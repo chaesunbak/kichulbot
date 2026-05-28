@@ -1,0 +1,48 @@
+{
+  "name": "@kichulbot/api-contract",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "auth": ["dist/auth/index.d.ts"],
+      "papers": ["dist/papers/index.d.ts"],
+      "taxonomy": ["dist/taxonomy/index.d.ts"],
+      "tags": ["dist/tags/index.d.ts"]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
+    "./papers": {
+      "types": "./dist/papers/index.d.ts",
+      "default": "./dist/papers/index.js"
+    },
+    "./taxonomy": {
+      "types": "./dist/taxonomy/index.d.ts",
+      "default": "./dist/taxonomy/index.js"
+    },
+    "./tags": {
+      "types": "./dist/tags/index.d.ts",
+      "default": "./dist/tags/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@kichulbot/typescript-config": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}

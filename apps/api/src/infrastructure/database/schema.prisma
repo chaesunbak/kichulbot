@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserAuthType {
+  ANONYMOUS
+  EMAIL
+}
+
+enum TagCategory {
+  PERIOD
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String?      @unique
+  passwordHash String?
+  nickname     String?
+  authType     UserAuthType @default(ANONYMOUS)
+  role         UserRole     @default(USER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  papers    Paper[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  papers    Paper[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Paper {
+  id            String     @id @default(cuid())
+  title         String
+  year          Int
+  questionCount Int        @default(20)
+  isPublished   Boolean    @default(false)
+  examId        String
+  subjectId     String
+  exam          Exam       @relation(fields: [examId], references: [id])
+  subject       Subject    @relation(fields: [subjectId], references: [id])
+  questions     Question[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([examId])
+  @@index([subjectId])
+  @@index([isPublished])
+}
+
+model Tag {
+  id          String        @id @default(cuid())
+  name        String
+  slug        String        @unique
+  category    TagCategory   @default(PERIOD)
+  questions   QuestionTag[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Question {
+  id          String        @id @default(cuid())
+  paperId     String
+  number      Int
+  imageUrl    String?
+  choiceCount Int
+  answer      Int
+  paper       Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  tags        QuestionTag[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([paperId, number])
+  @@index([paperId])
+}
+
+model QuestionTag {
+  questionId String
+  tagId      String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([questionId, tagId])
+  @@index([tagId])
+}

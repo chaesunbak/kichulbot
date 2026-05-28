@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: kichulbot-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: kichulbot
+      POSTGRES_PASSWORD: kichulbot
+      POSTGRES_DB: kichulbot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kichulbot -d kichulbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:

@@ -4,9 +4,9 @@
     "baseUrl": ".",
     "noEmit": true,
     "paths": {
-      "#components/*": ["./src/components/*"],
-      "#hooks/*": ["./src/hooks/*"],
-      "#lib/*": ["./src/lib/*"]
+      "@components/*": ["./src/components/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@lib/*": ["./src/lib/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

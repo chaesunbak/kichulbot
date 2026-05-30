@@ -3,6 +3,8 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+import { zodNamespaceImportRule } from './rules.js';
+
 export function nestConfig({ tsconfigRootDir }) {
   return tseslint.config(
     {
@@ -29,6 +31,7 @@ export function nestConfig({ tsconfigRootDir }) {
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-floating-promises': 'warn',
         '@typescript-eslint/no-unsafe-argument': 'warn',
+        ...zodNamespaceImportRule,
         'prettier/prettier': ['error', { endOfLine: 'auto' }],
       },
     },

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { IsoDateStringSchema } from "../common.js";
 
 export const TaxonomyResponseSchema = z.object({

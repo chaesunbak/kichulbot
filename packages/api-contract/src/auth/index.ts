@@ -1,5 +1,9 @@
-import { z } from "zod";
-import { IsoDateStringSchema, UserAuthTypeSchema, UserRoleSchema } from "../common.js";
+import * as z from 'zod';
+import {
+  IsoDateStringSchema,
+  UserAuthTypeSchema,
+  UserRoleSchema,
+} from '../common.js';
 
 export const RegisterRequestSchema = z.object({
   email: z.string().email(),
@@ -9,13 +13,15 @@ export const RegisterRequestSchema = z.object({
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
 export const LoginRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(8).max(72),
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
 export const ConvertAnonymousRequestSchema = RegisterRequestSchema;
-export type ConvertAnonymousRequest = z.infer<typeof ConvertAnonymousRequestSchema>;
+export type ConvertAnonymousRequest = z.infer<
+  typeof ConvertAnonymousRequestSchema
+>;
 
 export const UserResponseSchema = z.object({
   id: z.string(),
@@ -38,4 +44,3 @@ export const MeResponseSchema = z.object({
   user: UserResponseSchema,
 });
 export type MeResponse = z.infer<typeof MeResponseSchema>;
-

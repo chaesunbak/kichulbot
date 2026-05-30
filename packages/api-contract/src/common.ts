@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 export const IsoDateStringSchema = z.iso.datetime();
 
@@ -10,4 +10,3 @@ export type UserAuthType = z.infer<typeof UserAuthTypeSchema>;
 
 export const TagCategorySchema = z.enum(["PERIOD"]);
 export type TagCategory = z.infer<typeof TagCategorySchema>;
-

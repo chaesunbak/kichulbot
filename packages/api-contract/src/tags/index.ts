@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { IsoDateStringSchema, TagCategorySchema } from "../common.js";
 
 export const TagResponseSchema = z.object({

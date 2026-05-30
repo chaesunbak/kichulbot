@@ -2,12 +2,14 @@
   "name": "@kichulbot/api-contract",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "typesVersions": {
     "*": {
       "auth": ["dist/auth/index.d.ts"],
       "papers": ["dist/papers/index.d.ts"],
+      "questions": ["dist/questions/index.d.ts"],
       "taxonomy": ["dist/taxonomy/index.d.ts"],
       "tags": ["dist/tags/index.d.ts"]
     }
@@ -24,6 +26,10 @@
     "./papers": {
       "types": "./dist/papers/index.d.ts",
       "default": "./dist/papers/index.js"
+    },
+    "./questions": {
+      "types": "./dist/questions/index.d.ts",
+      "default": "./dist/questions/index.js"
     },
     "./taxonomy": {
       "types": "./dist/taxonomy/index.d.ts",

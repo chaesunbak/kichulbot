@@ -1,36 +1,34 @@
-"use client";
-
-import * as React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import * as z from "zod";
-import { BookOpen, LogOut, Plus, RefreshCw, ShieldCheck } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BookOpen, LogOut, Plus, RefreshCw, ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '@kichulbot/ui/components/badge';
+import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@kichulbot/ui/components/card';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+} from '@kichulbot/ui/components/field';
+import { Input } from '@kichulbot/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from '@kichulbot/ui/components/select';
+import { Separator } from '@kichulbot/ui/components/separator';
 import {
   Table,
   TableBody,
@@ -38,206 +36,147 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { apiRequest, Paper, Taxonomy, User } from "@/lib/api";
-import {
-  clearStoredToken,
-  readStoredToken,
-  storeToken,
-} from "@/lib/auth-storage";
-import { cn } from "@/lib/utils";
-
-const loginSchema = z.object({
-  email: z.string().email("관리자 이메일을 입력해 주세요."),
-  password: z
-    .string()
-    .min(8, "비밀번호는 8자 이상이어야 합니다.")
-    .max(72, "비밀번호는 72자 이하여야 합니다."),
-});
-
-const paperSchema = z.object({
-  title: z
-    .string()
-    .min(2, "문제지 제목을 입력해 주세요.")
-    .max(100, "문제지 제목은 100자 이하여야 합니다."),
-  year: z
-    .number()
-    .int("연도는 정수로 입력해 주세요.")
-    .min(1994, "1994년 이후 연도를 입력해 주세요.")
-    .max(2100, "2100년 이하 연도를 입력해 주세요."),
-  examId: z.string().min(1, "시험을 선택해 주세요."),
-  subjectId: z.string().min(1, "과목을 선택해 주세요."),
-  questionCount: z
-    .number()
-    .int("문항 수는 정수로 입력해 주세요.")
-    .min(1, "문항 수는 1개 이상이어야 합니다.")
-    .max(100, "문항 수는 100개 이하여야 합니다."),
-  isPublished: z.enum(["false", "true"]),
-});
-
-type LoginValues = z.infer<typeof loginSchema>;
-type PaperValues = z.infer<typeof paperSchema>;
+} from '@kichulbot/ui/components/table';
+import { login, fetchMe } from '@/lib/api/auth';
+import { fetchPapers, createPaper } from '@/lib/api/papers';
+import { fetchExams, fetchSubjects } from '@/lib/api/taxonomy';
+import { loginSchema, paperSchema, LoginValues, PaperValues } from '@/lib/schemas';
+import { useAuthStore } from '@/stores/auth-store';
+import { cn } from '@/lib/utils';
 
 export function AdminDashboard() {
-  const [token, setToken] = React.useState<string | null>(null);
-  const [user, setUser] = React.useState<User | null>(null);
-  const [papers, setPapers] = React.useState<Paper[]>([]);
-  const [exams, setExams] = React.useState<Taxonomy[]>([]);
-  const [subjects, setSubjects] = React.useState<Taxonomy[]>([]);
-  const [isBooting, setIsBooting] = React.useState(true);
-  const [isLoadingData, setIsLoadingData] = React.useState(false);
+  const queryClient = useQueryClient();
+  const { token, _hasHydrated, setAuth, clearAuth } = useAuthStore();
+
+  const isEnabled = _hasHydrated && !!token;
+
+  const meQuery = useQuery({
+    queryKey: ['me'],
+    queryFn: async () => {
+      const data = await fetchMe(token!);
+      if (data.user.role !== 'ADMIN') {
+        throw new Error('관리자 권한이 있는 계정으로 로그인해 주세요.');
+      }
+      return data;
+    },
+    enabled: isEnabled,
+    retry: false,
+  });
+
+  const papersQuery = useQuery({
+    queryKey: ['papers'],
+    queryFn: () => fetchPapers(token!),
+    enabled: isEnabled,
+  });
+
+  const examsQuery = useQuery({
+    queryKey: ['exams'],
+    queryFn: () => fetchExams(token!),
+    enabled: isEnabled,
+  });
+
+  const subjectsQuery = useQuery({
+    queryKey: ['subjects'],
+    queryFn: () => fetchSubjects(token!),
+    enabled: isEnabled,
+  });
+
+  React.useEffect(() => {
+    if (!meQuery.isError) return;
+    clearAuth();
+    queryClient.clear();
+    toast.error(
+      meQuery.error instanceof Error
+        ? meQuery.error.message
+        : '세션이 만료되었습니다. 다시 로그인해 주세요.',
+    );
+  }, [meQuery.isError, meQuery.error, clearAuth, queryClient]);
+
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }: LoginValues) => login(email, password),
+    onSuccess: (data) => {
+      if (data.user.role !== 'ADMIN') {
+        toast.error('관리자 권한이 있는 계정으로 로그인해 주세요.');
+        return;
+      }
+      setAuth(data.accessToken, data.user);
+      toast.success('로그인했습니다.');
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : '로그인에 실패했습니다.',
+      );
+    },
+  });
+
+  const createPaperMutation = useMutation({
+    mutationFn: (values: PaperValues) =>
+      createPaper(token!, {
+        title: values.title,
+        year: values.year,
+        examId: values.examId,
+        subjectId: values.subjectId,
+        questionCount: values.questionCount,
+        isPublished: values.isPublished === 'true',
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['papers'] });
+      paperForm.reset({
+        title: '',
+        year: variables.year,
+        examId: variables.examId,
+        subjectId: variables.subjectId,
+        questionCount: 20,
+        isPublished: 'false',
+      });
+      toast.success('문제지를 생성했습니다.');
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : '문제지 생성에 실패했습니다.',
+      );
+    },
+  });
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: '', password: '' },
   });
 
   const paperForm = useForm<PaperValues>({
     resolver: zodResolver(paperSchema),
     defaultValues: {
-      title: "",
+      title: '',
       year: new Date().getFullYear(),
-      examId: "",
-      subjectId: "",
+      examId: '',
+      subjectId: '',
       questionCount: 20,
-      isPublished: "false",
+      isPublished: 'false',
     },
   });
 
-  const loadAdminData = React.useCallback(
-    async (accessToken: string, options?: { silent?: boolean }) => {
-      setIsLoadingData(true);
-
-      try {
-        const [meData, papersData, examsData, subjectsData] = await Promise.all([
-          apiRequest("/auth/me", MeResponseSchema.parse, {
-            token: accessToken,
-          }),
-          apiRequest("/papers", ListPapersResponseSchema.parse, {
-            token: accessToken,
-          }),
-          apiRequest("/exams", ListExamsResponseSchema.parse, {
-            token: accessToken,
-          }),
-          apiRequest("/subjects", ListSubjectsResponseSchema.parse, {
-            token: accessToken,
-          }),
-        ]);
-
-        if (meData.user.role !== "ADMIN") {
-          throw new Error("관리자 권한이 있는 계정으로 로그인해 주세요.");
-        }
-
-        setUser(meData.user);
-        setPapers(papersData.papers.filter(isAdminPaper));
-        setExams(examsData.exams);
-        setSubjects(subjectsData.subjects);
-
-        if (!options?.silent) {
-          toast.success("관리자 데이터를 불러왔습니다.");
-        }
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "데이터를 불러오지 못했습니다.";
-
-        clearStoredToken();
-        setToken(null);
-        setUser(null);
-        toast.error(message);
-      } finally {
-        setIsLoadingData(false);
-      }
-    },
-    [],
-  );
-
-  React.useEffect(() => {
-    const storedToken = readStoredToken();
-
-    if (!storedToken) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsBooting(false);
-      return;
-    }
-
-    setToken(storedToken);
-    loadAdminData(storedToken, { silent: true }).finally(() =>
-      setIsBooting(false),
-    );
-  }, [loadAdminData]);
-
-  async function handleLogin(values: LoginValues) {
-    try {
-      const data = await apiRequest("/auth/login", AuthResponseSchema.parse, {
-        method: "POST",
-        body: values,
-      });
-
-      if (data.user.role !== "ADMIN") {
-        throw new Error("관리자 권한이 있는 계정으로 로그인해 주세요.");
-      }
-
-      storeToken(data.accessToken);
-      setToken(data.accessToken);
-      setUser(data.user);
-      toast.success("로그인했습니다.");
-      await loadAdminData(data.accessToken, { silent: true });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "로그인에 실패했습니다.",
-      );
-    }
-  }
-
   function handleLogout() {
-    clearStoredToken();
-    setToken(null);
-    setUser(null);
-    setPapers([]);
-    setExams([]);
-    setSubjects([]);
-    toast("로그아웃했습니다.");
+    clearAuth();
+    queryClient.clear();
+    toast('로그아웃했습니다.');
   }
 
-  async function handleCreatePaper(values: PaperValues) {
-    if (!token) {
-      toast.error("먼저 로그인해 주세요.");
-      return;
-    }
-
-    try {
-      const data = await apiRequest("/papers", CreatePaperResponseSchema.parse, {
-        method: "POST",
-        token,
-        body: {
-          title: values.title,
-          year: values.year,
-          examId: values.examId,
-          subjectId: values.subjectId,
-          questionCount: values.questionCount,
-          isPublished: values.isPublished === "true",
-        },
-      });
-
-      setPapers((current) => [data.paper, ...current]);
-      paperForm.reset({
-        title: "",
-        year: values.year,
-        examId: values.examId,
-        subjectId: values.subjectId,
-        questionCount: 20,
-        isPublished: "false",
-      });
-      toast.success("문제지를 생성했습니다.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "문제지 생성에 실패했습니다.",
-      );
-    }
+  function handleRefresh() {
+    queryClient.invalidateQueries();
+    toast.success('관리자 데이터를 불러왔습니다.');
   }
+
+  const isBooting = !_hasHydrated || (isEnabled && meQuery.isLoading);
+  const isLoadingData =
+    papersQuery.isFetching ||
+    examsQuery.isFetching ||
+    subjectsQuery.isFetching ||
+    meQuery.isFetching;
+
+  const user = meQuery.data?.user ?? null;
+  const papers = papersQuery.data?.papers ?? [];
+  const exams = examsQuery.data?.exams ?? [];
+  const subjects = subjectsQuery.data?.subjects ?? [];
 
   if (isBooting) {
     return (
@@ -266,7 +205,9 @@ export function AdminDashboard() {
           <CardContent>
             <form
               className="space-y-5"
-              onSubmit={loginForm.handleSubmit(handleLogin)}
+              onSubmit={loginForm.handleSubmit((values) =>
+                loginMutation.mutate(values),
+              )}
             >
               <Controller
                 name="email"
@@ -311,7 +252,7 @@ export function AdminDashboard() {
               <Button
                 className="w-full"
                 type="submit"
-                disabled={loginForm.formState.isSubmitting}
+                disabled={loginMutation.isPending}
               >
                 로그인
               </Button>
@@ -334,18 +275,18 @@ export function AdminDashboard() {
               </h1>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              {user.email ?? user.nickname ?? "관리자"} 계정으로 접속 중
+              {user.email ?? user.nickname ?? '관리자'} 계정으로 접속 중
             </p>
           </div>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="outline"
-              onClick={() => token && loadAdminData(token)}
+              onClick={handleRefresh}
               disabled={isLoadingData}
             >
               <RefreshCw
-                className={cn("size-4", isLoadingData && "animate-spin")}
+                className={cn('size-4', isLoadingData && 'animate-spin')}
                 aria-hidden="true"
               />
               새로고침
@@ -372,7 +313,9 @@ export function AdminDashboard() {
           <CardContent>
             <form
               className="space-y-5"
-              onSubmit={paperForm.handleSubmit(handleCreatePaper)}
+              onSubmit={paperForm.handleSubmit((values) =>
+                createPaperMutation.mutate(values),
+              )}
             >
               <FieldGroup>
                 <Controller
@@ -407,9 +350,7 @@ export function AdminDashboard() {
                           value={field.value}
                           onBlur={field.onBlur}
                           ref={field.ref}
-                          onChange={(event) =>
-                            field.onChange(Number(event.target.value))
-                          }
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           type="number"
                           inputMode="numeric"
                           aria-invalid={fieldState.invalid}
@@ -433,9 +374,7 @@ export function AdminDashboard() {
                           value={field.value}
                           onBlur={field.onBlur}
                           ref={field.ref}
-                          onChange={(event) =>
-                            field.onChange(Number(event.target.value))
-                          }
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                           type="number"
                           inputMode="numeric"
                           aria-invalid={fieldState.invalid}
@@ -551,7 +490,7 @@ export function AdminDashboard() {
               <Button
                 className="w-full"
                 type="submit"
-                disabled={paperForm.formState.isSubmitting}
+                disabled={createPaperMutation.isPending}
               >
                 <Plus className="size-4" aria-hidden="true" />
                 문제지 생성
@@ -575,12 +514,12 @@ export function AdminDashboard() {
               <Metric label="전체" value={papers.length} />
               <Metric
                 label="공개"
-                value={papers.filter((paper) => paper.isPublished).length}
+                value={papers.filter((p) => p.isPublished).length}
               />
               <Metric
                 label="문항"
                 value={papers.reduce(
-                  (sum, paper) => sum + (paper.registeredQuestionCount ?? 0),
+                  (sum, p) => sum + (p.registeredQuestionCount ?? 0),
                   0,
                 )}
               />
@@ -623,9 +562,9 @@ export function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={paper.isPublished ? "default" : "secondary"}
+                            variant={paper.isPublished ? 'default' : 'secondary'}
                           >
-                            {paper.isPublished ? "공개" : "비공개"}
+                            {paper.isPublished ? '공개' : '비공개'}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -649,24 +588,3 @@ function Metric({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
-
-function isAdminPaper(paper: unknown): paper is Paper {
-  return (
-    typeof paper === "object" &&
-    paper !== null &&
-    "isPublished" in paper &&
-    "registeredQuestionCount" in paper
-  );
-}
-import {
-  AuthResponseSchema,
-  MeResponseSchema,
-} from "@kichulbot/api-contract/auth";
-import {
-  CreatePaperResponseSchema,
-  ListPapersResponseSchema,
-} from "@kichulbot/api-contract/papers";
-import {
-  ListExamsResponseSchema,
-  ListSubjectsResponseSchema,
-} from "@kichulbot/api-contract/taxonomy";

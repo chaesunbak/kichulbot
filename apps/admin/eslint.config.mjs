@@ -1,3 +1,3 @@
-import nextConfig from '@kichulbot/eslint-config/next';
+import { reactConfig } from '@kichulbot/eslint-config/react';
 
-export default nextConfig;
+export default reactConfig();

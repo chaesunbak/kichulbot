@@ -1,1 +1,7 @@
 @import "@kichulbot/ui/globals.css";
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-heading: ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: ui-monospace, monospace;
+}

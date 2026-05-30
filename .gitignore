@@ -10,3 +10,5 @@ coverage
 # 로컬 스토리지 드라이버 업로드 파일
 uploads
 .antigravitycli/
+*.tsbuildinfo
+

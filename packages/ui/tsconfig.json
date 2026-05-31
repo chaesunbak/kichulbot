@@ -1,7 +1,6 @@
 {
   "extends": "@kichulbot/typescript-config/nextjs.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "noEmit": true,
     "paths": {
       "@components/*": ["./src/components/*"],

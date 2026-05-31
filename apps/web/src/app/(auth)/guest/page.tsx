@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/auth-store";
+import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function GuestPage() {
   const router = useRouter();
@@ -13,17 +13,17 @@ export default function GuestPage() {
     if (started.current) return;
     started.current = true;
 
-    fetch("/api/auth/anonymous", { method: "POST" })
+    fetch('/api/auth/anonymous', { method: 'POST' })
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
           setAuth(data.accessToken, data.user);
-          router.replace("/papers");
+          router.replace('/home');
         } else {
-          router.replace("/login");
+          router.replace('/login');
         }
       })
-      .catch(() => router.replace("/login"));
+      .catch(() => router.replace('/login'));
   }, [router, setAuth]);
 
   return (

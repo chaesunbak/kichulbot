@@ -1,44 +1,31 @@
-"use client";
-
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@kichulbot/ui/components/button";
-import { useAuthStore } from "@/stores/auth-store";
-import type { AuthUser } from "@/lib/auth";
+import Link from 'next/link';
+import { UserRound } from 'lucide-react';
+import { DesktopNavigation } from '@/components/main-navigation';
+import type { AuthUser } from '@/lib/auth';
 
 interface Props {
   user: AuthUser;
 }
 
 export default function MainHeader({ user }: Props) {
-  const router = useRouter();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
-
-  const handleLogout = async () => {
-    clearAuth();
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
-  };
-
   return (
-    <header className="border-b border-zinc-200 bg-white px-4 py-3">
-      <div className="mx-auto flex max-w-4xl items-center justify-between">
-        <Link href="/papers" className="text-base font-semibold text-zinc-900">
+    <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-6">
+        <Link href="/home" className="shrink-0 text-lg font-bold text-zinc-900">
           기출봇
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-zinc-500">
-            {user.nickname ?? user.email ?? "게스트"}
+        <DesktopNavigation />
+        <Link
+          href="/my"
+          className="flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
+        >
+          <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <UserRound className="size-4" />
           </span>
-          {user.authType === "ANONYMOUS" && (
-            <Button asChild variant="outline" size="sm">
-              <Link href="/register">계정 만들기</Link>
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            로그아웃
-          </Button>
-        </div>
+          <span className="hidden lg:inline">
+            {user.nickname ?? user.email ?? '게스트'}
+          </span>
+        </Link>
       </div>
     </header>
   );

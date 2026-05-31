@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation";
-import { getUser } from "@/lib/auth";
-import MainHeader from "@/components/main-header";
+import { redirect } from 'next/navigation';
+import { getUser } from '@/lib/auth';
+import MainHeader from '@/components/main-header';
+import { MobileBottomNavigation } from '@/components/main-navigation';
 
 export default async function MainLayout({
   children,
@@ -8,12 +9,13 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   const user = await getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect('/login');
 
   return (
     <div className="flex flex-1 flex-col">
       <MainHeader user={user} />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <MobileBottomNavigation />
     </div>
   );
 }

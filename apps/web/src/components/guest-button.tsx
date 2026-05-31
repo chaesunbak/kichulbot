@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@kichulbot/ui/components/button";
-import { useAuthStore } from "@/stores/auth-store";
-import { anonymousLoginApi } from "@/lib/api/auth";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@kichulbot/ui/components/button';
+import { useAuthStore } from '@/stores/auth-store';
+import { anonymousLoginApi } from '@/lib/api/auth';
 
 export function GuestButton() {
   const router = useRouter();
@@ -18,9 +18,9 @@ export function GuestButton() {
     try {
       const data = await anonymousLoginApi();
       setAuth(data.accessToken, data.user);
-      router.push("/papers");
+      router.push('/home');
     } catch {
-      setError("게스트 로그인에 실패했습니다. 다시 시도해주세요.");
+      setError('게스트 로그인에 실패했습니다. 다시 시도해주세요.');
       setLoading(false);
     }
   };
@@ -33,7 +33,7 @@ export function GuestButton() {
         disabled={loading}
         onClick={handleClick}
       >
-        {loading ? "시작 중..." : "게스트로 시작하기"}
+        {loading ? '시작 중...' : '게스트로 시작하기'}
       </Button>
       {error && (
         <p role="alert" className="mt-2 text-sm text-destructive">

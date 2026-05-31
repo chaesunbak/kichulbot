@@ -11,6 +11,8 @@ interface QuestionInput {
   choiceCount?: number;
   answerChoice?: number;
   answerText?: string;
+  explanation?: string;
+  recommendedTimeSeconds?: number;
   tagIds: string[];
   image?: File;
 }
@@ -39,6 +41,15 @@ function toQuestionFormData(
   }
   if (input.answerText !== undefined) {
     formData.append('answerText', input.answerText);
+  }
+  if (input.explanation !== undefined) {
+    formData.append('explanation', input.explanation);
+  }
+  if (input.recommendedTimeSeconds !== undefined) {
+    formData.append(
+      'recommendedTimeSeconds',
+      String(input.recommendedTimeSeconds),
+    );
   }
   input.tagIds.forEach((tagId) => formData.append('tagIds', tagId));
   if (input.image) {

@@ -7,6 +7,8 @@ export const questionSchema = z
     choiceCount: z.number().int().min(2).max(10).optional(),
     answerChoice: z.number().int().min(1).max(10).optional(),
     answerText: z.string().max(2000).optional(),
+    explanation: z.string().max(5000).optional(),
+    recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
     tagIds: z.array(z.string()),
   })
   .superRefine(({ type, choiceCount, answerChoice, answerText }, ctx) => {

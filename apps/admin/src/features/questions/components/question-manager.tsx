@@ -61,6 +61,8 @@ const DEFAULT_QUESTION: QuestionValues = {
   choiceCount: 5,
   answerChoice: 1,
   answerText: '',
+  explanation: '',
+  recommendedTimeSeconds: undefined,
   tagIds: [],
 };
 
@@ -128,6 +130,8 @@ export function QuestionManager({
       choiceCount: question.choiceCount ?? undefined,
       answerChoice: question.answerChoice ?? undefined,
       answerText: question.answerText ?? '',
+      explanation: question.explanation ?? '',
+      recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
       tagIds: question.tags.map((tag) => tag.id),
     });
   }
@@ -356,6 +360,32 @@ export function QuestionManager({
                     />
                   )}
 
+                  <NumberField
+                    control={questionForm.control}
+                    name="recommendedTimeSeconds"
+                    label="권장 풀이시간(초)"
+                  />
+
+                  <Controller
+                    name="explanation"
+                    control={questionForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>해설</FieldLabel>
+                        <Textarea
+                          {...field}
+                          id={field.name}
+                          value={field.value ?? ''}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="선택 입력입니다."
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
                   <Controller
                     name="tagIds"
                     control={questionForm.control}
@@ -441,7 +471,7 @@ function NumberField({
   label,
 }: {
   control: ReturnType<typeof useForm<QuestionValues>>['control'];
-  name: 'number' | 'choiceCount' | 'answerChoice';
+  name: 'number' | 'choiceCount' | 'answerChoice' | 'recommendedTimeSeconds';
   label: string;
 }) {
   return (

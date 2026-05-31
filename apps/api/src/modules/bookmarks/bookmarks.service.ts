@@ -1,0 +1,174 @@
+import {
+  AddBookmarkedQuestionResponse,
+  AddBookmarkedQuestionResponseSchema,
+  BookmarkListResponse,
+  BookmarkListResponseEnvelope,
+  BookmarkListResponseEnvelopeSchema,
+  BookmarkListSummaryResponse,
+  BookmarkListSummaryResponseEnvelope,
+  BookmarkListSummaryResponseEnvelopeSchema,
+  BookmarkedQuestionResponse,
+  DeleteBookmarkedQuestionResponse,
+  DeleteBookmarkedQuestionResponseSchema,
+  ListBookmarkListsResponse,
+  ListBookmarkListsResponseSchema,
+} from '@kichulbot/api-contract/bookmarks';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { BookmarksRepository } from './bookmarks.repository';
+
+type BookmarkListSummary = Prisma.BookmarkListGetPayload<{
+  include: { _count: { select: { questions: true } } };
+}>;
+type BookmarkListWithQuestions = Prisma.BookmarkListGetPayload<{
+  include: {
+    questions: {
+      include: {
+        question: {
+          include: { paper: { include: { exam: true; subject: true } } };
+        };
+      };
+    };
+  };
+}>;
+type BookmarkedQuestionWithQuestion =
+  BookmarkListWithQuestions['questions'][number];
+
+@Injectable()
+export class BookmarksService {
+  constructor(private readonly bookmarksRepository: BookmarksRepository) {}
+
+  async listBookmarkLists(userId: string): Promise<ListBookmarkListsResponse> {
+    const bookmarkLists =
+      await this.bookmarksRepository.findBookmarkLists(userId);
+    return ListBookmarkListsResponseSchema.parse({
+      bookmarkLists: bookmarkLists.map((list) => this.toSummaryResponse(list)),
+    });
+  }
+
+  async createBookmarkList(
+    userId: string,
+    name: string,
+  ): Promise<BookmarkListSummaryResponseEnvelope> {
+    const bookmarkList = await this.bookmarksRepository.createBookmarkList(
+      userId,
+      name.trim(),
+    );
+    return BookmarkListSummaryResponseEnvelopeSchema.parse({
+      bookmarkList: this.toSummaryResponse(bookmarkList),
+    });
+  }
+
+  async getBookmarkList(
+    userId: string,
+    bookmarkListId: string,
+  ): Promise<BookmarkListResponseEnvelope> {
+    const bookmarkList = await this.getOwnedBookmarkList(
+      userId,
+      bookmarkListId,
+    );
+    return BookmarkListResponseEnvelopeSchema.parse({
+      bookmarkList: this.toBookmarkListResponse(bookmarkList),
+    });
+  }
+
+  async addQuestion(
+    userId: string,
+    bookmarkListId: string,
+    questionId: string,
+  ): Promise<AddBookmarkedQuestionResponse> {
+    const [question] = await Promise.all([
+      this.bookmarksRepository.findQuestion(questionId),
+      this.getOwnedBookmarkList(userId, bookmarkListId),
+    ]);
+    if (!question) {
+      throw new NotFoundException('문제를 찾을 수 없습니다.');
+    }
+    const bookmarkedQuestion = await this.bookmarksRepository.addQuestion(
+      bookmarkListId,
+      questionId,
+    );
+    return AddBookmarkedQuestionResponseSchema.parse({
+      question: this.toQuestionResponse(bookmarkedQuestion),
+    });
+  }
+
+  async deleteQuestion(
+    userId: string,
+    bookmarkListId: string,
+    questionId: string,
+  ): Promise<DeleteBookmarkedQuestionResponse> {
+    const [, bookmarkedQuestion] = await Promise.all([
+      this.getOwnedBookmarkList(userId, bookmarkListId),
+      this.bookmarksRepository.findBookmarkedQuestion(
+        bookmarkListId,
+        questionId,
+      ),
+    ]);
+    if (!bookmarkedQuestion) {
+      throw new NotFoundException('북마크한 문제를 찾을 수 없습니다.');
+    }
+    await this.bookmarksRepository.deleteQuestion(bookmarkListId, questionId);
+    return DeleteBookmarkedQuestionResponseSchema.parse({
+      bookmarkListId,
+      questionId,
+    });
+  }
+
+  private async getOwnedBookmarkList(userId: string, bookmarkListId: string) {
+    const bookmarkList = await this.bookmarksRepository.findBookmarkList(
+      userId,
+      bookmarkListId,
+    );
+    if (!bookmarkList) {
+      throw new NotFoundException('북마크 리스트를 찾을 수 없습니다.');
+    }
+    return bookmarkList;
+  }
+
+  private toSummaryResponse(
+    bookmarkList: BookmarkListSummary,
+  ): BookmarkListSummaryResponse {
+    return {
+      id: bookmarkList.id,
+      name: bookmarkList.name,
+      questionCount: bookmarkList._count.questions,
+      createdAt: bookmarkList.createdAt.toISOString(),
+      updatedAt: bookmarkList.updatedAt.toISOString(),
+    };
+  }
+
+  private toBookmarkListResponse(
+    bookmarkList: BookmarkListWithQuestions,
+  ): BookmarkListResponse {
+    return {
+      id: bookmarkList.id,
+      name: bookmarkList.name,
+      questionCount: bookmarkList.questions.length,
+      questions: bookmarkList.questions.map((question) =>
+        this.toQuestionResponse(question),
+      ),
+      createdAt: bookmarkList.createdAt.toISOString(),
+      updatedAt: bookmarkList.updatedAt.toISOString(),
+    };
+  }
+
+  private toQuestionResponse(
+    bookmarkedQuestion: BookmarkedQuestionWithQuestion,
+  ): BookmarkedQuestionResponse {
+    const { question } = bookmarkedQuestion;
+    return {
+      id: question.id,
+      number: question.number,
+      imageUrl: question.imageUrl,
+      paper: {
+        id: question.paper.id,
+        title: question.paper.title,
+        year: question.paper.year,
+        examName: question.paper.exam.name,
+        subjectName: question.paper.subject.name,
+      },
+      createdAt: bookmarkedQuestion.createdAt.toISOString(),
+    };
+  }
+}

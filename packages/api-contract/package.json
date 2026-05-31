@@ -13,6 +13,9 @@
       "answer-sessions": [
         "dist/answer-sessions/index.d.ts"
       ],
+      "bookmarks": [
+        "dist/bookmarks/index.d.ts"
+      ],
       "library": [
         "dist/library/index.d.ts"
       ],
@@ -45,6 +48,11 @@
       "types": "./dist/answer-sessions/index.d.ts",
       "import": "./dist/answer-sessions/index.js",
       "default": "./dist/answer-sessions/index.js"
+    },
+    "./bookmarks": {
+      "types": "./dist/bookmarks/index.d.ts",
+      "import": "./dist/bookmarks/index.js",
+      "default": "./dist/bookmarks/index.js"
     },
     "./library": {
       "types": "./dist/library/index.d.ts",

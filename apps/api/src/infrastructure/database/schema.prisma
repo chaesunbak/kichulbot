@@ -35,6 +35,7 @@ model User {
   authType       UserAuthType    @default(ANONYMOUS)
   role           UserRole        @default(USER)
   bookshelves    Bookshelf[]
+  bookmarkLists  BookmarkList[]
   answerSessions AnswerSession[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -105,21 +106,22 @@ model TagSubject {
 }
 
 model Question {
-  id                     String        @id @default(cuid())
+  id                     String               @id @default(cuid())
   paperId                String
   number                 Int
-  type                   QuestionType  @default(MULTIPLE_CHOICE)
+  type                   QuestionType         @default(MULTIPLE_CHOICE)
   imageUrl               String?
   choiceCount            Int?
   answerChoice           Int?
   answerText             String?
   explanation            String?
   recommendedTimeSeconds Int?
-  paper                  Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  paper                  Paper                @relation(fields: [paperId], references: [id], onDelete: Cascade)
   tags                   QuestionTag[]
   draftAnswers           DraftAnswer[]
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  bookmarks              BookmarkedQuestion[]
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 
   @@unique([paperId, number])
   @@index([paperId])
@@ -147,6 +149,30 @@ model UserPaper {
 
   @@id([bookshelfId, paperId])
   @@index([paperId])
+}
+
+model BookmarkList {
+  id        String               @id @default(cuid())
+  userId    String
+  name      String
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions BookmarkedQuestion[]
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model BookmarkedQuestion {
+  bookmarkListId String
+  questionId     String
+  bookmarkList   BookmarkList @relation(fields: [bookmarkListId], references: [id], onDelete: Cascade)
+  question       Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@id([bookmarkListId, questionId])
+  @@index([questionId])
 }
 
 model AnswerSession {

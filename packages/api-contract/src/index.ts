@@ -1,6 +1,7 @@
 export * from './common.js';
 export * from './auth/index.js';
 export * from './answer-sessions/index.js';
+export * from './bookmarks/index.js';
 export * from './library/index.js';
 export * from './papers/index.js';
 export * from './questions/index.js';

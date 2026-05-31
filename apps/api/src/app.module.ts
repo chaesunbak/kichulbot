@@ -6,6 +6,7 @@ import { HealthController } from './health.controller';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AnswerSessionsModule } from './modules/answer-sessions/answer-sessions.module';
+import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { PapersModule } from './modules/papers/papers.module';
 import { QuestionsModule } from './modules/questions/questions.module';
@@ -30,6 +31,7 @@ import { TagsModule } from './modules/tags/tags.module';
     DatabaseModule,
     AuthModule,
     AnswerSessionsModule,
+    BookmarksModule,
     ExamsModule,
     SubjectsModule,
     TagsModule,

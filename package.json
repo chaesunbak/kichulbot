@@ -11,11 +11,15 @@
     "build": "turbo run build",
     "check": "turbo run check",
     "lint": "turbo run lint",
+    "lint-staged": "lint-staged",
     "test": "turbo run test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@kichulbot/prettier-config": "workspace:*",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "turbo": "^2.9.15"
   }

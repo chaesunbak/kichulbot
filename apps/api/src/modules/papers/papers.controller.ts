@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
@@ -15,6 +24,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreatePaperDto } from './dto/create-paper.dto';
+import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersService } from './papers.service';
 
 @ApiTags('papers')
@@ -59,5 +69,23 @@ export class PapersController {
   @ApiOkResponse({ description: '문제지 상세를 반환합니다.' })
   getPaper(@CurrentUser() user: RequestUser, @Param('id') id: string) {
     return this.papersService.getPaper(id, user.role);
+  }
+
+  @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '문제지 공개 상태 변경' })
+  @ApiOkResponse({ description: '문제지 공개 상태를 변경합니다.' })
+  updatePaper(@Param('id') id: string, @Body() dto: UpdatePaperDto) {
+    return this.papersService.updatePaper(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '문제지 삭제' })
+  @ApiOkResponse({ description: '문제지를 삭제합니다.' })
+  deletePaper(@Param('id') id: string) {
+    return this.papersService.deletePaper(id);
   }
 }

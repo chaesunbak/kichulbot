@@ -17,8 +17,9 @@ enum UserAuthType {
   EMAIL
 }
 
-enum TagCategory {
-  PERIOD
+enum QuestionType {
+  MULTIPLE_CHOICE
+  WRITTEN
 }
 
 model User {
@@ -42,12 +43,13 @@ model Exam {
 }
 
 model Subject {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
-  slug      String   @unique
+  slug      String       @unique
   papers    Paper[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  tags      TagSubject[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 model Paper {
@@ -70,26 +72,42 @@ model Paper {
 }
 
 model Tag {
-  id          String        @id @default(cuid())
-  name        String
-  slug        String        @unique
-  category    TagCategory   @default(PERIOD)
-  questions   QuestionTag[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  isActive  Boolean       @default(true)
+  subjects  TagSubject[]
+  questions QuestionTag[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([isActive])
+}
+
+model TagSubject {
+  tagId     String
+  subjectId String
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([tagId, subjectId])
+  @@index([subjectId])
 }
 
 model Question {
-  id          String        @id @default(cuid())
-  paperId     String
-  number      Int
-  imageUrl    String?
-  choiceCount Int
-  answer      Int
-  paper       Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
-  tags        QuestionTag[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  paperId      String
+  number       Int
+  type         QuestionType  @default(MULTIPLE_CHOICE)
+  imageUrl     String?
+  choiceCount  Int?
+  answerChoice Int?
+  answerText   String?
+  paper        Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  tags         QuestionTag[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@unique([paperId, number])
   @@index([paperId])

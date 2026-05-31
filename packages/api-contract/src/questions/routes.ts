@@ -1,5 +1,6 @@
 import {
   CreateQuestionRequestSchema,
+  DeleteQuestionResponseSchema,
   UpdateQuestionRequestSchema,
   QuestionMutationResponseSchema,
 } from './dto.js';
@@ -16,5 +17,11 @@ export const questionsRoutes = {
     path: '/admin/questions/:id',
     request: UpdateQuestionRequestSchema,
     response: QuestionMutationResponseSchema,
+  },
+  deleteQuestion: {
+    method: 'DELETE',
+    path: '/admin/questions/:id',
+    request: null,
+    response: DeleteQuestionResponseSchema,
   },
 } as const;

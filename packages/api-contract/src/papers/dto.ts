@@ -16,6 +16,21 @@ export const CreatePaperResponseSchema = z.object({
 });
 export type CreatePaperResponse = z.infer<typeof CreatePaperResponseSchema>;
 
+export const UpdatePaperRequestSchema = z.object({
+  isPublished: z.boolean(),
+});
+export type UpdatePaperRequest = z.infer<typeof UpdatePaperRequestSchema>;
+
+export const UpdatePaperResponseSchema = z.object({
+  paper: AdminPaperResponseSchema,
+});
+export type UpdatePaperResponse = z.infer<typeof UpdatePaperResponseSchema>;
+
+export const DeletePaperResponseSchema = z.object({
+  id: z.string(),
+});
+export type DeletePaperResponse = z.infer<typeof DeletePaperResponseSchema>;
+
 export const ListPapersResponseSchema = z.object({
   papers: z.array(z.union([AdminPaperResponseSchema, PaperResponseSchema])),
 });

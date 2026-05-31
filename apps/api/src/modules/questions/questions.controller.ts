@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Param,
   Patch,
   Post,
@@ -70,5 +71,12 @@ export class QuestionsController {
     @UploadedFile() file?: UploadedImageFile,
   ) {
     return this.questionsService.updateQuestion(id, dto, file);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '문제 삭제' })
+  @ApiOkResponse({ description: '문제를 삭제합니다.' })
+  deleteQuestion(@Param('id') id: string) {
+    return this.questionsService.deleteQuestion(id);
   }
 }

@@ -1,9 +1,4 @@
-import {
-  PrismaClient,
-  TagCategory,
-  UserAuthType,
-  UserRole,
-} from '@prisma/client';
+import { PrismaClient, UserAuthType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -45,7 +40,7 @@ async function main() {
     },
   });
 
-  await prisma.subject.upsert({
+  const subject = await prisma.subject.upsert({
     where: { slug: 'korean-history' },
     create: {
       name: '한국사',
@@ -67,20 +62,32 @@ async function main() {
   ] as const;
 
   await Promise.all(
-    periodTags.map(([name, slug]) =>
-      prisma.tag.upsert({
+    periodTags.map(async ([name, slug]) => {
+      const tag = await prisma.tag.upsert({
         where: { slug },
         create: {
           name,
           slug,
-          category: TagCategory.PERIOD,
         },
         update: {
           name,
-          category: TagCategory.PERIOD,
         },
-      }),
-    ),
+      });
+
+      await prisma.tagSubject.upsert({
+        where: {
+          tagId_subjectId: {
+            tagId: tag.id,
+            subjectId: subject.id,
+          },
+        },
+        create: {
+          tagId: tag.id,
+          subjectId: subject.id,
+        },
+        update: {},
+      });
+    }),
   );
 
   console.log('Seeded exam, subject, and period tags');

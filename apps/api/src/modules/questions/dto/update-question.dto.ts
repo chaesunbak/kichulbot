@@ -1,12 +1,15 @@
 import { UpdateQuestionRequest } from '@kichulbot/api-contract/questions';
 import { ApiProperty } from '@nestjs/swagger';
+import { QuestionType } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { toStringArray } from './transforms';
@@ -19,6 +22,11 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @Min(1)
   @Max(100)
   number?: number;
+
+  @ApiProperty({ required: false, enum: QuestionType })
+  @IsOptional()
+  @IsEnum(QuestionType)
+  type?: QuestionType;
 
   @ApiProperty({ required: false, example: 5 })
   @IsOptional()
@@ -34,7 +42,13 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @IsInt()
   @Min(1)
   @Max(10)
-  answer?: number;
+  answerChoice?: number;
+
+  @ApiProperty({ required: false, example: '서술형 모범답안' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  answerText?: string;
 
   @ApiProperty({
     required: false,

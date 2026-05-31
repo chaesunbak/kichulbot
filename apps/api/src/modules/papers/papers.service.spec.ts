@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Exam, Paper, Question, Subject, UserRole } from '@prisma/client';
+import { StorageService } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
 import { SubjectsService } from '../subjects/subjects.service';
 import { PapersRepository } from './papers.repository';
@@ -50,12 +51,15 @@ describe('PapersService', () => {
   let repository: jest.Mocked<PapersRepository>;
   let examsService: jest.Mocked<ExamsService>;
   let subjectsService: jest.Mocked<SubjectsService>;
+  let storageService: jest.Mocked<StorageService>;
 
   beforeEach(() => {
     repository = {
       create: jest.fn(),
+      delete: jest.fn(),
       findMany: jest.fn(),
       findById: jest.fn(),
+      update: jest.fn(),
     } as unknown as jest.Mocked<PapersRepository>;
     examsService = {
       findById: jest.fn(),
@@ -63,8 +67,18 @@ describe('PapersService', () => {
     subjectsService = {
       findById: jest.fn(),
     } as unknown as jest.Mocked<SubjectsService>;
+    storageService = {
+      uploadQuestionImage: jest.fn(),
+      getPublicUrl: jest.fn(),
+      deleteObject: jest.fn().mockResolvedValue(undefined),
+    };
 
-    service = new PapersService(repository, examsService, subjectsService);
+    service = new PapersService(
+      repository,
+      examsService,
+      subjectsService,
+      storageService,
+    );
   });
 
   it('returns only published papers for normal users without admin fields', async () => {
@@ -150,5 +164,37 @@ describe('PapersService', () => {
     expect(repository.findById).toHaveBeenCalledWith('paper_1', {
       isPublished: true,
     });
+  });
+
+  it('updates the published state for admins', async () => {
+    repository.findById.mockResolvedValue(paper() as never);
+    repository.update.mockResolvedValue(paper({ isPublished: true }));
+
+    const response = await service.updatePaper('paper_1', {
+      isPublished: true,
+    });
+
+    expect(repository.update).toHaveBeenCalledWith('paper_1', {
+      isPublished: true,
+    });
+    expect(response.paper).toMatchObject({ id: 'paper_1', isPublished: true });
+  });
+
+  it('deletes a paper and its stored question images', async () => {
+    repository.findById.mockResolvedValue({
+      ...paper(),
+      questions: [
+        {
+          imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+        } as Question,
+      ],
+    } as never);
+
+    await service.deletePaper('paper_1');
+
+    expect(repository.delete).toHaveBeenCalledWith('paper_1');
+    expect(storageService.deleteObject).toHaveBeenCalledWith(
+      'questions/question_1.png',
+    );
   });
 });

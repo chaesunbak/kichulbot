@@ -1,15 +1,17 @@
 import * as z from 'zod';
-import { IsoDateStringSchema, TagCategorySchema } from '../common.js';
+import { IsoDateStringSchema, OfficialTagKindSchema } from '../common.js';
 
 export const TagResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  category: TagCategorySchema,
+  kind: OfficialTagKindSchema,
+  isActive: z.boolean(),
 });
 export type TagResponse = z.infer<typeof TagResponseSchema>;
 
 export const AdminTagResponseSchema = TagResponseSchema.extend({
+  subjectIds: z.array(z.string()),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });

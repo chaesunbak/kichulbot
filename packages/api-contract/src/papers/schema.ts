@@ -1,17 +1,27 @@
 import * as z from 'zod';
-import { IsoDateStringSchema } from '../common.js';
+import { IsoDateStringSchema, QuestionTypeSchema } from '../common.js';
+import { TagResponseSchema } from '../tags/schema.js';
 import { TaxonomyResponseSchema } from '../taxonomy/schema.js';
 
 export const QuestionResponseSchema = z.object({
   id: z.string(),
   number: z.number().int(),
+  type: QuestionTypeSchema,
   imageUrl: z.string().url().nullable(),
-  choiceCount: z.number().int(),
-  answer: z.number().int(),
+  choiceCount: z.number().int().nullable(),
+  answerChoice: z.number().int().nullable(),
+  answerText: z.string().nullable(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });
 export type QuestionResponse = z.infer<typeof QuestionResponseSchema>;
+
+export const AdminPaperQuestionResponseSchema = QuestionResponseSchema.extend({
+  tags: z.array(TagResponseSchema).default([]),
+});
+export type AdminPaperQuestionResponse = z.infer<
+  typeof AdminPaperQuestionResponseSchema
+>;
 
 export const PaperResponseSchema = z.object({
   id: z.string(),
@@ -28,6 +38,6 @@ export const AdminPaperResponseSchema = PaperResponseSchema.extend({
   registeredQuestionCount: z.number().int(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
-  questions: z.array(QuestionResponseSchema).optional(),
+  questions: z.array(AdminPaperQuestionResponseSchema).optional(),
 });
 export type AdminPaperResponse = z.infer<typeof AdminPaperResponseSchema>;

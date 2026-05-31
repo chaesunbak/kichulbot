@@ -31,9 +31,24 @@ export class PapersRepository {
         ...this.paperIncludes(),
         questions: {
           orderBy: { number: 'asc' },
+          include: {
+            tags: { include: { tag: true } },
+          },
         },
       },
     });
+  }
+
+  update(id: string, data: Prisma.PaperUncheckedUpdateInput) {
+    return this.db.paper.update({
+      where: { id },
+      data,
+      include: this.paperIncludes(),
+    });
+  }
+
+  delete(id: string) {
+    return this.db.paper.delete({ where: { id } });
   }
 
   private paperIncludes() {

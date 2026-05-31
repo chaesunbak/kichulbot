@@ -27,10 +27,6 @@ export class QuestionsRepository {
     return this.db.paper.findUnique({ where: { id: paperId } });
   }
 
-  countTagsByIds(tagIds: string[]) {
-    return this.db.tag.count({ where: { id: { in: tagIds } } });
-  }
-
   updateImageUrl(id: string, imageUrl: string) {
     return this.db.question.update({
       where: { id },

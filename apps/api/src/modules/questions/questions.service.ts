@@ -1,5 +1,7 @@
 import {
   AdminQuestionResponse,
+  DeleteQuestionResponse,
+  DeleteQuestionResponseSchema,
   QuestionMutationResponse,
   QuestionMutationResponseSchema,
 } from '@kichulbot/api-contract/questions';
@@ -8,9 +10,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, QuestionType } from '@prisma/client';
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import { TagsService } from '../tags/tags.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsRepository } from './questions.repository';
@@ -19,11 +22,18 @@ type QuestionWithTags = Prisma.QuestionGetPayload<{
   include: { tags: { include: { tag: true } } };
 }>;
 
+type QuestionAnswerInput = {
+  choiceCount?: number;
+  answerChoice?: number;
+  answerText?: string;
+};
+
 @Injectable()
 export class QuestionsService {
   constructor(
     private readonly questionsRepository: QuestionsRepository,
     private readonly storageService: StorageService,
+    private readonly tagsService: TagsService,
   ) {}
 
   async createQuestion(
@@ -39,10 +49,14 @@ export class QuestionsService {
       throw new BadRequestException('문제지를 찾을 수 없습니다.');
     }
 
-    this.assertAnswerWithinChoices(dto.answer, dto.choiceCount);
+    this.assertNumberWithinPaper(dto.number, paper.questionCount);
+    const answerData = this.resolveAnswerData(
+      dto.type ?? QuestionType.MULTIPLE_CHOICE,
+      dto,
+    );
 
     const tagIds = dto.tagIds ?? [];
-    await this.assertTagsExist(tagIds);
+    await this.tagsService.assertTagsAssignable(tagIds, paper.subjectId);
 
     let created: QuestionWithTags;
     try {
@@ -50,8 +64,7 @@ export class QuestionsService {
         {
           paperId: dto.paperId,
           number: dto.number,
-          choiceCount: dto.choiceCount,
-          answer: dto.answer,
+          ...answerData,
           imageUrl: null,
         },
         tagIds,
@@ -87,18 +100,38 @@ export class QuestionsService {
       throw new NotFoundException('문제를 찾을 수 없습니다.');
     }
 
-    const nextAnswer = dto.answer ?? existing.answer;
-    const nextChoiceCount = dto.choiceCount ?? existing.choiceCount;
-    this.assertAnswerWithinChoices(nextAnswer, nextChoiceCount);
+    const answerData = this.resolveAnswerData(
+      dto.type ?? existing.type,
+      dto,
+      existing,
+    );
+
+    const paper =
+      dto.number || dto.tagIds
+        ? await this.questionsRepository.findPaper(existing.paperId)
+        : null;
+
+    if (dto.number) {
+      if (!paper) {
+        throw new BadRequestException('문제지를 찾을 수 없습니다.');
+      }
+      this.assertNumberWithinPaper(dto.number, paper.questionCount);
+    }
 
     if (dto.tagIds) {
-      await this.assertTagsExist(dto.tagIds);
+      if (!paper) {
+        throw new BadRequestException('문제지를 찾을 수 없습니다.');
+      }
+      await this.tagsService.assertTagsAssignable(
+        dto.tagIds,
+        paper.subjectId,
+        existing.tags.map(({ tagId }) => tagId),
+      );
     }
 
     const data: Prisma.QuestionUncheckedUpdateInput = {
       number: dto.number,
-      choiceCount: dto.choiceCount,
-      answer: dto.answer,
+      ...answerData,
     };
 
     if (file) {
@@ -117,23 +150,75 @@ export class QuestionsService {
     return this.toMutationResponse(updated);
   }
 
-  private assertAnswerWithinChoices(answer: number, choiceCount: number) {
-    if (answer > choiceCount) {
-      throw new BadRequestException(
-        '정답 번호는 선택지 개수를 넘을 수 없습니다.',
-      );
+  async deleteQuestion(id: string): Promise<DeleteQuestionResponse> {
+    const existing = await this.questionsRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException('문제를 찾을 수 없습니다.');
     }
+
+    await this.questionsRepository.delete(id);
+    await this.deleteStoredImage(existing.imageUrl);
+
+    return DeleteQuestionResponseSchema.parse({ id });
   }
 
-  private async assertTagsExist(tagIds: string[]) {
-    if (tagIds.length === 0) {
-      return;
+  private resolveAnswerData(
+    type: QuestionType,
+    input: QuestionAnswerInput,
+    existing?: QuestionWithTags,
+  ) {
+    if (type === QuestionType.MULTIPLE_CHOICE) {
+      const choiceCount =
+        input.choiceCount ??
+        (existing?.type === QuestionType.MULTIPLE_CHOICE
+          ? existing.choiceCount
+          : null);
+      const answerChoice =
+        input.answerChoice ??
+        (existing?.type === QuestionType.MULTIPLE_CHOICE
+          ? existing.answerChoice
+          : null);
+
+      if (choiceCount === null || answerChoice === null) {
+        throw new BadRequestException(
+          '객관식 문항은 선택지 개수와 정답 번호를 입력해주세요.',
+        );
+      }
+      if (answerChoice > choiceCount) {
+        throw new BadRequestException(
+          '정답 번호는 선택지 개수를 넘을 수 없습니다.',
+        );
+      }
+
+      return {
+        type,
+        choiceCount,
+        answerChoice,
+        answerText: null,
+      };
     }
 
-    const uniqueIds = [...new Set(tagIds)];
-    const found = await this.questionsRepository.countTagsByIds(uniqueIds);
-    if (found !== uniqueIds.length) {
-      throw new BadRequestException('존재하지 않는 태그가 포함되어 있습니다.');
+    const answerText = (
+      input.answerText ??
+      (existing?.type === QuestionType.WRITTEN ? existing.answerText : '')
+    )?.trim();
+    if (!answerText) {
+      throw new BadRequestException('서술형 문항은 모범답안을 입력해주세요.');
+    }
+
+    return {
+      type,
+      choiceCount: null,
+      answerChoice: null,
+      answerText,
+    };
+  }
+
+  private assertNumberWithinPaper(number: number, questionCount: number) {
+    if (number > questionCount) {
+      throw new BadRequestException(
+        '문항 번호는 문제지 문항 수를 넘을 수 없습니다.',
+      );
     }
   }
 
@@ -145,7 +230,15 @@ export class QuestionsService {
       return;
     }
 
-    const objectKey = this.extractObjectKey(previousUrl);
+    await this.deleteStoredImage(previousUrl);
+  }
+
+  private async deleteStoredImage(imageUrl: string | null): Promise<void> {
+    if (!imageUrl) {
+      return;
+    }
+
+    const objectKey = this.extractObjectKey(imageUrl);
     if (objectKey) {
       await this.storageService.deleteObject(objectKey).catch(() => undefined);
     }
@@ -180,14 +273,17 @@ export class QuestionsService {
       id: question.id,
       paperId: question.paperId,
       number: question.number,
+      type: question.type,
       imageUrl: question.imageUrl,
       choiceCount: question.choiceCount,
-      answer: question.answer,
+      answerChoice: question.answerChoice,
+      answerText: question.answerText,
       tags: question.tags.map((questionTag) => ({
         id: questionTag.tag.id,
         name: questionTag.tag.name,
         slug: questionTag.tag.slug,
-        category: questionTag.tag.category,
+        kind: 'OFFICIAL',
+        isActive: questionTag.tag.isActive,
       })),
       createdAt: question.createdAt.toISOString(),
       updatedAt: question.updatedAt.toISOString(),

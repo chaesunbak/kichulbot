@@ -1,15 +1,18 @@
-import * as z from "zod";
+import * as z from 'zod';
 
 export const IsoDateStringSchema = z.iso.datetime();
 
-export const UserRoleSchema = z.enum(["USER", "ADMIN"]);
+export const UserRoleSchema = z.enum(['USER', 'ADMIN']);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
-export const UserAuthTypeSchema = z.enum(["ANONYMOUS", "EMAIL"]);
+export const UserAuthTypeSchema = z.enum(['ANONYMOUS', 'EMAIL']);
 export type UserAuthType = z.infer<typeof UserAuthTypeSchema>;
 
-export const TagCategorySchema = z.enum(["PERIOD"]);
-export type TagCategory = z.infer<typeof TagCategorySchema>;
+export const OfficialTagKindSchema = z.literal('OFFICIAL');
+export type OfficialTagKind = z.infer<typeof OfficialTagKindSchema>;
+
+export const QuestionTypeSchema = z.enum(['MULTIPLE_CHOICE', 'WRITTEN']);
+export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 
 export const ErrorResponseSchema = z.object({
   success: z.literal(false),
@@ -29,7 +32,9 @@ export const PaginationQuerySchema = z.object({
 });
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
 
-export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(
+  itemSchema: T,
+) =>
   z.object({
     items: z.array(itemSchema),
     total: z.number().int().nonnegative(),
@@ -37,4 +42,3 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =
     limit: z.number().int().positive(),
     totalPages: z.number().int().nonnegative(),
   });
-

@@ -2,11 +2,15 @@ import {
   AdminPaperResponse,
   CreatePaperResponse,
   CreatePaperResponseSchema,
+  DeletePaperResponse,
+  DeletePaperResponseSchema,
   GetPaperResponse,
   GetPaperResponseSchema,
   ListPapersResponse,
   ListPapersResponseSchema,
   PaperResponse,
+  UpdatePaperResponse,
+  UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
 import { TaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import {
@@ -14,16 +18,33 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Exam, Paper, Question, Subject, UserRole } from '@prisma/client';
+import {
+  Exam,
+  Paper,
+  Prisma,
+  Question,
+  Subject,
+  UserRole,
+} from '@prisma/client';
 import { ExamsService } from '../exams/exams.service';
 import { SubjectsService } from '../subjects/subjects.service';
+import { StorageService } from '../../infrastructure/storage/storage.service';
 import { CreatePaperDto } from './dto/create-paper.dto';
+import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersRepository } from './papers.repository';
 
 type PaperWithRelations = Paper & {
   exam: Exam;
   subject: Subject;
-  questions?: Question[];
+  questions?: Array<
+    Question & {
+      tags?: Array<
+        Prisma.QuestionTagGetPayload<{
+          include: { tag: true };
+        }>
+      >;
+    }
+  >;
 };
 
 @Injectable()
@@ -32,6 +53,7 @@ export class PapersService {
     private readonly papersRepository: PapersRepository,
     private readonly examsService: ExamsService,
     private readonly subjectsService: SubjectsService,
+    private readonly storageService: StorageService,
   ) {}
 
   async createPaper(
@@ -90,6 +112,40 @@ export class PapersService {
     });
   }
 
+  async updatePaper(
+    id: string,
+    dto: UpdatePaperDto,
+  ): Promise<UpdatePaperResponse> {
+    const paper = await this.papersRepository.findById(id);
+    if (!paper) {
+      throw new NotFoundException('문제지를 찾을 수 없습니다.');
+    }
+
+    const updated = await this.papersRepository.update(id, {
+      isPublished: dto.isPublished,
+    });
+
+    return UpdatePaperResponseSchema.parse({
+      paper: this.toPaperResponse(updated, UserRole.ADMIN),
+    });
+  }
+
+  async deletePaper(id: string): Promise<DeletePaperResponse> {
+    const paper = await this.papersRepository.findById(id);
+    if (!paper) {
+      throw new NotFoundException('문제지를 찾을 수 없습니다.');
+    }
+
+    await this.papersRepository.delete(id);
+    await Promise.all(
+      (paper.questions ?? []).map((question) =>
+        this.deleteStoredImage(question.imageUrl),
+      ),
+    );
+
+    return DeletePaperResponseSchema.parse({ id });
+  }
+
   private toPaperResponse(
     paper: PaperWithRelations,
     role: UserRole,
@@ -124,9 +180,19 @@ export class PapersService {
       questions: paper.questions.map((question) => ({
         id: question.id,
         number: question.number,
+        type: question.type,
         imageUrl: question.imageUrl,
         choiceCount: question.choiceCount,
-        answer: question.answer,
+        answerChoice: question.answerChoice,
+        answerText: question.answerText,
+        tags:
+          question.tags?.map((questionTag) => ({
+            id: questionTag.tag.id,
+            name: questionTag.tag.name,
+            slug: questionTag.tag.slug,
+            kind: 'OFFICIAL',
+            isActive: questionTag.tag.isActive,
+          })) ?? [],
         createdAt: question.createdAt.toISOString(),
         updatedAt: question.updatedAt.toISOString(),
       })),
@@ -139,5 +205,19 @@ export class PapersService {
       name: entity.name,
       slug: entity.slug,
     };
+  }
+
+  private async deleteStoredImage(imageUrl: string | null): Promise<void> {
+    if (!imageUrl) {
+      return;
+    }
+
+    const marker = '/questions/';
+    const index = imageUrl.indexOf(marker);
+    if (index !== -1) {
+      await this.storageService
+        .deleteObject(imageUrl.slice(index + 1))
+        .catch(() => undefined);
+    }
   }
 }

@@ -20,8 +20,6 @@ kichulbot/
 
 The backend app lives in `apps/api`.
 
-개발 DB 스키마 변경은 `pnpm db:migrate`로 동기화하고, `prisma db push --accept-data-loss`는 폐기 가능한 로컬 DB에만 사용합니다.
-
 ```text
 apps/api/src/
 ├── main.ts
@@ -44,3 +42,11 @@ apps/api/src/
         ├── dto/
         └── guards/
 ```
+
+## GitHub
+
+use `gh` to read and write issues and RRs.
+
+## Build
+
+Run frontend builds outside the sandbox because `next/font` fetches Google Fonts.

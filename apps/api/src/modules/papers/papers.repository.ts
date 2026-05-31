@@ -13,22 +13,22 @@ export class PapersRepository {
     });
   }
 
-  findMany(where: Prisma.PaperWhereInput) {
+  findMany(where: Prisma.PaperWhereInput, userId?: string) {
     return this.db.paper.findMany({
       where,
-      include: this.paperIncludes(),
+      include: this.paperIncludes(userId),
       orderBy: [{ year: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
-  findById(id: string, where: Prisma.PaperWhereInput = {}) {
+  findById(id: string, where: Prisma.PaperWhereInput = {}, userId?: string) {
     return this.db.paper.findFirst({
       where: {
         ...where,
         id,
       },
       include: {
-        ...this.paperIncludes(),
+        ...this.paperIncludes(userId),
         questions: {
           orderBy: { number: 'asc' },
           include: {
@@ -51,11 +51,17 @@ export class PapersRepository {
     return this.db.paper.delete({ where: { id } });
   }
 
-  private paperIncludes() {
+  private paperIncludes(userId?: string) {
     return {
       exam: true,
       subject: true,
       questions: true,
+      users: userId
+        ? {
+            where: { bookshelf: { userId } },
+            select: { bookshelfId: true },
+          }
+        : false,
     } satisfies Prisma.PaperInclude;
   }
 }

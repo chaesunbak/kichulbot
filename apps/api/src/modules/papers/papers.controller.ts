@@ -45,7 +45,7 @@ export class PapersController {
   })
   @ApiOkResponse({ description: '문제지 목록을 반환합니다.' })
   listPapers(@CurrentUser() user: RequestUser) {
-    return this.papersService.listPapers(user.role);
+    return this.papersService.listPapers(user.role, user.id);
   }
 
   @Post()
@@ -68,7 +68,7 @@ export class PapersController {
   })
   @ApiOkResponse({ description: '문제지 상세를 반환합니다.' })
   getPaper(@CurrentUser() user: RequestUser, @Param('id') id: string) {
-    return this.papersService.getPaper(id, user.role);
+    return this.papersService.getPaper(id, user.role, user.id);
   }
 
   @Patch(':id')

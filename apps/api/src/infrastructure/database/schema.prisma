@@ -22,15 +22,22 @@ enum QuestionType {
   WRITTEN
 }
 
+enum AnswerMode {
+  ONE_BY_ONE
+  EXAM
+}
+
 model User {
-  id           String       @id @default(cuid())
-  email        String?      @unique
-  passwordHash String?
-  nickname     String?
-  authType     UserAuthType @default(ANONYMOUS)
-  role         UserRole     @default(USER)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id             String          @id @default(cuid())
+  email          String?         @unique
+  passwordHash   String?
+  nickname       String?
+  authType       UserAuthType    @default(ANONYMOUS)
+  role           UserRole        @default(USER)
+  bookshelves    Bookshelf[]
+  answerSessions AnswerSession[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Exam {
@@ -53,18 +60,20 @@ model Subject {
 }
 
 model Paper {
-  id            String     @id @default(cuid())
-  title         String
-  year          Int
-  questionCount Int        @default(20)
-  isPublished   Boolean    @default(false)
-  examId        String
-  subjectId     String
-  exam          Exam       @relation(fields: [examId], references: [id])
-  subject       Subject    @relation(fields: [subjectId], references: [id])
-  questions     Question[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id             String          @id @default(cuid())
+  title          String
+  year           Int
+  questionCount  Int             @default(20)
+  isPublished    Boolean         @default(false)
+  examId         String
+  subjectId      String
+  exam           Exam            @relation(fields: [examId], references: [id])
+  subject        Subject         @relation(fields: [subjectId], references: [id])
+  questions      Question[]
+  users          UserPaper[]
+  answerSessions AnswerSession[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([examId])
   @@index([subjectId])
@@ -96,21 +105,79 @@ model TagSubject {
 }
 
 model Question {
-  id           String        @id @default(cuid())
-  paperId      String
-  number       Int
-  type         QuestionType  @default(MULTIPLE_CHOICE)
-  imageUrl     String?
-  choiceCount  Int?
-  answerChoice Int?
-  answerText   String?
-  paper        Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
-  tags         QuestionTag[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                     String        @id @default(cuid())
+  paperId                String
+  number                 Int
+  type                   QuestionType  @default(MULTIPLE_CHOICE)
+  imageUrl               String?
+  choiceCount            Int?
+  answerChoice           Int?
+  answerText             String?
+  explanation            String?
+  recommendedTimeSeconds Int?
+  paper                  Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  tags                   QuestionTag[]
+  draftAnswers           DraftAnswer[]
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
   @@unique([paperId, number])
   @@index([paperId])
+}
+
+model Bookshelf {
+  id        String      @id @default(cuid())
+  userId    String
+  name      String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  papers    UserPaper[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model UserPaper {
+  bookshelfId String
+  paperId     String
+  bookshelf   Bookshelf @relation(fields: [bookshelfId], references: [id], onDelete: Cascade)
+  paper       Paper     @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@id([bookshelfId, paperId])
+  @@index([paperId])
+}
+
+model AnswerSession {
+  id           String        @id @default(cuid())
+  userId       String
+  paperId      String
+  mode         AnswerMode    @default(EXAM)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paper        Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  draftAnswers DraftAnswer[]
+  submittedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId, paperId, submittedAt])
+  @@index([paperId])
+}
+
+model DraftAnswer {
+  sessionId         String
+  questionId        String
+  answerChoice      Int?
+  answerText        String?
+  spentMilliseconds Int           @default(0)
+  session           AnswerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question          Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@id([sessionId, questionId])
+  @@index([questionId])
 }
 
 model QuestionTag {

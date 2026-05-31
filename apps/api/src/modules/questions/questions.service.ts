@@ -65,6 +65,8 @@ export class QuestionsService {
           paperId: dto.paperId,
           number: dto.number,
           ...answerData,
+          explanation: dto.explanation?.trim() || null,
+          recommendedTimeSeconds: dto.recommendedTimeSeconds,
           imageUrl: null,
         },
         tagIds,
@@ -132,6 +134,11 @@ export class QuestionsService {
     const data: Prisma.QuestionUncheckedUpdateInput = {
       number: dto.number,
       ...answerData,
+      explanation:
+        dto.explanation === undefined
+          ? undefined
+          : dto.explanation.trim() || null,
+      recommendedTimeSeconds: dto.recommendedTimeSeconds,
     };
 
     if (file) {
@@ -278,6 +285,8 @@ export class QuestionsService {
       choiceCount: question.choiceCount,
       answerChoice: question.answerChoice,
       answerText: question.answerText,
+      explanation: question.explanation,
+      recommendedTimeSeconds: question.recommendedTimeSeconds,
       tags: question.tags.map((questionTag) => ({
         id: questionTag.tag.id,
         name: questionTag.tag.name,

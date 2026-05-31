@@ -50,6 +50,20 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @MaxLength(2000)
   answerText?: string;
 
+  @ApiProperty({ required: false, example: '정답은 3번입니다.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  explanation?: string;
+
+  @ApiProperty({ required: false, example: 90 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(3600)
+  recommendedTimeSeconds?: number;
+
   @ApiProperty({
     required: false,
     type: [String],

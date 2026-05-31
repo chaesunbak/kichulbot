@@ -14,6 +14,9 @@ export type OfficialTagKind = z.infer<typeof OfficialTagKindSchema>;
 export const QuestionTypeSchema = z.enum(['MULTIPLE_CHOICE', 'WRITTEN']);
 export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 
+export const AnswerModeSchema = z.enum(['ONE_BY_ONE', 'EXAM']);
+export type AnswerMode = z.infer<typeof AnswerModeSchema>;
+
 export const ErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.object({

@@ -5,9 +5,11 @@ import { validateEnvironment } from './config/env.validation';
 import { HealthController } from './health.controller';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AnswerSessionsModule } from './modules/answer-sessions/answer-sessions.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { PapersModule } from './modules/papers/papers.module';
 import { QuestionsModule } from './modules/questions/questions.module';
+import { LibraryModule } from './modules/library/library.module';
 import { SubjectsModule } from './modules/subjects/subjects.module';
 import { TagsModule } from './modules/tags/tags.module';
 
@@ -27,11 +29,13 @@ import { TagsModule } from './modules/tags/tags.module';
     }),
     DatabaseModule,
     AuthModule,
+    AnswerSessionsModule,
     ExamsModule,
     SubjectsModule,
     TagsModule,
     PapersModule,
     QuestionsModule,
+    LibraryModule,
   ],
   controllers: [HealthController],
 })

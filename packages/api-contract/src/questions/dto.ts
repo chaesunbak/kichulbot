@@ -10,6 +10,8 @@ export const CreateQuestionRequestSchema = z
     choiceCount: z.number().int().min(2).max(10).optional(),
     answerChoice: z.number().int().min(1).max(10).optional(),
     answerText: z.string().trim().min(1).max(2000).optional(),
+    explanation: z.string().trim().max(5000).optional(),
+    recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
     tagIds: z.array(z.string().min(1)).optional(),
   })
   .superRefine(({ type, choiceCount, answerChoice, answerText }, ctx) => {
@@ -47,6 +49,8 @@ export const UpdateQuestionRequestSchema = z.object({
   choiceCount: z.number().int().min(2).max(10).optional(),
   answerChoice: z.number().int().min(1).max(10).optional(),
   answerText: z.string().trim().min(1).max(2000).optional(),
+  explanation: z.string().trim().max(5000).optional(),
+  recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
 });
 export type UpdateQuestionRequest = z.infer<typeof UpdateQuestionRequestSchema>;

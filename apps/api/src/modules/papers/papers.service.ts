@@ -45,6 +45,7 @@ type PaperWithRelations = Paper & {
       >;
     }
   >;
+  users?: Array<{ bookshelfId: string }>;
 };
 
 @Injectable()
@@ -87,9 +88,13 @@ export class PapersService {
     });
   }
 
-  async listPapers(role: UserRole): Promise<ListPapersResponse> {
+  async listPapers(
+    role: UserRole,
+    userId?: string,
+  ): Promise<ListPapersResponse> {
     const papers = await this.papersRepository.findMany(
       role === UserRole.ADMIN ? {} : { isPublished: true },
+      userId,
     );
 
     return ListPapersResponseSchema.parse({
@@ -97,11 +102,15 @@ export class PapersService {
     });
   }
 
-  async getPaper(id: string, role: UserRole): Promise<GetPaperResponse> {
-    const paper = await this.papersRepository.findById(
-      id,
-      role === UserRole.ADMIN ? {} : { isPublished: true },
-    );
+  async getPaper(
+    id: string,
+    role: UserRole,
+    userId?: string,
+  ): Promise<GetPaperResponse> {
+    const where = role === UserRole.ADMIN ? {} : { isPublished: true };
+    const paper = userId
+      ? await this.papersRepository.findById(id, where, userId)
+      : await this.papersRepository.findById(id, where);
 
     if (!paper) {
       throw new NotFoundException('문제지를 찾을 수 없습니다.');
@@ -155,6 +164,7 @@ export class PapersService {
       title: paper.title,
       year: paper.year,
       questionCount: paper.questionCount,
+      isInLibrary: (paper.users?.length ?? 0) > 0,
       exam: this.toTaxonomyResponse(paper.exam),
       subject: this.toTaxonomyResponse(paper.subject),
     };
@@ -185,6 +195,8 @@ export class PapersService {
         choiceCount: question.choiceCount,
         answerChoice: question.answerChoice,
         answerText: question.answerText,
+        explanation: question.explanation,
+        recommendedTimeSeconds: question.recommendedTimeSeconds,
         tags:
           question.tags?.map((questionTag) => ({
             id: questionTag.tag.id,

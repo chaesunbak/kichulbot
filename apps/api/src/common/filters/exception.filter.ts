@@ -25,6 +25,10 @@ export class ExceptionFilter implements NestExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    if (!(exception instanceof HttpException)) {
+      console.error(exception);
+    }
+
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : undefined;
     const errorBody = this.toErrorBody(exceptionResponse, statusCode);

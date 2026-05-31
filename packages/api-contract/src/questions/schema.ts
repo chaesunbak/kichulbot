@@ -11,6 +11,8 @@ export const AdminQuestionResponseSchema = z.object({
   choiceCount: z.number().int().nullable(),
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
+  explanation: z.string().nullable(),
+  recommendedTimeSeconds: z.number().int().nullable(),
   tags: z.array(TagResponseSchema),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,

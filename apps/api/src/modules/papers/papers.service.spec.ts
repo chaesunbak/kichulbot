@@ -30,6 +30,7 @@ const paper = (
   exam: Exam;
   subject: Subject;
   questions: Question[];
+  users: Array<{ bookshelfId: string; paperId: string; createdAt: Date }>;
 } => ({
   id: 'paper_1',
   title: '2025학년도 수능 한국사',
@@ -43,6 +44,7 @@ const paper = (
   exam,
   subject,
   questions: [],
+  users: [],
   ...overrides,
 });
 
@@ -86,7 +88,10 @@ describe('PapersService', () => {
 
     const response = await service.listPapers(UserRole.USER);
 
-    expect(repository.findMany).toHaveBeenCalledWith({ isPublished: true });
+    expect(repository.findMany).toHaveBeenCalledWith(
+      { isPublished: true },
+      undefined,
+    );
     expect(response.papers[0]).toMatchObject({
       id: 'paper_1',
       title: '2025학년도 수능 한국사',
@@ -101,7 +106,7 @@ describe('PapersService', () => {
 
     const response = await service.listPapers(UserRole.ADMIN);
 
-    expect(repository.findMany).toHaveBeenCalledWith({});
+    expect(repository.findMany).toHaveBeenCalledWith({}, undefined);
     expect(response.papers[0]).toMatchObject({
       id: 'paper_1',
       isPublished: false,
@@ -109,6 +114,24 @@ describe('PapersService', () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     });
+  });
+
+  it('marks papers already added to the current user library', async () => {
+    repository.findMany.mockResolvedValue([
+      paper({
+        users: [
+          { bookshelfId: 'bookshelf_1', paperId: 'paper_1', createdAt: now },
+        ],
+      } as never),
+    ]);
+
+    const response = await service.listPapers(UserRole.USER, 'user_1');
+
+    expect(repository.findMany).toHaveBeenCalledWith(
+      { isPublished: true },
+      'user_1',
+    );
+    expect(response.papers[0]).toMatchObject({ isInLibrary: true });
   });
 
   it('rejects creating a paper when taxonomy ids are invalid', async () => {

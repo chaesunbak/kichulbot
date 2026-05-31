@@ -11,6 +11,8 @@ export const QuestionResponseSchema = z.object({
   choiceCount: z.number().int().nullable(),
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
+  explanation: z.string().nullable(),
+  recommendedTimeSeconds: z.number().int().nullable(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });
@@ -28,6 +30,7 @@ export const PaperResponseSchema = z.object({
   title: z.string(),
   year: z.number().int(),
   questionCount: z.number().int(),
+  isInLibrary: z.boolean(),
   exam: TaxonomyResponseSchema,
   subject: TaxonomyResponseSchema,
 });

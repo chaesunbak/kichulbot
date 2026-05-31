@@ -119,6 +119,8 @@ describe('QuestionsService', () => {
       choiceCount: null,
       answerChoice: null,
       answerText: '모범답안',
+      explanation: null,
+      recommendedTimeSeconds: null,
       imageUrl: null,
       tags: [],
       createdAt: new Date('2026-05-31T00:00:00.000Z'),

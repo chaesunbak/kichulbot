@@ -6,9 +6,13 @@ dist
 coverage
 .env
 .env.local
+.venv/
 
 # 로컬 스토리지 드라이버 업로드 파일
 uploads
 .antigravitycli/
 *.tsbuildinfo
 
+# 문항 추출 도구의 로컬 입력 및 산출물
+tools/question-extractor/input/
+tools/question-extractor/output/

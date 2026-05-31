@@ -1,8 +1,12 @@
 import { LibraryManager } from '@/components/library-manager';
-import { getBookshelves } from '@/lib/learning';
+import { BookmarkListManager } from '@/components/bookmark-list-manager';
+import { getBookmarkLists, getBookshelves } from '@/lib/learning';
 
 export default async function LibraryPage() {
-  const bookshelves = await getBookshelves();
+  const [bookshelves, bookmarkLists] = await Promise.all([
+    getBookshelves(),
+    getBookmarkLists(),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
@@ -12,6 +16,7 @@ export default async function LibraryPage() {
         자료를 책장별로 모아두고 이어서 학습하세요.
       </p>
       <LibraryManager initialBookshelves={bookshelves} />
+      <BookmarkListManager initialBookmarkLists={bookmarkLists} />
     </div>
   );
 }

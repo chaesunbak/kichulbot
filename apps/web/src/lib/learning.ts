@@ -16,6 +16,32 @@ export interface Bookshelf {
   updatedAt: string;
 }
 
+export interface BookmarkListSummary {
+  id: string;
+  name: string;
+  questionCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookmarkedQuestion {
+  id: string;
+  number: number;
+  imageUrl: string | null;
+  paper: {
+    id: string;
+    title: string;
+    year: number;
+    examName: string;
+    subjectName: string;
+  };
+  createdAt: string;
+}
+
+export interface BookmarkList extends BookmarkListSummary {
+  questions: BookmarkedQuestion[];
+}
+
 export interface SolveQuestion {
   id: string;
   number: number;
@@ -71,6 +97,29 @@ export const getBookshelves = cache(async (): Promise<Bookshelf[]> => {
   );
   return res.data.bookshelves;
 });
+
+export const getBookmarkLists = cache(
+  async (): Promise<BookmarkListSummary[]> => {
+    const token = await getToken();
+    if (!token) return [];
+    const res = await api.get<{
+      data: { bookmarkLists: BookmarkListSummary[] };
+    }>('/bookmark-lists', token);
+    return res.data.bookmarkLists;
+  },
+);
+
+export const getBookmarkList = cache(
+  async (id: string): Promise<BookmarkList> => {
+    const token = await getToken();
+    if (!token) throw new Error('로그인이 필요합니다.');
+    const res = await api.get<{ data: { bookmarkList: BookmarkList } }>(
+      `/bookmark-lists/${id}`,
+      token,
+    );
+    return res.data.bookmarkList;
+  },
+);
 
 export const getAnswerSession = cache(
   async (id: string): Promise<AnswerSession> => {

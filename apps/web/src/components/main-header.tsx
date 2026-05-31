@@ -9,7 +9,7 @@ interface Props {
 
 export default function MainHeader({ user }: Props) {
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur">
+    <header className="sticky top-0 z-40  bg-white/90 px-4 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-6">
         <Link href="/home" className="shrink-0 text-lg font-bold text-zinc-900">
           기출봇

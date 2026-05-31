@@ -9,6 +9,7 @@ import type {
   QuestionResult,
 } from '@/lib/learning';
 import { cn } from '@/lib/utils';
+import { QuestionBookmarkButton } from '@/components/question-bookmark-button';
 
 export function SolveSession({
   initialSession,
@@ -161,9 +162,12 @@ export function SolveSession({
               </p>
             )}
           </div>
-          <span className="text-sm text-zinc-500">
-            {currentIndex + 1} / {session.paper.questions.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <QuestionBookmarkButton questionId={question.id} />
+            <span className="text-sm text-zinc-500">
+              {currentIndex + 1} / {session.paper.questions.length}
+            </span>
+          </div>
         </div>
 
         {question.imageUrl ? (
@@ -207,7 +211,6 @@ export function SolveSession({
               onChange={(event) => setAnswerText(event.target.value)}
             />
             <Button
-              type="button"
               className="justify-self-end"
               disabled={!!session.submittedAt}
               onClick={() =>

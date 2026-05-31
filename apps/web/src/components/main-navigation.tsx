@@ -24,7 +24,7 @@ const navigationItems: NavigationItem[] = [
   { href: '/library', label: '내책장', icon: LibraryBig },
   { href: '/recap', label: '복습', icon: RotateCcw },
   { href: '/my', label: '마이페이지', icon: UserRound },
-];
+] as const;
 
 function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -44,7 +44,7 @@ export function DesktopNavigation() {
             className={cn(
               'rounded-full px-3 py-2 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-primary/10 text-primary'
+                ? ' text-primary'
                 : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900',
             )}
             aria-current={isActive ? 'page' : undefined}

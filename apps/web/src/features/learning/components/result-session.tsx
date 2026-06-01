@@ -74,7 +74,7 @@ export function ResultSession({ session }: { session: SolveSession }) {
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link href={`/papers/${session.paper.id}`}>
+          <Link href={`/resources/${session.paper.id}`}>
             <RotateCcw />
             다시 풀기
           </Link>

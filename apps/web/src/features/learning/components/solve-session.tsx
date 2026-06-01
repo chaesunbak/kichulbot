@@ -4,13 +4,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@kichulbot/ui/components/button';
 import { Textarea } from '@kichulbot/ui/components/textarea';
 import { Clock, FileText } from 'lucide-react';
-import type {
-  SolveSession,
-  Answer,
-  QuestionResult,
-} from '@/features/learning/types';
+import type { QuestionResult, SolveSession } from '@/features/learning/types';
 import { cn } from '@/shared/lib/utils';
 import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
+import {
+  saveSolveSessionAnswer,
+  submitSolveSession,
+} from '@/features/learning/api/client';
 
 export function SolveSession({
   initialSession,
@@ -69,19 +69,11 @@ export function SolveSession({
       spentMilliseconds?: number;
     },
   ) => {
-    const response = await fetch(
-      `/api/me/solve-sessions/${session.id}/answers/${questionId}`,
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      },
-    );
-    if (!response.ok) throw new Error('저장 실패');
-    const body = (await response.json()) as {
-      answer: Answer;
-      result: QuestionResult | null;
-    };
+    const body = await saveSolveSessionAnswer({
+      sessionId: session.id,
+      questionId,
+      payload,
+    });
     setSession((current) => ({
       ...current,
       paper: {
@@ -143,15 +135,8 @@ export function SolveSession({
     setMessage('시험을 종료하는 중...');
     try {
       await saveProgress(question.id, { spentMilliseconds: takeElapsed() });
-      const response = await fetch(
-        `/api/me/solve-sessions/${session.id}/submissions`,
-        {
-          method: 'POST',
-        },
-      );
-      if (!response.ok) throw new Error('종료 실패');
-      const body = (await response.json()) as { session: SolveSession };
-      setSession(body.session);
+      const submittedSession = await submitSolveSession(session.id);
+      setSession(submittedSession);
       setMessage('시험을 종료했습니다. 정답과 해설을 확인해보세요.');
     } catch {
       setMessage('시험을 종료하지 못했습니다.');

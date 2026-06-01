@@ -10,7 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
+import { promptDialog } from '@/shared/components/confirm-dialog';
 import type { BookmarkListSummary } from '@/features/learning/types';
+import { createBookmarkList as createBookmarkListApi } from '@/features/library/api/client';
 
 export function BookmarkListManager({
   initialBookmarkLists,
@@ -21,19 +23,20 @@ export function BookmarkListManager({
   const [message, setMessage] = useState<string | null>(null);
 
   const createBookmarkList = async () => {
-    const name = window.prompt('새 북마크 리스트 이름을 입력해 주세요.');
-    if (!name?.trim()) return;
-    const response = await fetch('/api/me/question-lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+    const name = await promptDialog({
+      title: '새 북마크 리스트',
+      description: '새 북마크 리스트 이름을 입력해 주세요.',
+      placeholder: '리스트 이름',
+      confirmLabel: '만들기',
     });
-    if (!response.ok) return setMessage('북마크 리스트를 만들지 못했습니다.');
-    const body = (await response.json()) as {
-      bookmarkList: BookmarkListSummary;
-    };
-    setBookmarkLists((current) => [...current, body.bookmarkList]);
-    setMessage('새 북마크 리스트를 만들었습니다.');
+    if (!name?.trim()) return;
+    try {
+      const bookmarkList = await createBookmarkListApi(name);
+      setBookmarkLists((current) => [...current, bookmarkList]);
+      setMessage('새 북마크 리스트를 만들었습니다.');
+    } catch {
+      setMessage('북마크 리스트를 만들지 못했습니다.');
+    }
   };
 
   return (

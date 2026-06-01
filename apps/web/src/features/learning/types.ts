@@ -1,4 +1,4 @@
-import type { Paper } from '@/features/papers/api';
+import type { Paper } from '@/features/papers/types';
 
 export interface LibraryPaper {
   id: string;

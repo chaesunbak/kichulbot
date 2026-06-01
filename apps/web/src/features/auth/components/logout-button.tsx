@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import { useAuthStore } from '@/features/auth/store';
+import { logoutApi } from '@/features/auth/api/client';
 
 export function LogoutButton() {
   const router = useRouter();
@@ -11,7 +12,7 @@ export function LogoutButton() {
 
   const handleLogout = async () => {
     clearAuth();
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await logoutApi();
     router.push('/');
   };
 

@@ -47,7 +47,7 @@ async function request<T>(
   }
 }
 
-export const api = {
+export const serverApi = {
   get: <T>(path: string, token?: string) =>
     request<T>(path, { method: 'GET', token }),
 

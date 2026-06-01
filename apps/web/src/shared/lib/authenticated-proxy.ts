@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { api } from '@/shared/api/api-client';
+import { serverApi } from '@/shared/api/server';
 import { getToken } from '@/features/auth/server';
 import { proxyErrorResponse } from '@/shared/lib/proxy-response';
 import { rejectCrossOriginRequest } from '@/shared/lib/route-helpers';
@@ -17,27 +17,27 @@ async function readJsonBody(request: Request) {
 async function forwardRequest(path: string, request: Request, token: string) {
   switch (request.method) {
     case 'GET':
-      return api.get<{ data: unknown }>(path, token);
+      return serverApi.get<{ data: unknown }>(path, token);
     case 'POST':
-      return api.post<{ data: unknown }>(
+      return serverApi.post<{ data: unknown }>(
         path,
         await readJsonBody(request),
         token,
       );
     case 'PATCH':
-      return api.patch<{ data: unknown }>(
+      return serverApi.patch<{ data: unknown }>(
         path,
         await readJsonBody(request),
         token,
       );
     case 'PUT':
-      return api.put<{ data: unknown }>(
+      return serverApi.put<{ data: unknown }>(
         path,
         await readJsonBody(request),
         token,
       );
     case 'DELETE':
-      return api.delete<{ data: unknown }>(path, token);
+      return serverApi.delete<{ data: unknown }>(path, token);
     default:
       return null;
   }

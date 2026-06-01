@@ -11,7 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
-import type { Library, LibraryFolder } from '@/features/learning/types';
+import type { LibraryFolder } from '@/features/learning/types';
+import { createSolveSession } from '@/features/learning/api/client';
+import { getLibrary } from '@/features/library/api/client';
+import { addExamPaperToLibrary } from '@/features/papers/api/client';
 
 const ROOT_FOLDER_VALUE = '__root__';
 
@@ -33,14 +36,14 @@ export function PaperActions({
   const [isChoosingMode, setIsChoosingMode] = useState(false);
 
   const loadFolders = async () => {
-    const response = await fetch('/api/me/library');
-    if (!response.ok) {
+    try {
+      const library = await getLibrary();
+      setFolders(library.folders);
+      return true;
+    } catch {
       setMessage('폴더 목록을 불러오지 못했습니다.');
       return false;
     }
-    const body = (await response.json()) as Library;
-    setFolders(body.folders);
-    return true;
   };
 
   const toggleFolderPicker = async () => {
@@ -53,13 +56,8 @@ export function PaperActions({
   const addToLibrary = async (targetFolderId: string | null) => {
     setIsAdding(true);
     setMessage(null);
-    const response = await fetch(`/api/me/library/exam-papers/${paperId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderId: targetFolderId }),
-    });
-    setIsAdding(false);
-    if (response.ok) {
+    try {
+      await addExamPaperToLibrary(paperId, targetFolderId);
       setIsInLibrary(true);
       setIsChoosingFolder(false);
       setMessage(
@@ -68,26 +66,23 @@ export function PaperActions({
           : '내 서재에 추가했습니다.',
       );
       router.refresh();
-    } else {
+    } catch {
       setMessage('내 서재 추가에 실패했습니다.');
+    } finally {
+      setIsAdding(false);
     }
   };
 
   const start = async (mode: 'ONE_BY_ONE' | 'EXAM') => {
     setIsStarting(true);
     setMessage(null);
-    const response = await fetch('/api/me/solve-sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paperId, mode }),
-    });
-    if (!response.ok) {
+    try {
+      const session = await createSolveSession({ paperId, mode });
+      router.push(`/solve/${session.id}`);
+    } catch {
       setIsStarting(false);
       setMessage('풀이를 시작하지 못했습니다.');
-      return;
     }
-    const body = (await response.json()) as { session: { id: string } };
-    router.push(`/solve/${body.session.id}`);
   };
 
   return (

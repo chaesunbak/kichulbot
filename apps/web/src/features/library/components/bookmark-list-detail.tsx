@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import type { BookmarkList } from '@/features/learning/types';
+import { removeQuestionFromBookmarkList } from '@/features/library/api/client';
 
 export function BookmarkListDetail({
   initialList,
@@ -14,15 +15,18 @@ export function BookmarkListDetail({
   const [message, setMessage] = useState<string | null>(null);
 
   const removeQuestion = async (questionId: string) => {
-    const response = await fetch(
-      `/api/me/question-lists/${initialList.id}/questions/${questionId}`,
-      { method: 'DELETE' },
-    );
-    if (!response.ok) return setMessage('북마크를 제거하지 못했습니다.');
-    setQuestions((current) =>
-      current.filter((question) => question.id !== questionId),
-    );
-    setMessage('북마크를 제거했습니다.');
+    try {
+      await removeQuestionFromBookmarkList({
+        bookmarkListId: initialList.id,
+        questionId,
+      });
+      setQuestions((current) =>
+        current.filter((question) => question.id !== questionId),
+      );
+      setMessage('북마크를 제거했습니다.');
+    } catch {
+      setMessage('북마크를 제거하지 못했습니다.');
+    }
   };
 
   if (questions.length === 0) {

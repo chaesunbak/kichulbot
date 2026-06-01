@@ -5,7 +5,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   const { pathname } = request.nextUrl;
 
-  if (!token && pathname.startsWith('/papers')) {
+  if (!token && pathname.startsWith('/resources')) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 

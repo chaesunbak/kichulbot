@@ -20,7 +20,7 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { href: '/home', label: '홈', icon: House },
-  { href: '/papers', label: '자료실', icon: BookOpen },
+  { href: '/resources', label: '자료실', icon: BookOpen },
   { href: '/library', label: '내서재', icon: LibraryBig },
   { href: '/recap', label: '복습', icon: RotateCcw },
   { href: '/my', label: '마이페이지', icon: UserRound },

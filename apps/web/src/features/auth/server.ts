@@ -1,6 +1,6 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
-import { api } from '@/shared/api/api-client';
+import { getCurrentUser } from '@/features/auth/api/server';
 import type { AuthUser } from '@/features/auth/store';
 
 export { type AuthUser };
@@ -25,8 +25,7 @@ export const getUser = cache(async (): Promise<AuthUser | null> => {
   const token = await getToken();
   if (!token) return null;
   try {
-    const res = await api.get<{ data: { user: AuthUser } }>('/me', token);
-    return res.data.user;
+    return await getCurrentUser(token);
   } catch {
     (await cookies()).delete(COOKIE_NAME);
     return null;

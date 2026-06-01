@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { api, ApiError } from '@/shared/api/api-client';
+import { ApiError, serverApi } from '@/shared/api/server';
 import {
   AuthResponse,
   authSuccessResponse,
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const res = await api.post<AuthResponse>('/auth/login', body);
+    const res = await serverApi.post<AuthResponse>('/auth/login', body);
     return authSuccessResponse(res.data.user, res.data.accessToken);
   } catch (err) {
     if (err instanceof ApiError) {

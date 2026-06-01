@@ -11,6 +11,10 @@ import {
   SelectValue,
 } from '@kichulbot/ui/components/select';
 import type { BookmarkListSummary } from '@/features/learning/types';
+import {
+  addQuestionToBookmarkList,
+  getBookmarkLists,
+} from '@/features/library/api/client';
 
 export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,28 +26,29 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
   const toggle = async () => {
     setIsOpen((current) => !current);
     if (lists) return;
-    const response = await fetch('/api/me/question-lists');
-    if (!response.ok) return setMessage('리스트를 불러오지 못했습니다.');
-    const body = (await response.json()) as {
-      bookmarkLists: BookmarkListSummary[];
-    };
-    setLists(body.bookmarkLists);
-    setSelectedId(body.bookmarkLists[0]?.id ?? '');
+    try {
+      const bookmarkLists = await getBookmarkLists();
+      setLists(bookmarkLists);
+      setSelectedId(bookmarkLists[0]?.id ?? '');
+    } catch {
+      setMessage('리스트를 불러오지 못했습니다.');
+    }
   };
 
   const addBookmark = async () => {
     if (!selectedId) return;
     setIsAdding(true);
-    const response = await fetch(
-      `/api/me/question-lists/${selectedId}/questions/${questionId}`,
-      { method: 'PUT' },
-    );
-    setIsAdding(false);
-    setMessage(
-      response.ok
-        ? '선택한 리스트에 추가했습니다.'
-        : '북마크를 추가하지 못했습니다.',
-    );
+    try {
+      await addQuestionToBookmarkList({
+        bookmarkListId: selectedId,
+        questionId,
+      });
+      setMessage('선택한 리스트에 추가했습니다.');
+    } catch {
+      setMessage('북마크를 추가하지 못했습니다.');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   return (

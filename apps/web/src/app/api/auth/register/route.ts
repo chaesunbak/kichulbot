@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { api, ApiError } from '@/shared/api/api-client';
+import { ApiError, serverApi } from '@/shared/api/server';
 import { COOKIE_NAME } from '@/features/auth/server';
 import {
   AuthResponse,
@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
     const currentToken = request.cookies.get(COOKIE_NAME)?.value;
     const endpoint = currentToken ? '/auth/convert' : '/auth/register';
 
-    const res = await api.post<AuthResponse>(endpoint, body, currentToken);
+    const res = await serverApi.post<AuthResponse>(
+      endpoint,
+      body,
+      currentToken,
+    );
     return authSuccessResponse(res.data.user, res.data.accessToken);
   } catch (err) {
     if (err instanceof ApiError) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@kichulbot/ui/components/button';
 import {
@@ -9,10 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import type {
-  SolveSession,
-  DailyWrongQuestionSet,
-} from '@/features/learning/types';
+import type { DailyWrongQuestionSet } from '@/features/learning/types';
+import {
+  createWrongQuestionSolveSession,
+  refreshWrongQuestionSet,
+} from '@/features/learning/api/client';
 
 export function WrongReviewCard({
   initialQuestionSet,
@@ -23,49 +24,47 @@ export function WrongReviewCard({
   const [questionSet, setQuestionSet] = useState(initialQuestionSet);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const didAutoRefresh = useRef(false);
 
   const start = async () => {
     setIsPending(true);
     setMessage(null);
     try {
-      const response = await fetch(
-        `/api/me/wrong-question-sets/${questionSet.id}/solve-sessions`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'ONE_BY_ONE' }),
-        },
-      );
-      if (!response.ok) throw new Error('시작 실패');
-      const body = (await response.json()) as { session: SolveSession };
-      router.push(`/solve/${body.session.id}`);
+      const session = await createWrongQuestionSolveSession({
+        questionSetId: questionSet.id,
+        mode: 'ONE_BY_ONE',
+      });
+      router.push(`/solve/${session.id}`);
     } catch {
       setMessage('오답 복습을 시작하지 못했습니다.');
       setIsPending(false);
     }
   };
 
-  const refresh = async () => {
-    setIsPending(true);
-    setMessage(null);
-    try {
-      const response = await fetch('/api/me/wrong-question-sets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studyDate: questionSet.studyDate }),
-      });
-      if (!response.ok) throw new Error('갱신 실패');
-      const body = (await response.json()) as {
-        questionSet: DailyWrongQuestionSet;
-      };
-      setQuestionSet(body.questionSet);
-      setMessage('최신 풀이 기록으로 갱신했습니다.');
-    } catch {
-      setMessage('오늘의 오답을 갱신하지 못했습니다.');
-    } finally {
-      setIsPending(false);
-    }
-  };
+  const refresh = useCallback(
+    async ({ silent = false } = {}) => {
+      setIsPending(true);
+      if (!silent) setMessage(null);
+      try {
+        const nextQuestionSet = await refreshWrongQuestionSet(
+          questionSet.studyDate,
+        );
+        setQuestionSet(nextQuestionSet);
+        if (!silent) setMessage('최신 풀이 기록으로 갱신했습니다.');
+      } catch {
+        if (!silent) setMessage('오늘의 오답을 갱신하지 못했습니다.');
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [questionSet.studyDate],
+  );
+
+  useEffect(() => {
+    if (didAutoRefresh.current) return;
+    didAutoRefresh.current = true;
+    void refresh({ silent: true });
+  }, [refresh]);
 
   return (
     <Card className="mt-6 border-blue-200 bg-blue-50/40">
@@ -81,14 +80,6 @@ export function WrongReviewCard({
             onClick={() => void start()}
           >
             오답 다시 풀기
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isPending}
-            onClick={() => void refresh()}
-          >
-            최신 기록으로 갱신
           </Button>
         </div>
         {questionSet.questionCount === 0 && (

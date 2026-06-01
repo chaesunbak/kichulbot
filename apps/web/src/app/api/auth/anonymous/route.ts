@@ -1,4 +1,4 @@
-import { api, ApiError } from '@/shared/api/api-client';
+import { ApiError, serverApi } from '@/shared/api/server';
 import {
   AuthResponse,
   authSuccessResponse,
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   if (originError) return originError;
 
   try {
-    const res = await api.post<AuthResponse>('/auth/anonymous', {});
+    const res = await serverApi.post<AuthResponse>('/auth/anonymous', {});
     return authSuccessResponse(res.data.user, res.data.accessToken);
   } catch (err) {
     if (err instanceof ApiError) {

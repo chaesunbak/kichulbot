@@ -11,7 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
+import { confirmDialog } from '@/shared/components/confirm-dialog';
 import type { LibraryFolder } from '@/features/learning/types';
+import { createSolveSession } from '@/features/learning/api/client';
+import {
+  moveLibraryPaper,
+  removeLibraryPaper,
+} from '@/features/library/api/client';
 
 const ROOT_FOLDER_VALUE = '__root__';
 
@@ -38,52 +44,52 @@ export function LibraryPaperActions({
   const start = async (mode: 'ONE_BY_ONE' | 'EXAM') => {
     setIsStarting(true);
     setMessage(null);
-    const response = await fetch('/api/me/solve-sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paperId, mode }),
-    });
-    if (!response.ok) {
+    try {
+      const session = await createSolveSession({ paperId, mode });
+      router.push(`/solve/${session.id}`);
+    } catch {
       setIsStarting(false);
       setMessage('풀이를 시작하지 못했습니다.');
-      return;
     }
-    const body = (await response.json()) as { session: { id: string } };
-    router.push(`/solve/${body.session.id}`);
   };
 
   const move = async () => {
     const nextFolderId = folderId === ROOT_FOLDER_VALUE ? null : folderId;
     setIsMoving(true);
     setMessage(null);
-    const response = await fetch(`/api/me/library/papers/${libraryPaperId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderId: nextFolderId }),
-    });
-    setIsMoving(false);
-    if (!response.ok) {
+    try {
+      await moveLibraryPaper({
+        libraryPaperId,
+        folderId: nextFolderId,
+      });
+      setMessage('문제지를 이동했습니다.');
+      router.refresh();
+    } catch {
       setMessage('문제지를 이동하지 못했습니다.');
-      return;
+    } finally {
+      setIsMoving(false);
     }
-    setMessage('문제지를 이동했습니다.');
-    router.refresh();
   };
 
   const remove = async () => {
-    if (!window.confirm('내 서재에서 이 저장 항목을 제거할까요?')) return;
+    const shouldDelete = await confirmDialog({
+      title: '내 서재에서 제거할까요?',
+      description: '저장 항목만 제거되며 문제지는 그대로 유지됩니다.',
+      confirmLabel: '제거',
+      destructive: true,
+    });
+    if (!shouldDelete) return;
+
     setIsDeleting(true);
     setMessage(null);
-    const response = await fetch(`/api/me/library/papers/${libraryPaperId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
+    try {
+      await removeLibraryPaper(libraryPaperId);
+      router.push('/library');
+      router.refresh();
+    } catch {
       setIsDeleting(false);
       setMessage('문제지를 제거하지 못했습니다.');
-      return;
     }
-    router.push('/library');
-    router.refresh();
   };
 
   return (

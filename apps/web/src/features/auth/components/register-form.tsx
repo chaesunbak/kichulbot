@@ -13,11 +13,9 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/field';
 import { useAuthStore } from '@/features/auth/store';
-import {
-  registerSchema,
-  type RegisterFormValues,
-} from '@/features/auth/schemas';
-import { registerApi, ApiError } from '@/features/auth/api';
+import { registerSchema } from '@/features/auth/schemas';
+import type { RegisterFormValues } from '@/features/auth/types';
+import { registerApi, ApiError } from '@/features/auth/api/client';
 
 interface Props {
   isGuestConvert: boolean;

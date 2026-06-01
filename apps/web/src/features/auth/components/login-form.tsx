@@ -13,8 +13,9 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/field';
 import { useAuthStore } from '@/features/auth/store';
-import { loginSchema, type LoginFormValues } from '@/features/auth/schemas';
-import { loginApi, ApiError } from '@/features/auth/api';
+import { loginSchema } from '@/features/auth/schemas';
+import type { LoginFormValues } from '@/features/auth/types';
+import { loginApi, ApiError } from '@/features/auth/api/client';
 
 export default function LoginForm() {
   const router = useRouter();

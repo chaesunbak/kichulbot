@@ -1,5 +1,5 @@
-import { ApiError, clientApi } from '@/shared/api/client';
 import type { AuthUser } from '@/features/auth/store';
+import { ApiError, clientApi } from '@/shared/api/client';
 
 export { ApiError };
 

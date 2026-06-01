@@ -1,10 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
-import { useAuthStore } from '@/features/auth/store';
+import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
 import { logoutApi } from '@/features/auth/api/client';
+import { useAuthStore } from '@/features/auth/store';
 
 export function LogoutButton() {
   const router = useRouter();

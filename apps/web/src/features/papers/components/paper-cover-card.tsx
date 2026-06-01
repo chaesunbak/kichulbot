@@ -74,13 +74,21 @@ export function PaperCover({
         </span>
       )}
       <div className="relative flex h-full flex-col">
-        <div className="
-          flex flex-1 flex-col items-center justify-center px-3 pt-5 text-center
-        ">
-          <p className={cn(`
-            text-[11px] font-bold
-            sm:text-xs
-          `, palette.accent)}>
+        <div
+          className="
+            flex flex-1 flex-col items-center justify-center px-3 pt-5
+            text-center
+          "
+        >
+          <p
+            className={cn(
+              `
+                text-[11px] font-bold
+                sm:text-xs
+              `,
+              palette.accent,
+            )}
+          >
             {formatPaperSession(paper)}
           </p>
           <p
@@ -130,10 +138,12 @@ export function PaperCoverCard({ paper }: { paper: Paper }) {
         <PaperCover paper={paper} />
       </div>
       <div className="px-1 pt-3">
-        <h3 className="
-          line-clamp-2 text-sm/5 font-bold break-keep text-zinc-900
-          sm:text-base
-        ">
+        <h3
+          className="
+            line-clamp-2 text-sm/5 font-bold break-keep text-zinc-900
+            sm:text-base
+          "
+        >
           {paper.title}
         </h3>
       </div>

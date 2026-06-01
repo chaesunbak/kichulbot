@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -6,11 +5,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
+import Link from 'next/link';
+
 import {
   getSolveSessionLogs,
   getTodayWrongQuestions,
 } from '@/features/learning/api/server';
+import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
 
 export default async function RecapPage() {
   const [logs, wrongQuestionSet] = await Promise.all([
@@ -19,7 +20,12 @@ export default async function RecapPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+    <div
+      className="
+        mx-auto max-w-5xl px-4 py-8
+        sm:py-10
+      "
+    >
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">복습</h1>
       {wrongQuestionSet && (
         <WrongReviewCard initialQuestionSet={wrongQuestionSet} />

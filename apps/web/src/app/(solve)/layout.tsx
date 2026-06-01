@@ -11,7 +11,12 @@ export default async function SolveLayout({
   if (!user) redirect('/login');
 
   return (
-    <div className="h-dvh overflow-hidden bg-zinc-50 p-2 justify-center items-center flex w-full">
+    <div
+      className="
+        flex h-dvh w-full items-center justify-center overflow-hidden bg-zinc-50
+        p-2
+      "
+    >
       {children}
     </div>
   );

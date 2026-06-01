@@ -53,6 +53,7 @@ export interface SolveQuestion {
   type: 'MULTIPLE_CHOICE' | 'WRITTEN';
   imageUrl: string | null;
   choiceCount: number | null;
+  points: number;
   recommendedTimeSeconds: number | null;
   result: QuestionResult | null;
 }

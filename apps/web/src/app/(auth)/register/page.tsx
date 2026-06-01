@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { getUser } from '@/features/auth/server';
+
 import RegisterForm from '@/features/auth/components/register-form';
+import { getUser } from '@/features/auth/server';
 
 export default async function RegisterPage() {
   const user = await getUser();
@@ -25,7 +26,10 @@ export default async function RegisterPage() {
         이미 계정이 있으신가요?{' '}
         <Link
           href="/login"
-          className="font-medium text-zinc-900 hover:underline"
+          className="
+            font-medium text-zinc-900
+            hover:underline
+          "
         >
           로그인
         </Link>

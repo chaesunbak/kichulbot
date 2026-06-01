@@ -1,9 +1,5 @@
 'use client';
 
-import type { MouseEvent } from 'react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +12,11 @@ import {
   AlertDialogTrigger,
 } from '@kichulbot/ui/components/alert-dialog';
 import { Button } from '@kichulbot/ui/components/button';
+import { Loader2, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import type { MouseEvent } from 'react';
+import { useState } from 'react';
+
 import { ApiError, deleteAccountApi } from '@/features/auth/api/client';
 import { useAuthStore } from '@/features/auth/store';
 
@@ -67,7 +68,10 @@ export function DeleteAccountButton() {
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
           <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="
+              bg-destructive text-white
+              hover:bg-destructive/90
+            "
             disabled={isPending}
             onClick={handleDelete}
           >

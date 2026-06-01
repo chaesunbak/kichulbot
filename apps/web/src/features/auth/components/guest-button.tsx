@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@kichulbot/ui/components/button';
-import { useAuthStore } from '@/features/auth/store';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { anonymousLoginApi } from '@/features/auth/api/client';
+import { useAuthStore } from '@/features/auth/store';
 
 export function GuestButton() {
   const router = useRouter();

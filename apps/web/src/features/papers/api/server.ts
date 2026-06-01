@@ -1,7 +1,8 @@
 import { cache } from 'react';
-import { serverApi } from '@/shared/api/server';
+
 import { getToken } from '@/features/auth/server';
 import type { Paper } from '@/features/papers/types';
+import { serverApi } from '@/shared/api/server';
 
 export type { Paper, Taxonomy } from '@/features/papers/types';
 

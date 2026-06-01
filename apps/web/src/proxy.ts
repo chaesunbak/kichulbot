@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { COOKIE_NAME } from '@/features/auth/server';
 
 export function proxy(request: NextRequest) {

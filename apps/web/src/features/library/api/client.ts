@@ -1,9 +1,9 @@
-import { clientApi } from '@/shared/api/client';
 import type {
   BookmarkListSummary,
   Library,
   LibraryFolder,
 } from '@/features/learning/types';
+import { clientApi } from '@/shared/api/client';
 
 export async function getLibrary(): Promise<Library> {
   return clientApi.get<Library>('/api/me/library');

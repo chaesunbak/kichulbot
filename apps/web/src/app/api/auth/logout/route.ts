@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { COOKIE_NAME } from '@/features/auth/server';
 import { rejectCrossOriginRequest } from '@/shared/lib/route-helpers';
 

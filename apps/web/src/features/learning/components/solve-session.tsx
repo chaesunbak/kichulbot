@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@kichulbot/ui/components/button';
 import { Textarea } from '@kichulbot/ui/components/textarea';
 import { Clock, FileText } from 'lucide-react';
-import type { QuestionResult, SolveSession } from '@/features/learning/types';
-import { cn } from '@/shared/lib/utils';
-import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
 import {
   saveSolveSessionAnswer,
   submitSolveSession,
 } from '@/features/learning/api/client';
+import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
+import type { QuestionResult, SolveSession } from '@/features/learning/types';
+import { cn } from '@/shared/lib/utils';
 
 export function SolveSession({
   initialSession,
@@ -153,27 +154,65 @@ export function SolveSession({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-zinc-200 bg-white px-4 md:px-6">
+      <header
+        className="
+          flex h-16 shrink-0 items-center justify-between gap-4 border-b
+          border-zinc-200 bg-white px-4
+          md:px-6
+        "
+      >
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-zinc-900 text-white">
+          <div
+            className="
+              grid size-9 shrink-0 place-items-center rounded-lg bg-zinc-900
+              text-white
+            "
+          >
             <FileText className="size-4" aria-hidden />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold text-zinc-950 md:text-lg">
+            <h1
+              className="
+                truncate text-base font-semibold text-zinc-950
+                md:text-lg
+              "
+            >
               {session.paper.title}
             </h1>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 md:gap-3">
-          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2 py-2 text-sm text-zinc-600 md:gap-2 md:px-3">
+        <div
+          className="
+            flex shrink-0 items-center gap-2
+            md:gap-3
+          "
+        >
+          <div
+            className="
+              flex items-center gap-1.5 rounded-lg border border-zinc-200 p-2
+              text-sm text-zinc-600
+              md:gap-2 md:px-3
+            "
+          >
             <Clock className="size-4" aria-hidden />
             <span>{formatClock(currentTime)}</span>
           </div>
-          <div className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white tabular-nums">
+          <div
+            className="
+              rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white
+              tabular-nums
+            "
+          >
             {formatDuration(totalElapsedMilliseconds)}
           </div>
           {session.submittedAt ? (
-            <span className="hidden rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 sm:inline-flex">
+            <span
+              className="
+                hidden rounded-lg border border-zinc-200 px-3 py-2 text-sm
+                text-zinc-500
+                sm:inline-flex
+              "
+            >
               종료 완료
             </span>
           ) : (
@@ -184,11 +223,36 @@ export function SolveSession({
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-3 md:grid-cols-[1fr_232px] md:gap-4 md:p-4">
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white">
-          <div className="flex shrink-0 items-center justify-between gap-4 border-b border-zinc-100 px-4 py-3">
+      <div
+        className="
+          grid min-h-0 flex-1 gap-3 overflow-hidden p-3
+          md:grid-cols-[1fr_232px] md:gap-4 md:p-4
+        "
+      >
+        <section
+          className="
+            flex min-h-0 flex-col overflow-hidden rounded-lg border
+            border-zinc-200 bg-white
+          "
+        >
+          <div
+            className="
+              flex shrink-0 items-center justify-between gap-4 border-b
+              border-zinc-100 px-4 py-3
+            "
+          >
             <div>
-              <h2 className="text-lg font-semibold">{question.number}번</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-semibold">{question.number}번</h2>
+                <span
+                  className="
+                    rounded-full border px-2 py-0.5 text-xs font-medium
+                    text-zinc-500
+                  "
+                >
+                  {question.points}점
+                </span>
+              </div>
               {question.recommendedTimeSeconds && (
                 <p className="mt-1 text-xs text-zinc-500">
                   권장 풀이시간{' '}
@@ -210,10 +274,15 @@ export function SolveSession({
               <img
                 src={question.imageUrl}
                 alt={`${question.number}번 문제`}
-                className="h-full w-full rounded-md object-contain"
+                className="size-full rounded-md object-contain"
               />
             ) : (
-              <div className="grid h-full place-items-center rounded-md bg-white px-4 text-center text-sm text-zinc-500">
+              <div
+                className="
+                  grid h-full place-items-center rounded-md bg-white px-4
+                  text-center text-sm text-zinc-500
+                "
+              >
                 문제 이미지가 없습니다.
               </div>
             )}
@@ -270,7 +339,12 @@ export function SolveSession({
             {question.result && (
               <QuestionResultPanel result={question.result} />
             )}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
+            <div
+              className="
+                mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs
+                text-zinc-500
+              "
+            >
               {answer && (
                 <span>
                   누적 풀이시간 {formatDuration(answer.spentMilliseconds)}
@@ -281,7 +355,12 @@ export function SolveSession({
           </div>
         </section>
 
-        <aside className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white p-4">
+        <aside
+          className="
+            flex min-h-0 flex-col overflow-hidden rounded-lg border
+            border-zinc-200 bg-white p-4
+          "
+        >
           <p className="text-xs text-zinc-500">
             {session.mode === 'ONE_BY_ONE' ? '한 문제씩 풀기' : '한번에 풀기'}
           </p>
@@ -338,7 +417,9 @@ function SessionResultPanel({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+    <div
+      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
+    >
       <p className="font-semibold text-blue-900">
         {result.isCorrect === null
           ? '정답 확인'

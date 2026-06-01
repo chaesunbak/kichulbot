@@ -1,7 +1,8 @@
-import Link from 'next/link';
-import { Mail } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import { Card, CardContent } from '@kichulbot/ui/components/card';
+import { Mail } from 'lucide-react';
+import Link from 'next/link';
+
 import { DeleteAccountButton } from '@/features/auth/components/delete-account-button';
 import { LogoutButton } from '@/features/auth/components/logout-button';
 import { getUser } from '@/features/auth/server';
@@ -11,7 +12,12 @@ export default async function MyPage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+    <div
+      className="
+        mx-auto max-w-5xl px-4 py-8
+        sm:py-10
+      "
+    >
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">마이 페이지</h1>
 
       <Card className="mt-6 max-w-xl">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import LoginForm from '@/features/auth/components/login-form';
 
 export default function LoginPage() {
@@ -16,13 +17,22 @@ export default function LoginPage() {
           계정이 없으신가요?{' '}
           <Link
             href="/register"
-            className="font-medium text-zinc-900 hover:underline"
+            className="
+              font-medium text-zinc-900
+              hover:underline
+            "
           >
             회원가입
           </Link>
         </p>
         <p>
-          <Link href="/" className="font-medium text-zinc-900 hover:underline">
+          <Link
+            href="/"
+            className="
+              font-medium text-zinc-900
+              hover:underline
+            "
+          >
             게스트로 시작하기
           </Link>
         </p>

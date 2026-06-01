@@ -49,21 +49,21 @@ const sections = [
           <table className="w-full min-w-180 border-collapse text-left text-sm">
             <thead>
               <tr className="border-y border-zinc-200 bg-zinc-50 text-zinc-900">
-                <th className="px-3 py-3 font-semibold">구분</th>
-                <th className="px-3 py-3 font-semibold">처리 항목</th>
-                <th className="px-3 py-3 font-semibold">처리 목적</th>
-                <th className="px-3 py-3 font-semibold">보유기간</th>
+                <th className="p-3 font-semibold">구분</th>
+                <th className="p-3 font-semibold">처리 항목</th>
+                <th className="p-3 font-semibold">처리 목적</th>
+                <th className="p-3 font-semibold">보유기간</th>
               </tr>
             </thead>
             <tbody>
               {processingRows.map((row) => (
                 <tr key={row.category} className="border-b border-zinc-100">
-                  <td className="px-3 py-3 align-top font-medium text-zinc-900">
+                  <td className="p-3 align-top font-medium text-zinc-900">
                     {row.category}
                   </td>
-                  <td className="px-3 py-3 align-top">{row.items}</td>
-                  <td className="px-3 py-3 align-top">{row.purpose}</td>
-                  <td className="px-3 py-3 align-top">{row.period}</td>
+                  <td className="p-3 align-top">{row.items}</td>
+                  <td className="p-3 align-top">{row.purpose}</td>
+                  <td className="p-3 align-top">{row.period}</td>
                 </tr>
               ))}
             </tbody>
@@ -210,7 +210,12 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
+    <main
+      className="
+        mx-auto w-full max-w-4xl px-4 py-10
+        sm:py-14
+      "
+    >
       <Link href="/" className="text-sm font-medium text-zinc-500">
         기출봇
       </Link>
@@ -221,7 +226,7 @@ export default function PrivacyPage() {
         <p className="mt-3 text-sm text-zinc-500">시행일: 2026년 6월 1일</p>
       </header>
 
-      <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-600">
+      <div className="mt-8 space-y-8 text-sm/7 text-zinc-600">
         <p>
           회사는 개인정보 보호법 등 관련 법령을 준수하며, 정보주체의 개인정보를
           안전하게 처리하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.

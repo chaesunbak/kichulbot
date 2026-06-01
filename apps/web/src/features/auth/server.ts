@@ -1,5 +1,6 @@
-import { cache } from 'react';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
+
 import { getCurrentUser } from '@/features/auth/api/server';
 import type { AuthUser } from '@/features/auth/store';
 

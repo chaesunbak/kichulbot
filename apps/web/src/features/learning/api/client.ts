@@ -1,10 +1,10 @@
-import { clientApi } from '@/shared/api/client';
 import type {
   Answer,
   DailyWrongQuestionSet,
   QuestionResult,
   SolveSession,
 } from '@/features/learning/types';
+import { clientApi } from '@/shared/api/client';
 
 export type SolveMode = 'ONE_BY_ONE' | 'EXAM';
 

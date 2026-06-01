@@ -72,10 +72,12 @@ export function BookmarkListDetail({
                 className="mt-4 max-h-140 w-full rounded-lg object-contain"
               />
             ) : (
-              <p className="
-                mt-4 rounded-lg bg-zinc-50 px-4 py-10 text-center text-sm
-                text-zinc-500
-              ">
+              <p
+                className="
+                  mt-4 rounded-lg bg-zinc-50 px-4 py-10 text-center text-sm
+                  text-zinc-500
+                "
+              >
                 문제 이미지가 없습니다.
               </p>
             )}

@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 
-import { SolveSession } from '@/features/learning/components/solve-session';
 import { getSolveSession } from '@/features/learning/api/server';
+import { SolveSession } from '@/features/learning/components/solve-session';
 import type { SolveSession as SolveSessionData } from '@/features/learning/types';
 
 export default async function SolvePage({

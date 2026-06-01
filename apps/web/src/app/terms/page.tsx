@@ -97,7 +97,12 @@ const sections = [
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
+    <main
+      className="
+        mx-auto w-full max-w-3xl px-4 py-10
+        sm:py-14
+      "
+    >
       <Link href="/" className="text-sm font-medium text-zinc-500">
         기출봇
       </Link>
@@ -114,7 +119,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-zinc-900">
               {section.title}
             </h2>
-            <div className="mt-3 space-y-3 text-sm leading-7 text-zinc-600">
+            <div className="mt-3 space-y-3 text-sm/7 text-zinc-600">
               {section.content.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}

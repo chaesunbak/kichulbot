@@ -1,10 +1,10 @@
-import { serverApi } from '@/shared/api/server';
 import { getToken } from '@/features/auth/server';
 import type {
-  BookmarkListSummary,
   BookmarkList,
+  BookmarkListSummary,
   Library,
 } from '@/features/learning/types';
+import { serverApi } from '@/shared/api/server';
 
 export const getLibrary = async (): Promise<Library> => {
   const token = await getToken();

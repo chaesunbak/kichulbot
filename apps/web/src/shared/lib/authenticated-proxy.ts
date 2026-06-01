@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { serverApi } from '@/shared/api/server';
+
 import { getToken } from '@/features/auth/server';
+import { serverApi } from '@/shared/api/server';
 import { proxyErrorResponse } from '@/shared/lib/proxy-response';
 import { rejectCrossOriginRequest } from '@/shared/lib/route-helpers';
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Dialog,
@@ -11,6 +10,7 @@ import {
   DialogTitle,
 } from '@kichulbot/ui/components/dialog';
 import { Input } from '@kichulbot/ui/components/input';
+import { type ReactNode, useEffect, useState } from 'react';
 
 type PromptDialogProps = {
   isOpen: boolean;

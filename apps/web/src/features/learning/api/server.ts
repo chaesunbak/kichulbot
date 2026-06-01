@@ -1,10 +1,10 @@
-import { serverApi } from '@/shared/api/server';
 import { getToken } from '@/features/auth/server';
 import type {
   DailyWrongQuestionSet,
   SolveSession,
   SolveSessionLog,
 } from '@/features/learning/types';
+import { serverApi } from '@/shared/api/server';
 
 export const getSolveSession = async (id: string): Promise<SolveSession> => {
   const token = await getToken();

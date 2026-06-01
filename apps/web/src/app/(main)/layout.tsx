@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
+
 import { getUser } from '@/features/auth/server';
+import GlobalFooter from '@/shared/components/global-footer';
 import MainHeader from '@/shared/components/main-header';
 import { MobileBottomNavigation } from '@/shared/components/main-navigation';
-import GlobalFooter from '@/shared/components/global-footer';
 
 export default async function MainLayout({
   children,
@@ -15,7 +16,14 @@ export default async function MainLayout({
   return (
     <div className="flex flex-1 flex-col">
       <MainHeader user={user} />
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main
+        className="
+          flex-1 pb-20
+          md:pb-0
+        "
+      >
+        {children}
+      </main>
       <MobileBottomNavigation />
       <GlobalFooter />
     </div>

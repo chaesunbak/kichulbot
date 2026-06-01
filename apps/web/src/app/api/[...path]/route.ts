@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { proxyAuthenticatedRequest } from '@/shared/lib/authenticated-proxy';
 
 type RouteContext = {
@@ -51,9 +52,9 @@ async function proxyRequest(request: Request, { params }: RouteContext) {
 }
 
 export {
-  proxyRequest as GET,
-  proxyRequest as POST,
-  proxyRequest as PATCH,
-  proxyRequest as PUT,
   proxyRequest as DELETE,
+  proxyRequest as GET,
+  proxyRequest as PATCH,
+  proxyRequest as POST,
+  proxyRequest as PUT,
 };

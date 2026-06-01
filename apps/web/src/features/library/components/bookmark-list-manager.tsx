@@ -1,9 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Bookmark, Plus } from 'lucide-react';
-import { overlay } from 'overlay-kit';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -11,9 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { PromptDialog } from '@/shared/components/prompt-dialog';
+import { Bookmark, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { overlay } from 'overlay-kit';
+import { useState } from 'react';
+
 import type { BookmarkListSummary } from '@/features/learning/types';
 import { createBookmarkList as createBookmarkListApi } from '@/features/library/api/client';
+import { PromptDialog } from '@/shared/components/prompt-dialog';
 
 export function BookmarkListManager({
   initialBookmarkLists,
@@ -72,11 +73,21 @@ export function BookmarkListManager({
           북마크 리스트가 없습니다. 새 리스트를 만들어 문제를 모아보세요.
         </p>
       ) : (
-        <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+        <ul
+          className="
+            mt-5 grid gap-4
+            sm:grid-cols-2
+          "
+        >
           {bookmarkLists.map((list) => (
             <li key={list.id}>
               <Link href={`/library/bookmarks/${list.id}`} className="block">
-                <Card className="transition hover:bg-zinc-50">
+                <Card
+                  className="
+                    transition
+                    hover:bg-zinc-50
+                  "
+                >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Bookmark className="size-4" />

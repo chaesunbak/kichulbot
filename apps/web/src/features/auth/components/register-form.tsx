@@ -1,21 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@kichulbot/ui/components/button';
-import { Input } from '@kichulbot/ui/components/input';
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from '@kichulbot/ui/components/field';
-import { useAuthStore } from '@/features/auth/store';
+import { Input } from '@kichulbot/ui/components/input';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { ApiError, registerApi } from '@/features/auth/api/client';
 import { registerSchema } from '@/features/auth/schemas';
+import { useAuthStore } from '@/features/auth/store';
 import type { RegisterFormValues } from '@/features/auth/types';
-import { registerApi, ApiError } from '@/features/auth/api/client';
 
 interface Props {
   isGuestConvert: boolean;

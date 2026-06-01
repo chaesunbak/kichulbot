@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/features/auth/store';
+import { useEffect, useRef } from 'react';
+
 import { anonymousLoginApi } from '@/features/auth/api/client';
+import { useAuthStore } from '@/features/auth/store';
 
 export default function GuestPage() {
   const router = useRouter();

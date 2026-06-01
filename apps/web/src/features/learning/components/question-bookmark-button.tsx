@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { BookmarkPlus } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Select,
@@ -10,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
+import { BookmarkPlus } from 'lucide-react';
+import { useState } from 'react';
+
 import type { BookmarkListSummary } from '@/features/learning/types';
 import {
   addQuestionToBookmarkList,
@@ -58,7 +59,12 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
         북마크
       </Button>
       {isOpen && (
-        <div className="absolute right-0 top-11 z-10 grid w-64 gap-3 rounded-lg border border-zinc-200 bg-white p-3 ">
+        <div
+          className="
+            absolute top-11 right-0 z-10 grid w-64 gap-3 rounded-lg border
+            border-zinc-200 bg-white p-3
+          "
+        >
           {lists?.length ? (
             <>
               <Select value={selectedId} onValueChange={setSelectedId}>

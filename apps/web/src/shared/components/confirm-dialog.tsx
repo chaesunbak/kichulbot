@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -10,6 +9,7 @@ import {
   AlertDialogTitle,
 } from '@kichulbot/ui/components/alert-dialog';
 import { Button } from '@kichulbot/ui/components/button';
+import { type ReactNode, useEffect } from 'react';
 
 type ConfirmDialogProps = {
   isOpen: boolean;

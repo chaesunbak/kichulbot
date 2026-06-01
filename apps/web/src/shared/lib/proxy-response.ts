@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { ApiError } from '@/shared/api/server';
 
 export function proxyErrorResponse(error: unknown) {

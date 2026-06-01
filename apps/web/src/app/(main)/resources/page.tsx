@@ -1,10 +1,11 @@
 import Link from 'next/link';
+
 import {
   BookshelfGrid,
   BookshelfSection,
 } from '@/features/library/components/bookshelf-section';
-import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
 import { getPapers, type Paper } from '@/features/papers/api/server';
+import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
 
 export default async function PapersPage() {
   let papers: Paper[];
@@ -23,7 +24,12 @@ export default async function PapersPage() {
   const examGroups = groupPapers(papers);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <div
+      className="
+        mx-auto max-w-6xl px-4 py-8
+        sm:py-10
+      "
+    >
       <h1 className="mt-1 text-2xl font-semibold text-zinc-900">자료실</h1>
 
       {papers.length === 0 ? (
@@ -37,7 +43,13 @@ export default async function PapersPage() {
         >
           <div className="divide-y divide-[#e5dacb]">
             {examGroups.map((examGroup) => (
-              <div key={examGroup.id} className="px-3 py-6 sm:px-6">
+              <div
+                key={examGroup.id}
+                className="
+                  px-3 py-6
+                  sm:px-6
+                "
+              >
                 <h2 className="text-lg font-bold text-zinc-900">
                   {examGroup.name}
                 </h2>
@@ -48,7 +60,7 @@ export default async function PapersPage() {
                         고{gradeGroup.grade}
                       </h3>
                     )}
-                    <BookshelfGrid className="px-0 py-0">
+                    <BookshelfGrid className="p-0">
                       {gradeGroup.papers.map((paper) => (
                         <li key={paper.id} className="min-w-0 px-1 pb-5">
                           <Link

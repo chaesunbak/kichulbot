@@ -1,17 +1,5 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import {
-  ChevronLeft,
-  Folder,
-  FolderPlus,
-  MoreVertical,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react';
-import { overlay } from 'overlay-kit';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   DropdownMenu,
@@ -26,20 +14,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
-import { ConfirmDialog } from '@/shared/components/confirm-dialog';
-import { PromptDialog } from '@/shared/components/prompt-dialog';
+import {
+  ChevronLeft,
+  Folder,
+  FolderPlus,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
+import Link from 'next/link';
+import { overlay } from 'overlay-kit';
+import { useMemo, useState } from 'react';
+
 import type {
   Library,
   LibraryFolder,
   LibraryPaper,
 } from '@/features/learning/types';
-import { PaperCover } from '@/features/papers/components/paper-cover-card';
-import { cn } from '@/shared/lib/utils';
 import {
   createLibraryFolder,
   deleteLibraryFolder,
   renameLibraryFolder,
 } from '@/features/library/api/client';
+import { PaperCover } from '@/features/papers/components/paper-cover-card';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { PromptDialog } from '@/shared/components/prompt-dialog';
+import { cn } from '@/shared/lib/utils';
 
 const SORT_OPTIONS = {
   recent: '최근 추가순',
@@ -169,13 +170,13 @@ export function LibraryManager({
   return (
     <section className="mt-7">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex gap-4">
+        <div className="flex min-w-0 gap-4">
           <h2 className="text-2xl font-semibold text-zinc-900">{title}</h2>
           {selectedFolder && (
             <Button
               variant="ghost"
               size="sm"
-              className="-ml-2 mb-1 text-zinc-500"
+              className="mb-1 -ml-2 text-zinc-500"
               onClick={() => setSelectedFolderId(parentFolderId)}
             >
               <ChevronLeft />
@@ -228,7 +229,7 @@ export function LibraryManager({
           value={sortKey}
           onValueChange={(value) => setSortKey(value as SortKey)}
         >
-          <SelectTrigger aria-label="정렬 기준" className="h-12 min-w-44 ">
+          <SelectTrigger aria-label="정렬 기준" className="h-12 min-w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -247,14 +248,20 @@ export function LibraryManager({
       {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
 
       {isEmpty ? (
-        <section className="mt-8 rounded-2xl border border-zinc-200 px-4 py-14 text-center">
+        <section className="
+          mt-8 rounded-2xl border border-zinc-200 px-4 py-14 text-center
+        ">
           <Folder className="mx-auto size-12 text-sky-300" />
           <h3 className="mt-4 text-lg font-semibold text-zinc-900">
             비어 있습니다
           </h3>
         </section>
       ) : (
-        <ul className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="
+          mt-8 grid gap-4
+          md:grid-cols-2
+          xl:grid-cols-3
+        ">
           {visibleFolders.map((folder) => (
             <FolderCard
               key={folder.id}
@@ -285,18 +292,41 @@ function FolderCard({
     <li>
       <button
         type="button"
-        className="flex min-h-40 w-full items-center gap-5 rounded-2xl border  bg-white px-6 py-6 text-left  transition hover:border-sky-200 hover:bg-sky-50/40 md:min-h-56 md:flex-col md:items-center md:justify-center md:text-center"
+        className="
+          flex min-h-40 w-full items-center gap-5 rounded-2xl border bg-white
+          p-6 text-left transition
+          hover:border-sky-200 hover:bg-sky-50/40
+          md:min-h-56 md:flex-col md:items-center md:justify-center
+          md:text-center
+        "
         onClick={onOpen}
       >
-        <span className="relative flex h-20 w-24 shrink-0 items-end md:h-24 md:w-32">
-          <span className="absolute left-1 top-2 h-5 w-10 rounded-t-xl bg-sky-400" />
-          <span className="relative h-16 w-24 rounded-xl bg-sky-300 shadow-sm md:h-20 md:w-32" />
+        <span className="
+          relative flex h-20 w-24 shrink-0 items-end
+          md:h-24 md:w-32
+        ">
+          <span className="
+            absolute top-2 left-1 h-5 w-10 rounded-t-xl bg-sky-400
+          " />
+          <span className="
+            relative h-16 w-24 rounded-xl bg-sky-300 shadow-sm
+            md:h-20 md:w-32
+          " />
         </span>
-        <span className="min-w-0 flex-1 md:flex-none">
-          <span className="block truncate text-2xl font-semibold text-zinc-950 md:text-xl">
+        <span className="
+          min-w-0 flex-1
+          md:flex-none
+        ">
+          <span className="
+            block truncate text-2xl font-semibold text-zinc-950
+            md:text-xl
+          ">
             {folder.name}
           </span>
-          <span className="mt-4 block text-xl text-zinc-400 md:text-lg">
+          <span className="
+            mt-4 block text-xl text-zinc-400
+            md:text-lg
+          ">
             {count}개
           </span>
         </span>
@@ -313,23 +343,42 @@ function PaperCard({ libraryPaper }: { libraryPaper: LibraryPaper }) {
       <Link
         href={`/library/papers/${libraryPaper.id}`}
         className={cn(
-          'flex min-h-40 gap-5 rounded-2xl border p-5 transition hover:border-zinc-300 hover:bg-zinc-50',
+          `
+            flex min-h-40 gap-5 rounded-2xl border p-5 transition
+            hover:border-zinc-300 hover:bg-zinc-50
+          `,
           'md:min-h-56 md:flex-col md:gap-4',
         )}
         aria-label={`${paper.title} 자세히 보기`}
       >
         <PaperCover
           paper={paper}
-          className="w-24 shrink-0 rounded-none md:mx-auto md:w-full md:max-w-32"
+          className="
+            w-24 shrink-0 rounded-none
+            md:mx-auto md:w-full md:max-w-32
+          "
         />
-        <div className="flex min-w-0 flex-1 flex-col md:flex-none">
-          <h3 className="line-clamp-2 break-keep text-2xl font-medium leading-tight text-zinc-950 md:text-lg">
+        <div className="
+          flex min-w-0 flex-1 flex-col
+          md:flex-none
+        ">
+          <h3 className="
+            line-clamp-2 text-2xl/tight font-medium break-keep text-zinc-950
+            md:text-lg
+          ">
             {paper.title}
           </h3>
-          <p className="mt-3 truncate text-lg text-zinc-400 md:text-sm">
-            {paper.exam.name} · {paper.subject.name}
+          <p className="
+            mt-3 truncate text-lg text-zinc-400
+            md:text-sm
+          ">
+            {paper.exam.name}
           </p>
-          <div className="mt-auto flex items-end justify-between gap-3 pt-6 text-lg text-zinc-400 md:text-sm">
+          <div className="
+            mt-auto flex items-end justify-between gap-3 pt-6 text-lg
+            text-zinc-400
+            md:text-sm
+          ">
             <span>{formatQuestionCount(paper.questionCount)}</span>
             <span>{formatRelativeTime(libraryPaper.createdAt)} 추가</span>
           </div>

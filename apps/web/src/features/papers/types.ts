@@ -1,7 +1,6 @@
 export interface Taxonomy {
   id: string;
   name: string;
-  slug: string;
 }
 
 export interface Paper {
@@ -14,5 +13,4 @@ export interface Paper {
   questionCount: number;
   isInLibrary: boolean;
   exam: Taxonomy;
-  subject: Taxonomy;
 }

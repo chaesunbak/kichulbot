@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+
 import type { BookmarkList } from '@/features/learning/types';
 import { removeQuestionFromBookmarkList } from '@/features/library/api/client';
 
@@ -50,8 +51,7 @@ export function BookmarkListDetail({
                   {question.paper.title} {question.number}번
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {question.paper.examName} · {question.paper.subjectName} ·{' '}
-                  {question.paper.year}학년도
+                  {question.paper.examName} · {question.paper.year}학년도
                 </p>
               </div>
               <Button
@@ -69,10 +69,13 @@ export function BookmarkListDetail({
               <img
                 src={question.imageUrl}
                 alt={`${question.paper.title} ${question.number}번 문제`}
-                className="mt-4 max-h-[560px] w-full rounded-lg object-contain"
+                className="mt-4 max-h-140 w-full rounded-lg object-contain"
               />
             ) : (
-              <p className="mt-4 rounded-lg bg-zinc-50 px-4 py-10 text-center text-sm text-zinc-500">
+              <p className="
+                mt-4 rounded-lg bg-zinc-50 px-4 py-10 text-center text-sm
+                text-zinc-500
+              ">
                 문제 이미지가 없습니다.
               </p>
             )}

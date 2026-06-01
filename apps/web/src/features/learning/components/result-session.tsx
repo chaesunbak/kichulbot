@@ -1,17 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { Badge } from '@kichulbot/ui/components/badge';
 import { Button } from '@kichulbot/ui/components/button';
 import { BookOpenCheck, CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
 
 import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
 import type {
   Answer,
-  SolveSession,
   QuestionResult,
   SolveQuestion,
+  SolveSession,
 } from '@/features/learning/types';
 import { cn } from '@/shared/lib/utils';
 
@@ -58,7 +58,10 @@ export function ResultSession({ session }: { session: SolveSession }) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <div className="
+      mx-auto max-w-6xl px-4 py-8
+      sm:py-10
+    ">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-primary">
@@ -81,7 +84,11 @@ export function ResultSession({ session }: { session: SolveSession }) {
         </Button>
       </div>
 
-      <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="
+        mt-6 grid gap-3
+        sm:grid-cols-2
+        lg:grid-cols-4
+      ">
         <SummaryTile
           label="점수"
           value={`${session.result.score}점`}
@@ -105,9 +112,14 @@ export function ResultSession({ session }: { session: SolveSession }) {
         />
       </section>
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-[280px_1fr]">
+      <div className="
+        mt-8 grid gap-5
+        lg:grid-cols-[280px_1fr]
+      ">
         <aside className="h-fit rounded-lg border border-zinc-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-zinc-900">
+          <div className="
+            flex items-center gap-2 text-sm font-semibold text-zinc-900
+          ">
             <BookOpenCheck className="size-4" aria-hidden />
             문항별 채점
           </div>
@@ -164,8 +176,13 @@ export function ResultSession({ session }: { session: SolveSession }) {
           )}
         </aside>
 
-        <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 px-4 py-3">
+        <section className="
+          overflow-hidden rounded-lg border border-zinc-200 bg-white
+        ">
+          <div className="
+            flex flex-wrap items-center justify-between gap-3 border-b
+            border-zinc-100 px-4 py-3
+          ">
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-zinc-950">
@@ -184,23 +201,32 @@ export function ResultSession({ session }: { session: SolveSession }) {
             <QuestionBookmarkButton questionId={selectedQuestion.id} />
           </div>
 
-          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="min-h-[420px] bg-zinc-50 p-3">
+          <div className="
+            grid gap-0
+            lg:grid-cols-[minmax(0,1fr)_320px]
+          ">
+            <div className="min-h-105 bg-zinc-50 p-3">
               {selectedQuestion.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={selectedQuestion.imageUrl}
                   alt={`${selectedQuestion.number}번 문제`}
-                  className="h-full min-h-[396px] w-full rounded-md object-contain"
+                  className="size-full min-h-99 rounded-md object-contain"
                 />
               ) : (
-                <div className="grid min-h-[396px] place-items-center rounded-md bg-white px-4 text-center text-sm text-zinc-500">
+                <div className="
+                  grid min-h-99 place-items-center rounded-md bg-white px-4
+                  text-center text-sm text-zinc-500
+                ">
                   문제 이미지가 없습니다.
                 </div>
               )}
             </div>
 
-            <div className="border-t border-zinc-100 p-4 lg:border-l lg:border-t-0">
+            <div className="
+              border-t border-zinc-100 p-4
+              lg:border-t-0 lg:border-l
+            ">
               <AnswerBlock
                 question={selectedQuestion}
                 answer={selectedAnswer}
@@ -260,7 +286,9 @@ function AnswerBlock({
       </div>
       <div>
         <p className="text-xs font-medium text-zinc-500">정답</p>
-        <p className="mt-1 rounded-md bg-emerald-50 px-3 py-2 font-medium text-emerald-800">
+        <p className="
+          mt-1 rounded-md bg-emerald-50 px-3 py-2 font-medium text-emerald-800
+        ">
           {formatCorrectAnswer(question.result)}
         </p>
       </div>
@@ -270,7 +298,9 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+    <div className="
+      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
+    ">
       <p className="font-semibold text-blue-900">해설</p>
       <p className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}

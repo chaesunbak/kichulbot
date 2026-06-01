@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -7,11 +5,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { LibraryPaperActions } from '@/features/library/components/library-paper-actions';
-import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
-import { getLibrary } from '@/features/library/api/server';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+
 import { getSolveSessionLogs } from '@/features/learning/api/server';
 import type { LibraryFolder } from '@/features/learning/types';
+import { getLibrary } from '@/features/library/api/server';
+import { LibraryPaperActions } from '@/features/library/components/library-paper-actions';
+import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
 
 export default async function LibraryPaperPage({
@@ -43,8 +44,8 @@ export default async function LibraryPaperPage({
         {paper.title}
       </h1>
       <p className="mt-3 text-sm text-zinc-500">
-        {paper.exam.name} · {paper.subject.name} · {formatPaperSession(paper)} ·{' '}
-        {paper.questionCount}문항
+        {paper.exam.name} · {formatPaperSession(paper)} · {paper.questionCount}
+        문항
       </p>
 
       <LibraryPaperActions

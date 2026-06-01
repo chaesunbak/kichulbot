@@ -1,7 +1,8 @@
 import { BookCheck } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
+
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
 import type { Paper } from '@/features/papers/types';
+import { cn } from '@/shared/lib/utils';
 
 const coverPalettes = [
   {
@@ -49,8 +50,7 @@ export function PaperCover({
   paper: Paper;
   className?: string;
 }) {
-  const palette =
-    coverPalettes[hash(paper.subject.slug) % coverPalettes.length];
+  const palette = coverPalettes[hash(paper.exam.id) % coverPalettes.length];
 
   return (
     <div
@@ -63,7 +63,10 @@ export function PaperCover({
     >
       {paper.isInLibrary && (
         <span
-          className="absolute right-2 top-8 flex size-6 items-center justify-center rounded-full bg-white/65"
+          className="
+            absolute top-8 right-2 flex size-6 items-center justify-center
+            rounded-full bg-white/65
+          "
           aria-label="내서재에 저장됨"
           title="내서재에 저장됨"
         >
@@ -71,13 +74,21 @@ export function PaperCover({
         </span>
       )}
       <div className="relative flex h-full flex-col">
-        <div className="flex flex-1 flex-col items-center justify-center px-3 pt-5 text-center">
-          <p className={cn('text-[11px] font-bold sm:text-xs', palette.accent)}>
+        <div className="
+          flex flex-1 flex-col items-center justify-center px-3 pt-5 text-center
+        ">
+          <p className={cn(`
+            text-[11px] font-bold
+            sm:text-xs
+          `, palette.accent)}>
             {formatPaperSession(paper)}
           </p>
           <p
             className={cn(
-              'mt-1 break-keep text-xl font-black sm:text-2xl',
+              `
+                mt-1 text-xl font-black break-keep
+                sm:text-2xl
+              `,
               palette.ink,
             )}
           >
@@ -85,7 +96,10 @@ export function PaperCover({
           </p>
           <p
             className={cn(
-              'mt-1 text-sm font-extrabold sm:text-base',
+              `
+                mt-1 text-sm font-extrabold
+                sm:text-base
+              `,
               palette.ink,
             )}
           >
@@ -94,11 +108,15 @@ export function PaperCover({
         </div>
         <div
           className={cn(
-            'relative z-10 border-y border-current/15 bg-white/20 px-2 py-2 text-center text-xs font-extrabold sm:text-sm',
+            `
+              relative z-10 border-y border-current/15 bg-white/20 p-2
+              text-center text-xs font-extrabold
+              sm:text-sm
+            `,
             palette.accent,
           )}
         >
-          {paper.subject.name}
+          {paper.exam.name}
         </div>
       </div>
     </div>
@@ -112,7 +130,10 @@ export function PaperCoverCard({ paper }: { paper: Paper }) {
         <PaperCover paper={paper} />
       </div>
       <div className="px-1 pt-3">
-        <h3 className="line-clamp-2 break-keep text-sm font-bold leading-5 text-zinc-900  sm:text-base">
+        <h3 className="
+          line-clamp-2 text-sm/5 font-bold break-keep text-zinc-900
+          sm:text-base
+        ">
           {paper.title}
         </h3>
       </div>

@@ -39,7 +39,6 @@ export interface BookmarkedQuestion {
     title: string;
     year: number;
     examName: string;
-    subjectName: string;
   };
   createdAt: string;
 }
@@ -118,7 +117,6 @@ export interface DailyWrongQuestionSet {
       title: string;
       year: number;
       examName: string;
-      subjectName: string;
     };
   }[];
   generatedAt: string;

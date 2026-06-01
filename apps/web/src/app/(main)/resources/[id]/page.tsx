@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
+
+import { getPaper, type Paper } from '@/features/papers/api/server';
 import { PaperActions } from '@/features/papers/components/paper-actions';
 import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
-import { getPaper, type Paper } from '@/features/papers/api/server';
 
 export default async function PaperPage({
   params,
@@ -22,9 +23,7 @@ export default async function PaperPage({
       <div className="mb-8">
         <PaperCoverCard paper={paper} />
       </div>
-      <p className="text-sm text-zinc-500">
-        {paper.exam.name} · {paper.subject.name}
-      </p>
+      <p className="text-sm text-zinc-500">{paper.exam.name}</p>
       <h1 className="mt-2 text-2xl font-semibold text-zinc-900">
         {paper.title}
       </h1>

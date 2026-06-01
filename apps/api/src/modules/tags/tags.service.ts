@@ -13,20 +13,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Tag, TagSubject, UserRole } from '@prisma/client';
+import { Tag, TagExam, UserRole } from '@prisma/client';
+
 import { TagsRepository } from './tags.repository';
 
-type TagWithSubjects = Tag & { subjects: TagSubject[] };
+type TagWithExams = Tag & { exams: TagExam[] };
 
 @Injectable()
 export class TagsService {
   constructor(private readonly tagsRepository: TagsRepository) {}
 
-  async listTags(
-    role: UserRole,
-    subjectId?: string,
-  ): Promise<ListTagsResponse> {
-    const tags = await this.tagsRepository.findManyAvailable(subjectId);
+  async listTags(role: UserRole, examId?: string): Promise<ListTagsResponse> {
+    const tags = await this.tagsRepository.findManyAvailable(examId);
     return ListTagsResponseSchema.parse({
       tags: tags.map((tag) => this.toResponse(tag, role)),
     });
@@ -42,13 +40,12 @@ export class TagsService {
   async createOfficialTag(
     dto: CreateOfficialTagRequest,
   ): Promise<OfficialTagMutationResponse> {
-    const subjectIds = await this.assertSubjectsExist(dto.subjectIds);
+    const examIds = await this.assertExamsExist(dto.examIds);
     const tag = await this.tagsRepository.create(
       {
         name: dto.name.trim(),
-        slug: dto.slug.trim(),
       },
-      subjectIds,
+      examIds,
     );
 
     return OfficialTagMutationResponseSchema.parse({
@@ -65,17 +62,16 @@ export class TagsService {
       throw new NotFoundException('공식 태그를 찾을 수 없습니다.');
     }
 
-    const subjectIds = dto.subjectIds
-      ? await this.assertSubjectsExist(dto.subjectIds)
+    const examIds = dto.examIds
+      ? await this.assertExamsExist(dto.examIds)
       : undefined;
     const tag = await this.tagsRepository.update(
       id,
       {
         name: dto.name?.trim(),
-        slug: dto.slug?.trim(),
         isActive: dto.isActive,
       },
-      subjectIds,
+      examIds,
     );
 
     return OfficialTagMutationResponseSchema.parse({
@@ -85,7 +81,7 @@ export class TagsService {
 
   async assertTagsAssignable(
     tagIds: string[],
-    subjectId: string,
+    examId: string,
     preservedTagIds: string[] = [],
   ) {
     const preserved = new Set(preservedTagIds);
@@ -96,36 +92,35 @@ export class TagsService {
 
     const count = await this.tagsRepository.countAssignableByIds(
       newTagIds,
-      subjectId,
+      examId,
     );
     if (count !== newTagIds.length) {
       throw new BadRequestException(
-        '선택한 과목에 지정할 수 없는 공식 태그가 포함되어 있습니다.',
+        '선택한 시험에 지정할 수 없는 공식 태그가 포함되어 있습니다.',
       );
     }
   }
 
-  private async assertSubjectsExist(subjectIds: string[]) {
-    const uniqueIds = [...new Set(subjectIds)];
+  private async assertExamsExist(examIds: string[]) {
+    const uniqueIds = [...new Set(examIds)];
     if (uniqueIds.length === 0) {
       return uniqueIds;
     }
 
-    const count = await this.tagsRepository.countSubjectsByIds(uniqueIds);
+    const count = await this.tagsRepository.countExamsByIds(uniqueIds);
     if (count !== uniqueIds.length) {
-      throw new BadRequestException('과목을 찾을 수 없습니다.');
+      throw new BadRequestException('시험을 찾을 수 없습니다.');
     }
     return uniqueIds;
   }
 
   private toResponse(
-    tag: TagWithSubjects,
+    tag: TagWithExams,
     role: UserRole,
   ): TagResponse | AdminTagResponse {
     const response = {
       id: tag.id,
       name: tag.name,
-      slug: tag.slug,
       kind: 'OFFICIAL' as const,
       isActive: tag.isActive,
     };
@@ -136,7 +131,7 @@ export class TagsService {
 
     return {
       ...response,
-      subjectIds: tag.subjects.map(({ subjectId }) => subjectId),
+      examIds: tag.exams.map(({ examId }) => examId),
       createdAt: tag.createdAt.toISOString(),
       updatedAt: tag.updatedAt.toISOString(),
     };

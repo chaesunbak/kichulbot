@@ -11,6 +11,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, QuestionType } from '@prisma/client';
+
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
 import { TagsService } from '../tags/tags.service';
@@ -56,7 +57,10 @@ export class QuestionsService {
     );
 
     const tagIds = dto.tagIds ?? [];
-    await this.tagsService.assertTagsAssignable(tagIds, paper.subjectId);
+    await this.tagsService.assertTagsAssignable(
+      tagIds,
+      paper.examSession.examId,
+    );
 
     let created: QuestionWithTags;
     try {
@@ -126,7 +130,7 @@ export class QuestionsService {
       }
       await this.tagsService.assertTagsAssignable(
         dto.tagIds,
-        paper.subjectId,
+        paper.examSession.examId,
         existing.tags.map(({ tagId }) => tagId),
       );
     }
@@ -290,7 +294,6 @@ export class QuestionsService {
       tags: question.tags.map((questionTag) => ({
         id: questionTag.tag.id,
         name: questionTag.tag.name,
-        slug: questionTag.tag.slug,
         kind: 'OFFICIAL',
         isActive: questionTag.tag.isActive,
       })),

@@ -15,17 +15,11 @@ export class UpdateOfficialTagDto implements UpdateOfficialTagRequest {
   @MaxLength(50)
   name?: string;
 
-  @ApiProperty({ required: false, example: 'joseon' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  slug?: string;
-
   @ApiProperty({ required: false, type: [String] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  subjectIds?: string[];
+  examIds?: string[];
 
   @ApiProperty({ required: false })
   @IsOptional()

@@ -5,6 +5,7 @@ import {
   QuestionRevision,
   QuestionSetKind,
 } from '@prisma/client';
+
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
@@ -29,7 +30,10 @@ export class QuestionsRepository {
   }
 
   findPaper(paperId: string) {
-    return this.db.paper.findUnique({ where: { id: paperId } });
+    return this.db.paper.findUnique({
+      where: { id: paperId },
+      include: { examSession: true },
+    });
   }
 
   updateImageUrl(id: string, imageUrl: string) {

@@ -10,7 +10,6 @@ export const BookmarkedQuestionResponseSchema = z.object({
     title: z.string(),
     year: z.number().int(),
     examName: z.string(),
-    subjectName: z.string(),
   }),
   createdAt: IsoDateStringSchema,
 });

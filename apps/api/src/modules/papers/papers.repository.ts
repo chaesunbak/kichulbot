@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, QuestionSetKind } from '@prisma/client';
+
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 interface CreatePaperInput {
   title: string;
   examId: string;
-  subjectId: string;
   displayYear: number;
   month: number | null;
   grade: number | null;
@@ -94,7 +94,6 @@ export class PapersRepository {
   private paperIncludes(userId?: string) {
     return {
       examSession: { include: { exam: true } },
-      subject: true,
       questions: true,
       users: userId
         ? {

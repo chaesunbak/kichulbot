@@ -8,13 +8,8 @@ export class CreateOfficialTagDto implements CreateOfficialTagRequest {
   @MaxLength(50)
   name: string;
 
-  @ApiProperty({ example: 'joseon' })
-  @IsString()
-  @MaxLength(50)
-  slug: string;
-
   @ApiProperty({ type: [String] })
   @IsArray()
   @IsString({ each: true })
-  subjectIds: string[];
+  examIds: string[];
 }

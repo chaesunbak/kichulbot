@@ -2,6 +2,7 @@ import * as z from 'zod';
 import {
   AdminExamResponseSchema,
   AdminTaxonomyResponseSchema,
+  CategoryResponseSchema,
   ExamResponseSchema,
   TaxonomyResponseSchema,
 } from './schema.js';
@@ -11,9 +12,44 @@ export const ListExamsResponseSchema = z.object({
 });
 export type ListExamsResponse = z.infer<typeof ListExamsResponseSchema>;
 
-export const ListSubjectsResponseSchema = z.object({
-  subjects: z.array(
-    z.union([AdminTaxonomyResponseSchema, TaxonomyResponseSchema]),
+export const CreateCategoryRequestSchema = z.object({
+  name: z.string().trim().min(1).max(50),
+});
+export type CreateCategoryRequest = z.infer<typeof CreateCategoryRequestSchema>;
+
+export const UpdateCategoryRequestSchema =
+  CreateCategoryRequestSchema.partial();
+export type UpdateCategoryRequest = z.infer<typeof UpdateCategoryRequestSchema>;
+
+export const CategoryMutationResponseSchema = z.object({
+  category: AdminTaxonomyResponseSchema,
+});
+export type CategoryMutationResponse = z.infer<
+  typeof CategoryMutationResponseSchema
+>;
+
+export const ListCategoriesResponseSchema = z.object({
+  categories: z.array(
+    z.union([AdminTaxonomyResponseSchema, CategoryResponseSchema]),
   ),
 });
-export type ListSubjectsResponse = z.infer<typeof ListSubjectsResponseSchema>;
+export type ListCategoriesResponse = z.infer<
+  typeof ListCategoriesResponseSchema
+>;
+
+export const CreateExamRequestSchema = z.object({
+  name: z.string().trim().min(1).max(50),
+  categoryIds: z.array(z.string().min(1)).min(1),
+  usesMonth: z.boolean().optional(),
+  usesGrade: z.boolean().optional(),
+  usesRound: z.boolean().optional(),
+});
+export type CreateExamRequest = z.infer<typeof CreateExamRequestSchema>;
+
+export const UpdateExamRequestSchema = CreateExamRequestSchema.partial();
+export type UpdateExamRequest = z.infer<typeof UpdateExamRequestSchema>;
+
+export const ExamMutationResponseSchema = z.object({
+  exam: AdminExamResponseSchema,
+});
+export type ExamMutationResponse = z.infer<typeof ExamMutationResponseSchema>;

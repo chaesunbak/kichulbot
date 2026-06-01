@@ -1,4 +1,13 @@
-import { ListExamsResponseSchema, ListSubjectsResponseSchema } from './dto.js';
+import {
+  CategoryMutationResponseSchema,
+  CreateCategoryRequestSchema,
+  CreateExamRequestSchema,
+  ExamMutationResponseSchema,
+  ListCategoriesResponseSchema,
+  ListExamsResponseSchema,
+  UpdateCategoryRequestSchema,
+  UpdateExamRequestSchema,
+} from './dto.js';
 
 export const taxonomyRoutes = {
   listExams: {
@@ -7,10 +16,34 @@ export const taxonomyRoutes = {
     request: null,
     response: ListExamsResponseSchema,
   },
-  listSubjects: {
+  createExam: {
+    method: 'POST',
+    path: '/exams',
+    request: CreateExamRequestSchema,
+    response: ExamMutationResponseSchema,
+  },
+  updateExam: {
+    method: 'PATCH',
+    path: '/exams/:id',
+    request: UpdateExamRequestSchema,
+    response: ExamMutationResponseSchema,
+  },
+  listCategories: {
     method: 'GET',
-    path: '/subjects',
+    path: '/categories',
     request: null,
-    response: ListSubjectsResponseSchema,
+    response: ListCategoriesResponseSchema,
+  },
+  createCategory: {
+    method: 'POST',
+    path: '/categories',
+    request: CreateCategoryRequestSchema,
+    response: CategoryMutationResponseSchema,
+  },
+  updateCategory: {
+    method: 'PATCH',
+    path: '/categories/:id',
+    request: UpdateCategoryRequestSchema,
+    response: CategoryMutationResponseSchema,
   },
 } as const;

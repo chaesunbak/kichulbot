@@ -1,18 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
 import { HealthController } from './health.controller';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { ExamsModule } from './modules/exams/exams.module';
+import { LibraryModule } from './modules/library/library.module';
 import { PapersModule } from './modules/papers/papers.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { ReviewModule } from './modules/review/review.module';
-import { LibraryModule } from './modules/library/library.module';
-import { SubjectsModule } from './modules/subjects/subjects.module';
+import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
 import { TagsModule } from './modules/tags/tags.module';
 
 @Module({
@@ -33,8 +34,8 @@ import { TagsModule } from './modules/tags/tags.module';
     AuthModule,
     SolveSessionsModule,
     BookmarksModule,
+    CategoriesModule,
     ExamsModule,
-    SubjectsModule,
     TagsModule,
     PapersModule,
     QuestionsModule,

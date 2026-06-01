@@ -1,13 +1,13 @@
 import {
   AddBookmarkedQuestionResponse,
   AddBookmarkedQuestionResponseSchema,
+  BookmarkedQuestionResponse,
   BookmarkListResponse,
   BookmarkListResponseEnvelope,
   BookmarkListResponseEnvelopeSchema,
   BookmarkListSummaryResponse,
   BookmarkListSummaryResponseEnvelope,
   BookmarkListSummaryResponseEnvelopeSchema,
-  BookmarkedQuestionResponse,
   DeleteBookmarkedQuestionResponse,
   DeleteBookmarkedQuestionResponseSchema,
   ListBookmarkListsResponse,
@@ -15,6 +15,7 @@ import {
 } from '@kichulbot/api-contract/bookmarks';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+
 import { BookmarksRepository } from './bookmarks.repository';
 
 type BookmarkListSummary = Prisma.QuestionSetGetPayload<{
@@ -31,7 +32,6 @@ type BookmarkListWithQuestions = Prisma.QuestionSetGetPayload<{
                 paper: {
                   include: {
                     examSession: { include: { exam: true } };
-                    subject: true;
                   };
                 };
               };
@@ -176,7 +176,6 @@ export class BookmarksService {
         title: question.paper.title,
         year: question.paper.examSession.displayYear,
         examName: question.paper.examSession.exam.name,
-        subjectName: question.paper.subject.name,
       },
       createdAt: questionSetItem.createdAt.toISOString(),
     };

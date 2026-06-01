@@ -8,8 +8,7 @@ export type ListTagsResponse = z.infer<typeof ListTagsResponseSchema>;
 
 export const CreateOfficialTagRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),
-  slug: z.string().trim().min(1).max(50),
-  subjectIds: z.array(z.string().min(1)),
+  examIds: z.array(z.string().min(1)),
 });
 export type CreateOfficialTagRequest = z.infer<
   typeof CreateOfficialTagRequestSchema

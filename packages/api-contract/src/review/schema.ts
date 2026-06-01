@@ -11,7 +11,6 @@ export const WrongQuestionResponseSchema = z.object({
     title: z.string(),
     year: z.number().int(),
     examName: z.string(),
-    subjectName: z.string(),
   }),
 });
 export type WrongQuestionResponse = z.infer<typeof WrongQuestionResponseSchema>;

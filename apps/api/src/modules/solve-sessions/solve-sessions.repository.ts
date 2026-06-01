@@ -5,6 +5,7 @@ import {
   Prisma,
   QuestionRevision,
 } from '@prisma/client';
+
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 export class SubmittedSolveSessionError extends Error {}
@@ -188,7 +189,6 @@ export class SolveSessionsRepository {
       paper: {
         include: {
           examSession: { include: { exam: true } },
-          subject: true,
         },
       },
       sourceSet: true,

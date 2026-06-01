@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
@@ -117,7 +118,6 @@ export class LibraryRepository {
       paper: {
         include: {
           examSession: { include: { exam: true } },
-          subject: true,
         },
       },
     };

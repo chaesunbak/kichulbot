@@ -19,6 +19,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -43,7 +44,7 @@ export class TagsController {
   @ApiOkResponse({ description: '태그 목록을 반환합니다.' })
   listTags(
     @CurrentUser() user: RequestUser,
-    @Query('subjectId') subjectId?: string,
+    @Query('examId') examId?: string,
     @Query('includeInactive') includeInactive?: string,
   ) {
     if (includeInactive === 'true') {
@@ -54,7 +55,7 @@ export class TagsController {
       }
       return this.tagsService.listAdminTags();
     }
-    return this.tagsService.listTags(user.role, subjectId);
+    return this.tagsService.listTags(user.role, examId);
   }
 
   @Post()

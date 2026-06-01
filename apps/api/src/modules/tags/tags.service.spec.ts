@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { Tag, UserRole } from '@prisma/client';
+
 import { TagsRepository } from './tags.repository';
 import { TagsService } from './tags.service';
 
@@ -15,7 +16,7 @@ describe('TagsService', () => {
       findMany: jest.fn(),
       findById: jest.fn(),
       countAssignableByIds: jest.fn(),
-      countSubjectsByIds: jest.fn(),
+      countExamsByIds: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<TagsRepository>;
@@ -26,14 +27,14 @@ describe('TagsService', () => {
   it('returns only public fields for the regular tag list', async () => {
     repository.findManyAvailable.mockResolvedValue([
       makeTag({
-        subjects: [{ tagId: 'tag_1', subjectId: 'subject_1', createdAt: now }],
+        exams: [{ tagId: 'tag_1', examId: 'exam_1', createdAt: now }],
       }),
     ]);
 
-    const response = await service.listTags(UserRole.USER, 'subject_1');
+    const response = await service.listTags(UserRole.USER, 'exam_1');
 
-    expect(repository.findManyAvailable).toHaveBeenCalledWith('subject_1');
-    expect(response.tags[0]).not.toHaveProperty('subjectIds');
+    expect(repository.findManyAvailable).toHaveBeenCalledWith('exam_1');
+    expect(response.tags[0]).not.toHaveProperty('examIds');
     expect(response.tags[0]).toMatchObject({
       id: 'tag_1',
       kind: 'OFFICIAL',
@@ -41,17 +42,17 @@ describe('TagsService', () => {
     });
   });
 
-  it('returns subject scopes and timestamps for the admin list', async () => {
+  it('returns exam scopes and timestamps for the admin list', async () => {
     repository.findMany.mockResolvedValue([
       makeTag({
-        subjects: [{ tagId: 'tag_1', subjectId: 'subject_1', createdAt: now }],
+        exams: [{ tagId: 'tag_1', examId: 'exam_1', createdAt: now }],
       }),
     ]);
 
     const response = await service.listAdminTags();
 
     expect(response.tags[0]).toMatchObject({
-      subjectIds: ['subject_1'],
+      examIds: ['exam_1'],
       createdAt: now.toISOString(),
     });
   });
@@ -60,29 +61,28 @@ describe('TagsService', () => {
     repository.countAssignableByIds.mockResolvedValue(0);
 
     await expect(
-      service.assertTagsAssignable(['tag_1'], 'subject_1'),
+      service.assertTagsAssignable(['tag_1'], 'exam_1'),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('keeps an existing inactive tag without requiring reassignment', async () => {
-    await service.assertTagsAssignable(['tag_1'], 'subject_1', ['tag_1']);
+    await service.assertTagsAssignable(['tag_1'], 'exam_1', ['tag_1']);
 
     expect(repository.countAssignableByIds).not.toHaveBeenCalled();
   });
 });
 
 function makeTag({
-  subjects,
+  exams,
 }: {
-  subjects: Array<{ tagId: string; subjectId: string; createdAt: Date }>;
-}): Tag & { subjects: typeof subjects } {
+  exams: Array<{ tagId: string; examId: string; createdAt: Date }>;
+}): Tag & { exams: typeof exams } {
   return {
     id: 'tag_1',
     name: '조선',
-    slug: 'joseon',
     isActive: true,
     createdAt: now,
     updatedAt: now,
-    subjects,
+    exams,
   };
 }

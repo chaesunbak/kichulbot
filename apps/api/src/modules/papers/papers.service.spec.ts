@@ -1,30 +1,50 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
+  Category,
   Exam,
+  ExamCategory,
   ExamSession,
   Paper,
   Question,
-  Subject,
   UserPaper,
   UserRole,
 } from '@prisma/client';
+
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
-import { SubjectsService } from '../subjects/subjects.service';
 import { PapersRepository } from './papers.repository';
 import { PapersService } from './papers.service';
 
 const now = new Date('2026-05-28T00:00:00.000Z');
 
+const category: Category = {
+  id: 'category_1',
+  name: '수능',
+  createdAt: now,
+  updatedAt: now,
+};
+
 const exam: Exam = {
   id: 'exam_1',
   name: '수능',
-  slug: 'suneung',
   usesMonth: false,
   usesGrade: false,
   usesRound: false,
   createdAt: now,
   updatedAt: now,
+};
+const examWithCategories: Exam & {
+  categories: Array<ExamCategory & { category: Category }>;
+} = {
+  ...exam,
+  categories: [
+    {
+      examId: exam.id,
+      categoryId: category.id,
+      createdAt: now,
+      category,
+    },
+  ],
 };
 
 const examSession: ExamSession = {
@@ -39,19 +59,10 @@ const examSession: ExamSession = {
   updatedAt: now,
 };
 
-const subject: Subject = {
-  id: 'subject_1',
-  name: '한국사',
-  slug: 'korean-history',
-  createdAt: now,
-  updatedAt: now,
-};
-
 const paper = (
   overrides: Partial<Paper> = {},
 ): Paper & {
   examSession: ExamSession & { exam: Exam };
-  subject: Subject;
   questions: Question[];
   users: UserPaper[];
 } => ({
@@ -60,12 +71,10 @@ const paper = (
   questionCount: 20,
   isPublished: false,
   examSessionId: examSession.id,
-  subjectId: subject.id,
   questionSetId: 'question_set_1',
   createdAt: now,
   updatedAt: now,
   examSession: { ...examSession, exam },
-  subject,
   questions: [],
   users: [],
   ...overrides,
@@ -75,7 +84,6 @@ describe('PapersService', () => {
   let service: PapersService;
   let repository: jest.Mocked<PapersRepository>;
   let examsService: jest.Mocked<ExamsService>;
-  let subjectsService: jest.Mocked<SubjectsService>;
   let storageService: jest.Mocked<StorageService>;
 
   beforeEach(() => {
@@ -89,21 +97,13 @@ describe('PapersService', () => {
     examsService = {
       findById: jest.fn(),
     } as unknown as jest.Mocked<ExamsService>;
-    subjectsService = {
-      findById: jest.fn(),
-    } as unknown as jest.Mocked<SubjectsService>;
     storageService = {
       uploadQuestionImage: jest.fn(),
       getPublicUrl: jest.fn(),
       deleteObject: jest.fn().mockResolvedValue(undefined),
     };
 
-    service = new PapersService(
-      repository,
-      examsService,
-      subjectsService,
-      storageService,
-    );
+    service = new PapersService(repository, examsService, storageService);
   });
 
   it('returns only published papers for normal users without admin fields', async () => {
@@ -164,9 +164,8 @@ describe('PapersService', () => {
     expect(response.papers[0]).toMatchObject({ isInLibrary: true });
   });
 
-  it('rejects creating a paper when taxonomy ids are invalid', async () => {
+  it('rejects creating a paper when the exam id is invalid', async () => {
     examsService.findById.mockResolvedValue(null);
-    subjectsService.findById.mockResolvedValue(subject);
 
     await expect(
       service.createPaper(
@@ -174,16 +173,14 @@ describe('PapersService', () => {
           title: '2025학년도 수능 한국사',
           year: 2025,
           examId: 'missing_exam',
-          subjectId: subject.id,
         },
         UserRole.ADMIN,
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('creates a paper after checking exam and subject ids', async () => {
-    examsService.findById.mockResolvedValue(exam);
-    subjectsService.findById.mockResolvedValue(subject);
+  it('creates a paper after checking the exam id', async () => {
+    examsService.findById.mockResolvedValue(examWithCategories);
     repository.create.mockResolvedValue(paper({ isPublished: true }));
 
     const response = await service.createPaper(
@@ -191,7 +188,6 @@ describe('PapersService', () => {
         title: '2025학년도 수능 한국사',
         year: 2025,
         examId: exam.id,
-        subjectId: subject.id,
         isPublished: true,
       },
       UserRole.ADMIN,
@@ -204,7 +200,6 @@ describe('PapersService', () => {
       month: null,
       grade: null,
       round: null,
-      subjectId: subject.id,
       questionCount: 20,
       isPublished: true,
     });
@@ -212,8 +207,10 @@ describe('PapersService', () => {
   });
 
   it('requires grade when the selected exam uses grade classification', async () => {
-    examsService.findById.mockResolvedValue({ ...exam, usesGrade: true });
-    subjectsService.findById.mockResolvedValue(subject);
+    examsService.findById.mockResolvedValue({
+      ...examWithCategories,
+      usesGrade: true,
+    });
 
     await expect(
       service.createPaper(
@@ -221,7 +218,6 @@ describe('PapersService', () => {
           title: '2026년 3월 고1 학평 한국사',
           year: 2026,
           examId: exam.id,
-          subjectId: subject.id,
         },
         UserRole.ADMIN,
       ),

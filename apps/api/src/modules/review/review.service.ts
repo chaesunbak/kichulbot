@@ -12,6 +12,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AnswerMode, AttemptOutcome, Prisma } from '@prisma/client';
+
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';
 
@@ -28,7 +29,6 @@ type DailyWrongQuestionSet = Prisma.QuestionSetGetPayload<{
                 paper: {
                   include: {
                     examSession: { include: { exam: true } };
-                    subject: true;
                   };
                 };
               };
@@ -164,7 +164,6 @@ export class ReviewService {
             title: question.paper.title,
             year: question.paper.examSession.displayYear,
             examName: question.paper.examSession.exam.name,
-            subjectName: question.paper.subject.name,
           },
         };
       }),

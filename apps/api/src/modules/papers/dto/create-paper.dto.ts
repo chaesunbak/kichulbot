@@ -46,10 +46,6 @@ export class CreatePaperDto implements CreatePaperRequest {
   @IsString()
   examId: string;
 
-  @ApiProperty({ example: 'clx0000000000000000000001' })
-  @IsString()
-  subjectId: string;
-
   @ApiProperty({ required: false, default: 20, example: 20 })
   @IsOptional()
   @IsInt()

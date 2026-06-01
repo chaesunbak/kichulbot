@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AttemptOutcome, Prisma, QuestionSetKind } from '@prisma/client';
+
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
@@ -143,7 +144,6 @@ export class ReviewRepository {
                   paper: {
                     include: {
                       examSession: { include: { exam: true } },
-                      subject: true,
                     },
                   },
                 },

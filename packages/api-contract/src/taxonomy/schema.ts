@@ -4,11 +4,14 @@ import { IsoDateStringSchema } from '../common.js';
 export const TaxonomyResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  slug: z.string(),
 });
 export type TaxonomyResponse = z.infer<typeof TaxonomyResponseSchema>;
 
+export const CategoryResponseSchema = TaxonomyResponseSchema;
+export type CategoryResponse = z.infer<typeof CategoryResponseSchema>;
+
 export const ExamResponseSchema = TaxonomyResponseSchema.extend({
+  categories: z.array(CategoryResponseSchema),
   usesMonth: z.boolean(),
   usesGrade: z.boolean(),
   usesRound: z.boolean(),

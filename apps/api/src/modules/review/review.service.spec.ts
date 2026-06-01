@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { AnswerMode, AttemptOutcome, QuestionSetKind } from '@prisma/client';
+
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';
 import { ReviewService } from './review.service';
@@ -72,7 +73,6 @@ const questionSet = {
             questionCount: 20,
             isPublished: true,
             examSessionId: 'exam_session_1',
-            subjectId: 'subject_1',
             questionSetId: 'official_set_1',
             createdAt: now,
             updatedAt: now,
@@ -89,20 +89,12 @@ const questionSet = {
               exam: {
                 id: 'exam_1',
                 name: '수능',
-                slug: 'suneung',
                 usesMonth: false,
                 usesGrade: false,
                 usesRound: false,
                 createdAt: now,
                 updatedAt: now,
               },
-            },
-            subject: {
-              id: 'subject_1',
-              name: '한국사',
-              slug: 'korean-history',
-              createdAt: now,
-              updatedAt: now,
             },
           },
         },

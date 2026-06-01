@@ -8,7 +8,6 @@ export const CreatePaperRequestSchema = z.object({
   grade: z.number().int().min(1).max(3).nullable().optional(),
   round: z.number().int().min(1).nullable().optional(),
   examId: z.string().min(1),
-  subjectId: z.string().min(1),
   questionCount: z.number().int().min(1).max(100).optional(),
   isPublished: z.boolean().optional(),
 });

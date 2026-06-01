@@ -1,8 +1,5 @@
 import {
-  SolveSessionLogResponse,
-  SolveSessionResponse,
   AnswerResponse,
-  SolveSessionResultResponse,
   GetSolveSessionResponse,
   GetSolveSessionResponseSchema,
   ListSolveSessionLogsResponse,
@@ -10,6 +7,9 @@ import {
   QuestionResultResponse,
   SaveAnswerResponse,
   SaveAnswerResponseSchema,
+  SolveSessionLogResponse,
+  SolveSessionResponse,
+  SolveSessionResultResponse,
   StartSolveSessionResponse,
   StartSolveSessionResponseSchema,
   SubmitSolveSessionResponse,
@@ -27,6 +27,7 @@ import {
   Prisma,
   QuestionType,
 } from '@prisma/client';
+
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import {
   SolveSessionsRepository,
@@ -38,7 +39,6 @@ type SessionWithRelations = Prisma.SolveSessionGetPayload<{
     paper: {
       include: {
         examSession: { include: { exam: true } };
-        subject: true;
       };
     };
     sourceSet: true;
@@ -268,12 +268,6 @@ export class SolveSessionsService {
         exam: {
           id: 'wrong-review',
           name: '오답 복습',
-          slug: 'wrong-review',
-        },
-        subject: {
-          id: 'mixed',
-          name: '혼합',
-          slug: 'mixed',
         },
       };
     }
@@ -289,12 +283,6 @@ export class SolveSessionsService {
       exam: {
         id: paper.examSession.exam.id,
         name: paper.examSession.exam.name,
-        slug: paper.examSession.exam.slug,
-      },
-      subject: {
-        id: paper.subject.id,
-        name: paper.subject.name,
-        slug: paper.subject.slug,
       },
     };
   }

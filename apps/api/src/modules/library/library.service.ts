@@ -20,13 +20,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  Exam,
-  ExamSession,
-  LibraryFolder,
-  Paper,
-  Subject,
-} from '@prisma/client';
+import { Exam, ExamSession, LibraryFolder, Paper } from '@prisma/client';
+
 import { LibraryRepository } from './library.repository';
 
 type LibraryPaperWithPaper = {
@@ -36,7 +31,6 @@ type LibraryPaperWithPaper = {
   updatedAt: Date;
   paper: Paper & {
     examSession: ExamSession & { exam: Exam };
-    subject: Subject;
   };
 };
 
@@ -276,12 +270,6 @@ export class LibraryService {
         exam: {
           id: paper.examSession.exam.id,
           name: paper.examSession.exam.name,
-          slug: paper.examSession.exam.slug,
-        },
-        subject: {
-          id: paper.subject.id,
-          name: paper.subject.name,
-          slug: paper.subject.slug,
         },
       },
       createdAt: libraryPaper.createdAt.toISOString(),

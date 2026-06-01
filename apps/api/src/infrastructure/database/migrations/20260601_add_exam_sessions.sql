@@ -11,12 +11,11 @@ SET
   "usesMonth" = false,
   "usesGrade" = false,
   "usesRound" = false
-WHERE "slug" = 'suneung';
+WHERE "name" = '수능';
 
 INSERT INTO "Exam" (
   "id",
   "name",
-  "slug",
   "usesMonth",
   "usesGrade",
   "usesRound",
@@ -27,7 +26,6 @@ VALUES
   (
     'seed-mock-exam',
     '전국연합학력평가',
-    'mock-exam',
     true,
     true,
     false,
@@ -37,14 +35,13 @@ VALUES
   (
     'seed-korean-history-proficiency-test',
     '한국사능력검정시험',
-    'korean-history-proficiency-test',
     false,
     false,
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
   )
-ON CONFLICT ("slug") DO UPDATE
+ON CONFLICT ("id") DO UPDATE
 SET
   "name" = EXCLUDED."name",
   "usesMonth" = EXCLUDED."usesMonth",

@@ -24,19 +24,17 @@ import {
   Paper,
   Prisma,
   Question,
-  Subject,
   UserRole,
 } from '@prisma/client';
-import { ExamsService } from '../exams/exams.service';
-import { SubjectsService } from '../subjects/subjects.service';
+
 import { StorageService } from '../../infrastructure/storage/storage.service';
+import { ExamsService } from '../exams/exams.service';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersRepository } from './papers.repository';
 
 type PaperWithRelations = Paper & {
   examSession: ExamSession & { exam: Exam };
-  subject: Subject;
   questions?: Array<
     Question & {
       tags?: Array<
@@ -54,7 +52,6 @@ export class PapersService {
   constructor(
     private readonly papersRepository: PapersRepository,
     private readonly examsService: ExamsService,
-    private readonly subjectsService: SubjectsService,
     private readonly storageService: StorageService,
   ) {}
 
@@ -62,17 +59,10 @@ export class PapersService {
     dto: CreatePaperDto,
     role: UserRole,
   ): Promise<CreatePaperResponse> {
-    const [exam, subject] = await Promise.all([
-      this.examsService.findById(dto.examId),
-      this.subjectsService.findById(dto.subjectId),
-    ]);
+    const exam = await this.examsService.findById(dto.examId);
 
     if (!exam) {
       throw new BadRequestException('시험을 찾을 수 없습니다.');
-    }
-
-    if (!subject) {
-      throw new BadRequestException('과목을 찾을 수 없습니다.');
     }
 
     this.assertSessionFields(exam, dto);
@@ -84,7 +74,6 @@ export class PapersService {
       month: dto.month ?? null,
       grade: dto.grade ?? null,
       round: dto.round ?? null,
-      subjectId: dto.subjectId,
       questionCount: dto.questionCount ?? 20,
       isPublished: dto.isPublished ?? false,
     });
@@ -175,7 +164,6 @@ export class PapersService {
       questionCount: paper.questionCount,
       isInLibrary: (paper.users?.length ?? 0) > 0,
       exam: this.toTaxonomyResponse(paper.examSession.exam),
-      subject: this.toTaxonomyResponse(paper.subject),
     };
 
     if (role !== UserRole.ADMIN) {
@@ -210,7 +198,6 @@ export class PapersService {
           question.tags?.map((questionTag) => ({
             id: questionTag.tag.id,
             name: questionTag.tag.name,
-            slug: questionTag.tag.slug,
             kind: 'OFFICIAL',
             isActive: questionTag.tag.isActive,
           })) ?? [],
@@ -220,11 +207,10 @@ export class PapersService {
     };
   }
 
-  private toTaxonomyResponse(entity: Exam | Subject): TaxonomyResponse {
+  private toTaxonomyResponse(entity: Exam): TaxonomyResponse {
     return {
       id: entity.id,
       name: entity.name,
-      slug: entity.slug,
     };
   }
 

@@ -35,7 +35,6 @@ export const PaperResponseSchema = z.object({
   questionCount: z.number().int(),
   isInLibrary: z.boolean(),
   exam: TaxonomyResponseSchema,
-  subject: TaxonomyResponseSchema,
 });
 export type PaperResponse = z.infer<typeof PaperResponseSchema>;
 

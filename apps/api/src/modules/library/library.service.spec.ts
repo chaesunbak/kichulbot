@@ -1,11 +1,6 @@
 import { ConflictException } from '@nestjs/common';
-import {
-  Exam,
-  ExamSession,
-  LibraryFolder,
-  Paper,
-  Subject,
-} from '@prisma/client';
+import { Exam, ExamSession, LibraryFolder, Paper } from '@prisma/client';
+
 import { LibraryRepository } from './library.repository';
 import { LibraryService } from './library.service';
 
@@ -13,7 +8,6 @@ const now = new Date('2026-05-31T00:00:00.000Z');
 const exam = {
   id: 'exam_1',
   name: '수능',
-  slug: 'suneung',
   usesMonth: false,
   usesGrade: false,
   usesRound: false,
@@ -38,19 +32,12 @@ const paper = {
   questionCount: 20,
   isPublished: true,
   examSessionId: examSession.id,
-  subjectId: 'subject_1',
   questionSetId: 'question_set_1',
   createdAt: now,
   updatedAt: now,
   examSession,
-  subject: {
-    id: 'subject_1',
-    name: '한국사',
-    slug: 'korean-history',
-  } as Subject,
 } satisfies Paper & {
   examSession: ExamSession & { exam: Exam };
-  subject: Subject;
 };
 const folder = {
   id: 'folder_1',

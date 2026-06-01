@@ -38,6 +38,7 @@ describe('AuthService', () => {
       createEmailUser: jest.fn(),
       findByEmail: jest.fn(),
       findById: jest.fn(),
+      deleteById: jest.fn(),
       convertAnonymousUser: jest.fn(),
       isUniqueConstraintError: jest.fn(),
     } as unknown as jest.Mocked<UsersRepository>;
@@ -218,5 +219,24 @@ describe('AuthService', () => {
       id: 'user_1',
       email: 'a@b.com',
     });
+  });
+
+  it('deletes the current user account', async () => {
+    usersRepository.findById.mockResolvedValue(user());
+    usersRepository.deleteById.mockResolvedValue({ id: 'user_1' });
+
+    await expect(service.deleteMe('user_1')).resolves.toEqual({
+      id: 'user_1',
+    });
+    expect(usersRepository.deleteById).toHaveBeenCalledWith('user_1');
+  });
+
+  it('rejects account deletion with an invalid user id', async () => {
+    usersRepository.findById.mockResolvedValue(null);
+
+    await expect(service.deleteMe('missing_user')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(usersRepository.deleteById).not.toHaveBeenCalled();
   });
 });

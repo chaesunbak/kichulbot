@@ -109,6 +109,17 @@ export class AuthService {
     });
   }
 
+  async deleteMe(userId: string): Promise<DeleteMeResponse> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
+    }
+
+    return DeleteMeResponseSchema.parse(
+      await this.usersRepository.deleteById(userId),
+    );
+  }
+
   async validateJwtPayload(payload: JwtUser) {
     const user = await this.usersRepository.findById(payload.sub);
     if (!user) {
@@ -163,6 +174,8 @@ export class AuthService {
 import {
   AuthResponse,
   AuthResponseSchema,
+  DeleteMeResponse,
+  DeleteMeResponseSchema,
   MeResponse,
   MeResponseSchema,
 } from '@kichulbot/api-contract/auth';

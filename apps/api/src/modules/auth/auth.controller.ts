@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -15,6 +15,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import {
   AuthResponseDto,
   ConvertAnonymousDto,
+  DeleteMeResponseDto,
   LoginDto,
   MeResponseDto,
   RegisterDto,
@@ -106,5 +107,20 @@ export class MeController {
   })
   me(@CurrentUser() user: RequestUser) {
     return this.authService.getMe(user.id);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '내 계정 삭제' })
+  @ApiOkResponse({
+    description: '현재 인증된 사용자의 계정을 삭제합니다.',
+    type: DeleteMeResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: '인증 정보가 없거나 유효하지 않습니다.',
+  })
+  deleteMe(@CurrentUser() user: RequestUser) {
+    return this.authService.deleteMe(user.id);
   }
 }

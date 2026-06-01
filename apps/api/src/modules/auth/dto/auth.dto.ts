@@ -1,6 +1,7 @@
 import {
   AuthResponse,
   ConvertAnonymousRequest,
+  DeleteMeResponse,
   LoginRequest,
   MeResponse,
   RegisterRequest,
@@ -116,4 +117,9 @@ export class AuthResponseDto implements AuthResponse {
 export class MeResponseDto implements MeResponse {
   @ApiProperty({ type: UserResponseDto })
   user: UserResponseDto;
+}
+
+export class DeleteMeResponseDto implements DeleteMeResponse {
+  @ApiProperty({ example: 'clx0000000000000000000000' })
+  id: string;
 }

@@ -2,6 +2,7 @@ import {
   RegisterRequestSchema,
   LoginRequestSchema,
   ConvertAnonymousRequestSchema,
+  DeleteMeResponseSchema,
   AuthResponseSchema,
   MeResponseSchema,
 } from './dto.js';
@@ -36,5 +37,11 @@ export const authRoutes = {
     path: '/me',
     request: null,
     response: MeResponseSchema,
+  },
+  deleteMe: {
+    method: 'DELETE',
+    path: '/me',
+    request: null,
+    response: DeleteMeResponseSchema,
   },
 } as const;

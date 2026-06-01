@@ -54,6 +54,13 @@ export class UsersRepository {
     });
   }
 
+  deleteById(id: string) {
+    return this.db.user.delete({
+      where: { id },
+      select: { id: true },
+    });
+  }
+
   convertAnonymousUser(
     userId: string,
     data: {

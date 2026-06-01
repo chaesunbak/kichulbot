@@ -29,3 +29,8 @@ export const MeResponseSchema = z.object({
   user: UserResponseSchema,
 });
 export type MeResponse = z.infer<typeof MeResponseSchema>;
+
+export const DeleteMeResponseSchema = z.object({
+  id: z.string(),
+});
+export type DeleteMeResponse = z.infer<typeof DeleteMeResponseSchema>;

@@ -16,6 +16,34 @@ kichulbot/
     └── typescript-config/  # Shared TypeScript tsconfig presets
 ```
 
+## Web Frontend Structure
+
+The user-facing frontend app lives in `apps/web`.
+
+```text
+apps/web/
+├── public/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/          # Auth pages such as guest, login, and register
+│   │   ├── (main)/          # Main authenticated app pages
+│   │   ├── (solve)/         # Solve-focused route layout
+│   │   ├── api/             # Route handlers and backend proxy routes(BFF)
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── features/            # Feature modules grouped by domain
+│   │   └── (feature)/
+│   ├── shared/
+│   │   ├── api/
+│   │   ├── components/
+│   │   └── lib/
+│   └── proxy.ts
+├── next.config.ts
+├── package.json
+└── tsconfig.json
+```
+
 ## Backend Structure
 
 The backend app lives in `apps/api`.

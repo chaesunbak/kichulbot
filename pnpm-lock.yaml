@@ -240,6 +240,9 @@ importers:
       next:
         specifier: 16.2.6
         version: 16.2.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      overlay-kit:
+        specifier: ^1.9.0
+        version: 1.9.0(react@19.2.4)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8643,6 +8646,14 @@ packages:
         integrity: sha512-+Sl2UErvtsoajRDKCE5/dBz4DIvHXQQnAxtQTF04OJxY0+DyZXSo5P5Bb7XYWOh81syohlYL24hbDwxedPUJCA==,
       }
 
+  overlay-kit@1.9.0:
+    resolution:
+      {
+        integrity: sha512-kwzAOhWEDsrmgJzQKuI0v3xCwyWTSaNe3qI0t+7OTTj05ciRpg3j+NWz8FRPVt7rHBFL/jAjKyQf4xGOHcRXfg==,
+      }
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19
+
   own-keys@1.0.1:
     resolution:
       {
@@ -16443,6 +16454,10 @@ snapshots:
   os-tmpdir@1.0.2: {}
 
   outvariant@1.4.3: {}
+
+  overlay-kit@1.9.0(react@19.2.4):
+    dependencies:
+      react: 19.2.4
 
   own-keys@1.0.1:
     dependencies:

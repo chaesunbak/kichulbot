@@ -5,6 +5,7 @@ import {
   Paper,
   Question,
   Subject,
+  UserPaper,
   UserRole,
 } from '@prisma/client';
 import { StorageService } from '../../infrastructure/storage/storage.service';
@@ -52,7 +53,7 @@ const paper = (
   examSession: ExamSession & { exam: Exam };
   subject: Subject;
   questions: Question[];
-  users: Array<{ bookshelfId: string; paperId: string; createdAt: Date }>;
+  users: UserPaper[];
 } => ({
   id: 'paper_1',
   title: '2025학년도 수능 한국사',
@@ -142,7 +143,14 @@ describe('PapersService', () => {
     repository.findMany.mockResolvedValue([
       paper({
         users: [
-          { bookshelfId: 'bookshelf_1', paperId: 'paper_1', createdAt: now },
+          {
+            id: 'library_paper_1',
+            userId: 'user_1',
+            paperId: 'paper_1',
+            folderId: null,
+            createdAt: now,
+            updatedAt: now,
+          },
         ],
       } as never),
     ]);

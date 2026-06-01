@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { Mail, UserRound } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import { Card, CardContent } from '@kichulbot/ui/components/card';
-import { LogoutButton } from '@/components/logout-button';
-import { getUser } from '@/lib/auth';
+import { LogoutButton } from '@/features/auth/components/logout-button';
+import { getUser } from '@/features/auth/server';
 
 export default async function MyPage() {
   const user = await getUser();

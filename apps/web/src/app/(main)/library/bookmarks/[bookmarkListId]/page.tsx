@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { BookmarkListDetail } from '@/components/bookmark-list-detail';
-import { getBookmarkList } from '@/lib/learning';
-import type { BookmarkList } from '@/lib/learning.types';
+import { BookmarkListDetail } from '@/features/library/components/bookmark-list-detail';
+import { getBookmarkList } from '@/features/learning/api';
+import type { BookmarkList } from '@/features/learning/types';
 
 export default async function BookmarkListPage({
   params,

@@ -1,47 +1,55 @@
 import {
-  AddLibraryPaperResponseSchema,
-  BookshelfResponseEnvelopeSchema,
-  CreateBookshelfRequestSchema,
-  DeleteBookshelfResponseSchema,
+  AddLibraryPaperRequestSchema,
+  DeleteLibraryFolderResponseSchema,
   DeleteLibraryPaperResponseSchema,
-  ListBookshelvesResponseSchema,
-  UpdateBookshelfRequestSchema,
+  CreateLibraryFolderRequestSchema,
+  LibraryFolderResponseEnvelopeSchema,
+  LibraryPaperResponseEnvelopeSchema,
+  LibraryResponseSchema,
+  MoveLibraryPaperRequestSchema,
+  UpdateLibraryFolderRequestSchema,
 } from './dto.js';
 
 export const libraryRoutes = {
-  listBookshelves: {
+  getLibrary: {
     method: 'GET',
-    path: '/me/paper-lists',
+    path: '/me/library',
     request: null,
-    response: ListBookshelvesResponseSchema,
+    response: LibraryResponseSchema,
   },
-  createBookshelf: {
+  createFolder: {
     method: 'POST',
-    path: '/me/paper-lists',
-    request: CreateBookshelfRequestSchema,
-    response: BookshelfResponseEnvelopeSchema,
+    path: '/me/library/folders',
+    request: CreateLibraryFolderRequestSchema,
+    response: LibraryFolderResponseEnvelopeSchema,
   },
-  updateBookshelf: {
+  updateFolder: {
     method: 'PATCH',
-    path: '/me/paper-lists/:bookshelfId',
-    request: UpdateBookshelfRequestSchema,
-    response: BookshelfResponseEnvelopeSchema,
+    path: '/me/library/folders/:folderId',
+    request: UpdateLibraryFolderRequestSchema,
+    response: LibraryFolderResponseEnvelopeSchema,
   },
-  deleteBookshelf: {
+  deleteFolder: {
     method: 'DELETE',
-    path: '/me/paper-lists/:bookshelfId',
+    path: '/me/library/folders/:folderId',
     request: null,
-    response: DeleteBookshelfResponseSchema,
+    response: DeleteLibraryFolderResponseSchema,
   },
   addLibraryPaper: {
     method: 'PUT',
-    path: '/me/paper-lists/:bookshelfId/exam-papers/:paperId',
-    request: null,
-    response: AddLibraryPaperResponseSchema,
+    path: '/me/library/exam-papers/:paperId',
+    request: AddLibraryPaperRequestSchema,
+    response: LibraryPaperResponseEnvelopeSchema,
+  },
+  moveLibraryPaper: {
+    method: 'PATCH',
+    path: '/me/library/papers/:libraryPaperId',
+    request: MoveLibraryPaperRequestSchema,
+    response: LibraryPaperResponseEnvelopeSchema,
   },
   deleteLibraryPaper: {
     method: 'DELETE',
-    path: '/me/paper-lists/:bookshelfId/exam-papers/:paperId',
+    path: '/me/library/papers/:libraryPaperId',
     request: null,
     response: DeleteLibraryPaperResponseSchema,
   },

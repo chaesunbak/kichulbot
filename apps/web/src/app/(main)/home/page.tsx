@@ -1,19 +1,16 @@
 import Link from 'next/link';
 import { ArrowRight, BookOpen, LibraryBig, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from '@kichulbot/ui/components/card';
-import { getUser } from '@/lib/auth';
-import { getSolveSessionLogs, getBookshelves } from '@/lib/learning';
+import { getUser } from '@/features/auth/server';
+import { getSolveSessionLogs, getLibrary } from '@/features/learning/api';
 
 export default async function HomePage() {
-  const [user, bookshelves, logs] = await Promise.all([
+  const [user, library, logs] = await Promise.all([
     getUser(),
-    getBookshelves().catch(() => []),
+    getLibrary().catch(() => ({ folders: [], papers: [] })),
     getSolveSessionLogs().catch(() => []),
   ]);
-  const savedPaperCount = bookshelves.reduce(
-    (count, bookshelf) => count + bookshelf.papers.length,
-    0,
-  );
+  const savedPaperCount = library.papers.length;
   const recentLog = logs[0];
 
   return (
@@ -46,7 +43,7 @@ export default async function HomePage() {
           <ShortcutCard
             href="/library"
             icon={LibraryBig}
-            title="내책장"
+            title="내서재"
             description={`${savedPaperCount}개 자료 보관 중`}
           />
           <ShortcutCard

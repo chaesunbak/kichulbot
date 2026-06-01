@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { proxyAuthenticatedRequest } from '@/lib/authenticated-proxy';
+import { proxyAuthenticatedRequest } from '@/shared/lib/authenticated-proxy';
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
@@ -16,12 +16,13 @@ const ALLOWED_ROUTES = [
   ['GET', /^\/me\/question-lists\/[^/]+$/],
   ['PUT', /^\/me\/question-lists\/[^/]+\/questions\/[^/]+$/],
   ['DELETE', /^\/me\/question-lists\/[^/]+\/questions\/[^/]+$/],
-  ['GET', /^\/me\/paper-lists$/],
-  ['POST', /^\/me\/paper-lists$/],
-  ['PATCH', /^\/me\/paper-lists\/[^/]+$/],
-  ['DELETE', /^\/me\/paper-lists\/[^/]+$/],
-  ['PUT', /^\/me\/paper-lists\/[^/]+\/exam-papers\/[^/]+$/],
-  ['DELETE', /^\/me\/paper-lists\/[^/]+\/exam-papers\/[^/]+$/],
+  ['GET', /^\/me\/library$/],
+  ['POST', /^\/me\/library\/folders$/],
+  ['PATCH', /^\/me\/library\/folders\/[^/]+$/],
+  ['DELETE', /^\/me\/library\/folders\/[^/]+$/],
+  ['PUT', /^\/me\/library\/exam-papers\/[^/]+$/],
+  ['PATCH', /^\/me\/library\/papers\/[^/]+$/],
+  ['DELETE', /^\/me\/library\/papers\/[^/]+$/],
   ['GET', /^\/me\/wrong-question-sets$/],
   ['POST', /^\/me\/wrong-question-sets$/],
   ['POST', /^\/me\/wrong-question-sets\/[^/]+\/solve-sessions$/],

@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 
-import { SolveSession } from '@/components/solve-session';
-import { getSolveSession } from '@/lib/learning';
-import type { SolveSession as SolveSessionData } from '@/lib/learning.types';
+import { SolveSession } from '@/features/learning/components/solve-session';
+import { getSolveSession } from '@/features/learning/api';
+import type { SolveSession as SolveSessionData } from '@/features/learning/types';
 
 export default async function SolvePage({
   params,

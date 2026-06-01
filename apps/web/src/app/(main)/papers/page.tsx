@@ -2,9 +2,9 @@ import Link from 'next/link';
 import {
   BookshelfGrid,
   BookshelfSection,
-} from '@/components/bookshelf-section';
-import { PaperCoverCard } from '@/components/paper-cover-card';
-import { getPapers, type Paper } from '@/lib/papers';
+} from '@/features/library/components/bookshelf-section';
+import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
+import { getPapers, type Paper } from '@/features/papers/api';
 
 export default async function PapersPage() {
   let papers: Paper[];

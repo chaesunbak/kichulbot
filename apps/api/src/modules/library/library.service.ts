@@ -1,144 +1,259 @@
 import {
-  AddLibraryPaperResponse,
-  AddLibraryPaperResponseSchema,
-  BookshelfResponse,
-  BookshelfResponseEnvelope,
-  BookshelfResponseEnvelopeSchema,
-  DeleteBookshelfResponse,
-  DeleteBookshelfResponseSchema,
+  CreateLibraryFolderRequest,
+  DeleteLibraryFolderResponse,
+  DeleteLibraryFolderResponseSchema,
   DeleteLibraryPaperResponse,
   DeleteLibraryPaperResponseSchema,
+  LibraryFolderResponse,
+  LibraryFolderResponseEnvelope,
+  LibraryFolderResponseEnvelopeSchema,
   LibraryPaperResponse,
-  ListBookshelvesResponse,
-  ListBookshelvesResponseSchema,
+  LibraryPaperResponseEnvelope,
+  LibraryPaperResponseEnvelopeSchema,
+  LibraryResponse,
+  LibraryResponseSchema,
+  UpdateLibraryFolderRequest,
 } from '@kichulbot/api-contract/library';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Bookshelf, Exam, ExamSession, Paper, Subject } from '@prisma/client';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  Exam,
+  ExamSession,
+  LibraryFolder,
+  Paper,
+  Subject,
+} from '@prisma/client';
 import { LibraryRepository } from './library.repository';
 
 type LibraryPaperWithPaper = {
+  id: string;
+  folderId: string | null;
   createdAt: Date;
+  updatedAt: Date;
   paper: Paper & {
     examSession: ExamSession & { exam: Exam };
     subject: Subject;
   };
 };
 
-type BookshelfWithPapers = Bookshelf & {
-  papers: LibraryPaperWithPaper[];
-};
-
 @Injectable()
 export class LibraryService {
   constructor(private readonly libraryRepository: LibraryRepository) {}
 
-  async listBookshelves(userId: string): Promise<ListBookshelvesResponse> {
-    const bookshelves = await this.libraryRepository.findBookshelves(userId);
-    return ListBookshelvesResponseSchema.parse({
-      bookshelves: bookshelves.map((bookshelf) =>
-        this.toBookshelfResponse(bookshelf),
-      ),
+  async getLibrary(userId: string): Promise<LibraryResponse> {
+    const [folders, papers] = await this.libraryRepository.findLibrary(userId);
+    return LibraryResponseSchema.parse({
+      folders: folders.map((folder) => this.toFolderResponse(folder)),
+      papers: papers.map((paper) => this.toLibraryPaperResponse(paper)),
     });
   }
 
-  async createBookshelf(
+  async createFolder(
     userId: string,
-    name: string,
-  ): Promise<BookshelfResponseEnvelope> {
-    const bookshelf = await this.libraryRepository.createBookshelf(
+    dto: CreateLibraryFolderRequest,
+  ): Promise<LibraryFolderResponseEnvelope> {
+    const name = dto.name.trim();
+    const parentId = dto.parentId ?? null;
+    await this.assertParentFolder(userId, parentId);
+    await this.assertUniqueSiblingName(userId, parentId, name);
+
+    const folder = await this.libraryRepository.createFolder(
       userId,
-      name.trim(),
+      name,
+      parentId,
     );
-    return BookshelfResponseEnvelopeSchema.parse({
-      bookshelf: this.toBookshelfResponse(bookshelf),
+    return LibraryFolderResponseEnvelopeSchema.parse({
+      folder: this.toFolderResponse(folder),
     });
   }
 
-  async updateBookshelf(
+  async updateFolder(
     userId: string,
-    bookshelfId: string,
-    name: string,
-  ): Promise<BookshelfResponseEnvelope> {
-    await this.getBookshelf(userId, bookshelfId);
-    const bookshelf = await this.libraryRepository.updateBookshelf(
-      bookshelfId,
-      name.trim(),
-    );
-    return BookshelfResponseEnvelopeSchema.parse({
-      bookshelf: this.toBookshelfResponse(bookshelf),
+    folderId: string,
+    dto: UpdateLibraryFolderRequest,
+  ): Promise<LibraryFolderResponseEnvelope> {
+    const folder = await this.getFolder(userId, folderId);
+    const parentId = Object.prototype.hasOwnProperty.call(dto, 'parentId')
+      ? (dto.parentId ?? null)
+      : folder.parentId;
+    const name = dto.name?.trim() ?? folder.name;
+
+    await this.assertParentFolder(userId, parentId);
+    await this.assertNotDescendantParent(userId, folderId, parentId);
+    if (name !== folder.name || parentId !== folder.parentId) {
+      await this.assertUniqueSiblingName(userId, parentId, name, folderId);
+    }
+
+    const updated = await this.libraryRepository.updateFolder(folderId, {
+      name,
+      parentId,
+    });
+    return LibraryFolderResponseEnvelopeSchema.parse({
+      folder: this.toFolderResponse(updated),
     });
   }
 
-  async deleteBookshelf(
+  async deleteFolder(
     userId: string,
-    bookshelfId: string,
-  ): Promise<DeleteBookshelfResponse> {
-    await this.getBookshelf(userId, bookshelfId);
-    await this.libraryRepository.deleteBookshelf(bookshelfId);
-    return DeleteBookshelfResponseSchema.parse({ id: bookshelfId });
+    folderId: string,
+  ): Promise<DeleteLibraryFolderResponse> {
+    await this.getFolder(userId, folderId);
+    const [childCount, paperCount] = await Promise.all([
+      this.libraryRepository.countFolderChildren(folderId),
+      this.libraryRepository.countFolderPapers(folderId),
+    ]);
+    if (childCount > 0 || paperCount > 0) {
+      throw new ConflictException('비어 있는 폴더만 삭제할 수 있습니다.');
+    }
+
+    await this.libraryRepository.deleteFolder(folderId);
+    return DeleteLibraryFolderResponseSchema.parse({ id: folderId });
   }
 
   async addPaper(
     userId: string,
-    bookshelfId: string,
     paperId: string,
-  ): Promise<AddLibraryPaperResponse> {
+    folderId: string | null,
+  ): Promise<LibraryPaperResponseEnvelope> {
     const [paper] = await Promise.all([
       this.libraryRepository.findPaper(paperId),
-      this.getBookshelf(userId, bookshelfId),
+      this.assertParentFolder(userId, folderId),
     ]);
     if (!paper) {
       throw new NotFoundException('문제지를 찾을 수 없습니다.');
     }
 
-    const libraryPaper = await this.libraryRepository.addPaper(
-      bookshelfId,
+    const existing = await this.libraryRepository.findExistingLibraryPaper(
+      userId,
       paperId,
+      folderId,
     );
-    return AddLibraryPaperResponseSchema.parse({
+    const libraryPaper =
+      existing ??
+      (await this.libraryRepository.createLibraryPaper(
+        userId,
+        paperId,
+        folderId,
+      ));
+
+    return LibraryPaperResponseEnvelopeSchema.parse({
       libraryPaper: this.toLibraryPaperResponse(libraryPaper),
+    });
+  }
+
+  async movePaper(
+    userId: string,
+    libraryPaperId: string,
+    folderId: string | null,
+  ): Promise<LibraryPaperResponseEnvelope> {
+    const libraryPaper = await this.getLibraryPaper(userId, libraryPaperId);
+    await this.assertParentFolder(userId, folderId);
+
+    const existing = await this.libraryRepository.findExistingLibraryPaper(
+      userId,
+      libraryPaper.paper.id,
+      folderId,
+    );
+    if (existing && existing.id !== libraryPaperId) {
+      throw new ConflictException('이미 같은 폴더에 저장된 문제지입니다.');
+    }
+
+    const updated = await this.libraryRepository.moveLibraryPaper(
+      libraryPaperId,
+      folderId,
+    );
+    return LibraryPaperResponseEnvelopeSchema.parse({
+      libraryPaper: this.toLibraryPaperResponse(updated),
     });
   }
 
   async deletePaper(
     userId: string,
-    bookshelfId: string,
-    paperId: string,
+    libraryPaperId: string,
   ): Promise<DeleteLibraryPaperResponse> {
-    const [, libraryPaper] = await Promise.all([
-      this.getBookshelf(userId, bookshelfId),
-      this.libraryRepository.findLibraryPaper(bookshelfId, paperId),
-    ]);
-    if (!libraryPaper) {
-      throw new NotFoundException('책장에 추가된 문제지를 찾을 수 없습니다.');
-    }
-
-    await this.libraryRepository.deletePaper(bookshelfId, paperId);
-    return DeleteLibraryPaperResponseSchema.parse({ bookshelfId, paperId });
+    await this.getLibraryPaper(userId, libraryPaperId);
+    await this.libraryRepository.deletePaper(libraryPaperId);
+    return DeleteLibraryPaperResponseSchema.parse({ id: libraryPaperId });
   }
 
-  private async getBookshelf(userId: string, bookshelfId: string) {
-    const bookshelf = await this.libraryRepository.findBookshelf(
+  private async getFolder(userId: string, folderId: string) {
+    const folder = await this.libraryRepository.findFolder(userId, folderId);
+    if (!folder) {
+      throw new NotFoundException('폴더를 찾을 수 없습니다.');
+    }
+    return folder;
+  }
+
+  private async getLibraryPaper(userId: string, libraryPaperId: string) {
+    const libraryPaper = await this.libraryRepository.findLibraryPaper(
       userId,
-      bookshelfId,
+      libraryPaperId,
     );
-    if (!bookshelf) {
-      throw new NotFoundException('책장을 찾을 수 없습니다.');
+    if (!libraryPaper) {
+      throw new NotFoundException(
+        '내 서재에 저장된 문제지를 찾을 수 없습니다.',
+      );
     }
-    return bookshelf;
+    return libraryPaper;
   }
 
-  private toBookshelfResponse(
-    bookshelf: BookshelfWithPapers,
-  ): BookshelfResponse {
+  private async assertParentFolder(userId: string, parentId: string | null) {
+    if (!parentId) return;
+    await this.getFolder(userId, parentId);
+  }
+
+  private async assertUniqueSiblingName(
+    userId: string,
+    parentId: string | null,
+    name: string,
+    ignoreFolderId?: string,
+  ) {
+    const sibling = await this.libraryRepository.findSiblingFolder(
+      userId,
+      parentId,
+      name,
+    );
+    if (sibling && sibling.id !== ignoreFolderId) {
+      throw new ConflictException('같은 위치에 같은 이름의 폴더가 있습니다.');
+    }
+  }
+
+  private async assertNotDescendantParent(
+    userId: string,
+    folderId: string,
+    parentId: string | null,
+  ) {
+    if (!parentId) return;
+    if (parentId === folderId) {
+      throw new BadRequestException(
+        '자기 자신을 상위 폴더로 지정할 수 없습니다.',
+      );
+    }
+
+    const folders = await this.libraryRepository.findFolders(userId);
+    let current = folders.find((folder) => folder.id === parentId);
+    while (current) {
+      if (current.parentId === folderId) {
+        throw new BadRequestException(
+          '하위 폴더를 상위 폴더로 지정할 수 없습니다.',
+        );
+      }
+      current = folders.find((folder) => folder.id === current?.parentId);
+    }
+  }
+
+  private toFolderResponse(folder: LibraryFolder): LibraryFolderResponse {
     return {
-      id: bookshelf.id,
-      name: bookshelf.name,
-      papers: bookshelf.papers.map((paper) =>
-        this.toLibraryPaperResponse(paper),
-      ),
-      createdAt: bookshelf.createdAt.toISOString(),
-      updatedAt: bookshelf.updatedAt.toISOString(),
+      id: folder.id,
+      name: folder.name,
+      parentId: folder.parentId,
+      sortOrder: folder.sortOrder,
+      createdAt: folder.createdAt.toISOString(),
+      updatedAt: folder.updatedAt.toISOString(),
     };
   }
 
@@ -147,6 +262,8 @@ export class LibraryService {
   ): LibraryPaperResponse {
     const { paper } = libraryPaper;
     return {
+      id: libraryPaper.id,
+      folderId: libraryPaper.folderId,
       paper: {
         id: paper.id,
         title: paper.title,
@@ -168,6 +285,7 @@ export class LibraryService {
         },
       },
       createdAt: libraryPaper.createdAt.toISOString(),
+      updatedAt: libraryPaper.updatedAt.toISOString(),
     };
   }
 }

@@ -20,76 +20,99 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
-import { CreateBookshelfDto, UpdateBookshelfDto } from './dto/bookshelf.dto';
+import {
+  AddLibraryPaperDto,
+  CreateLibraryFolderDto,
+  MoveLibraryPaperDto,
+  UpdateLibraryFolderDto,
+} from './dto/library.dto';
 import { LibraryService } from './library.service';
 
-@ApiTags('paper-lists')
+@ApiTags('library')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard)
-@Controller('me/paper-lists')
+@Controller('me/library')
 export class LibraryController {
   constructor(private readonly libraryService: LibraryService) {}
 
   @Get()
-  @ApiOperation({ summary: '내 책장 목록 조회' })
-  @ApiOkResponse({ description: '내 책장과 추가한 문제지를 반환합니다.' })
-  listBookshelves(@CurrentUser() user: RequestUser) {
-    return this.libraryService.listBookshelves(user.id);
+  @ApiOperation({ summary: '내 서재 조회' })
+  @ApiOkResponse({ description: '내 서재 폴더와 저장한 문제지를 반환합니다.' })
+  getLibrary(@CurrentUser() user: RequestUser) {
+    return this.libraryService.getLibrary(user.id);
   }
 
-  @Post()
-  @ApiOperation({ summary: '책장 생성' })
-  @ApiCreatedResponse({ description: '새 책장을 생성합니다.' })
-  createBookshelf(
+  @Post('folders')
+  @ApiOperation({ summary: '내 서재 폴더 생성' })
+  @ApiCreatedResponse({ description: '새 폴더를 생성합니다.' })
+  createFolder(
     @CurrentUser() user: RequestUser,
-    @Body() dto: CreateBookshelfDto,
+    @Body() dto: CreateLibraryFolderDto,
   ) {
-    return this.libraryService.createBookshelf(user.id, dto.name);
+    return this.libraryService.createFolder(user.id, dto);
   }
 
-  @Patch(':bookshelfId')
-  @ApiOperation({ summary: '책장 이름 변경' })
-  @ApiOkResponse({ description: '책장 이름을 변경합니다.' })
-  updateBookshelf(
+  @Patch('folders/:folderId')
+  @ApiOperation({ summary: '내 서재 폴더 변경' })
+  @ApiOkResponse({ description: '폴더 이름 또는 위치를 변경합니다.' })
+  updateFolder(
     @CurrentUser() user: RequestUser,
-    @Param('bookshelfId') bookshelfId: string,
-    @Body() dto: UpdateBookshelfDto,
+    @Param('folderId') folderId: string,
+    @Body() dto: UpdateLibraryFolderDto,
   ) {
-    return this.libraryService.updateBookshelf(user.id, bookshelfId, dto.name);
+    return this.libraryService.updateFolder(user.id, folderId, dto);
   }
 
-  @Delete(':bookshelfId')
-  @ApiOperation({ summary: '책장 삭제' })
-  @ApiOkResponse({ description: '책장과 책장 안의 문제지를 제거합니다.' })
-  deleteBookshelf(
+  @Delete('folders/:folderId')
+  @ApiOperation({ summary: '내 서재 폴더 삭제' })
+  @ApiOkResponse({ description: '빈 폴더를 삭제합니다.' })
+  deleteFolder(
     @CurrentUser() user: RequestUser,
-    @Param('bookshelfId') bookshelfId: string,
+    @Param('folderId') folderId: string,
   ) {
-    return this.libraryService.deleteBookshelf(user.id, bookshelfId);
+    return this.libraryService.deleteFolder(user.id, folderId);
   }
 
-  @Put(':bookshelfId/exam-papers/:paperId')
-  @ApiOperation({ summary: '책장에 문제지 추가' })
-  @ApiOkResponse({ description: '선택한 책장에 문제지를 추가합니다.' })
+  @Put('exam-papers/:paperId')
+  @ApiOperation({ summary: '내 서재에 문제지 추가' })
+  @ApiOkResponse({
+    description: '내 서재 또는 선택한 폴더에 문제지를 추가합니다.',
+  })
   addPaper(
     @CurrentUser() user: RequestUser,
-    @Param('bookshelfId') bookshelfId: string,
     @Param('paperId') paperId: string,
+    @Body() dto: AddLibraryPaperDto,
   ) {
-    return this.libraryService.addPaper(user.id, bookshelfId, paperId);
+    return this.libraryService.addPaper(user.id, paperId, dto.folderId ?? null);
   }
 
-  @Delete(':bookshelfId/exam-papers/:paperId')
-  @ApiOperation({ summary: '책장에서 문제지 제거' })
-  @ApiOkResponse({ description: '선택한 책장에서 문제지를 제거합니다.' })
+  @Patch('papers/:libraryPaperId')
+  @ApiOperation({ summary: '저장한 문제지 이동' })
+  @ApiOkResponse({
+    description: '저장한 문제지를 다른 폴더나 루트로 이동합니다.',
+  })
+  movePaper(
+    @CurrentUser() user: RequestUser,
+    @Param('libraryPaperId') libraryPaperId: string,
+    @Body() dto: MoveLibraryPaperDto,
+  ) {
+    return this.libraryService.movePaper(
+      user.id,
+      libraryPaperId,
+      dto.folderId ?? null,
+    );
+  }
+
+  @Delete('papers/:libraryPaperId')
+  @ApiOperation({ summary: '내 서재에서 문제지 제거' })
+  @ApiOkResponse({ description: '저장한 문제지를 제거합니다.' })
   deletePaper(
     @CurrentUser() user: RequestUser,
-    @Param('bookshelfId') bookshelfId: string,
-    @Param('paperId') paperId: string,
+    @Param('libraryPaperId') libraryPaperId: string,
   ) {
-    return this.libraryService.deletePaper(user.id, bookshelfId, paperId);
+    return this.libraryService.deletePaper(user.id, libraryPaperId);
   }
 }

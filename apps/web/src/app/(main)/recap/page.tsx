@@ -6,8 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { WrongReviewCard } from '@/components/wrong-review-card';
-import { getSolveSessionLogs, getTodayWrongQuestions } from '@/lib/learning';
+import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
+import {
+  getSolveSessionLogs,
+  getTodayWrongQuestions,
+} from '@/features/learning/api';
 
 export default async function RecapPage() {
   const [logs, wrongQuestionSet] = await Promise.all([

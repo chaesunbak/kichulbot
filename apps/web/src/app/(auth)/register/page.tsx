@@ -1,16 +1,16 @@
-import Link from "next/link";
-import { getUser } from "@/lib/auth";
-import RegisterForm from "@/components/register-form";
+import Link from 'next/link';
+import { getUser } from '@/features/auth/server';
+import RegisterForm from '@/features/auth/components/register-form';
 
 export default async function RegisterPage() {
   const user = await getUser();
-  const isGuestConvert = user?.authType === "ANONYMOUS";
+  const isGuestConvert = user?.authType === 'ANONYMOUS';
 
   return (
     <div className="flex flex-col gap-8">
       <div className="text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          {isGuestConvert ? "계정 만들기" : "회원가입"}
+          {isGuestConvert ? '계정 만들기' : '회원가입'}
         </h1>
         {isGuestConvert && (
           <p className="mt-2 text-sm text-zinc-500">
@@ -22,8 +22,11 @@ export default async function RegisterPage() {
       <RegisterForm isGuestConvert={isGuestConvert} />
 
       <p className="text-center text-sm text-zinc-500">
-        이미 계정이 있으신가요?{" "}
-        <Link href="/login" className="font-medium text-zinc-900 hover:underline">
+        이미 계정이 있으신가요?{' '}
+        <Link
+          href="/login"
+          className="font-medium text-zinc-900 hover:underline"
+        >
           로그인
         </Link>
       </p>

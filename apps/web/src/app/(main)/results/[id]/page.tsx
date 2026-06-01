@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 
-import { ResultSession } from '@/components/result-session';
-import { getSolveSession } from '@/lib/learning';
-import type { SolveSession } from '@/lib/learning.types';
+import { ResultSession } from '@/features/learning/components/result-session';
+import { getSolveSession } from '@/features/learning/api';
+import type { SolveSession } from '@/features/learning/types';
 
 export default async function ResultPage({
   params,

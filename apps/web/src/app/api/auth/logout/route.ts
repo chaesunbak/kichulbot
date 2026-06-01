@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { COOKIE_NAME } from '@/lib/auth';
-import { rejectCrossOriginRequest } from '@/lib/route-helpers';
+import { COOKIE_NAME } from '@/features/auth/server';
+import { rejectCrossOriginRequest } from '@/shared/lib/route-helpers';
 
 export async function POST(request: Request) {
   const originError = rejectCrossOriginRequest(request);

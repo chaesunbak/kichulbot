@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
-import { getUser } from '@/lib/auth';
-import MainHeader from '@/components/main-header';
-import { MobileBottomNavigation } from '@/components/main-navigation';
-import GlobalFooter from '@/components/global-footer';
+import { getUser } from '@/features/auth/server';
+import MainHeader from '@/shared/components/main-header';
+import { MobileBottomNavigation } from '@/shared/components/main-navigation';
+import GlobalFooter from '@/shared/components/global-footer';
 
 export default async function MainLayout({
   children,

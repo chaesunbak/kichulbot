@@ -16,7 +16,6 @@ export class UsersRepository {
       data: {
         authType: UserAuthType.ANONYMOUS,
         role: UserRole.USER,
-        bookshelves: { create: { name: '기본 책장' } },
         questionSets: {
           create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
         },
@@ -36,7 +35,6 @@ export class UsersRepository {
         nickname: data.nickname,
         authType: UserAuthType.EMAIL,
         role: UserRole.USER,
-        bookshelves: { create: { name: '기본 책장' } },
         questionSets: {
           create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
         },

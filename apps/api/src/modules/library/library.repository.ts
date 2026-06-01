@@ -11,77 +11,114 @@ export class LibraryRepository {
     });
   }
 
-  findBookshelf(userId: string, bookshelfId: string) {
-    return this.db.bookshelf.findFirst({
-      where: { id: bookshelfId, userId },
-      include: this.bookshelfIncludes(),
-    });
+  findLibrary(userId: string) {
+    return Promise.all([
+      this.findFolders(userId),
+      this.findLibraryPapers(userId),
+    ]);
   }
 
-  findBookshelves(userId: string) {
-    return this.db.bookshelf.findMany({
+  findFolders(userId: string) {
+    return this.db.libraryFolder.findMany({
       where: { userId },
-      include: this.bookshelfIncludes(),
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
   }
 
-  createBookshelf(userId: string, name: string) {
-    return this.db.bookshelf.create({
-      data: { userId, name },
-      include: this.bookshelfIncludes(),
+  findFolder(userId: string, folderId: string) {
+    return this.db.libraryFolder.findFirst({
+      where: { id: folderId, userId },
     });
   }
 
-  updateBookshelf(bookshelfId: string, name: string) {
-    return this.db.bookshelf.update({
-      where: { id: bookshelfId },
-      data: { name },
-      include: this.bookshelfIncludes(),
+  findSiblingFolder(userId: string, parentId: string | null, name: string) {
+    return this.db.libraryFolder.findFirst({
+      where: { userId, parentId, name },
     });
   }
 
-  deleteBookshelf(bookshelfId: string) {
-    return this.db.bookshelf.delete({ where: { id: bookshelfId } });
-  }
-
-  addPaper(bookshelfId: string, paperId: string) {
-    return this.db.userPaper.upsert({
-      where: { bookshelfId_paperId: { bookshelfId, paperId } },
-      create: { bookshelfId, paperId },
-      update: {},
-      include: {
-        paper: {
-          include: { examSession: { include: { exam: true } }, subject: true },
-        },
-      },
+  createFolder(userId: string, name: string, parentId: string | null) {
+    return this.db.libraryFolder.create({
+      data: { userId, name, parentId },
     });
   }
 
-  findLibraryPaper(bookshelfId: string, paperId: string) {
-    return this.db.userPaper.findUnique({
-      where: { bookshelfId_paperId: { bookshelfId, paperId } },
+  updateFolder(
+    folderId: string,
+    data: { name?: string; parentId?: string | null },
+  ) {
+    return this.db.libraryFolder.update({
+      where: { id: folderId },
+      data,
     });
   }
 
-  deletePaper(bookshelfId: string, paperId: string) {
+  countFolderChildren(folderId: string) {
+    return this.db.libraryFolder.count({ where: { parentId: folderId } });
+  }
+
+  countFolderPapers(folderId: string) {
+    return this.db.userPaper.count({ where: { folderId } });
+  }
+
+  deleteFolder(folderId: string) {
+    return this.db.libraryFolder.delete({ where: { id: folderId } });
+  }
+
+  findLibraryPapers(userId: string) {
+    return this.db.userPaper.findMany({
+      where: { userId },
+      include: this.libraryPaperIncludes(),
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findLibraryPaper(userId: string, libraryPaperId: string) {
+    return this.db.userPaper.findFirst({
+      where: { id: libraryPaperId, userId },
+      include: this.libraryPaperIncludes(),
+    });
+  }
+
+  findExistingLibraryPaper(
+    userId: string,
+    paperId: string,
+    folderId: string | null,
+  ) {
+    return this.db.userPaper.findFirst({
+      where: { userId, paperId, folderId },
+      include: this.libraryPaperIncludes(),
+    });
+  }
+
+  createLibraryPaper(userId: string, paperId: string, folderId: string | null) {
+    return this.db.userPaper.create({
+      data: { userId, paperId, folderId },
+      include: this.libraryPaperIncludes(),
+    });
+  }
+
+  moveLibraryPaper(libraryPaperId: string, folderId: string | null) {
+    return this.db.userPaper.update({
+      where: { id: libraryPaperId },
+      data: { folderId },
+      include: this.libraryPaperIncludes(),
+    });
+  }
+
+  deletePaper(libraryPaperId: string) {
     return this.db.userPaper.delete({
-      where: { bookshelfId_paperId: { bookshelfId, paperId } },
+      where: { id: libraryPaperId },
     });
   }
 
-  private bookshelfIncludes() {
+  private libraryPaperIncludes() {
     return {
-      papers: {
+      paper: {
         include: {
-          paper: {
-            include: {
-              examSession: { include: { exam: true } },
-              subject: true,
-            },
-          },
+          examSession: { include: { exam: true } },
+          subject: true,
         },
-        orderBy: { createdAt: 'desc' as const },
       },
     };
   }

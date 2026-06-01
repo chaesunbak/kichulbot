@@ -1,10 +1,10 @@
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError } from '@/shared/api/api-client';
 import {
   AuthResponse,
   authSuccessResponse,
   authErrorResponse,
   rejectCrossOriginRequest,
-} from '@/lib/route-helpers';
+} from '@/shared/lib/route-helpers';
 
 export async function POST(request: Request) {
   const originError = rejectCrossOriginRequest(request);

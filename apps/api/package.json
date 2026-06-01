@@ -13,13 +13,6 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "prisma:generate": "prisma generate",
-    "prisma:migrate:exam-sessions": "prisma db execute --file src/infrastructure/database/migrations/20260601_add_exam_sessions.sql --schema src/infrastructure/database/schema.prisma",
-    "prisma:migrate:question-sets": "prisma db execute --file src/infrastructure/database/migrations/20260601_add_question_sets.sql --schema src/infrastructure/database/schema.prisma",
-    "prisma:migrate:solve-session-items": "prisma db execute --file src/infrastructure/database/migrations/20260601_add_solve_session_items.sql --schema src/infrastructure/database/schema.prisma",
-    "prisma:migrate:draft-responses-and-attempts": "prisma db execute --file src/infrastructure/database/migrations/20260601_add_draft_responses_and_attempts.sql --schema src/infrastructure/database/schema.prisma",
-    "prisma:migrate:answer-session-paper-optional": "prisma db execute --file src/infrastructure/database/migrations/20260601_make_answer_session_paper_optional.sql --schema src/infrastructure/database/schema.prisma",
-    "prisma:migrate:rename-answer-session-to-solve-session": "prisma db execute --file src/infrastructure/database/migrations/20260601_rename_answer_session_to_solve_session.sql --schema src/infrastructure/database/schema.prisma",
-    "prisma:migrate:drop-legacy-solving-models": "prisma db execute --file src/infrastructure/database/migrations/20260601_drop_legacy_solving_models.sql --schema src/infrastructure/database/schema.prisma",
     "prisma:push": "prisma db push --accept-data-loss",
     "seed": "prisma db seed"
   },

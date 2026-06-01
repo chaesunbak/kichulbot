@@ -152,7 +152,7 @@ NestJS는 production 환경에서 `NODE_ENV=production`으로 실행한다.
 - 문제지
 - 문제
 - 태그
-- 내 책장
+- 내 서재
 - 답안 세션
 - 답안 로그
 
@@ -245,7 +245,7 @@ MVP에서는 access token 기반으로 사용자별 답안 기록이 분리되�
 
 사용자는 두 역할을 가진다.
 
-- `USER`: 문제 풀이, 내 책장, 약점 분석, 오답 복습
+- `USER`: 문제 풀이, 내 서재, 약점 분석, 오답 복습
 - `ADMIN`: 문제지 등록, 문제 등록, 문제 수정, 태그 관리
 
 MVP에서는 `role` 필드 기반으로 관리자 권한을 구분한다. 초기 관리자 계정은 seed로 생성하고, 이후 필요하면 DB에서 사용자 `role`을 `ADMIN`으로 변경한다.
@@ -291,7 +291,7 @@ StorageService는 다음 메서드를 제공한다.
 
 서비스 사용자.
 
-게스트 사용자도 `User`로 생성한다. 게스트가 이메일 회원가입을 완료하면 기존 `User`의 `authType`을 `EMAIL`로 바꾸고, 이메일과 비밀번호 해시를 추가한다. 이렇게 하면 게스트 상태에서 만든 내 책장, 답안 기록, 오답 문제지가 그대로 유지된다.
+게스트 사용자도 `User`로 생성한다. 게스트가 이메일 회원가입을 완료하면 기존 `User`의 `authType`을 `EMAIL`로 바꾸고, 이메일과 비밀번호 해시를 추가한다. 이렇게 하면 게스트 상태에서 만든 내 서재, 답안 기록, 오답 문제지가 그대로 유지된다.
 
 주요 필드:
 
@@ -384,16 +384,32 @@ MVP에서는 시대 태그만 사용하지만, 구조는 여러 태그 타입을
 - `questionId`
 - `tagId`
 
+### LibraryFolder
+
+사용자가 내 서재 안에서 문제지를 정리하는 폴더.
+
+주요 필드:
+
+- `id`
+- `userId`
+- `parentId`
+- `name`
+- `sortOrder`
+- `createdAt`
+- `updatedAt`
+
 ### UserPaper
 
-사용자가 내 책장에 추가한 문제지.
+사용자가 내 서재에 추가한 문제지 저장 항목. 같은 문제지를 여러 폴더에 중복 저장할 수 있으므로 독립 `id`를 가진다.
 
 주요 필드:
 
 - `id`
 - `userId`
 - `paperId`
-- `addedAt`
+- `folderId`
+- `createdAt`
+- `updatedAt`
 
 ### AnswerSession
 
@@ -483,6 +499,7 @@ model User {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
+  libraryFolders LibraryFolder[]
   papers        UserPaper[]
   sessions      AnswerSession[]
   wrongSets     WrongQuestionSet[]
@@ -562,16 +579,36 @@ model QuestionTag {
   @@id([questionId, tagId])
 }
 
+model LibraryFolder {
+  id        String   @id @default(cuid())
+  userId    String
+  parentId  String?
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id])
+  parent   LibraryFolder?  @relation("LibraryFolderTree", fields: [parentId], references: [id])
+  children LibraryFolder[] @relation("LibraryFolderTree")
+  papers   UserPaper[]
+
+  @@unique([userId, parentId, name])
+}
+
 model UserPaper {
-  id      String   @id @default(cuid())
-  userId  String
-  paperId String
-  addedAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  paperId   String
+  folderId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user  User  @relation(fields: [userId], references: [id])
-  paper Paper @relation(fields: [paperId], references: [id])
+  user   User           @relation(fields: [userId], references: [id])
+  paper  Paper          @relation(fields: [paperId], references: [id])
+  folder LibraryFolder? @relation(fields: [folderId], references: [id])
 
-  @@unique([userId, paperId])
+  @@unique([userId, paperId, folderId])
 }
 
 model AnswerSession {
@@ -721,17 +758,42 @@ Response:
 
 문제지 상세와 문항 목록 조회.
 
-#### `POST /api/me/papers`
+#### `GET /api/me/library`
 
-문제지를 내 책장에 추가.
+내 서재 폴더와 저장한 문제지 목록 조회.
+
+#### `POST /api/me/library/folders`
+
+내 서재 폴더 생성.
 
 Request:
 
-- `paperId`
+- `name`
+- `parentId`
 
-#### `GET /api/me/papers`
+#### `PATCH /api/me/library/folders/:folderId`
 
-내 책장 문제지 목록 조회.
+내 서재 폴더 이름 또는 위치 변경.
+
+#### `DELETE /api/me/library/folders/:folderId`
+
+빈 내 서재 폴더 삭제. 폴더 안에 하위 폴더나 문제지가 있으면 삭제하지 않는다.
+
+#### `PUT /api/me/library/exam-papers/:paperId`
+
+문제지를 내 서재에 추가. `folderId`가 없으면 루트에 저장한다.
+
+Request:
+
+- `folderId`
+
+#### `PATCH /api/me/library/papers/:libraryPaperId`
+
+저장한 문제지를 다른 폴더 또는 루트로 이동.
+
+#### `DELETE /api/me/library/papers/:libraryPaperId`
+
+내 서재에서 저장한 문제지 항목 제거.
 
 ### Questions
 
@@ -913,6 +975,7 @@ Response:
 /guest
 /papers
 /library
+/library/papers/:libraryPaperId
 /papers/:paperId/solve
 /sessions/:sessionId/result
 /analytics
@@ -923,7 +986,7 @@ Response:
 /admin/questions/:questionId/edit
 ```
 
-`/register`는 현재 사용자가 게스트 token을 가진 경우 `POST /api/auth/convert`를 호출하고, token이 없으면 `POST /api/auth/register`를 호출한다. `/guest`는 게스트 시작 후 바로 문제지 목록 또는 내 책장으로 이동한다.
+`/register`는 현재 사용자가 게스트 token을 가진 경우 `POST /api/auth/convert`를 호출하고, token이 없으면 `POST /api/auth/register`를 호출한다. `/guest`는 게스트 시작 후 바로 문제지 목록 또는 내 서재로 이동한다.
 
 ## 환경 변수
 
@@ -1036,7 +1099,7 @@ volumes:
 - 로그인
 - 관리자 문제지 생성
 - 관리자 문제 이미지 업로드
-- 내 책장 추가
+- 내 서재 추가
 - 20문항 풀이
 - 답안 제출
 - 결과 확인
@@ -1055,7 +1118,7 @@ volumes:
 8. 태그 seed 데이터 생성
 9. 문제지 등록 API와 화면 구현
 10. 문제 이미지 업로드 API와 화면 구현
-11. 내 책장 API와 화면 구현
+11. 내 서재 API와 화면 구현
 12. 문제지 풀이 화면 구현
 13. 문항 선택 시 임시 답안 저장 구현
 14. 답안 제출과 결과 저장 구현
@@ -1075,7 +1138,7 @@ MVP에서는 다음 흐름을 우선 검증한다.
 - 회원가입 후 로그인할 수 있다.
 - 관리자가 문제지를 만들 수 있다.
 - 관리자가 문제 이미지와 정답, 태그를 등록할 수 있다.
-- 사용자가 문제지를 내 책장에 추가할 수 있다.
+- 사용자가 문제지를 내 서재에 추가할 수 있다.
 - 문항 선택 시 임시 답안이 저장된다.
 - 사용자가 20문항 답안을 제출할 수 있다.
 - 제출 결과가 정오답으로 저장된다.

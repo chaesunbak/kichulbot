@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore } from '@/features/auth/store';
 
 export default function GuestPage() {
   const router = useRouter();

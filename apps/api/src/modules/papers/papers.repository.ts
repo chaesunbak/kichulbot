@@ -98,8 +98,8 @@ export class PapersRepository {
       questions: true,
       users: userId
         ? {
-            where: { bookshelf: { userId } },
-            select: { bookshelfId: true },
+            where: { userId },
+            select: { id: true },
           }
         : false,
     } satisfies Prisma.PaperInclude;

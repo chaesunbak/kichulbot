@@ -46,7 +46,7 @@ type PaperWithRelations = Paper & {
       >;
     }
   >;
-  users?: Array<{ bookshelfId: string }>;
+  users?: Array<{ id: string }>;
 };
 
 @Injectable()

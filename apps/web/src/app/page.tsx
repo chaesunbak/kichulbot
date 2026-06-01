@@ -1,17 +1,19 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@kichulbot/ui/components/button";
-import { getUser } from "@/lib/auth";
-import { GuestButton } from "@/components/guest-button";
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@kichulbot/ui/components/button';
+import { getUser } from '@/features/auth/server';
+import { GuestButton } from '@/features/auth/components/guest-button';
 
 export default async function Home() {
   const user = await getUser();
-  if (user) redirect("/papers");
+  if (user) redirect('/papers');
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-10 px-4">
       <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-zinc-900">기출봇</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-zinc-900">
+          기출봇
+        </h1>
         <p className="mt-4 max-w-sm text-base leading-relaxed text-zinc-500">
           기출문제 풀이 기록을 저장하고,
           <br />

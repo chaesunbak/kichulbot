@@ -1,58 +1,69 @@
 import * as z from 'zod';
 import {
-  BookshelfResponseSchema,
+  LibraryFolderResponseSchema,
   LibraryPaperResponseSchema,
 } from './schema.js';
 
-export const CreateBookshelfRequestSchema = z.object({
+export const LibraryResponseSchema = z.object({
+  folders: z.array(LibraryFolderResponseSchema),
+  papers: z.array(LibraryPaperResponseSchema),
+});
+export type LibraryResponse = z.infer<typeof LibraryResponseSchema>;
+
+export const CreateLibraryFolderRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),
+  parentId: z.string().nullable().optional(),
 });
-export type CreateBookshelfRequest = z.infer<
-  typeof CreateBookshelfRequestSchema
+export type CreateLibraryFolderRequest = z.infer<
+  typeof CreateLibraryFolderRequestSchema
 >;
 
-export const UpdateBookshelfRequestSchema = CreateBookshelfRequestSchema;
-export type UpdateBookshelfRequest = CreateBookshelfRequest;
-
-export const BookshelfResponseEnvelopeSchema = z.object({
-  bookshelf: BookshelfResponseSchema,
+export const UpdateLibraryFolderRequestSchema = z.object({
+  name: z.string().trim().min(1).max(50).optional(),
+  parentId: z.string().nullable().optional(),
 });
-export type BookshelfResponseEnvelope = z.infer<
-  typeof BookshelfResponseEnvelopeSchema
+export type UpdateLibraryFolderRequest = z.infer<
+  typeof UpdateLibraryFolderRequestSchema
 >;
 
-export const ListBookshelvesResponseSchema = z.object({
-  bookshelves: z.array(BookshelfResponseSchema),
+export const LibraryFolderResponseEnvelopeSchema = z.object({
+  folder: LibraryFolderResponseSchema,
 });
-export type ListBookshelvesResponse = z.infer<
-  typeof ListBookshelvesResponseSchema
+export type LibraryFolderResponseEnvelope = z.infer<
+  typeof LibraryFolderResponseEnvelopeSchema
 >;
 
-export const DeleteBookshelfResponseSchema = z.object({
+export const DeleteLibraryFolderResponseSchema = z.object({
   id: z.string(),
 });
-export type DeleteBookshelfResponse = z.infer<
-  typeof DeleteBookshelfResponseSchema
+export type DeleteLibraryFolderResponse = z.infer<
+  typeof DeleteLibraryFolderResponseSchema
 >;
 
-export const AddLibraryPaperResponseSchema = z.object({
+export const AddLibraryPaperRequestSchema = z.object({
+  folderId: z.string().nullable().optional(),
+});
+export type AddLibraryPaperRequest = z.infer<
+  typeof AddLibraryPaperRequestSchema
+>;
+
+export const MoveLibraryPaperRequestSchema = z.object({
+  folderId: z.string().nullable(),
+});
+export type MoveLibraryPaperRequest = z.infer<
+  typeof MoveLibraryPaperRequestSchema
+>;
+
+export const LibraryPaperResponseEnvelopeSchema = z.object({
   libraryPaper: LibraryPaperResponseSchema,
 });
-export type AddLibraryPaperResponse = z.infer<
-  typeof AddLibraryPaperResponseSchema
+export type LibraryPaperResponseEnvelope = z.infer<
+  typeof LibraryPaperResponseEnvelopeSchema
 >;
 
 export const DeleteLibraryPaperResponseSchema = z.object({
-  bookshelfId: z.string(),
-  paperId: z.string(),
+  id: z.string(),
 });
 export type DeleteLibraryPaperResponse = z.infer<
   typeof DeleteLibraryPaperResponseSchema
->;
-
-export const ListLibraryPapersResponseSchema = z.object({
-  libraryPapers: z.array(LibraryPaperResponseSchema),
-});
-export type ListLibraryPapersResponse = z.infer<
-  typeof ListLibraryPapersResponseSchema
 >;

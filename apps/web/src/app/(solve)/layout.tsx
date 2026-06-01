@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getUser } from '@/lib/auth';
+import { getUser } from '@/features/auth/server';
 
 export default async function SolveLayout({
   children,

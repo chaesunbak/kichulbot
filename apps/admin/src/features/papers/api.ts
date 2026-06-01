@@ -28,6 +28,9 @@ export async function fetchPaper(token: string, paperId: string) {
 export interface CreatePaperInput {
   title: string;
   year: number;
+  month?: number;
+  grade?: number;
+  round?: number;
   examId: string;
   subjectId: string;
   questionCount: number;

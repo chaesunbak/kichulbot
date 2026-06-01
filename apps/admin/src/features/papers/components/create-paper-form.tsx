@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Plus } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
-import type { Taxonomy } from '@/shared/api/api-client';
+import type { Exam, Taxonomy } from '@/shared/api/api-client';
 import { useCreatePaperMutation } from '../mutations';
 import { paperSchema, type PaperValues } from '../schemas';
 
@@ -43,7 +43,7 @@ export function CreatePaperForm({
   subjects,
 }: {
   token: string;
-  exams: Taxonomy[];
+  exams: Exam[];
   subjects: Taxonomy[];
 }) {
   const form = useForm<PaperValues>({
@@ -51,17 +51,23 @@ export function CreatePaperForm({
     defaultValues: defaults,
   });
   const mutation = useCreatePaperMutation(token);
-  const submit = form.handleSubmit((values) =>
-    mutation.mutate(values, {
-      onSuccess: () =>
-        form.reset({
-          ...defaults,
-          year: values.year,
-          examId: values.examId,
-          subjectId: values.subjectId,
-        }),
-    }),
-  );
+  const examId = useWatch({ control: form.control, name: 'examId' });
+  const selectedExam = exams.find((exam) => exam.id === examId);
+  const submit = form.handleSubmit((values) => {
+    if (!selectedExam) return;
+    mutation.mutate(
+      { values, exam: selectedExam },
+      {
+        onSuccess: () =>
+          form.reset({
+            ...defaults,
+            year: values.year,
+            examId: values.examId,
+            subjectId: values.subjectId,
+          }),
+      },
+    );
+  });
   return (
     <Card>
       <CardHeader>
@@ -70,7 +76,7 @@ export function CreatePaperForm({
           문제지 등록
         </CardTitle>
         <CardDescription>
-          시험, 과목, 연도와 문항 수를 저장합니다.
+          시험 종류에 맞는 시행 정보, 과목과 문항 수를 저장합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -100,6 +106,33 @@ export function CreatePaperForm({
               label="시험"
               items={exams}
             />
+            {selectedExam?.usesMonth && (
+              <NumberField
+                control={form.control}
+                name="month"
+                label="시행 월"
+                placeholder="3"
+                required
+              />
+            )}
+            {selectedExam?.usesGrade && (
+              <NumberField
+                control={form.control}
+                name="grade"
+                label="대상 학년"
+                placeholder="1"
+                required
+              />
+            )}
+            {selectedExam?.usesRound && (
+              <NumberField
+                control={form.control}
+                name="round"
+                label="시험 회차"
+                placeholder="75"
+                required
+              />
+            )}
             <SelectField
               control={form.control}
               name="subjectId"
@@ -168,10 +201,14 @@ function NumberField({
   control,
   name,
   label,
+  placeholder,
+  required,
 }: {
   control: Control;
-  name: 'year' | 'questionCount';
+  name: 'year' | 'month' | 'grade' | 'round' | 'questionCount';
   label: string;
+  placeholder?: string;
+  required?: boolean;
 }) {
   return (
     <Controller
@@ -182,8 +219,16 @@ function NumberField({
           <FieldLabel>{label}</FieldLabel>
           <Input
             type="number"
-            value={field.value}
-            onChange={(event) => field.onChange(Number(event.target.value))}
+            value={field.value ?? ''}
+            placeholder={placeholder}
+            required={required}
+            onChange={(event) =>
+              field.onChange(
+                event.target.value === ''
+                  ? undefined
+                  : Number(event.target.value),
+              )
+            }
           />
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </Field>

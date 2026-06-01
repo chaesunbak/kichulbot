@@ -13,6 +13,9 @@ export function PaperDetailHeader({
   paper: {
     title: string;
     year: number;
+    month: number | null;
+    grade: number | null;
+    round: number | null;
     isPublished: boolean;
     exam: { name: string };
     subject: { name: string };
@@ -33,7 +36,7 @@ export function PaperDetailHeader({
         </Button>
         <h2 className="text-2xl font-semibold">{paper.title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          {paper.year}년 · {paper.exam.name} / {paper.subject.name}
+          {formatPaperSession(paper)} · {paper.exam.name} / {paper.subject.name}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
@@ -58,4 +61,17 @@ export function PaperDetailHeader({
       </div>
     </div>
   );
+}
+
+function formatPaperSession(paper: {
+  year: number;
+  month: number | null;
+  grade: number | null;
+  round: number | null;
+}) {
+  if (paper.round) return `제${paper.round}회`;
+  const year = paper.month
+    ? `${paper.year}년 ${paper.month}월`
+    : `${paper.year}학년도`;
+  return paper.grade ? `${year} 고${paper.grade}` : year;
 }

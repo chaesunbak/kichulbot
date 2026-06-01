@@ -10,6 +10,9 @@ export const paperSchema = z.object({
     .int('연도는 정수로 입력해 주세요.')
     .min(1994, '1994년 이후 연도를 입력해 주세요.')
     .max(2100, '2100년 이하 연도를 입력해 주세요.'),
+  month: z.number().int().min(1).max(12).optional(),
+  grade: z.number().int().min(1).max(3).optional(),
+  round: z.number().int().min(1).optional(),
   examId: z.string().min(1, '시험을 선택해 주세요.'),
   subjectId: z.string().min(1, '과목을 선택해 주세요.'),
   questionCount: z

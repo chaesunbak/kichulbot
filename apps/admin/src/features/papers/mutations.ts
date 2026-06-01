@@ -4,12 +4,13 @@ import { createPaper, deletePaper, updatePaperPublished } from './api';
 import { toCreatePaperInput } from './mappers';
 import { paperKeys } from './queries';
 import type { PaperValues } from './schemas';
+import type { Exam } from '@/shared/api/api-client';
 
 export function useCreatePaperMutation(token: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: PaperValues) =>
-      createPaper(token, toCreatePaperInput(values)),
+    mutationFn: ({ values, exam }: { values: PaperValues; exam: Exam }) =>
+      createPaper(token, toCreatePaperInput(values, exam)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: paperKeys.lists() });
       toast.success('문제지를 생성했습니다.');

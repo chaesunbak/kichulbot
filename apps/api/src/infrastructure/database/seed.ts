@@ -29,16 +29,39 @@ async function main() {
 
   console.log(`Seeded admin user: ${email}`);
 
-  await prisma.exam.upsert({
-    where: { slug: 'suneung' },
-    create: {
+  const exams = [
+    {
       name: '수능',
       slug: 'suneung',
+      usesMonth: false,
+      usesGrade: false,
+      usesRound: false,
     },
-    update: {
-      name: '수능',
+    {
+      name: '전국연합학력평가',
+      slug: 'mock-exam',
+      usesMonth: true,
+      usesGrade: true,
+      usesRound: false,
     },
-  });
+    {
+      name: '한국사능력검정시험',
+      slug: 'korean-history-proficiency-test',
+      usesMonth: false,
+      usesGrade: false,
+      usesRound: true,
+    },
+  ];
+
+  await Promise.all(
+    exams.map((exam) =>
+      prisma.exam.upsert({
+        where: { slug: exam.slug },
+        create: exam,
+        update: exam,
+      }),
+    ),
+  );
 
   const subject = await prisma.subject.upsert({
     where: { slug: 'korean-history' },

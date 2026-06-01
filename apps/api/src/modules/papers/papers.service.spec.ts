@@ -1,5 +1,12 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Exam, Paper, Question, Subject, UserRole } from '@prisma/client';
+import {
+  Exam,
+  ExamSession,
+  Paper,
+  Question,
+  Subject,
+  UserRole,
+} from '@prisma/client';
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
 import { SubjectsService } from '../subjects/subjects.service';
@@ -12,6 +19,21 @@ const exam: Exam = {
   id: 'exam_1',
   name: '수능',
   slug: 'suneung',
+  usesMonth: false,
+  usesGrade: false,
+  usesRound: false,
+  createdAt: now,
+  updatedAt: now,
+};
+
+const examSession: ExamSession = {
+  id: 'exam_session_1',
+  key: 'exam_1:2025:-:-:-',
+  examId: exam.id,
+  displayYear: 2025,
+  month: null,
+  grade: null,
+  round: null,
   createdAt: now,
   updatedAt: now,
 };
@@ -27,21 +49,21 @@ const subject: Subject = {
 const paper = (
   overrides: Partial<Paper> = {},
 ): Paper & {
-  exam: Exam;
+  examSession: ExamSession & { exam: Exam };
   subject: Subject;
   questions: Question[];
   users: Array<{ bookshelfId: string; paperId: string; createdAt: Date }>;
 } => ({
   id: 'paper_1',
   title: '2025학년도 수능 한국사',
-  year: 2025,
   questionCount: 20,
   isPublished: false,
-  examId: exam.id,
+  examSessionId: examSession.id,
   subjectId: subject.id,
+  questionSetId: 'question_set_1',
   createdAt: now,
   updatedAt: now,
-  exam,
+  examSession: { ...examSession, exam },
   subject,
   questions: [],
   users: [],
@@ -169,13 +191,34 @@ describe('PapersService', () => {
 
     expect(repository.create).toHaveBeenCalledWith({
       title: '2025학년도 수능 한국사',
-      year: 2025,
       examId: exam.id,
+      displayYear: 2025,
+      month: null,
+      grade: null,
+      round: null,
       subjectId: subject.id,
       questionCount: 20,
       isPublished: true,
     });
     expect(response.paper).toMatchObject({ isPublished: true });
+  });
+
+  it('requires grade when the selected exam uses grade classification', async () => {
+    examsService.findById.mockResolvedValue({ ...exam, usesGrade: true });
+    subjectsService.findById.mockResolvedValue(subject);
+
+    await expect(
+      service.createPaper(
+        {
+          title: '2026년 3월 고1 학평 한국사',
+          year: 2026,
+          examId: exam.id,
+          subjectId: subject.id,
+        },
+        UserRole.ADMIN,
+      ),
+    ).rejects.toThrow('대상 학년을 입력해주세요.');
+    expect(repository.create).not.toHaveBeenCalled();
   });
 
   it('hides unpublished paper details from normal users', async () => {

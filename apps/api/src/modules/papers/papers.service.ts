@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import {
   Exam,
+  ExamSession,
   Paper,
   Prisma,
   Question,
@@ -34,7 +35,7 @@ import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersRepository } from './papers.repository';
 
 type PaperWithRelations = Paper & {
-  exam: Exam;
+  examSession: ExamSession & { exam: Exam };
   subject: Subject;
   questions?: Array<
     Question & {
@@ -74,10 +75,15 @@ export class PapersService {
       throw new BadRequestException('과목을 찾을 수 없습니다.');
     }
 
+    this.assertSessionFields(exam, dto);
+
     const paper = await this.papersRepository.create({
       title: dto.title,
-      year: dto.year,
       examId: dto.examId,
+      displayYear: dto.year,
+      month: dto.month ?? null,
+      grade: dto.grade ?? null,
+      round: dto.round ?? null,
       subjectId: dto.subjectId,
       questionCount: dto.questionCount ?? 20,
       isPublished: dto.isPublished ?? false,
@@ -162,10 +168,13 @@ export class PapersService {
     const base = {
       id: paper.id,
       title: paper.title,
-      year: paper.year,
+      year: paper.examSession.displayYear,
+      month: paper.examSession.month,
+      grade: paper.examSession.grade,
+      round: paper.examSession.round,
       questionCount: paper.questionCount,
       isInLibrary: (paper.users?.length ?? 0) > 0,
-      exam: this.toTaxonomyResponse(paper.exam),
+      exam: this.toTaxonomyResponse(paper.examSession.exam),
       subject: this.toTaxonomyResponse(paper.subject),
     };
 
@@ -217,6 +226,28 @@ export class PapersService {
       name: entity.name,
       slug: entity.slug,
     };
+  }
+
+  private assertSessionFields(
+    exam: Exam,
+    dto: Pick<CreatePaperDto, 'month' | 'grade' | 'round'>,
+  ) {
+    this.assertSessionField(exam.usesMonth, dto.month, '시행 월');
+    this.assertSessionField(exam.usesGrade, dto.grade, '대상 학년');
+    this.assertSessionField(exam.usesRound, dto.round, '시험 회차');
+  }
+
+  private assertSessionField(
+    isUsed: boolean,
+    value: number | null | undefined,
+    label: string,
+  ) {
+    if (isUsed && value == null) {
+      throw new BadRequestException(`${label}을 입력해주세요.`);
+    }
+    if (!isUsed && value != null) {
+      throw new BadRequestException(`${label}을 입력할 수 없는 시험입니다.`);
+    }
   }
 
   private async deleteStoredImage(imageUrl: string | null): Promise<void> {

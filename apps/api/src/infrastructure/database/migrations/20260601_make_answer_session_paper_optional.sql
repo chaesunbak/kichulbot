@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE "AnswerSession"
+  ALTER COLUMN "paperId" DROP NOT NULL;
+
+COMMIT;

@@ -19,7 +19,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
 import { AnswerSessionsService } from './answer-sessions.service';
-import { SaveDraftAnswerDto } from './dto/save-draft-answer.dto';
+import { SaveAnswerDto } from './dto/save-answer.dto';
 import { StartAnswerSessionDto } from './dto/start-answer-session.dto';
 
 @ApiTags('answer-sessions')
@@ -56,18 +56,13 @@ export class AnswerSessionsController {
   @Patch(':id/answers/:questionId')
   @ApiOperation({ summary: '문항별 임시 답안 저장' })
   @ApiOkResponse({ description: '저장한 임시 답안을 반환합니다.' })
-  saveDraftAnswer(
+  saveAnswer(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
     @Param('questionId') questionId: string,
-    @Body() dto: SaveDraftAnswerDto,
+    @Body() dto: SaveAnswerDto,
   ) {
-    return this.answerSessionsService.saveDraftAnswer(
-      user.id,
-      id,
-      questionId,
-      dto,
-    );
+    return this.answerSessionsService.saveAnswer(user.id, id, questionId, dto);
   }
 
   @Post(':id/submit')

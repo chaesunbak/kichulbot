@@ -13,12 +13,15 @@ import {
   ListBookshelvesResponseSchema,
 } from '@kichulbot/api-contract/library';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Bookshelf, Exam, Paper, Subject } from '@prisma/client';
+import { Bookshelf, Exam, ExamSession, Paper, Subject } from '@prisma/client';
 import { LibraryRepository } from './library.repository';
 
 type LibraryPaperWithPaper = {
   createdAt: Date;
-  paper: Paper & { exam: Exam; subject: Subject };
+  paper: Paper & {
+    examSession: ExamSession & { exam: Exam };
+    subject: Subject;
+  };
 };
 
 type BookshelfWithPapers = Bookshelf & {
@@ -147,13 +150,16 @@ export class LibraryService {
       paper: {
         id: paper.id,
         title: paper.title,
-        year: paper.year,
+        year: paper.examSession.displayYear,
+        month: paper.examSession.month,
+        grade: paper.examSession.grade,
+        round: paper.examSession.round,
         questionCount: paper.questionCount,
         isInLibrary: true,
         exam: {
-          id: paper.exam.id,
-          name: paper.exam.name,
-          slug: paper.exam.slug,
+          id: paper.examSession.exam.id,
+          name: paper.examSession.exam.name,
+          slug: paper.examSession.exam.slug,
         },
         subject: {
           id: paper.subject.id,

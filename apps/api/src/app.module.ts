@@ -10,6 +10,7 @@ import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { PapersModule } from './modules/papers/papers.module';
 import { QuestionsModule } from './modules/questions/questions.module';
+import { ReviewModule } from './modules/review/review.module';
 import { LibraryModule } from './modules/library/library.module';
 import { SubjectsModule } from './modules/subjects/subjects.module';
 import { TagsModule } from './modules/tags/tags.module';
@@ -37,6 +38,7 @@ import { TagsModule } from './modules/tags/tags.module';
     TagsModule,
     PapersModule,
     QuestionsModule,
+    ReviewModule,
     LibraryModule,
   ],
   controllers: [HealthController],

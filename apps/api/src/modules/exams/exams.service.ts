@@ -1,8 +1,8 @@
 import {
-  AdminTaxonomyResponse,
+  AdminExamResponse,
+  ExamResponse,
   ListExamsResponse,
   ListExamsResponseSchema,
-  TaxonomyResponse,
 } from '@kichulbot/api-contract/taxonomy';
 import { Injectable } from '@nestjs/common';
 import { Exam, UserRole } from '@prisma/client';
@@ -26,11 +26,14 @@ export class ExamsService {
   private toResponse(
     exam: Exam,
     role: UserRole,
-  ): TaxonomyResponse | AdminTaxonomyResponse {
+  ): ExamResponse | AdminExamResponse {
     const response = {
       id: exam.id,
       name: exam.name,
       slug: exam.slug,
+      usesMonth: exam.usesMonth,
+      usesGrade: exam.usesGrade,
+      usesRound: exam.usesRound,
     };
 
     if (role !== UserRole.ADMIN) {

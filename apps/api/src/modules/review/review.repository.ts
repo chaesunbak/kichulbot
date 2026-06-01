@@ -1,0 +1,165 @@
+import { Injectable } from '@nestjs/common';
+import { AttemptOutcome, Prisma, QuestionSetKind } from '@prisma/client';
+import { DatabaseService } from '../../infrastructure/database/database.service';
+
+@Injectable()
+export class ReviewRepository {
+  constructor(private readonly db: DatabaseService) {}
+
+  findUser(userId: string) {
+    return this.db.user.findUnique({ where: { id: userId } });
+  }
+
+  async findOrCreateToday(userId: string, studyDate: Date) {
+    const existing = await this.findToday(userId, studyDate);
+    if (existing) return existing;
+
+    try {
+      return await this.db.$transaction(async (tx) => {
+        const candidates = await this.findWrongCandidates(tx, userId);
+        return tx.questionSet.create({
+          data: {
+            ownerUserId: userId,
+            kind: QuestionSetKind.DAILY_WRONG,
+            title: this.toTitle(studyDate),
+            generated: {
+              create: {
+                ownerUserId: userId,
+                kind: QuestionSetKind.DAILY_WRONG,
+                studyDate,
+                generatorVersion: 'daily-wrong-v1',
+                parameters: this.toParameters(candidates.length),
+              },
+            },
+            items: {
+              create: candidates.map((attempt, index) => ({
+                questionRevisionId: attempt.questionRevisionId,
+                position: index + 1,
+                sourceAttemptId: attempt.id,
+                reason: { sourceOutcome: attempt.outcome },
+              })),
+            },
+          },
+          include: this.questionSetIncludes(),
+        });
+      });
+    } catch (error) {
+      if (!this.isUniqueConstraintError(error)) throw error;
+      return this.db.questionSet.findFirstOrThrow({
+        where: this.todayWhere(userId, studyDate),
+        include: this.questionSetIncludes(),
+      });
+    }
+  }
+
+  async refreshToday(userId: string, studyDate: Date) {
+    const existing = await this.findToday(userId, studyDate);
+    if (!existing) return this.findOrCreateToday(userId, studyDate);
+
+    return this.db.$transaction(async (tx) => {
+      const candidates = await this.findWrongCandidates(tx, userId);
+      return tx.questionSet.update({
+        where: { id: existing.id },
+        data: {
+          items: {
+            deleteMany: {},
+            create: candidates.map((attempt, index) => ({
+              questionRevisionId: attempt.questionRevisionId,
+              position: index + 1,
+              sourceAttemptId: attempt.id,
+              reason: { sourceOutcome: attempt.outcome },
+            })),
+          },
+          generated: {
+            update: {
+              generatedAt: new Date(),
+              generatorVersion: 'daily-wrong-v1',
+              parameters: this.toParameters(candidates.length),
+            },
+          },
+        },
+        include: this.questionSetIncludes(),
+      });
+    });
+  }
+
+  private findToday(userId: string, studyDate: Date) {
+    return this.db.questionSet.findFirst({
+      where: this.todayWhere(userId, studyDate),
+      include: this.questionSetIncludes(),
+    });
+  }
+
+  private todayWhere(userId: string, studyDate: Date) {
+    return {
+      ownerUserId: userId,
+      kind: QuestionSetKind.DAILY_WRONG,
+      generated: { is: { studyDate } },
+    } satisfies Prisma.QuestionSetWhereInput;
+  }
+
+  private async findWrongCandidates(
+    tx: Prisma.TransactionClient,
+    userId: string,
+  ) {
+    const attempts = await tx.questionAttempt.findMany({
+      where: { userId },
+      include: { questionRevision: true },
+      orderBy: [{ gradedAt: 'desc' }, { id: 'desc' }],
+    });
+    const latestByQuestion = new Map<string, (typeof attempts)[number]>();
+    for (const attempt of attempts) {
+      const { questionId } = attempt.questionRevision;
+      if (!latestByQuestion.has(questionId)) {
+        latestByQuestion.set(questionId, attempt);
+      }
+    }
+    return [...latestByQuestion.values()].filter(
+      (attempt) => attempt.outcome !== AttemptOutcome.CORRECT,
+    );
+  }
+
+  private questionSetIncludes() {
+    return {
+      generated: true,
+      items: {
+        include: {
+          sourceAttempt: true,
+          questionRevision: {
+            include: {
+              question: {
+                include: {
+                  paper: {
+                    include: {
+                      examSession: { include: { exam: true } },
+                      subject: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: { position: 'asc' as const },
+      },
+    } satisfies Prisma.QuestionSetInclude;
+  }
+
+  private toTitle(studyDate: Date) {
+    return `${studyDate.toISOString().slice(0, 10)} 오늘의 오답`;
+  }
+
+  private toParameters(questionCount: number) {
+    return {
+      selection: 'latest-attempt-per-question',
+      questionCount,
+    };
+  }
+
+  private isUniqueConstraintError(error: unknown) {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    );
+  }
+}

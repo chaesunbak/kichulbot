@@ -22,6 +22,26 @@ export class CreatePaperDto implements CreatePaperRequest {
   @Max(2100)
   year: number;
 
+  @ApiProperty({ required: false, nullable: true, example: 3 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month?: number | null;
+
+  @ApiProperty({ required: false, nullable: true, example: 3 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(3)
+  grade?: number | null;
+
+  @ApiProperty({ required: false, nullable: true, example: 75 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  round?: number | null;
+
   @ApiProperty({ example: 'clx0000000000000000000000' })
   @IsString()
   examId: string;

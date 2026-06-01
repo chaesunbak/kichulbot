@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
-export class SaveDraftAnswerDto {
+export class SaveAnswerDto {
   @IsOptional()
   @Transform(({ value }: { value: unknown }) =>
     value === undefined ? undefined : Number(value),

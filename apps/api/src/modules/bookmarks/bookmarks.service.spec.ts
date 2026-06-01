@@ -1,16 +1,47 @@
-import { BookmarkList, Exam, Paper, Question, Subject } from '@prisma/client';
+import {
+  Exam,
+  ExamSession,
+  Paper,
+  Question,
+  QuestionSet,
+  QuestionSetKind,
+  Subject,
+} from '@prisma/client';
 import { BookmarksRepository } from './bookmarks.repository';
 import { BookmarksService } from './bookmarks.service';
 
 const now = new Date('2026-05-31T00:00:00.000Z');
-const bookmarkList = {
-  id: 'bookmark_list_1',
-  userId: 'user_1',
-  name: '기본 북마크',
+const exam = {
+  id: 'exam_1',
+  name: '수능',
+  slug: 'suneung',
+  usesMonth: false,
+  usesGrade: false,
+  usesRound: false,
   createdAt: now,
   updatedAt: now,
-  questions: [],
-} satisfies BookmarkList & { questions: [] };
+} satisfies Exam;
+const examSession = {
+  id: 'exam_session_1',
+  key: 'exam_1:2025:-:-:-',
+  examId: exam.id,
+  displayYear: 2025,
+  month: null,
+  grade: null,
+  round: null,
+  createdAt: now,
+  updatedAt: now,
+  exam,
+} satisfies ExamSession & { exam: Exam };
+const bookmarkList = {
+  id: 'bookmark_list_1',
+  kind: QuestionSetKind.CUSTOM,
+  ownerUserId: 'user_1',
+  title: '기본 북마크',
+  createdAt: now,
+  updatedAt: now,
+  items: [],
+} satisfies QuestionSet & { items: [] };
 const question = {
   id: 'question_1',
   paperId: 'paper_1',
@@ -28,20 +59,45 @@ const question = {
 const paper = {
   id: 'paper_1',
   title: '2025학년도 수능 한국사',
-  year: 2025,
   questionCount: 20,
   isPublished: true,
-  examId: 'exam_1',
+  examSessionId: examSession.id,
   subjectId: 'subject_1',
+  questionSetId: 'question_set_1',
   createdAt: now,
   updatedAt: now,
-  exam: { id: 'exam_1', name: '수능', slug: 'suneung' } as Exam,
+  examSession,
   subject: {
     id: 'subject_1',
     name: '한국사',
     slug: 'korean-history',
   } as Subject,
-} satisfies Paper & { exam: Exam; subject: Subject };
+} satisfies Paper & {
+  examSession: ExamSession & { exam: Exam };
+  subject: Subject;
+};
+const questionSetItem = {
+  questionSetId: bookmarkList.id,
+  questionRevisionId: 'question_revision_1',
+  position: 1,
+  sourceAttemptId: null,
+  reason: null,
+  createdAt: now,
+  questionRevision: {
+    id: 'question_revision_1',
+    questionId: question.id,
+    revision: 1,
+    type: question.type,
+    imageUrl: question.imageUrl,
+    choiceCount: question.choiceCount,
+    answerChoice: question.answerChoice,
+    answerText: question.answerText,
+    explanation: question.explanation,
+    recommendedTimeSeconds: question.recommendedTimeSeconds,
+    createdAt: now,
+    question: { ...question, paper },
+  },
+};
 
 describe('BookmarksService', () => {
   let service: BookmarksService;
@@ -63,12 +119,7 @@ describe('BookmarksService', () => {
   it('uses an idempotent repository operation when the same question is added again', async () => {
     repository.findBookmarkList.mockResolvedValue(bookmarkList);
     repository.findQuestion.mockResolvedValue(question);
-    repository.addQuestion.mockResolvedValue({
-      bookmarkListId: bookmarkList.id,
-      questionId: question.id,
-      createdAt: now,
-      question: { ...question, paper },
-    });
+    repository.addQuestion.mockResolvedValue(questionSetItem);
 
     await service.addQuestion('user_1', bookmarkList.id, question.id);
     await service.addQuestion('user_1', bookmarkList.id, question.id);
@@ -88,13 +139,19 @@ describe('BookmarksService', () => {
   it('checks list ownership before removing a question', async () => {
     repository.findBookmarkList.mockResolvedValue(bookmarkList);
     repository.findBookmarkedQuestion.mockResolvedValue({
-      bookmarkListId: bookmarkList.id,
-      questionId: question.id,
+      questionSetId: bookmarkList.id,
+      questionRevisionId: questionSetItem.questionRevisionId,
+      position: 1,
+      sourceAttemptId: null,
+      reason: null,
       createdAt: now,
     });
     repository.deleteQuestion.mockResolvedValue({
-      bookmarkListId: bookmarkList.id,
-      questionId: question.id,
+      questionSetId: bookmarkList.id,
+      questionRevisionId: questionSetItem.questionRevisionId,
+      position: 1,
+      sourceAttemptId: null,
+      reason: null,
       createdAt: now,
     });
 

@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, UserAuthType, UserRole } from '@prisma/client';
+import {
+  Prisma,
+  QuestionSetKind,
+  UserAuthType,
+  UserRole,
+} from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
@@ -12,7 +17,9 @@ export class UsersRepository {
         authType: UserAuthType.ANONYMOUS,
         role: UserRole.USER,
         bookshelves: { create: { name: '기본 책장' } },
-        bookmarkLists: { create: { name: '기본 북마크' } },
+        questionSets: {
+          create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
+        },
       },
     });
   }
@@ -30,7 +37,9 @@ export class UsersRepository {
         authType: UserAuthType.EMAIL,
         role: UserRole.USER,
         bookshelves: { create: { name: '기본 책장' } },
-        bookmarkLists: { create: { name: '기본 북마크' } },
+        questionSets: {
+          create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
+        },
       },
     });
   }

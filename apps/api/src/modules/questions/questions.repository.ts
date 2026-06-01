@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import {
+  Prisma,
+  Question,
+  QuestionRevision,
+  QuestionSetKind,
+} from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
@@ -28,10 +33,27 @@ export class QuestionsRepository {
   }
 
   updateImageUrl(id: string, imageUrl: string) {
-    return this.db.question.update({
-      where: { id },
-      data: { imageUrl },
-      include: this.questionIncludes(),
+    return this.db.$transaction(async (tx) => {
+      const question = await tx.question.update({
+        where: { id },
+        data: { imageUrl },
+        include: { paper: true },
+      });
+      const revision = await tx.questionRevision.create({
+        data: this.toRevisionData(question, 1),
+      });
+      await tx.questionSetItem.create({
+        data: {
+          questionSetId: question.paper.questionSetId,
+          questionRevisionId: revision.id,
+          position: question.number,
+        },
+      });
+
+      return tx.question.findUniqueOrThrow({
+        where: { id },
+        include: this.questionIncludes(),
+      });
     });
   }
 
@@ -54,12 +76,96 @@ export class QuestionsRepository {
         }
       }
 
-      return tx.question.update({
-        where: { id },
-        data,
-        include: this.questionIncludes(),
-      });
+      return tx.question
+        .update({
+          where: { id },
+          data,
+          include: { paper: true },
+        })
+        .then(async (question) => {
+          const latestRevision = await tx.questionRevision.findFirst({
+            where: { questionId: id },
+            orderBy: { revision: 'desc' },
+          });
+          const revision = await this.createRevisionIfChanged(
+            tx,
+            question,
+            latestRevision,
+          );
+
+          if (revision && latestRevision) {
+            await tx.questionSetItem.updateMany({
+              where: {
+                questionRevisionId: latestRevision.id,
+                questionSet: { kind: QuestionSetKind.OFFICIAL_PAPER },
+              },
+              data: { questionRevisionId: revision.id },
+            });
+          }
+          await tx.questionSetItem.updateMany({
+            where: {
+              questionRevision: { questionId: id },
+              questionSet: { kind: QuestionSetKind.OFFICIAL_PAPER },
+            },
+            data: { position: question.number },
+          });
+
+          return tx.question.findUniqueOrThrow({
+            where: { id },
+            include: this.questionIncludes(),
+          });
+        });
     });
+  }
+
+  private async createRevisionIfChanged(
+    tx: Prisma.TransactionClient,
+    question: Question & { paper: { questionSetId: string } },
+    latestRevision: QuestionRevision | null,
+  ) {
+    if (latestRevision && !this.hasRevisionChanges(question, latestRevision)) {
+      return null;
+    }
+
+    const revision = await tx.questionRevision.create({
+      data: this.toRevisionData(question, (latestRevision?.revision ?? 0) + 1),
+    });
+    if (!latestRevision) {
+      await tx.questionSetItem.create({
+        data: {
+          questionSetId: question.paper.questionSetId,
+          questionRevisionId: revision.id,
+          position: question.number,
+        },
+      });
+    }
+    return revision;
+  }
+
+  private hasRevisionChanges(question: Question, revision: QuestionRevision) {
+    return (
+      question.type !== revision.type ||
+      question.imageUrl !== revision.imageUrl ||
+      question.choiceCount !== revision.choiceCount ||
+      question.answerChoice !== revision.answerChoice ||
+      question.answerText !== revision.answerText ||
+      question.explanation !== revision.explanation ||
+      question.recommendedTimeSeconds !== revision.recommendedTimeSeconds
+    );
+  }
+
+  private toRevisionData(question: Question, revision: number) {
+    return {
+      questionId: question.id,
+      revision,
+      type: question.type,
+      imageUrl: question.imageUrl,
+      choiceCount: question.choiceCount,
+      answerChoice: question.answerChoice,
+      answerText: question.answerText,
+      explanation: question.explanation,
+      recommendedTimeSeconds: question.recommendedTimeSeconds,
+    };
   }
 
   private questionIncludes() {

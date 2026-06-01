@@ -1,25 +1,50 @@
-import { Bookshelf, Exam, Paper, Subject } from '@prisma/client';
+import { Bookshelf, Exam, ExamSession, Paper, Subject } from '@prisma/client';
 import { LibraryRepository } from './library.repository';
 import { LibraryService } from './library.service';
 
 const now = new Date('2026-05-31T00:00:00.000Z');
+const exam = {
+  id: 'exam_1',
+  name: '수능',
+  slug: 'suneung',
+  usesMonth: false,
+  usesGrade: false,
+  usesRound: false,
+  createdAt: now,
+  updatedAt: now,
+} satisfies Exam;
+const examSession = {
+  id: 'exam_session_1',
+  key: 'exam_1:2025:-:-:-',
+  examId: exam.id,
+  displayYear: 2025,
+  month: null,
+  grade: null,
+  round: null,
+  createdAt: now,
+  updatedAt: now,
+  exam,
+} satisfies ExamSession & { exam: Exam };
 const paper = {
   id: 'paper_1',
   title: '2025학년도 수능 한국사',
-  year: 2025,
   questionCount: 20,
   isPublished: true,
-  examId: 'exam_1',
+  examSessionId: examSession.id,
   subjectId: 'subject_1',
+  questionSetId: 'question_set_1',
   createdAt: now,
   updatedAt: now,
-  exam: { id: 'exam_1', name: '수능', slug: 'suneung' } as Exam,
+  examSession,
   subject: {
     id: 'subject_1',
     name: '한국사',
     slug: 'korean-history',
   } as Subject,
-} satisfies Paper & { exam: Exam; subject: Subject };
+} satisfies Paper & {
+  examSession: ExamSession & { exam: Exam };
+  subject: Subject;
+};
 const bookshelf = {
   id: 'bookshelf_1',
   userId: 'user_1',

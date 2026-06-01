@@ -8,5 +8,6 @@ import { AnswerSessionsService } from './answer-sessions.service';
   imports: [AuthModule],
   controllers: [AnswerSessionsController],
   providers: [AnswerSessionsService, AnswerSessionsRepository],
+  exports: [AnswerSessionsService],
 })
 export class AnswerSessionsModule {}

@@ -18,6 +18,7 @@ function user(overrides: Partial<User> = {}): User {
     email: null,
     passwordHash: null,
     nickname: null,
+    timezone: 'Asia/Seoul',
     authType: UserAuthType.ANONYMOUS,
     role: UserRole.USER,
     createdAt: now,

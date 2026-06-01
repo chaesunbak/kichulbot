@@ -27,27 +27,47 @@ enum AnswerMode {
   EXAM
 }
 
+enum QuestionSetKind {
+  OFFICIAL_PAPER
+  CUSTOM
+  DAILY_WRONG
+  DAILY_WEAKNESS
+  RECOMMENDED
+}
+
+enum AttemptOutcome {
+  CORRECT
+  INCORRECT
+  OMITTED
+}
+
 model User {
-  id             String          @id @default(cuid())
-  email          String?         @unique
-  passwordHash   String?
-  nickname       String?
-  authType       UserAuthType    @default(ANONYMOUS)
-  role           UserRole        @default(USER)
-  bookshelves    Bookshelf[]
-  bookmarkLists  BookmarkList[]
-  answerSessions AnswerSession[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                    String                 @id @default(cuid())
+  email                 String?                @unique
+  passwordHash          String?
+  nickname              String?
+  timezone              String                 @default("Asia/Seoul")
+  authType              UserAuthType           @default(ANONYMOUS)
+  role                  UserRole               @default(USER)
+  bookshelves           Bookshelf[]
+  answerSessions        AnswerSession[]
+  questionSets          QuestionSet[]
+  generatedQuestionSets GeneratedQuestionSet[]
+  questionAttempts      QuestionAttempt[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
 }
 
 model Exam {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
-  slug      String   @unique
-  papers    Paper[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  slug      String        @unique
+  usesMonth Boolean       @default(false)
+  usesGrade Boolean       @default(false)
+  usesRound Boolean       @default(false)
+  sessions  ExamSession[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 model Subject {
@@ -63,22 +83,39 @@ model Subject {
 model Paper {
   id             String          @id @default(cuid())
   title          String
-  year           Int
   questionCount  Int             @default(20)
   isPublished    Boolean         @default(false)
-  examId         String
+  examSessionId  String
   subjectId      String
-  exam           Exam            @relation(fields: [examId], references: [id])
+  questionSetId  String          @unique
+  examSession    ExamSession     @relation(fields: [examSessionId], references: [id])
   subject        Subject         @relation(fields: [subjectId], references: [id])
+  questionSet    QuestionSet     @relation(fields: [questionSetId], references: [id])
   questions      Question[]
   users          UserPaper[]
   answerSessions AnswerSession[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  @@index([examId])
+  @@index([examSessionId])
   @@index([subjectId])
   @@index([isPublished])
+}
+
+model ExamSession {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  examId      String
+  displayYear Int
+  month       Int?
+  grade       Int?
+  round       Int?
+  exam        Exam     @relation(fields: [examId], references: [id])
+  papers      Paper[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([examId, displayYear, month, grade, round])
 }
 
 model Tag {
@@ -106,25 +143,94 @@ model TagSubject {
 }
 
 model Question {
-  id                     String               @id @default(cuid())
+  id                     String             @id @default(cuid())
   paperId                String
   number                 Int
-  type                   QuestionType         @default(MULTIPLE_CHOICE)
+  type                   QuestionType       @default(MULTIPLE_CHOICE)
   imageUrl               String?
   choiceCount            Int?
   answerChoice           Int?
   answerText             String?
   explanation            String?
   recommendedTimeSeconds Int?
-  paper                  Paper                @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  paper                  Paper              @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  revisions              QuestionRevision[]
   tags                   QuestionTag[]
-  draftAnswers           DraftAnswer[]
-  bookmarks              BookmarkedQuestion[]
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 
   @@unique([paperId, number])
   @@index([paperId])
+}
+
+model QuestionRevision {
+  id                     String             @id @default(cuid())
+  questionId             String
+  revision               Int
+  type                   QuestionType       @default(MULTIPLE_CHOICE)
+  imageUrl               String?
+  choiceCount            Int?
+  answerChoice           Int?
+  answerText             String?
+  explanation            String?
+  recommendedTimeSeconds Int?
+  question               Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionSetItems       QuestionSetItem[]
+  solveSessionItems      SolveSessionItem[]
+  attempts               QuestionAttempt[]
+  createdAt              DateTime           @default(now())
+
+  @@unique([questionId, revision])
+  @@index([questionId])
+}
+
+model QuestionSet {
+  id          String                @id @default(cuid())
+  kind        QuestionSetKind
+  ownerUserId String?
+  title       String
+  owner       User?                 @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  items       QuestionSetItem[]
+  generated   GeneratedQuestionSet?
+  paper       Paper?
+  sessions    AnswerSession[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([ownerUserId, kind])
+}
+
+model QuestionSetItem {
+  questionSetId      String
+  questionRevisionId String
+  position           Int
+  sourceAttemptId    String?
+  reason             Json?
+  questionSet        QuestionSet      @relation(fields: [questionSetId], references: [id], onDelete: Cascade)
+  questionRevision   QuestionRevision @relation(fields: [questionRevisionId], references: [id], onDelete: Cascade)
+  sourceAttempt      QuestionAttempt? @relation(fields: [sourceAttemptId], references: [id], onDelete: SetNull)
+  createdAt          DateTime         @default(now())
+
+  @@id([questionSetId, questionRevisionId])
+  @@unique([questionSetId, position])
+  @@index([questionRevisionId])
+  @@index([sourceAttemptId])
+}
+
+model GeneratedQuestionSet {
+  questionSetId    String          @id
+  ownerUserId      String
+  kind             QuestionSetKind
+  studyDate        DateTime?       @db.Date
+  generatorVersion String
+  parameters       Json?
+  generatedAt      DateTime        @default(now())
+  expiresAt        DateTime?
+  questionSet      QuestionSet     @relation(fields: [questionSetId], references: [id], onDelete: Cascade)
+  owner            User            @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerUserId, kind, studyDate])
+  @@index([ownerUserId, generatedAt])
 }
 
 model Bookshelf {
@@ -151,59 +257,68 @@ model UserPaper {
   @@index([paperId])
 }
 
-model BookmarkList {
-  id        String               @id @default(cuid())
-  userId    String
-  name      String
-  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions BookmarkedQuestion[]
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-
-  @@unique([userId, name])
-  @@index([userId])
-}
-
-model BookmarkedQuestion {
-  bookmarkListId String
-  questionId     String
-  bookmarkList   BookmarkList @relation(fields: [bookmarkListId], references: [id], onDelete: Cascade)
-  question       Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-
-  @@id([bookmarkListId, questionId])
-  @@index([questionId])
-}
-
 model AnswerSession {
-  id           String        @id @default(cuid())
-  userId       String
-  paperId      String
-  mode         AnswerMode    @default(EXAM)
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  paper        Paper         @relation(fields: [paperId], references: [id], onDelete: Cascade)
-  draftAnswers DraftAnswer[]
-  submittedAt  DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id          String             @id @default(cuid())
+  userId      String
+  paperId     String?
+  sourceSetId String?
+  mode        AnswerMode         @default(EXAM)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paper       Paper?             @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  sourceSet   QuestionSet?       @relation(fields: [sourceSetId], references: [id])
+  items       SolveSessionItem[]
+  submittedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   @@index([userId, paperId, submittedAt])
   @@index([paperId])
+  @@index([sourceSetId])
 }
 
-model DraftAnswer {
-  sessionId         String
-  questionId        String
+model SolveSessionItem {
+  id                 String            @id @default(cuid())
+  sessionId          String
+  questionRevisionId String
+  position           Int
+  session            AnswerSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionRevision   QuestionRevision  @relation(fields: [questionRevisionId], references: [id])
+  draft              DraftResponse?
+  attempts           QuestionAttempt[]
+  createdAt          DateTime          @default(now())
+
+  @@unique([sessionId, questionRevisionId])
+  @@unique([sessionId, position])
+  @@index([questionRevisionId])
+}
+
+model DraftResponse {
+  sessionItemId     String           @id
   answerChoice      Int?
   answerText        String?
-  spentMilliseconds Int           @default(0)
-  session           AnswerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  question          Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  spentMilliseconds Int              @default(0)
+  sessionItem       SolveSessionItem @relation(fields: [sessionItemId], references: [id], onDelete: Cascade)
+  updatedAt         DateTime         @updatedAt
+}
 
-  @@id([sessionId, questionId])
-  @@index([questionId])
+model QuestionAttempt {
+  id                 String            @id @default(cuid())
+  userId             String
+  sessionItemId      String?
+  questionRevisionId String
+  answerChoice       Int?
+  answerText         String?
+  outcome            AttemptOutcome
+  spentMilliseconds  Int               @default(0)
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionItem        SolveSessionItem? @relation(fields: [sessionItemId], references: [id], onDelete: SetNull)
+  questionRevision   QuestionRevision  @relation(fields: [questionRevisionId], references: [id])
+  sourceSetItems     QuestionSetItem[]
+  gradedAt           DateTime          @default(now())
+
+  @@index([userId, questionRevisionId, gradedAt])
+  @@index([userId, gradedAt])
+  @@index([sessionItemId])
 }
 
 model QuestionTag {

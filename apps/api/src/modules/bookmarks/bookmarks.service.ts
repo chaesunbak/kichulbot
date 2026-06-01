@@ -17,22 +17,32 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { BookmarksRepository } from './bookmarks.repository';
 
-type BookmarkListSummary = Prisma.BookmarkListGetPayload<{
-  include: { _count: { select: { questions: true } } };
+type BookmarkListSummary = Prisma.QuestionSetGetPayload<{
+  include: { _count: { select: { items: true } } };
 }>;
-type BookmarkListWithQuestions = Prisma.BookmarkListGetPayload<{
+type BookmarkListWithQuestions = Prisma.QuestionSetGetPayload<{
   include: {
-    questions: {
+    items: {
       include: {
-        question: {
-          include: { paper: { include: { exam: true; subject: true } } };
+        questionRevision: {
+          include: {
+            question: {
+              include: {
+                paper: {
+                  include: {
+                    examSession: { include: { exam: true } };
+                    subject: true;
+                  };
+                };
+              };
+            };
+          };
         };
       };
     };
   };
 }>;
-type BookmarkedQuestionWithQuestion =
-  BookmarkListWithQuestions['questions'][number];
+type BookmarkListItemWithQuestion = BookmarkListWithQuestions['items'][number];
 
 @Injectable()
 export class BookmarksService {
@@ -84,12 +94,12 @@ export class BookmarksService {
     if (!question) {
       throw new NotFoundException('문제를 찾을 수 없습니다.');
     }
-    const bookmarkedQuestion = await this.bookmarksRepository.addQuestion(
+    const questionSetItem = await this.bookmarksRepository.addQuestion(
       bookmarkListId,
       questionId,
     );
     return AddBookmarkedQuestionResponseSchema.parse({
-      question: this.toQuestionResponse(bookmarkedQuestion),
+      question: this.toQuestionResponse(questionSetItem),
     });
   }
 
@@ -98,14 +108,14 @@ export class BookmarksService {
     bookmarkListId: string,
     questionId: string,
   ): Promise<DeleteBookmarkedQuestionResponse> {
-    const [, bookmarkedQuestion] = await Promise.all([
+    const [, questionSetItem] = await Promise.all([
       this.getOwnedBookmarkList(userId, bookmarkListId),
       this.bookmarksRepository.findBookmarkedQuestion(
         bookmarkListId,
         questionId,
       ),
     ]);
-    if (!bookmarkedQuestion) {
+    if (!questionSetItem) {
       throw new NotFoundException('북마크한 문제를 찾을 수 없습니다.');
     }
     await this.bookmarksRepository.deleteQuestion(bookmarkListId, questionId);
@@ -131,8 +141,8 @@ export class BookmarksService {
   ): BookmarkListSummaryResponse {
     return {
       id: bookmarkList.id,
-      name: bookmarkList.name,
-      questionCount: bookmarkList._count.questions,
+      name: bookmarkList.title,
+      questionCount: bookmarkList._count.items,
       createdAt: bookmarkList.createdAt.toISOString(),
       updatedAt: bookmarkList.updatedAt.toISOString(),
     };
@@ -143,9 +153,9 @@ export class BookmarksService {
   ): BookmarkListResponse {
     return {
       id: bookmarkList.id,
-      name: bookmarkList.name,
-      questionCount: bookmarkList.questions.length,
-      questions: bookmarkList.questions.map((question) =>
+      name: bookmarkList.title,
+      questionCount: bookmarkList.items.length,
+      questions: bookmarkList.items.map((question) =>
         this.toQuestionResponse(question),
       ),
       createdAt: bookmarkList.createdAt.toISOString(),
@@ -154,9 +164,9 @@ export class BookmarksService {
   }
 
   private toQuestionResponse(
-    bookmarkedQuestion: BookmarkedQuestionWithQuestion,
+    questionSetItem: BookmarkListItemWithQuestion,
   ): BookmarkedQuestionResponse {
-    const { question } = bookmarkedQuestion;
+    const { question } = questionSetItem.questionRevision;
     return {
       id: question.id,
       number: question.number,
@@ -164,11 +174,11 @@ export class BookmarksService {
       paper: {
         id: question.paper.id,
         title: question.paper.title,
-        year: question.paper.year,
-        examName: question.paper.exam.name,
+        year: question.paper.examSession.displayYear,
+        examName: question.paper.examSession.exam.name,
         subjectName: question.paper.subject.name,
       },
-      createdAt: bookmarkedQuestion.createdAt.toISOString(),
+      createdAt: questionSetItem.createdAt.toISOString(),
     };
   }
 }

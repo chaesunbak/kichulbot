@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { AnswerMode, Prisma } from '@prisma/client';
+import {
+  AnswerMode,
+  AttemptOutcome,
+  Prisma,
+  QuestionRevision,
+} from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
+
+export class SubmittedAnswerSessionError extends Error {}
 
 @Injectable()
 export class AnswerSessionsRepository {
@@ -14,17 +21,61 @@ export class AnswerSessionsRepository {
 
   start(userId: string, paperId: string, mode: AnswerMode) {
     return this.db.$transaction(async (tx) => {
-      const existing = await tx.answerSession.findFirst({
-        where: { userId, paperId, mode, submittedAt: null },
-        include: this.sessionIncludes(),
-        orderBy: { createdAt: 'desc' },
+      const paper = await tx.paper.findUniqueOrThrow({
+        where: { id: paperId },
       });
-      if (existing) return existing;
+      return this.startQuestionSetTransaction(
+        tx,
+        userId,
+        paper.questionSetId,
+        mode,
+      );
+    });
+  }
 
-      return tx.answerSession.create({
-        data: { userId, paperId, mode },
-        include: this.sessionIncludes(),
-      });
+  startQuestionSet(userId: string, questionSetId: string, mode: AnswerMode) {
+    return this.db.$transaction((tx) =>
+      this.startQuestionSetTransaction(tx, userId, questionSetId, mode),
+    );
+  }
+
+  private async startQuestionSetTransaction(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    questionSetId: string,
+    mode: AnswerMode,
+  ) {
+    const questionSet = await tx.questionSet.findFirstOrThrow({
+      where: {
+        id: questionSetId,
+        OR: [{ ownerUserId: userId }, { paper: { is: { isPublished: true } } }],
+      },
+      include: {
+        paper: true,
+        items: { orderBy: { position: 'asc' } },
+      },
+    });
+    const existing = await tx.answerSession.findFirst({
+      where: { userId, sourceSetId: questionSetId, mode, submittedAt: null },
+      include: this.sessionIncludes(),
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existing) return existing;
+
+    return tx.answerSession.create({
+      data: {
+        userId,
+        paperId: questionSet.paper?.id,
+        sourceSetId: questionSet.id,
+        mode,
+        items: {
+          create: questionSet.items.map((item) => ({
+            questionRevisionId: item.questionRevisionId,
+            position: item.position,
+          })),
+        },
+      },
+      include: this.sessionIncludes(),
     });
   }
 
@@ -43,31 +94,92 @@ export class AnswerSessionsRepository {
     });
   }
 
-  saveDraftAnswer(
+  saveAnswer(
     sessionId: string,
-    questionId: string,
+    sessionItemId: string,
     data: {
       answerChoice?: number | null;
       answerText?: string | null;
       spentMilliseconds?: number;
     },
   ) {
-    const { spentMilliseconds = 0, ...answer } = data;
-    return this.db.draftAnswer.upsert({
-      where: { sessionId_questionId: { sessionId, questionId } },
-      create: { sessionId, questionId, spentMilliseconds, ...answer },
-      update: {
-        ...answer,
-        spentMilliseconds: { increment: spentMilliseconds },
-      },
+    return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "AnswerSession" WHERE "id" = ${sessionId} FOR UPDATE`;
+      const item = await tx.solveSessionItem.findFirstOrThrow({
+        where: { id: sessionItemId, sessionId },
+        include: { questionRevision: true, session: true },
+      });
+      if (item.session.submittedAt) throw new SubmittedAnswerSessionError();
+
+      const { spentMilliseconds = 0, ...answer } = data;
+      const draft = await tx.draftResponse.upsert({
+        where: { sessionItemId },
+        create: { sessionItemId, spentMilliseconds, ...answer },
+        update: {
+          ...answer,
+          spentMilliseconds: { increment: spentMilliseconds },
+        },
+      });
+      const attempt =
+        item.session.mode === AnswerMode.ONE_BY_ONE && this.hasAnswer(answer)
+          ? await tx.questionAttempt.create({
+              data: {
+                userId: item.session.userId,
+                sessionItemId,
+                questionRevisionId: item.questionRevisionId,
+                answerChoice: draft.answerChoice,
+                answerText: draft.answerText,
+                outcome: this.toOutcome(item.questionRevision, draft),
+                spentMilliseconds: draft.spentMilliseconds,
+              },
+            })
+          : null;
+
+      return { draft, attempt };
     });
   }
 
   submit(id: string) {
-    return this.db.answerSession.update({
-      where: { id },
-      data: { submittedAt: new Date() },
-      include: this.sessionIncludes(),
+    return this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "AnswerSession" WHERE "id" = ${id} FOR UPDATE`;
+      const session = await tx.answerSession.findUniqueOrThrow({
+        where: { id },
+        include: this.sessionIncludes(),
+      });
+      if (session.submittedAt) return session;
+
+      const attempts =
+        session.mode === AnswerMode.EXAM
+          ? session.items.map((item) => ({
+              userId: session.userId,
+              sessionItemId: item.id,
+              questionRevisionId: item.questionRevisionId,
+              answerChoice: item.draft?.answerChoice,
+              answerText: item.draft?.answerText,
+              outcome: this.toOutcome(item.questionRevision, item.draft),
+              spentMilliseconds: item.draft?.spentMilliseconds ?? 0,
+            }))
+          : session.items
+              .filter((item) => item.attempts.length === 0)
+              .map((item) => ({
+                userId: session.userId,
+                sessionItemId: item.id,
+                questionRevisionId: item.questionRevisionId,
+                answerChoice: null,
+                answerText: null,
+                outcome: AttemptOutcome.OMITTED,
+                spentMilliseconds: item.draft?.spentMilliseconds ?? 0,
+              }));
+
+      if (attempts.length > 0) {
+        await tx.questionAttempt.createMany({ data: attempts });
+      }
+
+      return tx.answerSession.update({
+        where: { id },
+        data: { submittedAt: new Date() },
+        include: this.sessionIncludes(),
+      });
     });
   }
 
@@ -75,12 +187,38 @@ export class AnswerSessionsRepository {
     return {
       paper: {
         include: {
-          exam: true,
+          examSession: { include: { exam: true } },
           subject: true,
-          questions: { orderBy: { number: 'asc' as const } },
         },
       },
-      draftAnswers: { orderBy: { createdAt: 'asc' as const } },
+      sourceSet: true,
+      items: {
+        include: {
+          questionRevision: { include: { question: true } },
+          draft: true,
+          attempts: { orderBy: { gradedAt: 'asc' as const } },
+        },
+        orderBy: { position: 'asc' as const },
+      },
     } satisfies Prisma.AnswerSessionInclude;
+  }
+
+  private hasAnswer(answer?: {
+    answerChoice?: number | null;
+    answerText?: string | null;
+  }) {
+    return answer?.answerChoice != null || answer?.answerText != null;
+  }
+
+  private toOutcome(
+    question: QuestionRevision,
+    answer?: { answerChoice: number | null; answerText: string | null } | null,
+  ) {
+    if (!answer || !this.hasAnswer(answer)) return AttemptOutcome.OMITTED;
+    const isCorrect =
+      question.type === 'MULTIPLE_CHOICE'
+        ? answer.answerChoice === question.answerChoice
+        : answer.answerText?.trim() === question.answerText?.trim();
+    return isCorrect ? AttemptOutcome.CORRECT : AttemptOutcome.INCORRECT;
   }
 }

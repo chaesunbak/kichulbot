@@ -51,7 +51,9 @@ export class LibraryRepository {
       create: { bookshelfId, paperId },
       update: {},
       include: {
-        paper: { include: { exam: true, subject: true } },
+        paper: {
+          include: { examSession: { include: { exam: true } }, subject: true },
+        },
       },
     });
   }
@@ -72,7 +74,12 @@ export class LibraryRepository {
     return {
       papers: {
         include: {
-          paper: { include: { exam: true, subject: true } },
+          paper: {
+            include: {
+              examSession: { include: { exam: true } },
+              subject: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' as const },
       },

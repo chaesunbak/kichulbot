@@ -1,14 +1,15 @@
 import {
   AnswerSessionLogResponse,
   AnswerSessionResponse,
-  DraftAnswerResponse,
+  AnswerResponse,
+  AnswerSessionResultResponse,
   GetAnswerSessionResponse,
   GetAnswerSessionResponseSchema,
   ListAnswerSessionLogsResponse,
   ListAnswerSessionLogsResponseSchema,
   QuestionResultResponse,
-  SaveDraftAnswerResponse,
-  SaveDraftAnswerResponseSchema,
+  SaveAnswerResponse,
+  SaveAnswerResponseSchema,
   StartAnswerSessionResponse,
   StartAnswerSessionResponseSchema,
   SubmitAnswerSessionResponse,
@@ -20,17 +21,40 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AnswerMode, Prisma, Question, QuestionType } from '@prisma/client';
-import { SaveDraftAnswerDto } from './dto/save-draft-answer.dto';
-import { AnswerSessionsRepository } from './answer-sessions.repository';
+import {
+  AnswerMode,
+  AttemptOutcome,
+  Prisma,
+  QuestionType,
+} from '@prisma/client';
+import { SaveAnswerDto } from './dto/save-answer.dto';
+import {
+  AnswerSessionsRepository,
+  SubmittedAnswerSessionError,
+} from './answer-sessions.repository';
 
 type SessionWithRelations = Prisma.AnswerSessionGetPayload<{
   include: {
-    paper: { include: { exam: true; subject: true; questions: true } };
-    draftAnswers: true;
+    paper: {
+      include: {
+        examSession: { include: { exam: true } };
+        subject: true;
+      };
+    };
+    sourceSet: true;
+    items: {
+      include: {
+        questionRevision: { include: { question: true } };
+        draft: true;
+        attempts: true;
+      };
+    };
   };
 }>;
-type Draft = SessionWithRelations['draftAnswers'][number];
+type SessionItem = SessionWithRelations['items'][number];
+type StoredDraft = NonNullable<SessionItem['draft']>;
+type StoredAttempt = SessionItem['attempts'][number];
+type StoredRevision = SessionItem['questionRevision'];
 
 @Injectable()
 export class AnswerSessionsService {
@@ -64,6 +88,21 @@ export class AnswerSessionsService {
     });
   }
 
+  async startQuestionSet(
+    userId: string,
+    questionSetId: string,
+    mode: AnswerMode,
+  ) {
+    const session = await this.answerSessionsRepository.startQuestionSet(
+      userId,
+      questionSetId,
+      mode,
+    );
+    return StartAnswerSessionResponseSchema.parse({
+      session: this.toResponse(session),
+    });
+  }
+
   async get(userId: string, id: string): Promise<GetAnswerSessionResponse> {
     const session = await this.findOwnedSession(userId, id);
     return GetAnswerSessionResponseSchema.parse({
@@ -71,36 +110,46 @@ export class AnswerSessionsService {
     });
   }
 
-  async saveDraftAnswer(
+  async saveAnswer(
     userId: string,
     id: string,
     questionId: string,
-    dto: SaveDraftAnswerDto,
-  ): Promise<SaveDraftAnswerResponse> {
+    dto: SaveAnswerDto,
+  ): Promise<SaveAnswerResponse> {
     const session = await this.findOwnedSession(userId, id);
     if (session.submittedAt) {
       throw new BadRequestException('이미 종료된 풀이입니다.');
     }
-    const question = session.paper.questions.find(
-      (item) => item.id === questionId,
+    const item = session.items.find(
+      ({ questionRevision }) => questionRevision.questionId === questionId,
     );
-    if (!question) throw new NotFoundException('문항을 찾을 수 없습니다.');
+    if (!item) throw new NotFoundException('문항을 찾을 수 없습니다.');
 
-    const answer = this.resolveAnswer(question.type, question.choiceCount, dto);
+    const answer = this.resolveAnswer(
+      item.questionRevision.type,
+      item.questionRevision.choiceCount,
+      dto,
+    );
     if (!answer && dto.spentMilliseconds === undefined) {
       throw new BadRequestException(
         '저장할 답안 또는 풀이 시간을 입력해주세요.',
       );
     }
-    const draftAnswer = await this.answerSessionsRepository.saveDraftAnswer(
-      id,
-      questionId,
-      { ...answer, spentMilliseconds: dto.spentMilliseconds },
-    );
-    return SaveDraftAnswerResponseSchema.parse({
-      draftAnswer: this.toDraftAnswerResponse(draftAnswer),
-      result: this.shouldRevealResult(session, draftAnswer)
-        ? this.toQuestionResult(question, draftAnswer)
+    const { draft, attempt } = await this.answerSessionsRepository
+      .saveAnswer(id, item.id, {
+        ...answer,
+        spentMilliseconds: dto.spentMilliseconds,
+      })
+      .catch((error: unknown) => {
+        if (error instanceof SubmittedAnswerSessionError) {
+          throw new BadRequestException('이미 종료된 풀이입니다.');
+        }
+        throw error;
+      });
+    return SaveAnswerResponseSchema.parse({
+      answer: this.toAnswerResponse(item, draft, attempt),
+      result: attempt
+        ? this.toQuestionResult(item.questionRevision, attempt)
         : null,
     });
   }
@@ -132,7 +181,7 @@ export class AnswerSessionsService {
   private resolveAnswer(
     type: QuestionType,
     choiceCount: number | null,
-    dto: SaveDraftAnswerDto,
+    dto: SaveAnswerDto,
   ) {
     const hasAnswer =
       dto.answerChoice !== undefined || dto.answerText !== undefined;
@@ -154,33 +203,37 @@ export class AnswerSessionsService {
   }
 
   private toResponse(session: SessionWithRelations): AnswerSessionResponse {
-    const { paper } = session;
     return {
       id: session.id,
       mode: session.mode,
       paper: {
-        ...this.toPaperResponse(paper),
-        questions: paper.questions.map((question) => {
-          const draft = session.draftAnswers.find(
-            (answer) => answer.questionId === question.id,
-          );
+        ...this.toPaperResponse(session),
+        questions: session.items.map((item) => {
+          const attempt = this.latestAttempt(item);
           return {
-            id: question.id,
-            number: question.number,
-            type: question.type,
-            imageUrl: question.imageUrl,
-            choiceCount: question.choiceCount,
-            recommendedTimeSeconds: question.recommendedTimeSeconds,
-            result:
-              draft && this.shouldRevealResult(session, draft)
-                ? this.toQuestionResult(question, draft)
-                : null,
+            id: item.questionRevision.questionId,
+            number: item.position,
+            type: item.questionRevision.type,
+            imageUrl: item.questionRevision.imageUrl,
+            choiceCount: item.questionRevision.choiceCount,
+            recommendedTimeSeconds:
+              item.questionRevision.recommendedTimeSeconds,
+            result: this.shouldRevealResult(session, attempt)
+              ? this.toQuestionResult(item.questionRevision, attempt)
+              : null,
           };
         }),
       },
-      draftAnswers: session.draftAnswers.map((answer) =>
-        this.toDraftAnswerResponse(answer),
-      ),
+      answers: session.items
+        .filter((item) => item.draft)
+        .map((item) =>
+          this.toAnswerResponse(
+            item,
+            item.draft!,
+            this.latestAttempt(item) ?? null,
+          ),
+        ),
+      result: session.submittedAt ? this.toSessionResult(session) : null,
       submittedAt: session.submittedAt?.toISOString() ?? null,
       createdAt: session.createdAt.toISOString(),
       updatedAt: session.updatedAt.toISOString(),
@@ -190,37 +243,54 @@ export class AnswerSessionsService {
   private toLogResponse(
     session: SessionWithRelations,
   ): AnswerSessionLogResponse {
-    const answeredDrafts = session.draftAnswers.filter((draft) =>
-      this.hasAnswer(draft),
-    );
     return {
       id: session.id,
       mode: session.mode,
-      paper: this.toPaperResponse(session.paper),
-      answeredCount: answeredDrafts.length,
-      correctCount: answeredDrafts.filter((draft) => {
-        const question = session.paper.questions.find(
-          (item) => item.id === draft.questionId,
-        );
-        return question && this.isCorrect(question, draft);
-      }).length,
-      totalSpentMilliseconds: session.draftAnswers.reduce(
-        (total, draft) => total + draft.spentMilliseconds,
-        0,
-      ),
+      paper: this.toPaperResponse(session),
+      result: this.toSessionResult(session),
       submittedAt: session.submittedAt!.toISOString(),
       createdAt: session.createdAt.toISOString(),
     };
   }
 
-  private toPaperResponse(paper: SessionWithRelations['paper']) {
+  private toPaperResponse(session: SessionWithRelations) {
+    const { paper } = session;
+    if (!paper) {
+      return {
+        id: session.sourceSetId ?? session.id,
+        title: session.sourceSet?.title ?? '오답 복습',
+        year: session.createdAt.getUTCFullYear(),
+        month: null,
+        grade: null,
+        round: null,
+        questionCount: session.items.length,
+        isInLibrary: false,
+        exam: {
+          id: 'wrong-review',
+          name: '오답 복습',
+          slug: 'wrong-review',
+        },
+        subject: {
+          id: 'mixed',
+          name: '혼합',
+          slug: 'mixed',
+        },
+      };
+    }
     return {
       id: paper.id,
       title: paper.title,
-      year: paper.year,
+      year: paper.examSession.displayYear,
+      month: paper.examSession.month,
+      grade: paper.examSession.grade,
+      round: paper.examSession.round,
       questionCount: paper.questionCount,
       isInLibrary: false,
-      exam: { id: paper.exam.id, name: paper.exam.name, slug: paper.exam.slug },
+      exam: {
+        id: paper.examSession.exam.id,
+        name: paper.examSession.exam.name,
+        slug: paper.examSession.exam.slug,
+      },
       subject: {
         id: paper.subject.id,
         name: paper.subject.name,
@@ -229,42 +299,71 @@ export class AnswerSessionsService {
     };
   }
 
-  private shouldRevealResult(session: SessionWithRelations, draft: Draft) {
+  private shouldRevealResult(
+    session: SessionWithRelations,
+    attempt?: StoredAttempt,
+  ) {
     return (
-      !!session.submittedAt ||
-      (session.mode === AnswerMode.ONE_BY_ONE && this.hasAnswer(draft))
+      (!!session.submittedAt || session.mode === AnswerMode.ONE_BY_ONE) &&
+      !!attempt
     );
   }
 
   private toQuestionResult(
-    question: Question,
-    draft: Draft,
+    question: StoredRevision,
+    attempt?: StoredAttempt,
   ): QuestionResultResponse {
     return {
       answerChoice: question.answerChoice,
       answerText: question.answerText,
       explanation: question.explanation,
-      isCorrect: this.hasAnswer(draft) ? this.isCorrect(question, draft) : null,
+      isCorrect: attempt?.outcome === AttemptOutcome.CORRECT,
     };
   }
 
-  private hasAnswer(draft: Draft) {
-    return draft.answerChoice !== null || draft.answerText !== null;
-  }
-
-  private isCorrect(question: Question, draft: Draft) {
-    return question.type === QuestionType.MULTIPLE_CHOICE
-      ? draft.answerChoice === question.answerChoice
-      : draft.answerText?.trim() === question.answerText?.trim();
-  }
-
-  private toDraftAnswerResponse(answer: Draft): DraftAnswerResponse {
+  private toAnswerResponse(
+    item: SessionItem,
+    draft: StoredDraft,
+    attempt: StoredAttempt | null,
+  ): AnswerResponse {
     return {
-      questionId: answer.questionId,
-      answerChoice: answer.answerChoice,
-      answerText: answer.answerText,
-      spentMilliseconds: answer.spentMilliseconds,
-      updatedAt: answer.updatedAt.toISOString(),
+      questionId: item.questionRevision.questionId,
+      answerChoice: draft.answerChoice,
+      answerText: draft.answerText,
+      isCorrect: attempt ? attempt.outcome === AttemptOutcome.CORRECT : null,
+      spentMilliseconds: draft.spentMilliseconds,
+      updatedAt: draft.updatedAt.toISOString(),
+    };
+  }
+
+  private latestAttempt(item: SessionItem) {
+    return item.attempts.at(-1);
+  }
+
+  private toSessionResult(
+    session: SessionWithRelations,
+  ): AnswerSessionResultResponse {
+    const attempts = session.items
+      .map((item) => this.latestAttempt(item))
+      .filter((attempt): attempt is StoredAttempt => !!attempt);
+    const answered = attempts.filter(
+      (attempt) => attempt.outcome !== AttemptOutcome.OMITTED,
+    );
+    const correctCount = attempts.filter(
+      (attempt) => attempt.outcome === AttemptOutcome.CORRECT,
+    ).length;
+    const totalCount = session.items.length;
+    return {
+      score:
+        totalCount === 0 ? 0 : Math.round((correctCount / totalCount) * 100),
+      totalCount,
+      answeredCount: answered.length,
+      correctCount,
+      wrongCount: totalCount - correctCount,
+      totalSpentMilliseconds: session.items.reduce(
+        (total, item) => total + (item.draft?.spentMilliseconds ?? 0),
+        0,
+      ),
     };
   }
 }

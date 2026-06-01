@@ -1,15 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, QuestionSetKind } from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
+
+interface CreatePaperInput {
+  title: string;
+  examId: string;
+  subjectId: string;
+  displayYear: number;
+  month: number | null;
+  grade: number | null;
+  round: number | null;
+  questionCount: number;
+  isPublished: boolean;
+}
 
 @Injectable()
 export class PapersRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  create(data: Prisma.PaperUncheckedCreateInput) {
-    return this.db.paper.create({
-      data,
-      include: this.paperIncludes(),
+  create(data: CreatePaperInput) {
+    return this.db.$transaction(async (tx) => {
+      const { examId, displayYear, month, grade, round, ...paper } = data;
+      const sessionWhere = { examId, displayYear, month, grade, round };
+      const key = [examId, displayYear, month, grade, round]
+        .map((value) => value ?? '-')
+        .join(':');
+      const session = await tx.examSession.upsert({
+        where: { key },
+        create: { key, ...sessionWhere },
+        update: {},
+      });
+      const questionSet = await tx.questionSet.create({
+        data: { kind: QuestionSetKind.OFFICIAL_PAPER, title: paper.title },
+      });
+
+      return tx.paper.create({
+        data: {
+          ...paper,
+          examSessionId: session.id,
+          questionSetId: questionSet.id,
+        },
+        include: this.paperIncludes(),
+      });
     });
   }
 
@@ -17,7 +49,11 @@ export class PapersRepository {
     return this.db.paper.findMany({
       where,
       include: this.paperIncludes(userId),
-      orderBy: [{ year: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [
+        { examSession: { displayYear: 'desc' } },
+        { examSession: { month: 'desc' } },
+        { createdAt: 'desc' },
+      ],
     });
   }
 
@@ -48,12 +84,16 @@ export class PapersRepository {
   }
 
   delete(id: string) {
-    return this.db.paper.delete({ where: { id } });
+    return this.db.$transaction(async (tx) => {
+      const paper = await tx.paper.delete({ where: { id } });
+      await tx.questionSet.delete({ where: { id: paper.questionSetId } });
+      return paper;
+    });
   }
 
   private paperIncludes(userId?: string) {
     return {
-      exam: true,
+      examSession: { include: { exam: true } },
       subject: true,
       questions: true,
       users: userId

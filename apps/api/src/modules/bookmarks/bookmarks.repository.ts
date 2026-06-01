@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { QuestionSetKind } from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
@@ -6,24 +7,32 @@ export class BookmarksRepository {
   constructor(private readonly db: DatabaseService) {}
 
   findBookmarkLists(userId: string) {
-    return this.db.bookmarkList.findMany({
-      where: { userId },
-      include: { _count: { select: { questions: true } } },
+    return this.db.questionSet.findMany({
+      where: { ownerUserId: userId, kind: QuestionSetKind.CUSTOM },
+      include: { _count: { select: { items: true } } },
       orderBy: { createdAt: 'asc' },
     });
   }
 
   findBookmarkList(userId: string, bookmarkListId: string) {
-    return this.db.bookmarkList.findFirst({
-      where: { id: bookmarkListId, userId },
+    return this.db.questionSet.findFirst({
+      where: {
+        id: bookmarkListId,
+        ownerUserId: userId,
+        kind: QuestionSetKind.CUSTOM,
+      },
       include: this.bookmarkListIncludes(),
     });
   }
 
   createBookmarkList(userId: string, name: string) {
-    return this.db.bookmarkList.create({
-      data: { userId, name },
-      include: { _count: { select: { questions: true } } },
+    return this.db.questionSet.create({
+      data: {
+        ownerUserId: userId,
+        kind: QuestionSetKind.CUSTOM,
+        title: name,
+      },
+      include: { _count: { select: { items: true } } },
     });
   }
 
@@ -34,46 +43,96 @@ export class BookmarksRepository {
   }
 
   addQuestion(bookmarkListId: string, questionId: string) {
-    return this.db.bookmarkedQuestion.upsert({
-      where: {
-        bookmarkListId_questionId: { bookmarkListId, questionId },
-      },
-      create: { bookmarkListId, questionId },
-      update: {},
-      include: this.bookmarkedQuestionIncludes(),
+    return this.db.$transaction(async (tx) => {
+      const revision = await tx.questionRevision.findFirstOrThrow({
+        where: { questionId },
+        orderBy: { revision: 'desc' },
+      });
+      const existing = await tx.questionSetItem.findFirst({
+        where: {
+          questionSetId: bookmarkListId,
+          questionRevision: { questionId },
+        },
+      });
+      if (existing) {
+        return tx.questionSetItem.update({
+          where: {
+            questionSetId_questionRevisionId: {
+              questionSetId: bookmarkListId,
+              questionRevisionId: existing.questionRevisionId,
+            },
+          },
+          data: { questionRevisionId: revision.id },
+          include: this.questionSetItemIncludes(),
+        });
+      }
+
+      const { _max } = await tx.questionSetItem.aggregate({
+        where: { questionSetId: bookmarkListId },
+        _max: { position: true },
+      });
+      return tx.questionSetItem.create({
+        data: {
+          questionSetId: bookmarkListId,
+          questionRevisionId: revision.id,
+          position: (_max.position ?? 0) + 1,
+        },
+        include: this.questionSetItemIncludes(),
+      });
     });
   }
 
   findBookmarkedQuestion(bookmarkListId: string, questionId: string) {
-    return this.db.bookmarkedQuestion.findUnique({
+    return this.db.questionSetItem.findFirst({
       where: {
-        bookmarkListId_questionId: { bookmarkListId, questionId },
+        questionSetId: bookmarkListId,
+        questionRevision: { questionId },
       },
     });
   }
 
   deleteQuestion(bookmarkListId: string, questionId: string) {
-    return this.db.bookmarkedQuestion.delete({
-      where: {
-        bookmarkListId_questionId: { bookmarkListId, questionId },
-      },
+    return this.db.$transaction(async (tx) => {
+      const item = await tx.questionSetItem.findFirstOrThrow({
+        where: {
+          questionSetId: bookmarkListId,
+          questionRevision: { questionId },
+        },
+      });
+      return tx.questionSetItem.delete({
+        where: {
+          questionSetId_questionRevisionId: {
+            questionSetId: bookmarkListId,
+            questionRevisionId: item.questionRevisionId,
+          },
+        },
+      });
     });
   }
 
   private bookmarkListIncludes() {
     return {
-      questions: {
-        include: this.bookmarkedQuestionIncludes(),
-        orderBy: { createdAt: 'desc' as const },
+      items: {
+        include: this.questionSetItemIncludes(),
+        orderBy: { position: 'asc' as const },
       },
     };
   }
 
-  private bookmarkedQuestionIncludes() {
+  private questionSetItemIncludes() {
     return {
-      question: {
+      questionRevision: {
         include: {
-          paper: { include: { exam: true, subject: true } },
+          question: {
+            include: {
+              paper: {
+                include: {
+                  examSession: { include: { exam: true } },
+                  subject: true,
+                },
+              },
+            },
+          },
         },
       },
     };

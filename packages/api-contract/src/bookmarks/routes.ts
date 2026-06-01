@@ -10,31 +10,31 @@ import {
 export const bookmarkRoutes = {
   listBookmarkLists: {
     method: 'GET',
-    path: '/bookmark-lists',
+    path: '/me/question-lists',
     request: null,
     response: ListBookmarkListsResponseSchema,
   },
   createBookmarkList: {
     method: 'POST',
-    path: '/bookmark-lists',
+    path: '/me/question-lists',
     request: CreateBookmarkListRequestSchema,
     response: BookmarkListSummaryResponseEnvelopeSchema,
   },
   getBookmarkList: {
     method: 'GET',
-    path: '/bookmark-lists/:bookmarkListId',
+    path: '/me/question-lists/:bookmarkListId',
     request: null,
     response: BookmarkListResponseEnvelopeSchema,
   },
   addBookmarkedQuestion: {
-    method: 'POST',
-    path: '/bookmark-lists/:bookmarkListId/questions/:questionId',
+    method: 'PUT',
+    path: '/me/question-lists/:bookmarkListId/questions/:questionId',
     request: null,
     response: AddBookmarkedQuestionResponseSchema,
   },
   deleteBookmarkedQuestion: {
     method: 'DELETE',
-    path: '/bookmark-lists/:bookmarkListId/questions/:questionId',
+    path: '/me/question-lists/:bookmarkListId/questions/:questionId',
     request: null,
     response: DeleteBookmarkedQuestionResponseSchema,
   },

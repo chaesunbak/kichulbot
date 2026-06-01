@@ -1,18 +1,26 @@
 import * as z from 'zod';
-import { StartAnswerSessionResponseSchema } from '../answer-sessions/dto.js';
+import { StartSolveSessionResponseSchema } from '../solve-sessions/dto.js';
 import { DailyWrongQuestionSetResponseSchema } from './schema.js';
 
-export const GetTodayWrongQuestionsResponseSchema = z.object({
-  questionSet: DailyWrongQuestionSetResponseSchema,
+export const GetWrongQuestionSetResponseSchema = z.object({
+  questionSet: DailyWrongQuestionSetResponseSchema.nullable(),
 });
-export type GetTodayWrongQuestionsResponse = z.infer<
-  typeof GetTodayWrongQuestionsResponseSchema
+export type GetWrongQuestionSetResponse = z.infer<
+  typeof GetWrongQuestionSetResponseSchema
 >;
 
-export const RefreshTodayWrongQuestionSetResponseSchema =
-  GetTodayWrongQuestionsResponseSchema;
-export type RefreshTodayWrongQuestionSetResponse = z.infer<
-  typeof RefreshTodayWrongQuestionSetResponseSchema
+export const CreateWrongQuestionSetRequestSchema = z.object({
+  studyDate: z.iso.date().optional(),
+});
+export type CreateWrongQuestionSetRequest = z.infer<
+  typeof CreateWrongQuestionSetRequestSchema
+>;
+
+export const CreateWrongQuestionSetResponseSchema = z.object({
+  questionSet: DailyWrongQuestionSetResponseSchema,
+});
+export type CreateWrongQuestionSetResponse = z.infer<
+  typeof CreateWrongQuestionSetResponseSchema
 >;
 
 export const StartWrongReviewSessionRequestSchema = z.object({
@@ -23,7 +31,7 @@ export type StartWrongReviewSessionRequest = z.infer<
 >;
 
 export const StartWrongReviewSessionResponseSchema =
-  StartAnswerSessionResponseSchema;
+  StartSolveSessionResponseSchema;
 export type StartWrongReviewSessionResponse = z.infer<
   typeof StartWrongReviewSessionResponseSchema
 >;

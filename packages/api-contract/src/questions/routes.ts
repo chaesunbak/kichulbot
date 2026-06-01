@@ -8,19 +8,19 @@ import {
 export const questionsRoutes = {
   createQuestion: {
     method: 'POST',
-    path: '/admin/questions',
+    path: '/questions',
     request: CreateQuestionRequestSchema,
     response: QuestionMutationResponseSchema,
   },
   updateQuestion: {
     method: 'PATCH',
-    path: '/admin/questions/:id',
+    path: '/questions/:id',
     request: UpdateQuestionRequestSchema,
     response: QuestionMutationResponseSchema,
   },
   deleteQuestion: {
     method: 'DELETE',
-    path: '/admin/questions/:id',
+    path: '/questions/:id',
     request: null,
     response: DeleteQuestionResponseSchema,
   },

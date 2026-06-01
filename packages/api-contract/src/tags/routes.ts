@@ -14,19 +14,19 @@ export const tagsRoutes = {
   },
   listAdminTags: {
     method: 'GET',
-    path: '/admin/tags',
+    path: '/tags?includeInactive=true',
     request: null,
     response: ListTagsResponseSchema,
   },
   createOfficialTag: {
     method: 'POST',
-    path: '/admin/tags',
+    path: '/tags',
     request: CreateOfficialTagRequestSchema,
     response: OfficialTagMutationResponseSchema,
   },
   updateOfficialTag: {
     method: 'PATCH',
-    path: '/admin/tags/:id',
+    path: '/tags/:id',
     request: UpdateOfficialTagRequestSchema,
     response: OfficialTagMutationResponseSchema,
   },

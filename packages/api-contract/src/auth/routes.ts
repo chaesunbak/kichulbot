@@ -33,7 +33,7 @@ export const authRoutes = {
   },
   me: {
     method: 'GET',
-    path: '/auth/me',
+    path: '/me',
     request: null,
     response: MeResponseSchema,
   },

@@ -11,31 +11,31 @@ import {
 export const papersRoutes = {
   listPapers: {
     method: 'GET',
-    path: '/papers',
+    path: '/exam-papers',
     request: null,
     response: ListPapersResponseSchema,
   },
   createPaper: {
     method: 'POST',
-    path: '/papers',
+    path: '/exam-papers',
     request: CreatePaperRequestSchema,
     response: CreatePaperResponseSchema,
   },
   getPaper: {
     method: 'GET',
-    path: '/papers/:id',
+    path: '/exam-papers/:id',
     request: null,
     response: GetPaperResponseSchema,
   },
   updatePaper: {
     method: 'PATCH',
-    path: '/papers/:id',
+    path: '/exam-papers/:id',
     request: UpdatePaperRequestSchema,
     response: UpdatePaperResponseSchema,
   },
   deletePaper: {
     method: 'DELETE',
-    path: '/papers/:id',
+    path: '/exam-papers/:id',
     request: null,
     response: DeletePaperResponseSchema,
   },

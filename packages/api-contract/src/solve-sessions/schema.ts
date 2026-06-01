@@ -37,7 +37,7 @@ export const AnswerResponseSchema = z.object({
 });
 export type AnswerResponse = z.infer<typeof AnswerResponseSchema>;
 
-export const AnswerSessionResultResponseSchema = z.object({
+export const SolveSessionResultResponseSchema = z.object({
   score: z.number().int().nonnegative(),
   totalCount: z.number().int().nonnegative(),
   answeredCount: z.number().int().nonnegative(),
@@ -45,32 +45,32 @@ export const AnswerSessionResultResponseSchema = z.object({
   wrongCount: z.number().int().nonnegative(),
   totalSpentMilliseconds: z.number().int().nonnegative(),
 });
-export type AnswerSessionResultResponse = z.infer<
-  typeof AnswerSessionResultResponseSchema
+export type SolveSessionResultResponse = z.infer<
+  typeof SolveSessionResultResponseSchema
 >;
 
-export const AnswerSessionResponseSchema = z.object({
+export const SolveSessionResponseSchema = z.object({
   id: z.string(),
   mode: AnswerModeSchema,
   paper: PaperResponseSchema.extend({
     questions: z.array(SolveQuestionResponseSchema),
   }),
   answers: z.array(AnswerResponseSchema),
-  result: AnswerSessionResultResponseSchema.nullable(),
+  result: SolveSessionResultResponseSchema.nullable(),
   submittedAt: IsoDateStringSchema.nullable(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });
-export type AnswerSessionResponse = z.infer<typeof AnswerSessionResponseSchema>;
+export type SolveSessionResponse = z.infer<typeof SolveSessionResponseSchema>;
 
-export const AnswerSessionLogResponseSchema = z.object({
+export const SolveSessionLogResponseSchema = z.object({
   id: z.string(),
   mode: AnswerModeSchema,
   paper: PaperResponseSchema,
-  result: AnswerSessionResultResponseSchema,
+  result: SolveSessionResultResponseSchema,
   submittedAt: IsoDateStringSchema,
   createdAt: IsoDateStringSchema,
 });
-export type AnswerSessionLogResponse = z.infer<
-  typeof AnswerSessionLogResponseSchema
+export type SolveSessionLogResponse = z.infer<
+  typeof SolveSessionLogResponseSchema
 >;

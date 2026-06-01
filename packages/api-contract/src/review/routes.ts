@@ -1,26 +1,27 @@
 import {
-  GetTodayWrongQuestionsResponseSchema,
-  RefreshTodayWrongQuestionSetResponseSchema,
+  CreateWrongQuestionSetRequestSchema,
+  CreateWrongQuestionSetResponseSchema,
+  GetWrongQuestionSetResponseSchema,
   StartWrongReviewSessionRequestSchema,
   StartWrongReviewSessionResponseSchema,
 } from './dto.js';
 
 export const reviewRoutes = {
-  getTodayWrongQuestions: {
+  getWrongQuestionSet: {
     method: 'GET',
-    path: '/me/wrong-questions',
+    path: '/me/wrong-question-sets',
     request: null,
-    response: GetTodayWrongQuestionsResponseSchema,
+    response: GetWrongQuestionSetResponseSchema,
   },
-  refreshTodayWrongQuestionSet: {
+  createWrongQuestionSet: {
     method: 'POST',
-    path: '/me/wrong-question-sets/today/refresh',
-    request: null,
-    response: RefreshTodayWrongQuestionSetResponseSchema,
+    path: '/me/wrong-question-sets',
+    request: CreateWrongQuestionSetRequestSchema,
+    response: CreateWrongQuestionSetResponseSchema,
   },
-  startWrongReviewSession: {
+  startWrongQuestionSetSolveSession: {
     method: 'POST',
-    path: '/answer-sessions/wrong-review',
+    path: '/me/wrong-question-sets/:questionSetId/solve-sessions',
     request: StartWrongReviewSessionRequestSchema,
     response: StartWrongReviewSessionResponseSchema,
   },

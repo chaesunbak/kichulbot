@@ -1,10 +1,11 @@
 import { queryOptions } from '@tanstack/react-query';
-import { fetchExams, fetchSubjects } from './api';
+
+import { fetchCategories, fetchExams } from './api';
 
 export const referenceDataKeys = {
   all: ['reference-data'] as const,
   exams: () => [...referenceDataKeys.all, 'exams'] as const,
-  subjects: () => [...referenceDataKeys.all, 'subjects'] as const,
+  categories: () => [...referenceDataKeys.all, 'categories'] as const,
 };
 
 export function examsQueryOptions(token: string) {
@@ -14,9 +15,9 @@ export function examsQueryOptions(token: string) {
   });
 }
 
-export function subjectsQueryOptions(token: string) {
+export function categoriesQueryOptions(token: string) {
   return queryOptions({
-    queryKey: referenceDataKeys.subjects(),
-    queryFn: () => fetchSubjects(token),
+    queryKey: referenceDataKeys.categories(),
+    queryFn: () => fetchCategories(token),
   });
 }

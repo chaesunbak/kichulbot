@@ -1,5 +1,3 @@
-import { BookOpen } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
@@ -8,24 +6,25 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/card';
 import { Separator } from '@kichulbot/ui/components/separator';
+import { useQuery } from '@tanstack/react-query';
+import { BookOpen } from 'lucide-react';
+
+import { useAuthStore } from '@/features/auth/store';
 import { CreatePaperForm } from '@/features/papers/components/create-paper-form';
 import { PapersSummary } from '@/features/papers/components/papers-summary';
 import { PapersTable } from '@/features/papers/components/papers-table';
 import { papersQueryOptions } from '@/features/papers/queries';
-import {
-  examsQueryOptions,
-  subjectsQueryOptions,
-} from '@/features/reference-data/queries';
-import { useAuthStore } from '@/features/auth/store';
+import { examsQueryOptions } from '@/features/reference-data/queries';
 
 export function PapersPage() {
   const token = useAuthStore((state) => state.token)!;
   const papers = useQuery(papersQueryOptions(token)).data?.papers ?? [];
   const exams = useQuery(examsQueryOptions(token)).data?.exams ?? [];
-  const subjects = useQuery(subjectsQueryOptions(token)).data?.subjects ?? [];
   return (
-    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
-      <CreatePaperForm token={token} exams={exams} subjects={subjects} />
+    <div className="
+      mx-auto grid max-w-7xl gap-5 px-5 py-6
+      lg:grid-cols-[minmax(320px,420px)_1fr]
+    ">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -42,6 +41,7 @@ export function PapersPage() {
           <PapersTable papers={papers} />
         </CardContent>
       </Card>
+      <CreatePaperForm token={token} exams={exams} />
     </div>
   );
 }

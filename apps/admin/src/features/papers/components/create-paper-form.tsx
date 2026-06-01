@@ -1,6 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm, useWatch } from 'react-hook-form';
-import { Plus } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -24,7 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
-import type { Exam, Taxonomy } from '@/shared/api/api-client';
+import { Plus } from 'lucide-react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+
+import type { Exam } from '@/shared/api/api-client';
+
 import { useCreatePaperMutation } from '../mutations';
 import { paperSchema, type PaperValues } from '../schemas';
 
@@ -32,7 +34,6 @@ const defaults: PaperValues = {
   title: '',
   year: new Date().getFullYear(),
   examId: '',
-  subjectId: '',
   questionCount: 20,
   isPublished: 'false',
 };
@@ -40,11 +41,9 @@ const defaults: PaperValues = {
 export function CreatePaperForm({
   token,
   exams,
-  subjects,
 }: {
   token: string;
   exams: Exam[];
-  subjects: Taxonomy[];
 }) {
   const form = useForm<PaperValues>({
     resolver: zodResolver(paperSchema),
@@ -63,7 +62,6 @@ export function CreatePaperForm({
             ...defaults,
             year: values.year,
             examId: values.examId,
-            subjectId: values.subjectId,
           }),
       },
     );
@@ -76,7 +74,7 @@ export function CreatePaperForm({
           문제지 등록
         </CardTitle>
         <CardDescription>
-          시험 종류에 맞는 시행 정보, 과목과 문항 수를 저장합니다.
+          시험 종류에 맞는 시행 정보와 문항 수를 저장합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -88,7 +86,10 @@ export function CreatePaperForm({
               label="문제지 제목"
               placeholder="2025학년도 수능 한국사"
             />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="
+              grid gap-4
+              sm:grid-cols-2
+            ">
               <NumberField
                 control={form.control}
                 name="year"
@@ -133,12 +134,6 @@ export function CreatePaperForm({
                 required
               />
             )}
-            <SelectField
-              control={form.control}
-              name="subjectId"
-              label="과목"
-              items={subjects}
-            />
             <Controller
               name="isPublished"
               control={form.control}
@@ -243,9 +238,9 @@ function SelectField({
   items,
 }: {
   control: Control;
-  name: 'examId' | 'subjectId';
+  name: 'examId';
   label: string;
-  items: Taxonomy[];
+  items: Exam[];
 }) {
   return (
     <Controller

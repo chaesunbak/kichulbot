@@ -14,7 +14,6 @@ export const paperSchema = z.object({
   grade: z.number().int().min(1).max(3).optional(),
   round: z.number().int().min(1).optional(),
   examId: z.string().min(1, '시험을 선택해 주세요.'),
-  subjectId: z.string().min(1, '과목을 선택해 주세요.'),
   questionCount: z
     .number()
     .int('문항 수는 정수로 입력해 주세요.')

@@ -1,4 +1,3 @@
-import { Link } from 'react-router';
 import type { AdminPaperResponse } from '@kichulbot/api-contract/papers';
 import { Badge } from '@kichulbot/ui/components/badge';
 import { Button } from '@kichulbot/ui/components/button';
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@kichulbot/ui/components/table';
+import { Link } from 'react-router';
 
 export function PapersTable({ papers }: { papers: AdminPaperResponse[] }) {
   return (
@@ -18,7 +18,7 @@ export function PapersTable({ papers }: { papers: AdminPaperResponse[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>제목</TableHead>
-            <TableHead>시험/과목</TableHead>
+            <TableHead>시험</TableHead>
             <TableHead>연도</TableHead>
             <TableHead>문항</TableHead>
             <TableHead>상태</TableHead>
@@ -44,7 +44,7 @@ export function PapersTable({ papers }: { papers: AdminPaperResponse[] }) {
                   {paper.title}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {paper.exam.name} / {paper.subject.name}
+                  {paper.exam.name}
                 </TableCell>
                 <TableCell>{formatPaperSession(paper)}</TableCell>
                 <TableCell>

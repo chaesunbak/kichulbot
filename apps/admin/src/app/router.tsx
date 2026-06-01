@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { Toaster } from 'sonner';
+
 import { ProtectedAdminLayout } from '@/features/auth/components/protected-admin-layout';
+
 import { ErrorBoundary } from './error-boundary';
 
 const LoginPage = lazy(() =>
@@ -12,6 +14,16 @@ const LoginPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import('@/pages/not-found-page').then((module) => ({
     default: module.NotFoundPage,
+  })),
+);
+const CategoriesPage = lazy(() =>
+  import('@/pages/categories-page').then((module) => ({
+    default: module.CategoriesPage,
+  })),
+);
+const ExamsPage = lazy(() =>
+  import('@/pages/exams-page').then((module) => ({
+    default: module.ExamsPage,
   })),
 );
 const PaperDetailPage = lazy(() =>
@@ -32,7 +44,10 @@ const TagsPage = lazy(() =>
 
 function PageFallback() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 px-6 text-sm text-muted-foreground">
+    <main className="
+      flex min-h-screen items-center justify-center bg-muted/30 px-6 text-sm
+      text-muted-foreground
+    ">
       불러오는 중
     </main>
   );
@@ -47,6 +62,8 @@ export function AppRouter() {
             <Route path="/login" element={<LoginPage />} />
             <Route element={<ProtectedAdminLayout />}>
               <Route index element={<PapersPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/exams" element={<ExamsPage />} />
               <Route path="/papers/:paperId" element={<PaperDetailPage />} />
               <Route path="/tags" element={<TagsPage />} />
               <Route path="*" element={<NotFoundPage />} />

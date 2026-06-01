@@ -1,10 +1,11 @@
-import * as z from 'zod';
 import {
   AdminPaperResponseSchema,
   CreatePaperResponseSchema,
   DeletePaperResponseSchema,
   UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
+import * as z from 'zod';
+
 import { apiRequest } from '@/shared/api/api-client';
 
 const AdminListPapersResponseSchema = z.object({
@@ -36,7 +37,6 @@ export interface CreatePaperInput {
   grade?: number;
   round?: number;
   examId: string;
-  subjectId: string;
   questionCount: number;
   isPublished: boolean;
 }

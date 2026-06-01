@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
 import { createOfficialTag, updateOfficialTag } from './api';
 import { tagKeys } from './queries';
 
 export interface TagForm {
   name: string;
-  slug: string;
-  subjectIds: string[];
+  examIds: string[];
 }
 
 function useInvalidateTags() {
@@ -27,11 +27,9 @@ export function useSaveTagMutation(
     mutationFn: (form: TagForm) => {
       const input = {
         name: form.name.trim(),
-        slug: form.slug.trim(),
-        subjectIds: form.subjectIds,
+        examIds: form.examIds,
       };
-      if (!input.name || !input.slug)
-        throw new Error('태그 이름과 slug를 입력해 주세요.');
+      if (!input.name) throw new Error('태그 이름을 입력해 주세요.');
       return editingTagId
         ? updateOfficialTag(token, editingTagId, input)
         : createOfficialTag(token, input);

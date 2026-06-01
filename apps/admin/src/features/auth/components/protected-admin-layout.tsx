@@ -1,10 +1,12 @@
-import * as React from 'react';
-import { Navigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
+import React from 'react';
+import { Navigate } from 'react-router';
 import { toast } from 'sonner';
+
 import { ApiError } from '@/shared/api/api-client';
-import { AdminLayout } from '@/shared/components/admin-layout';
+import { Layout } from '@/shared/components/layout';
+
 import { meQueryOptions } from '../queries';
 import { useAuthStore } from '../store';
 
@@ -42,7 +44,9 @@ export function ProtectedAdminLayout() {
 
   if (!_hasHydrated || (!!token && meQuery.isLoading)) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-muted/30 px-6">
+      <main className="
+        flex min-h-screen items-center justify-center bg-muted/30 px-6
+      ">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <RefreshCw className="size-4 animate-spin" />
           관리자 세션 확인 중
@@ -51,5 +55,5 @@ export function ProtectedAdminLayout() {
     );
   }
   if (!token || !meQuery.data?.user) return <Navigate to="/login" replace />;
-  return <AdminLayout />;
+  return <Layout />;
 }

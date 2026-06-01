@@ -4,10 +4,11 @@ import {
   OfficialTagMutationResponseSchema,
   UpdateOfficialTagRequest,
 } from '@kichulbot/api-contract/tags';
+
 import { apiRequest } from '@/shared/api/api-client';
 
-export async function fetchTags(token: string, subjectId?: string) {
-  const query = subjectId ? `?subjectId=${encodeURIComponent(subjectId)}` : '';
+export async function fetchTags(token: string, examId?: string) {
+  const query = examId ? `?examId=${encodeURIComponent(examId)}` : '';
   return apiRequest(`/tags${query}`, ListTagsResponseSchema.parse, { token });
 }
 

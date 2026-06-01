@@ -1,7 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -11,11 +8,17 @@ import {
 } from '@kichulbot/ui/components/card';
 import { Field, FieldError, FieldLabel } from '@kichulbot/ui/components/field';
 import { Input } from '@kichulbot/ui/components/input';
+import { useMutation } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
+
 import { login } from '../api';
 import { loginSchema, type LoginValues } from '../schemas';
 import { useAuthStore } from '../store';
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -30,6 +33,7 @@ export function LoginForm() {
       }
       setAuth(data.accessToken, data.user);
       toast.success('로그인했습니다.');
+      navigate('/', { replace: true });
     },
     onError: (error) =>
       toast.error(

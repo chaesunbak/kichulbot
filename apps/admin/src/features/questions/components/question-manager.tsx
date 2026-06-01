@@ -1,16 +1,4 @@
-import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-import { useQuery } from '@tanstack/react-query';
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Plus,
-  RefreshCw,
-  Trash2,
-  Upload,
-} from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
 import { Button } from '@kichulbot/ui/components/button';
 import {
@@ -38,14 +26,28 @@ import {
 } from '@kichulbot/ui/components/select';
 import { Separator } from '@kichulbot/ui/components/separator';
 import { Textarea } from '@kichulbot/ui/components/textarea';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router';
+
+import { PaperDetailHeader } from '@/features/papers/components/paper-detail-header';
+import { QuestionProgress } from '@/features/papers/components/question-progress';
 import {
   useDeletePaperMutation,
   useUpdatePaperPublishedMutation,
 } from '@/features/papers/mutations';
-import { PaperDetailHeader } from '@/features/papers/components/paper-detail-header';
-import { QuestionProgress } from '@/features/papers/components/question-progress';
 import { paperQueryOptions } from '@/features/papers/queries';
 import { tagsQueryOptions } from '@/features/tags/queries';
+
 import { useQuestionImage } from '../hooks/use-question-image';
 import {
   useDeleteQuestionMutation,
@@ -82,7 +84,7 @@ export function QuestionManager({
   const paperQuery = useQuery(paperQueryOptions(token, paperId));
   const paper = paperQuery.data?.paper;
   const tagsQuery = useQuery({
-    ...tagsQueryOptions(token, paper?.subject.id),
+    ...tagsQueryOptions(token, paper?.exam.id),
     enabled: !!paper,
   });
 
@@ -187,7 +189,10 @@ export function QuestionManager({
 
   if (paperQuery.isLoading) {
     return (
-      <div className="mx-auto flex max-w-7xl items-center justify-center px-5 py-24 text-sm text-muted-foreground">
+      <div className="
+        mx-auto flex max-w-7xl items-center justify-center px-5 py-24 text-sm
+        text-muted-foreground
+      ">
         <RefreshCw className="mr-2 size-4 animate-spin" aria-hidden="true" />
         문제지 상세 불러오는 중
       </div>
@@ -235,7 +240,10 @@ export function QuestionManager({
         total={questionCount}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]">
+      <div className="
+        grid gap-5
+        lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]
+      ">
         <QuestionList
           questions={questions}
           editingQuestionId={editingQuestionId}
@@ -271,7 +279,9 @@ export function QuestionManager({
           </CardHeader>
           <CardContent>
             {!editingQuestion && isComplete ? (
-              <div className="rounded-md border border-dashed px-4 py-10 text-center">
+              <div className="
+                rounded-md border border-dashed px-4 py-10 text-center
+              ">
                 <CheckCircle2
                   className="mx-auto size-6 text-primary"
                   aria-hidden="true"
@@ -291,7 +301,10 @@ export function QuestionManager({
                 )}
               >
                 <FieldGroup>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="
+                    grid gap-3
+                    sm:grid-cols-2
+                  ">
                     <NumberField
                       control={questionForm.control}
                       name="number"
@@ -398,7 +411,10 @@ export function QuestionManager({
                             return (
                               <label
                                 key={tag.id}
-                                className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                                className="
+                                  flex cursor-pointer items-center gap-2
+                                  rounded-md border px-3 py-2 text-sm
+                                "
                               >
                                 <Checkbox
                                   checked={checked}

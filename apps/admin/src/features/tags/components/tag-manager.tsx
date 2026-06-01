@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Pencil, Plus, Tags } from 'lucide-react';
 import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
 import { Badge } from '@kichulbot/ui/components/badge';
 import { Button } from '@kichulbot/ui/components/button';
@@ -12,11 +9,7 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/card';
 import { Checkbox } from '@kichulbot/ui/components/checkbox';
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-} from '@kichulbot/ui/components/field';
+import { Field, FieldLabel } from '@kichulbot/ui/components/field';
 import { Input } from '@kichulbot/ui/components/input';
 import { Switch } from '@kichulbot/ui/components/switch';
 import {
@@ -27,22 +20,27 @@ import {
   TableHeader,
   TableRow,
 } from '@kichulbot/ui/components/table';
+import { useQuery } from '@tanstack/react-query';
+import { Pencil, Plus, Tags } from 'lucide-react';
+import * as React from 'react';
+
 import type { Taxonomy } from '@/shared/api/api-client';
+
 import {
+  type TagForm,
   useSaveTagMutation,
   useUpdateTagActiveMutation,
-  type TagForm,
 } from '../mutations';
 import { adminTagsQueryOptions } from '../queries';
 
-const EMPTY_FORM: TagForm = { name: '', slug: '', subjectIds: [] };
+const EMPTY_FORM: TagForm = { name: '', examIds: [] };
 
 export function TagManager({
   token,
-  subjects,
+  exams,
 }: {
   token: string;
-  subjects: Taxonomy[];
+  exams: Taxonomy[];
 }) {
   const [editingTag, setEditingTag] = React.useState<AdminTagResponse | null>(
     null,
@@ -67,24 +65,26 @@ export function TagManager({
     setEditingTag(tag);
     setForm({
       name: tag.name,
-      slug: tag.slug,
-      subjectIds: tag.subjectIds,
+      examIds: tag.examIds,
     });
   }
 
-  function toggleSubject(subjectId: string, checked: boolean) {
+  function toggleExam(examId: string, checked: boolean) {
     setForm((current) => ({
       ...current,
-      subjectIds: checked
-        ? [...current.subjectIds, subjectId]
-        : current.subjectIds.filter((id) => id !== subjectId),
+      examIds: checked
+        ? [...current.examIds, examId]
+        : current.examIds.filter((id) => id !== examId),
     }));
   }
 
   const tags = (tagsQuery.data?.tags ?? []) as AdminTagResponse[];
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-6 lg:grid-cols-[minmax(320px,420px)_1fr]">
+    <div className="
+      mx-auto grid max-w-7xl gap-5 px-5 py-6
+      lg:grid-cols-[minmax(320px,420px)_1fr]
+    ">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -92,7 +92,7 @@ export function TagManager({
             {editingTag ? '공식 태그 수정' : '공식 태그 추가'}
           </CardTitle>
           <CardDescription>
-            공식 태그와 태그를 노출할 과목을 함께 관리합니다.
+            시험별로 문항 편집에 노출할 공식 태그를 관리합니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -118,37 +118,23 @@ export function TagManager({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="tag-slug">slug</FieldLabel>
-              <Input
-                id="tag-slug"
-                value={form.slug}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    slug: event.target.value,
-                  }))
-                }
-                placeholder="joseon"
-              />
-            </Field>
-            <Field>
-              <FieldLabel>적용 과목</FieldLabel>
-              <FieldDescription>
-                선택한 과목의 문항 편집 화면에 이 공식 태그가 표시됩니다.
-              </FieldDescription>
+              <FieldLabel>적용 시험</FieldLabel>
               <div className="grid gap-2">
-                {subjects.map((subject) => (
+                {exams.map((exam) => (
                   <label
-                    key={subject.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                    key={exam.id}
+                    className="
+                      flex cursor-pointer items-center gap-2 rounded-md border
+                      px-3 py-2 text-sm
+                    "
                   >
                     <Checkbox
-                      checked={form.subjectIds.includes(subject.id)}
+                      checked={form.examIds.includes(exam.id)}
                       onCheckedChange={(checked) =>
-                        toggleSubject(subject.id, checked === true)
+                        toggleExam(exam.id, checked === true)
                       }
                     />
-                    {subject.name}
+                    {exam.name}
                   </label>
                 ))}
               </div>
@@ -186,7 +172,7 @@ export function TagManager({
             <TableHeader>
               <TableRow>
                 <TableHead>태그</TableHead>
-                <TableHead>적용 과목</TableHead>
+                <TableHead>적용 시험</TableHead>
                 <TableHead>활성</TableHead>
                 <TableHead>
                   <span className="sr-only">수정</span>
@@ -198,22 +184,18 @@ export function TagManager({
                 <TableRow key={tag.id}>
                   <TableCell>
                     <div className="font-medium">{tag.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {tag.slug}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {tag.subjectIds.length === 0 ? (
+                      {tag.examIds.length === 0 ? (
                         <span className="text-xs text-muted-foreground">
                           없음
                         </span>
                       ) : (
-                        tag.subjectIds.map((subjectId) => (
-                          <Badge key={subjectId} variant="outline">
-                            {subjects.find(
-                              (subject) => subject.id === subjectId,
-                            )?.name ?? subjectId}
+                        tag.examIds.map((examId) => (
+                          <Badge key={examId} variant="outline">
+                            {exams.find((exam) => exam.id === examId)?.name ??
+                              examId}
                           </Badge>
                         ))
                       )}

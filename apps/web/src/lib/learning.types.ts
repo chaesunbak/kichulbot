@@ -65,7 +65,7 @@ export interface Answer {
   updatedAt: string;
 }
 
-export interface AnswerSessionResult {
+export interface SolveSessionResult {
   score: number;
   totalCount: number;
   answeredCount: number;
@@ -74,22 +74,22 @@ export interface AnswerSessionResult {
   totalSpentMilliseconds: number;
 }
 
-export interface AnswerSession {
+export interface SolveSession {
   id: string;
   mode: 'ONE_BY_ONE' | 'EXAM';
   paper: Paper & { questions: SolveQuestion[] };
   answers: Answer[];
-  result: AnswerSessionResult | null;
+  result: SolveSessionResult | null;
   submittedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AnswerSessionLog {
+export interface SolveSessionLog {
   id: string;
   mode: 'ONE_BY_ONE' | 'EXAM';
   paper: Paper;
-  result: AnswerSessionResult;
+  result: SolveSessionResult;
   submittedAt: string;
   createdAt: string;
 }

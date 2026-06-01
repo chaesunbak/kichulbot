@@ -2,13 +2,13 @@ import Link from 'next/link';
 import { ArrowRight, BookOpen, LibraryBig, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from '@kichulbot/ui/components/card';
 import { getUser } from '@/lib/auth';
-import { getAnswerSessionLogs, getBookshelves } from '@/lib/learning';
+import { getSolveSessionLogs, getBookshelves } from '@/lib/learning';
 
 export default async function HomePage() {
   const [user, bookshelves, logs] = await Promise.all([
     getUser(),
     getBookshelves().catch(() => []),
-    getAnswerSessionLogs().catch(() => []),
+    getSolveSessionLogs().catch(() => []),
   ]);
   const savedPaperCount = bookshelves.reduce(
     (count, bookshelf) => count + bookshelf.papers.length,

@@ -9,7 +9,7 @@ import {
 } from '@kichulbot/ui/components/card';
 import { LibraryPaperActions } from '@/components/library-paper-actions';
 import { PaperCoverCard } from '@/components/paper-cover-card';
-import { getAnswerSessionLogs, getBookshelves } from '@/lib/learning';
+import { getSolveSessionLogs, getBookshelves } from '@/lib/learning';
 import { formatPaperSession } from '@/lib/paper-labels';
 
 export default async function LibraryPaperPage({
@@ -20,7 +20,7 @@ export default async function LibraryPaperPage({
   const { bookshelfId, paperId } = await params;
   const [bookshelves, logs] = await Promise.all([
     getBookshelves(),
-    getAnswerSessionLogs(),
+    getSolveSessionLogs(),
   ]);
   const bookshelf = bookshelves.find((item) => item.id === bookshelfId);
   const libraryPaper = bookshelf?.papers.find(

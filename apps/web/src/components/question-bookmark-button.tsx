@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { BookmarkPlus } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@kichulbot/ui/components/native-select';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/select';
 import type { BookmarkListSummary } from '@/lib/learning.types';
 
 export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
@@ -19,7 +22,7 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
   const toggle = async () => {
     setIsOpen((current) => !current);
     if (lists) return;
-    const response = await fetch('/api/bookmark-lists');
+    const response = await fetch('/api/me/question-lists');
     if (!response.ok) return setMessage('리스트를 불러오지 못했습니다.');
     const body = (await response.json()) as {
       bookmarkLists: BookmarkListSummary[];
@@ -32,8 +35,8 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
     if (!selectedId) return;
     setIsAdding(true);
     const response = await fetch(
-      `/api/bookmark-lists/${selectedId}/questions/${questionId}`,
-      { method: 'POST' },
+      `/api/me/question-lists/${selectedId}/questions/${questionId}`,
+      { method: 'PUT' },
     );
     setIsAdding(false);
     setMessage(
@@ -53,17 +56,21 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
         <div className="absolute right-0 top-11 z-10 grid w-64 gap-3 rounded-lg border border-zinc-200 bg-white p-3 ">
           {lists?.length ? (
             <>
-              <NativeSelect
-                value={selectedId}
-                onChange={(event) => setSelectedId(event.target.value)}
-                aria-label="추가할 북마크 리스트 선택"
-              >
-                {lists.map((list) => (
-                  <NativeSelectOption key={list.id} value={list.id}>
-                    {list.name}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+              <Select value={selectedId} onValueChange={setSelectedId}>
+                <SelectTrigger
+                  aria-label="추가할 북마크 리스트 선택"
+                  className="w-full"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {lists.map((list) => (
+                    <SelectItem key={list.id} value={list.id}>
+                      {list.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 type="button"
                 size="sm"

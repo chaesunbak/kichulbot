@@ -12,7 +12,9 @@ const AdminListPapersResponseSchema = z.object({
 });
 
 export async function fetchPapers(token: string) {
-  return apiRequest('/papers', AdminListPapersResponseSchema.parse, { token });
+  return apiRequest('/exam-papers', AdminListPapersResponseSchema.parse, {
+    token,
+  });
 }
 
 const AdminGetPaperResponseSchema = z.object({
@@ -20,9 +22,11 @@ const AdminGetPaperResponseSchema = z.object({
 });
 
 export async function fetchPaper(token: string, paperId: string) {
-  return apiRequest(`/papers/${paperId}`, AdminGetPaperResponseSchema.parse, {
-    token,
-  });
+  return apiRequest(
+    `/exam-papers/${paperId}`,
+    AdminGetPaperResponseSchema.parse,
+    { token },
+  );
 }
 
 export interface CreatePaperInput {
@@ -38,7 +42,7 @@ export interface CreatePaperInput {
 }
 
 export async function createPaper(token: string, input: CreatePaperInput) {
-  return apiRequest('/papers', CreatePaperResponseSchema.parse, {
+  return apiRequest('/exam-papers', CreatePaperResponseSchema.parse, {
     method: 'POST',
     token,
     body: input,
@@ -50,16 +54,24 @@ export async function updatePaperPublished(
   paperId: string,
   isPublished: boolean,
 ) {
-  return apiRequest(`/papers/${paperId}`, UpdatePaperResponseSchema.parse, {
-    method: 'PATCH',
-    token,
-    body: { isPublished },
-  });
+  return apiRequest(
+    `/exam-papers/${paperId}`,
+    UpdatePaperResponseSchema.parse,
+    {
+      method: 'PATCH',
+      token,
+      body: { isPublished },
+    },
+  );
 }
 
 export async function deletePaper(token: string, paperId: string) {
-  return apiRequest(`/papers/${paperId}`, DeletePaperResponseSchema.parse, {
-    method: 'DELETE',
-    token,
-  });
+  return apiRequest(
+    `/exam-papers/${paperId}`,
+    DeletePaperResponseSchema.parse,
+    {
+      method: 'DELETE',
+      token,
+    },
+  );
 }

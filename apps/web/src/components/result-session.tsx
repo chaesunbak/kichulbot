@@ -9,7 +9,7 @@ import { BookOpenCheck, CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
 import { QuestionBookmarkButton } from '@/components/question-bookmark-button';
 import type {
   Answer,
-  AnswerSession,
+  SolveSession,
   QuestionResult,
   SolveQuestion,
 } from '@/lib/learning.types';
@@ -24,7 +24,7 @@ const filterLabels: Record<ResultFilter, string> = {
   CORRECT: '정답',
 };
 
-export function ResultSession({ session }: { session: AnswerSession }) {
+export function ResultSession({ session }: { session: SolveSession }) {
   const [currentId, setCurrentId] = useState(session.paper.questions[0]?.id);
   const [filter, setFilter] = useState<ResultFilter>('ALL');
   const answerByQuestionId = useMemo(

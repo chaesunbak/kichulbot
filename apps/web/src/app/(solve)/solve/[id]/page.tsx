@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 
 import { SolveSession } from '@/components/solve-session';
-import { getAnswerSession } from '@/lib/learning';
-import type { AnswerSession } from '@/lib/learning.types';
+import { getSolveSession } from '@/lib/learning';
+import type { SolveSession as SolveSessionData } from '@/lib/learning.types';
 
 export default async function SolvePage({
   params,
@@ -10,9 +10,9 @@ export default async function SolvePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  let session: AnswerSession;
+  let session: SolveSessionData;
   try {
-    session = await getAnswerSession(id);
+    session = await getSolveSession(id);
   } catch {
     notFound();
   }

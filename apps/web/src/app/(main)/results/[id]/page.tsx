@@ -1,8 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 
 import { ResultSession } from '@/components/result-session';
-import { getAnswerSession } from '@/lib/learning';
-import type { AnswerSession } from '@/lib/learning.types';
+import { getSolveSession } from '@/lib/learning';
+import type { SolveSession } from '@/lib/learning.types';
 
 export default async function ResultPage({
   params,
@@ -10,9 +10,9 @@ export default async function ResultPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  let session: AnswerSession;
+  let session: SolveSession;
   try {
-    session = await getAnswerSession(id);
+    session = await getSolveSession(id);
   } catch {
     notFound();
   }

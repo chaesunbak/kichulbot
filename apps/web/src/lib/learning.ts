@@ -4,8 +4,8 @@ import type {
   Bookshelf,
   BookmarkListSummary,
   BookmarkList,
-  AnswerSession,
-  AnswerSessionLog,
+  SolveSession,
+  SolveSessionLog,
   DailyWrongQuestionSet,
 } from './learning.types';
 
@@ -13,7 +13,7 @@ export const getBookshelves = async (): Promise<Bookshelf[]> => {
   const token = await getToken();
   if (!token) return [];
   const res = await api.get<{ data: { bookshelves: Bookshelf[] } }>(
-    '/library/bookshelves',
+    '/me/paper-lists',
     token,
   );
   return res.data.bookshelves;
@@ -24,7 +24,7 @@ export const getBookmarkLists = async (): Promise<BookmarkListSummary[]> => {
   if (!token) return [];
   const res = await api.get<{
     data: { bookmarkLists: BookmarkListSummary[] };
-  }>('/bookmark-lists', token);
+  }>('/me/question-lists', token);
   return res.data.bookmarkLists;
 };
 
@@ -32,27 +32,27 @@ export const getBookmarkList = async (id: string): Promise<BookmarkList> => {
   const token = await getToken();
   if (!token) throw new Error('로그인이 필요합니다.');
   const res = await api.get<{ data: { bookmarkList: BookmarkList } }>(
-    `/bookmark-lists/${id}`,
+    `/me/question-lists/${id}`,
     token,
   );
   return res.data.bookmarkList;
 };
 
-export const getAnswerSession = async (id: string): Promise<AnswerSession> => {
+export const getSolveSession = async (id: string): Promise<SolveSession> => {
   const token = await getToken();
   if (!token) throw new Error('로그인이 필요합니다.');
-  const res = await api.get<{ data: { session: AnswerSession } }>(
-    `/answer-sessions/${id}`,
+  const res = await api.get<{ data: { session: SolveSession } }>(
+    `/me/solve-sessions/${id}`,
     token,
   );
   return res.data.session;
 };
 
-export const getAnswerSessionLogs = async (): Promise<AnswerSessionLog[]> => {
+export const getSolveSessionLogs = async (): Promise<SolveSessionLog[]> => {
   const token = await getToken();
   if (!token) return [];
-  const res = await api.get<{ data: { logs: AnswerSessionLog[] } }>(
-    '/answer-sessions',
+  const res = await api.get<{ data: { logs: SolveSessionLog[] } }>(
+    '/me/solve-sessions',
     token,
   );
   return res.data.logs;
@@ -62,8 +62,8 @@ export const getTodayWrongQuestions =
   async (): Promise<DailyWrongQuestionSet | null> => {
     const token = await getToken();
     if (!token) return null;
-    const res = await api.get<{
+    const res = await api.post<{
       data: { questionSet: DailyWrongQuestionSet };
-    }>('/me/wrong-questions', token);
+    }>('/me/wrong-question-sets', {}, token);
     return res.data.questionSet;
   };

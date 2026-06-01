@@ -6,22 +6,25 @@ type RouteContext = {
 };
 
 const ALLOWED_ROUTES = [
-  ['POST', /^\/answer-sessions$/],
-  ['POST', /^\/answer-sessions\/wrong-review$/],
-  ['PATCH', /^\/answer-sessions\/[^/]+\/answers\/[^/]+$/],
-  ['POST', /^\/answer-sessions\/[^/]+\/submit$/],
-  ['GET', /^\/bookmark-lists$/],
-  ['POST', /^\/bookmark-lists$/],
-  ['POST', /^\/bookmark-lists\/[^/]+\/questions\/[^/]+$/],
-  ['DELETE', /^\/bookmark-lists\/[^/]+\/questions\/[^/]+$/],
-  ['GET', /^\/library\/bookshelves$/],
-  ['POST', /^\/library\/bookshelves$/],
-  ['PATCH', /^\/library\/bookshelves\/[^/]+$/],
-  ['DELETE', /^\/library\/bookshelves\/[^/]+$/],
-  ['POST', /^\/library\/bookshelves\/[^/]+\/papers\/[^/]+$/],
-  ['DELETE', /^\/library\/bookshelves\/[^/]+\/papers\/[^/]+$/],
-  ['GET', /^\/me\/wrong-questions$/],
-  ['POST', /^\/me\/wrong-question-sets\/today\/refresh$/],
+  ['GET', /^\/me\/solve-sessions$/],
+  ['POST', /^\/me\/solve-sessions$/],
+  ['GET', /^\/me\/solve-sessions\/[^/]+$/],
+  ['PUT', /^\/me\/solve-sessions\/[^/]+\/answers\/[^/]+$/],
+  ['POST', /^\/me\/solve-sessions\/[^/]+\/submissions$/],
+  ['GET', /^\/me\/question-lists$/],
+  ['POST', /^\/me\/question-lists$/],
+  ['GET', /^\/me\/question-lists\/[^/]+$/],
+  ['PUT', /^\/me\/question-lists\/[^/]+\/questions\/[^/]+$/],
+  ['DELETE', /^\/me\/question-lists\/[^/]+\/questions\/[^/]+$/],
+  ['GET', /^\/me\/paper-lists$/],
+  ['POST', /^\/me\/paper-lists$/],
+  ['PATCH', /^\/me\/paper-lists\/[^/]+$/],
+  ['DELETE', /^\/me\/paper-lists\/[^/]+$/],
+  ['PUT', /^\/me\/paper-lists\/[^/]+\/exam-papers\/[^/]+$/],
+  ['DELETE', /^\/me\/paper-lists\/[^/]+\/exam-papers\/[^/]+$/],
+  ['GET', /^\/me\/wrong-question-sets$/],
+  ['POST', /^\/me\/wrong-question-sets$/],
+  ['POST', /^\/me\/wrong-question-sets\/[^/]+\/solve-sessions$/],
 ] as const;
 
 function isAllowedRoute(method: string, path: string) {
@@ -34,6 +37,7 @@ function isAllowedRoute(method: string, path: string) {
 async function proxyRequest(request: Request, { params }: RouteContext) {
   const { path } = await params;
   const upstreamPath = `/${path.map(encodeURIComponent).join('/')}`;
+  const upstreamPathWithSearch = `${upstreamPath}${new URL(request.url).search}`;
 
   if (!isAllowedRoute(request.method, upstreamPath)) {
     return NextResponse.json(
@@ -42,12 +46,13 @@ async function proxyRequest(request: Request, { params }: RouteContext) {
     );
   }
 
-  return proxyAuthenticatedRequest(request, upstreamPath);
+  return proxyAuthenticatedRequest(request, upstreamPathWithSearch);
 }
 
 export {
   proxyRequest as GET,
   proxyRequest as POST,
   proxyRequest as PATCH,
+  proxyRequest as PUT,
   proxyRequest as DELETE,
 };

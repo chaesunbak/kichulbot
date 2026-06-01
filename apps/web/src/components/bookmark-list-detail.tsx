@@ -15,7 +15,7 @@ export function BookmarkListDetail({
 
   const removeQuestion = async (questionId: string) => {
     const response = await fetch(
-      `/api/bookmark-lists/${initialList.id}/questions/${questionId}`,
+      `/api/me/question-lists/${initialList.id}/questions/${questionId}`,
       { method: 'DELETE' },
     );
     if (!response.ok) return setMessage('북마크를 제거하지 못했습니다.');

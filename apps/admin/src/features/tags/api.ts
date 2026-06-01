@@ -12,14 +12,20 @@ export async function fetchTags(token: string, subjectId?: string) {
 }
 
 export async function fetchAdminTags(token: string) {
-  return apiRequest('/admin/tags', ListTagsResponseSchema.parse, { token });
+  return apiRequest(
+    '/tags?includeInactive=true',
+    ListTagsResponseSchema.parse,
+    {
+      token,
+    },
+  );
 }
 
 export async function createOfficialTag(
   token: string,
   input: CreateOfficialTagRequest,
 ) {
-  return apiRequest('/admin/tags', OfficialTagMutationResponseSchema.parse, {
+  return apiRequest('/tags', OfficialTagMutationResponseSchema.parse, {
     token,
     method: 'POST',
     body: input,
@@ -31,13 +37,9 @@ export async function updateOfficialTag(
   tagId: string,
   input: UpdateOfficialTagRequest,
 ) {
-  return apiRequest(
-    `/admin/tags/${tagId}`,
-    OfficialTagMutationResponseSchema.parse,
-    {
-      token,
-      method: 'PATCH',
-      body: input,
-    },
-  );
+  return apiRequest(`/tags/${tagId}`, OfficialTagMutationResponseSchema.parse, {
+    token,
+    method: 'PATCH',
+    body: input,
+  });
 }

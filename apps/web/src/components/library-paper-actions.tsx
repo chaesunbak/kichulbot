@@ -20,7 +20,7 @@ export function LibraryPaperActions({
   const start = async (mode: 'ONE_BY_ONE' | 'EXAM') => {
     setIsStarting(true);
     setMessage(null);
-    const response = await fetch('/api/answer-sessions', {
+    const response = await fetch('/api/me/solve-sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paperId, mode }),
@@ -39,7 +39,7 @@ export function LibraryPaperActions({
     setIsDeleting(true);
     setMessage(null);
     const response = await fetch(
-      `/api/library/bookshelves/${bookshelfId}/papers/${paperId}`,
+      `/api/me/paper-lists/${bookshelfId}/exam-papers/${paperId}`,
       { method: 'DELETE' },
     );
     if (!response.ok) {

@@ -30,6 +30,12 @@ async function forwardRequest(path: string, request: Request, token: string) {
         await readJsonBody(request),
         token,
       );
+    case 'PUT':
+      return api.put<{ data: unknown }>(
+        path,
+        await readJsonBody(request),
+        token,
+      );
     case 'DELETE':
       return api.delete<{ data: unknown }>(path, token);
     default:

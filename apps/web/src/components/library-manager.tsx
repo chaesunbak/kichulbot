@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@kichulbot/ui/components/native-select';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/select';
 import {
   BookshelfGrid,
   BookshelfSection,
@@ -28,7 +31,7 @@ export function LibraryManager({
   const createBookshelf = async () => {
     const name = window.prompt('새 책장 이름을 입력해 주세요.');
     if (!name?.trim()) return;
-    const response = await fetch('/api/library/bookshelves', {
+    const response = await fetch('/api/me/paper-lists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
@@ -47,7 +50,7 @@ export function LibraryManager({
       selected.name,
     );
     if (!name?.trim() || name.trim() === selected.name) return;
-    const response = await fetch(`/api/library/bookshelves/${selected.id}`, {
+    const response = await fetch(`/api/me/paper-lists/${selected.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
@@ -65,7 +68,7 @@ export function LibraryManager({
   const deleteBookshelf = async () => {
     if (!selected) return;
     if (!window.confirm(`"${selected.name}" 책장을 삭제할까요?`)) return;
-    const response = await fetch(`/api/library/bookshelves/${selected.id}`, {
+    const response = await fetch(`/api/me/paper-lists/${selected.id}`, {
       method: 'DELETE',
     });
     if (!response.ok) return setMessage('책장을 삭제하지 못했습니다.');
@@ -81,18 +84,18 @@ export function LibraryManager({
     <>
       <div className="mt-7 flex flex-wrap items-center gap-2">
         {bookshelves.length > 0 && (
-          <NativeSelect
-            className="min-w-52"
-            value={selectedId}
-            onChange={(event) => setSelectedId(event.target.value)}
-            aria-label="책장 선택"
-          >
-            {bookshelves.map((bookshelf) => (
-              <NativeSelectOption key={bookshelf.id} value={bookshelf.id}>
-                {bookshelf.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <Select value={selectedId} onValueChange={setSelectedId}>
+            <SelectTrigger aria-label="책장 선택" className="min-w-52">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {bookshelves.map((bookshelf) => (
+                <SelectItem key={bookshelf.id} value={bookshelf.id}>
+                  {bookshelf.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
         <Button
           type="button"

@@ -12,5 +12,5 @@ export async function login(email: string, password: string) {
 }
 
 export async function fetchMe(token: string) {
-  return apiRequest('/auth/me', MeResponseSchema.parse, { token });
+  return apiRequest('/me', MeResponseSchema.parse, { token });
 }

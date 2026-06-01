@@ -9,10 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import type {
-  AnswerSession,
-  DailyWrongQuestionSet,
-} from '@/lib/learning.types';
+import type { SolveSession, DailyWrongQuestionSet } from '@/lib/learning.types';
 
 export function WrongReviewCard({
   initialQuestionSet,
@@ -28,13 +25,16 @@ export function WrongReviewCard({
     setIsPending(true);
     setMessage(null);
     try {
-      const response = await fetch('/api/answer-sessions/wrong-review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'ONE_BY_ONE' }),
-      });
+      const response = await fetch(
+        `/api/me/wrong-question-sets/${questionSet.id}/solve-sessions`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'ONE_BY_ONE' }),
+        },
+      );
       if (!response.ok) throw new Error('시작 실패');
-      const body = (await response.json()) as { session: AnswerSession };
+      const body = (await response.json()) as { session: SolveSession };
       router.push(`/solve/${body.session.id}`);
     } catch {
       setMessage('오답 복습을 시작하지 못했습니다.');
@@ -46,10 +46,11 @@ export function WrongReviewCard({
     setIsPending(true);
     setMessage(null);
     try {
-      const response = await fetch(
-        '/api/me/wrong-question-sets/today/refresh',
-        { method: 'POST' },
-      );
+      const response = await fetch('/api/me/wrong-question-sets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studyDate: questionSet.studyDate }),
+      });
       if (!response.ok) throw new Error('갱신 실패');
       const body = (await response.json()) as {
         questionSet: DailyWrongQuestionSet;

@@ -62,7 +62,7 @@ export async function createQuestion(
   token: string,
   input: CreateQuestionInput,
 ) {
-  return apiRequest('/admin/questions', QuestionMutationResponseSchema.parse, {
+  return apiRequest('/questions', QuestionMutationResponseSchema.parse, {
     method: 'POST',
     token,
     body: toQuestionFormData(input),
@@ -75,7 +75,7 @@ export async function updateQuestion(
   input: UpdateQuestionInput,
 ) {
   return apiRequest(
-    `/admin/questions/${questionId}`,
+    `/questions/${questionId}`,
     QuestionMutationResponseSchema.parse,
     {
       method: 'PATCH',
@@ -87,7 +87,7 @@ export async function updateQuestion(
 
 export async function deleteQuestion(token: string, questionId: string) {
   return apiRequest(
-    `/admin/questions/${questionId}`,
+    `/questions/${questionId}`,
     DeleteQuestionResponseSchema.parse,
     {
       method: 'DELETE',

@@ -5,7 +5,7 @@ import { Button } from '@kichulbot/ui/components/button';
 import { Textarea } from '@kichulbot/ui/components/textarea';
 import { Clock, FileText } from 'lucide-react';
 import type {
-  AnswerSession,
+  SolveSession,
   Answer,
   QuestionResult,
 } from '@/lib/learning.types';
@@ -15,7 +15,7 @@ import { QuestionBookmarkButton } from '@/components/question-bookmark-button';
 export function SolveSession({
   initialSession,
 }: {
-  initialSession: AnswerSession;
+  initialSession: SolveSession;
 }) {
   const [session, setSession] = useState(initialSession);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -70,9 +70,9 @@ export function SolveSession({
     },
   ) => {
     const response = await fetch(
-      `/api/answer-sessions/${session.id}/answers/${questionId}`,
+      `/api/me/solve-sessions/${session.id}/answers/${questionId}`,
       {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       },
@@ -144,13 +144,13 @@ export function SolveSession({
     try {
       await saveProgress(question.id, { spentMilliseconds: takeElapsed() });
       const response = await fetch(
-        `/api/answer-sessions/${session.id}/submit`,
+        `/api/me/solve-sessions/${session.id}/submissions`,
         {
           method: 'POST',
         },
       );
       if (!response.ok) throw new Error('종료 실패');
-      const body = (await response.json()) as { session: AnswerSession };
+      const body = (await response.json()) as { session: SolveSession };
       setSession(body.session);
       setMessage('시험을 종료했습니다. 정답과 해설을 확인해보세요.');
     } catch {
@@ -334,7 +334,7 @@ export function SolveSession({
 function SessionResultPanel({
   result,
 }: {
-  result: NonNullable<AnswerSession['result']>;
+  result: NonNullable<SolveSession['result']>;
 }) {
   return (
     <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-xs text-zinc-600">

@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import { BookCheck, BookPlus, Play } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@kichulbot/ui/components/native-select';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/select';
 import type { Bookshelf } from '@/lib/learning.types';
 
 export function PaperActions({
@@ -30,7 +33,7 @@ export function PaperActions({
   const chooseBookshelf = async () => {
     if (isChoosingBookshelf) return setIsChoosingBookshelf(false);
     setMessage(null);
-    const response = await fetch('/api/library/bookshelves');
+    const response = await fetch('/api/me/paper-lists');
     if (!response.ok) return setMessage('책장 목록을 불러오지 못했습니다.');
     const body = (await response.json()) as { bookshelves: Bookshelf[] };
     setBookshelves(body.bookshelves);
@@ -43,9 +46,9 @@ export function PaperActions({
     setIsAdding(true);
     setMessage(null);
     const response = await fetch(
-      `/api/library/bookshelves/${bookshelfId}/papers/${paperId}`,
+      `/api/me/paper-lists/${bookshelfId}/exam-papers/${paperId}`,
       {
-        method: 'POST',
+        method: 'PUT',
       },
     );
     setIsAdding(false);
@@ -62,7 +65,7 @@ export function PaperActions({
   const start = async (mode: 'ONE_BY_ONE' | 'EXAM') => {
     setIsStarting(true);
     setMessage(null);
-    const response = await fetch('/api/answer-sessions', {
+    const response = await fetch('/api/me/solve-sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paperId, mode }),
@@ -107,17 +110,18 @@ export function PaperActions({
             </p>
           ) : (
             <>
-              <NativeSelect
-                value={bookshelfId}
-                onChange={(event) => setBookshelfId(event.target.value)}
-                aria-label="추가할 책장 선택"
-              >
-                {bookshelves.map((bookshelf) => (
-                  <NativeSelectOption key={bookshelf.id} value={bookshelf.id}>
-                    {bookshelf.name}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+              <Select value={bookshelfId} onValueChange={setBookshelfId}>
+                <SelectTrigger aria-label="추가할 책장 선택">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {bookshelves.map((bookshelf) => (
+                    <SelectItem key={bookshelf.id} value={bookshelf.id}>
+                      {bookshelf.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button type="button" size="sm" onClick={addToLibrary}>
                 추가
               </Button>

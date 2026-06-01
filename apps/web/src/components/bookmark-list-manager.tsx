@@ -23,7 +23,7 @@ export function BookmarkListManager({
   const createBookmarkList = async () => {
     const name = window.prompt('새 북마크 리스트 이름을 입력해 주세요.');
     if (!name?.trim()) return;
-    const response = await fetch('/api/bookmark-lists', {
+    const response = await fetch('/api/me/question-lists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),

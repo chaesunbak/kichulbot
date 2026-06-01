@@ -88,10 +88,77 @@ export function ExamsPage() {
   }
 
   return (
-    <div className="
-      mx-auto grid max-w-7xl gap-5 px-5 py-6
-      lg:grid-cols-[minmax(320px,420px)_1fr]
-    ">
+    <div
+      className="
+        mx-auto grid max-w-7xl gap-5 px-5 py-6
+        lg:grid-cols-[minmax(320px,420px)_1fr]
+      "
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ClipboardList className="size-4" aria-hidden="true" />
+            시험 목록
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>시험</TableHead>
+                <TableHead>분류</TableHead>
+                <TableHead>시행 정보</TableHead>
+                <TableHead>
+                  <span className="sr-only">수정</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {exams.map((exam) => (
+                <TableRow key={exam.id}>
+                  <TableCell>
+                    <div className="font-medium">{exam.name}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {exam.categories.map((category) => (
+                        <Badge key={category.id} variant="secondary">
+                          {category.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {exam.usesMonth && <Badge variant="outline">월</Badge>}
+                      {exam.usesGrade && <Badge variant="outline">학년</Badge>}
+                      {exam.usesRound && <Badge variant="outline">회차</Badge>}
+                      {!exam.usesMonth &&
+                        !exam.usesGrade &&
+                        !exam.usesRound && (
+                          <span className="text-xs text-muted-foreground">
+                            연도만
+                          </span>
+                        )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => beginEdit(exam)}
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                      수정
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -182,72 +249,6 @@ export function ExamsPage() {
           </form>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ClipboardList className="size-4" aria-hidden="true" />
-            시험 목록
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>시험</TableHead>
-                <TableHead>분류</TableHead>
-                <TableHead>시행 정보</TableHead>
-                <TableHead>
-                  <span className="sr-only">수정</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {exams.map((exam) => (
-                <TableRow key={exam.id}>
-                  <TableCell>
-                    <div className="font-medium">{exam.name}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {exam.categories.map((category) => (
-                        <Badge key={category.id} variant="secondary">
-                          {category.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {exam.usesMonth && <Badge variant="outline">월</Badge>}
-                      {exam.usesGrade && <Badge variant="outline">학년</Badge>}
-                      {exam.usesRound && <Badge variant="outline">회차</Badge>}
-                      {!exam.usesMonth &&
-                        !exam.usesGrade &&
-                        !exam.usesRound && (
-                          <span className="text-xs text-muted-foreground">
-                            연도만
-                          </span>
-                        )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => beginEdit(exam)}
-                    >
-                      <Pencil className="size-4" aria-hidden="true" />
-                      수정
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -262,9 +263,12 @@ function ToggleRow({
   onCheckedChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="
-      flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm
-    ">
+    <label
+      className="
+        flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2
+        text-sm
+      "
+    >
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}

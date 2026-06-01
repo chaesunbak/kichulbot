@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { QuestionType } from '@prisma/client';
+
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { TagsService } from '../tags/tags.service';
 import { QuestionsRepository } from './questions.repository';
@@ -120,6 +121,7 @@ describe('QuestionsService', () => {
       answerChoice: null,
       answerText: '모범답안',
       explanation: null,
+      points: 5,
       recommendedTimeSeconds: null,
       imageUrl: null,
       tags: [],

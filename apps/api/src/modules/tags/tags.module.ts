@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { AuthModule } from '../auth/auth.module';
 import { TagsController } from './tags.controller';
 import { TagsRepository } from './tags.repository';

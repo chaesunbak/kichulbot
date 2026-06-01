@@ -66,7 +66,7 @@ model Exam {
   usesGrade  Boolean       @default(false)
   usesRound  Boolean       @default(false)
   categories ExamCategory[]
-  tags       TagExam[]
+  tags       Tag[]
   sessions   ExamSession[]
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
@@ -129,23 +129,12 @@ model ExamSession {
 model Tag {
   id        String        @id @default(cuid())
   name      String
-  isActive  Boolean       @default(true)
-  exams     TagExam[]
+  examId    String
+  exam      Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
   questions QuestionTag[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  @@index([isActive])
-}
-
-model TagExam {
-  tagId     String
-  examId    String
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@id([tagId, examId])
   @@index([examId])
 }
 
@@ -159,6 +148,7 @@ model Question {
   answerChoice           Int?
   answerText             String?
   explanation            String?
+  points                 Int                @default(5)
   recommendedTimeSeconds Int?
   paper                  Paper              @relation(fields: [paperId], references: [id], onDelete: Cascade)
   revisions              QuestionRevision[]
@@ -180,6 +170,7 @@ model QuestionRevision {
   answerChoice           Int?
   answerText             String?
   explanation            String?
+  points                 Int                @default(5)
   recommendedTimeSeconds Int?
   question               Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
   questionSetItems       QuestionSetItem[]

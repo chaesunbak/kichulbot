@@ -25,6 +25,7 @@ export const AdminTaxonomyResponseSchema = TaxonomyResponseSchema.extend({
 export type AdminTaxonomyResponse = z.infer<typeof AdminTaxonomyResponseSchema>;
 
 export const AdminExamResponseSchema = ExamResponseSchema.extend({
+  paperCount: z.number().int().min(0),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });

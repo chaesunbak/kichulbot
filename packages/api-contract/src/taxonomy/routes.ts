@@ -2,6 +2,8 @@ import {
   CategoryMutationResponseSchema,
   CreateCategoryRequestSchema,
   CreateExamRequestSchema,
+  DeleteCategoryResponseSchema,
+  DeleteExamResponseSchema,
   ExamMutationResponseSchema,
   ListCategoriesResponseSchema,
   ListExamsResponseSchema,
@@ -28,6 +30,12 @@ export const taxonomyRoutes = {
     request: UpdateExamRequestSchema,
     response: ExamMutationResponseSchema,
   },
+  deleteExam: {
+    method: 'DELETE',
+    path: '/exams/:id',
+    request: null,
+    response: DeleteExamResponseSchema,
+  },
   listCategories: {
     method: 'GET',
     path: '/categories',
@@ -45,5 +53,11 @@ export const taxonomyRoutes = {
     path: '/categories/:id',
     request: UpdateCategoryRequestSchema,
     response: CategoryMutationResponseSchema,
+  },
+  deleteCategory: {
+    method: 'DELETE',
+    path: '/categories/:id',
+    request: null,
+    response: DeleteCategoryResponseSchema,
   },
 } as const;

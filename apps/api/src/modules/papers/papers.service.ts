@@ -193,13 +193,13 @@ export class PapersService {
         answerChoice: question.answerChoice,
         answerText: question.answerText,
         explanation: question.explanation,
+        points: question.points,
         recommendedTimeSeconds: question.recommendedTimeSeconds,
         tags:
           question.tags?.map((questionTag) => ({
             id: questionTag.tag.id,
             name: questionTag.tag.name,
             kind: 'OFFICIAL',
-            isActive: questionTag.tag.isActive,
           })) ?? [],
         createdAt: question.createdAt.toISOString(),
         updatedAt: question.updatedAt.toISOString(),

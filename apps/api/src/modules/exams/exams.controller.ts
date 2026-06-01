@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -62,5 +63,15 @@ export class ExamsController {
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   updateExam(@Param('id') id: string, @Body() dto: UpdateExamDto) {
     return this.examsService.updateExam(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '시험 삭제' })
+  @ApiOkResponse({ description: '연결된 문제지가 없는 시험을 삭제합니다.' })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  deleteExam(@Param('id') id: string) {
+    return this.examsService.deleteExam(id);
   }
 }

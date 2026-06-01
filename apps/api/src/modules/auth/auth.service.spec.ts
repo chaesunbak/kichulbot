@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserAuthType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+
 import { AuthService } from './auth.service';
 import { UsersRepository } from './users.repository';
 

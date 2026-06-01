@@ -106,6 +106,13 @@ export class QuestionsRepository {
               data: { questionRevisionId: revision.id },
             });
           }
+          if (!revision && latestRevision) {
+            await this.updateLatestRevisionMetadata(
+              tx,
+              latestRevision.id,
+              question,
+            );
+          }
           await tx.questionSetItem.updateMany({
             where: {
               questionRevision: { questionId: id },
@@ -153,9 +160,22 @@ export class QuestionsRepository {
       question.choiceCount !== revision.choiceCount ||
       question.answerChoice !== revision.answerChoice ||
       question.answerText !== revision.answerText ||
-      question.explanation !== revision.explanation ||
-      question.recommendedTimeSeconds !== revision.recommendedTimeSeconds
+      question.points !== revision.points
     );
+  }
+
+  private updateLatestRevisionMetadata(
+    tx: Prisma.TransactionClient,
+    id: string,
+    question: Question,
+  ) {
+    return tx.questionRevision.update({
+      where: { id },
+      data: {
+        explanation: question.explanation,
+        recommendedTimeSeconds: question.recommendedTimeSeconds,
+      },
+    });
   }
 
   private toRevisionData(question: Question, revision: number) {
@@ -168,6 +188,7 @@ export class QuestionsRepository {
       answerChoice: question.answerChoice,
       answerText: question.answerText,
       explanation: question.explanation,
+      points: question.points,
       recommendedTimeSeconds: question.recommendedTimeSeconds,
     };
   }

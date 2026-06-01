@@ -216,6 +216,7 @@ export class SolveSessionsService {
             type: item.questionRevision.type,
             imageUrl: item.questionRevision.imageUrl,
             choiceCount: item.questionRevision.choiceCount,
+            points: item.questionRevision.points,
             recommendedTimeSeconds:
               item.questionRevision.recommendedTimeSeconds,
             result: this.shouldRevealResult(session, attempt)
@@ -341,9 +342,14 @@ export class SolveSessionsService {
       (attempt) => attempt.outcome === AttemptOutcome.CORRECT,
     ).length;
     const totalCount = session.items.length;
+    const score = session.items.reduce((total, item) => {
+      const attempt = this.latestAttempt(item);
+      return attempt?.outcome === AttemptOutcome.CORRECT
+        ? total + item.questionRevision.points
+        : total;
+    }, 0);
     return {
-      score:
-        totalCount === 0 ? 0 : Math.round((correctCount / totalCount) * 100),
+      score,
       totalCount,
       answeredCount: answered.length,
       correctCount,

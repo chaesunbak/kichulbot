@@ -20,6 +20,13 @@ interface ExamUpdateData {
 
 const examInclude = {
   categories: { include: { category: true } },
+  sessions: {
+    select: {
+      _count: {
+        select: { papers: true },
+      },
+    },
+  },
 };
 
 @Injectable()
@@ -77,6 +84,33 @@ export class ExamsRepository {
           : {}),
       },
       include: examInclude,
+    });
+  }
+
+  async deleteIfNoPapers(id: string) {
+    return this.db.$transaction(async (tx) => {
+      const exam = await tx.exam.findUnique({
+        where: { id },
+        include: examInclude,
+      });
+
+      if (!exam) {
+        return { exam: null, paperCount: 0 };
+      }
+
+      const paperCount = exam.sessions.reduce(
+        (sum, session) => sum + session._count.papers,
+        0,
+      );
+
+      if (paperCount > 0) {
+        return { exam, paperCount };
+      }
+
+      await tx.examSession.deleteMany({ where: { examId: id } });
+      await tx.exam.delete({ where: { id } });
+
+      return { exam, paperCount };
     });
   }
 }

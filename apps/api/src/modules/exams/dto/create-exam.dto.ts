@@ -32,10 +32,5 @@ export class CreateExamDto implements CreateExamRequest {
   @ApiProperty({ required: false, default: false })
   @IsOptional()
   @IsBoolean()
-  usesGrade?: boolean;
-
-  @ApiProperty({ required: false, default: false })
-  @IsOptional()
-  @IsBoolean()
   usesRound?: boolean;
 }

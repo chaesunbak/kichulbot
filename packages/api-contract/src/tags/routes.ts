@@ -1,5 +1,6 @@
 import {
   CreateOfficialTagRequestSchema,
+  DeleteOfficialTagResponseSchema,
   ListTagsResponseSchema,
   OfficialTagMutationResponseSchema,
   UpdateOfficialTagRequestSchema,
@@ -14,7 +15,7 @@ export const tagsRoutes = {
   },
   listAdminTags: {
     method: 'GET',
-    path: '/tags?includeInactive=true',
+    path: '/tags',
     request: null,
     response: ListTagsResponseSchema,
   },
@@ -29,5 +30,11 @@ export const tagsRoutes = {
     path: '/tags/:id',
     request: UpdateOfficialTagRequestSchema,
     response: OfficialTagMutationResponseSchema,
+  },
+  deleteOfficialTag: {
+    method: 'DELETE',
+    path: '/tags/:id',
+    request: null,
+    response: DeleteOfficialTagResponseSchema,
   },
 } as const;

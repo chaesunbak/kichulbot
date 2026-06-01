@@ -8,16 +8,14 @@ export type ListTagsResponse = z.infer<typeof ListTagsResponseSchema>;
 
 export const CreateOfficialTagRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),
-  examIds: z.array(z.string().min(1)),
+  examId: z.string().min(1),
 });
 export type CreateOfficialTagRequest = z.infer<
   typeof CreateOfficialTagRequestSchema
 >;
 
 export const UpdateOfficialTagRequestSchema =
-  CreateOfficialTagRequestSchema.partial().extend({
-    isActive: z.boolean().optional(),
-  });
+  CreateOfficialTagRequestSchema.partial();
 export type UpdateOfficialTagRequest = z.infer<
   typeof UpdateOfficialTagRequestSchema
 >;
@@ -27,4 +25,11 @@ export const OfficialTagMutationResponseSchema = z.object({
 });
 export type OfficialTagMutationResponse = z.infer<
   typeof OfficialTagMutationResponseSchema
+>;
+
+export const DeleteOfficialTagResponseSchema = z.object({
+  id: z.string(),
+});
+export type DeleteOfficialTagResponse = z.infer<
+  typeof DeleteOfficialTagResponseSchema
 >;

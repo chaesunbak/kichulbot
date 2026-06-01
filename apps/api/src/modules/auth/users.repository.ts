@@ -5,6 +5,7 @@ import {
   UserAuthType,
   UserRole,
 } from '@prisma/client';
+
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()

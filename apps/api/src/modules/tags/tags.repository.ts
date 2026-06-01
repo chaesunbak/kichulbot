@@ -3,6 +3,12 @@ import { Prisma } from '@prisma/client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
+const tagInclude = {
+  _count: {
+    select: { questions: true },
+  },
+};
+
 @Injectable()
 export class TagsRepository {
   constructor(private readonly db: DatabaseService) {}
@@ -10,17 +16,16 @@ export class TagsRepository {
   findManyAvailable(examId?: string) {
     return this.db.tag.findMany({
       where: {
-        isActive: true,
-        ...(examId ? { exams: { some: { examId } } } : {}),
+        ...(examId ? { examId } : {}),
       },
-      include: { exams: true },
+      include: tagInclude,
       orderBy: { name: 'asc' },
     });
   }
 
   findMany() {
     return this.db.tag.findMany({
-      include: { exams: true },
+      include: tagInclude,
       orderBy: { name: 'asc' },
     });
   }
@@ -28,7 +33,7 @@ export class TagsRepository {
   findById(id: string) {
     return this.db.tag.findUnique({
       where: { id },
-      include: { exams: true },
+      include: tagInclude,
     });
   }
 
@@ -36,44 +41,67 @@ export class TagsRepository {
     return this.db.tag.count({
       where: {
         id: { in: tagIds },
-        isActive: true,
-        exams: { some: { examId } },
+        examId,
       },
     });
   }
 
-  countExamsByIds(examIds: string[]) {
-    return this.db.exam.count({ where: { id: { in: examIds } } });
+  async existsExamById(examId: string) {
+    const count = await this.db.exam.count({ where: { id: examId } });
+    return count > 0;
   }
 
-  create(data: Prisma.TagCreateInput, examIds: string[]) {
+  create(data: Prisma.TagUncheckedCreateInput) {
     return this.db.tag.create({
-      data: {
-        ...data,
-        exams: {
-          create: examIds.map((examId) => ({ examId })),
-        },
-      },
-      include: { exams: true },
+      data,
+      include: tagInclude,
     });
   }
 
-  update(id: string, data: Prisma.TagUpdateInput, examIds?: string[]) {
+  update(id: string, data: Prisma.TagUncheckedUpdateInput) {
     return this.db.$transaction(async (tx) => {
-      if (examIds) {
-        await tx.tagExam.deleteMany({ where: { tagId: id } });
-        if (examIds.length > 0) {
-          await tx.tagExam.createMany({
-            data: examIds.map((examId) => ({ tagId: id, examId })),
-          });
-        }
+      if (typeof data.examId === 'string') {
+        await tx.questionTag.deleteMany({
+          where: {
+            tagId: id,
+            question: {
+              paper: {
+                examSession: {
+                  examId: { not: data.examId },
+                },
+              },
+            },
+          },
+        });
       }
 
       return tx.tag.update({
         where: { id },
         data,
-        include: { exams: true },
+        include: tagInclude,
       });
+    });
+  }
+
+  async deleteIfUnused(id: string) {
+    return this.db.$transaction(async (tx) => {
+      const tag = await tx.tag.findUnique({
+        where: { id },
+        include: tagInclude,
+      });
+
+      if (!tag) {
+        return { tag: null, questionCount: 0 };
+      }
+
+      const questionCount = tag._count.questions;
+      if (questionCount > 0) {
+        return { tag, questionCount };
+      }
+
+      await tx.tag.delete({ where: { id } });
+
+      return { tag, questionCount };
     });
   }
 }

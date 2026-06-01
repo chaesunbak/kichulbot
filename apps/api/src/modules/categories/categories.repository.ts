@@ -27,4 +27,8 @@ export class CategoriesRepository {
       data,
     });
   }
+
+  delete(id: string) {
+    return this.db.category.delete({ where: { id } });
+  }
 }

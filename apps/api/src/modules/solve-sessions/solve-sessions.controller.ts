@@ -15,12 +15,13 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
-import { SolveSessionsService } from './solve-sessions.service';
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import { StartSolveSessionDto } from './dto/start-solve-session.dto';
+import { SolveSessionsService } from './solve-sessions.service';
 
 @ApiTags('solve-sessions')
 @ApiBearerAuth()

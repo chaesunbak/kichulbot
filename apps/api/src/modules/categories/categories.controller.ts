@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -62,5 +63,17 @@ export class CategoriesController {
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     return this.categoriesService.updateCategory(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '분류 삭제' })
+  @ApiOkResponse({
+    description: '분류를 삭제하고 연결된 시험 분류 관계를 정리합니다.',
+  })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  deleteCategory(@Param('id') id: string) {
+    return this.categoriesService.deleteCategory(id);
   }
 }

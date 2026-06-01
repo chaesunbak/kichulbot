@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
+  Delete,
   Get,
   Param,
   Patch,
@@ -42,17 +42,8 @@ export class TagsController {
   @Get()
   @ApiOperation({ summary: '태그 목록 조회' })
   @ApiOkResponse({ description: '태그 목록을 반환합니다.' })
-  listTags(
-    @CurrentUser() user: RequestUser,
-    @Query('examId') examId?: string,
-    @Query('includeInactive') includeInactive?: string,
-  ) {
-    if (includeInactive === 'true') {
-      if (user.role !== UserRole.ADMIN) {
-        throw new ForbiddenException(
-          '관리자만 비활성 태그를 조회할 수 있습니다.',
-        );
-      }
+  listTags(@CurrentUser() user: RequestUser, @Query('examId') examId?: string) {
+    if (user.role === UserRole.ADMIN && !examId) {
       return this.tagsService.listAdminTags();
     }
     return this.tagsService.listTags(user.role, examId);
@@ -61,8 +52,8 @@ export class TagsController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: '공식 태그 생성' })
-  @ApiCreatedResponse({ description: '공식 태그를 생성합니다.' })
+  @ApiOperation({ summary: '태그 생성' })
+  @ApiCreatedResponse({ description: '태그를 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   createTag(@Body() dto: CreateOfficialTagDto) {
     return this.tagsService.createOfficialTag(dto);
@@ -71,10 +62,22 @@ export class TagsController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: '공식 태그 수정 및 활성 상태 변경' })
-  @ApiOkResponse({ description: '공식 태그를 수정합니다.' })
+  @ApiOperation({ summary: '태그 수정' })
+  @ApiOkResponse({ description: '태그를 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   updateTag(@Param('id') id: string, @Body() dto: UpdateOfficialTagDto) {
     return this.tagsService.updateOfficialTag(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '태그 삭제' })
+  @ApiOkResponse({
+    description: '문항에 연결되지 않은 태그를 삭제합니다.',
+  })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  deleteTag(@Param('id') id: string) {
+    return this.tagsService.deleteOfficialTag(id);
   }
 }

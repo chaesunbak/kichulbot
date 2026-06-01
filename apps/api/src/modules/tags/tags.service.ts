@@ -1,6 +1,8 @@
 import {
   AdminTagResponse,
   CreateOfficialTagRequest,
+  DeleteOfficialTagResponse,
+  DeleteOfficialTagResponseSchema,
   ListTagsResponse,
   ListTagsResponseSchema,
   OfficialTagMutationResponse,
@@ -13,11 +15,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Tag, TagExam, UserRole } from '@prisma/client';
+import { Tag, UserRole } from '@prisma/client';
 
 import { TagsRepository } from './tags.repository';
 
-type TagWithExams = Tag & { exams: TagExam[] };
+type TagWithExam = Tag & {
+  _count?: { questions: number };
+};
 
 @Injectable()
 export class TagsService {
@@ -40,13 +44,11 @@ export class TagsService {
   async createOfficialTag(
     dto: CreateOfficialTagRequest,
   ): Promise<OfficialTagMutationResponse> {
-    const examIds = await this.assertExamsExist(dto.examIds);
-    const tag = await this.tagsRepository.create(
-      {
-        name: dto.name.trim(),
-      },
-      examIds,
-    );
+    await this.assertExamExists(dto.examId);
+    const tag = await this.tagsRepository.create({
+      name: dto.name.trim(),
+      examId: dto.examId,
+    });
 
     return OfficialTagMutationResponseSchema.parse({
       tag: this.toResponse(tag, UserRole.ADMIN),
@@ -59,24 +61,34 @@ export class TagsService {
   ): Promise<OfficialTagMutationResponse> {
     const existing = await this.tagsRepository.findById(id);
     if (!existing) {
-      throw new NotFoundException('공식 태그를 찾을 수 없습니다.');
+      throw new NotFoundException('태그를 찾을 수 없습니다.');
     }
 
-    const examIds = dto.examIds
-      ? await this.assertExamsExist(dto.examIds)
-      : undefined;
-    const tag = await this.tagsRepository.update(
-      id,
-      {
-        name: dto.name?.trim(),
-        isActive: dto.isActive,
-      },
-      examIds,
-    );
+    if (dto.examId) {
+      await this.assertExamExists(dto.examId);
+    }
+    const tag = await this.tagsRepository.update(id, {
+      name: dto.name?.trim(),
+      examId: dto.examId,
+    });
 
     return OfficialTagMutationResponseSchema.parse({
       tag: this.toResponse(tag, UserRole.ADMIN),
     });
+  }
+
+  async deleteOfficialTag(id: string): Promise<DeleteOfficialTagResponse> {
+    const result = await this.tagsRepository.deleteIfUnused(id);
+
+    if (!result.tag) {
+      throw new NotFoundException('태그를 찾을 수 없습니다.');
+    }
+
+    if (result.questionCount > 0) {
+      throw new BadRequestException('문항에 연결된 태그는 삭제할 수 없습니다.');
+    }
+
+    return DeleteOfficialTagResponseSchema.parse({ id });
   }
 
   async assertTagsAssignable(
@@ -96,33 +108,26 @@ export class TagsService {
     );
     if (count !== newTagIds.length) {
       throw new BadRequestException(
-        '선택한 시험에 지정할 수 없는 공식 태그가 포함되어 있습니다.',
+        '선택한 시험에 지정할 수 없는 태그가 포함되어 있습니다.',
       );
     }
   }
 
-  private async assertExamsExist(examIds: string[]) {
-    const uniqueIds = [...new Set(examIds)];
-    if (uniqueIds.length === 0) {
-      return uniqueIds;
-    }
-
-    const count = await this.tagsRepository.countExamsByIds(uniqueIds);
-    if (count !== uniqueIds.length) {
+  private async assertExamExists(examId: string) {
+    const exists = await this.tagsRepository.existsExamById(examId);
+    if (!exists) {
       throw new BadRequestException('시험을 찾을 수 없습니다.');
     }
-    return uniqueIds;
   }
 
   private toResponse(
-    tag: TagWithExams,
+    tag: TagWithExam,
     role: UserRole,
   ): TagResponse | AdminTagResponse {
     const response = {
       id: tag.id,
       name: tag.name,
       kind: 'OFFICIAL' as const,
-      isActive: tag.isActive,
     };
 
     if (role !== UserRole.ADMIN) {
@@ -131,7 +136,8 @@ export class TagsService {
 
     return {
       ...response,
-      examIds: tag.exams.map(({ examId }) => examId),
+      examId: tag.examId,
+      questionCount: tag._count?.questions ?? 0,
       createdAt: tag.createdAt.toISOString(),
       updatedAt: tag.updatedAt.toISOString(),
     };

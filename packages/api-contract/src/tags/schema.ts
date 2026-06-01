@@ -5,12 +5,12 @@ export const TagResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   kind: OfficialTagKindSchema,
-  isActive: z.boolean(),
 });
 export type TagResponse = z.infer<typeof TagResponseSchema>;
 
 export const AdminTagResponseSchema = TagResponseSchema.extend({
-  examIds: z.array(z.string()),
+  examId: z.string(),
+  questionCount: z.number().int().min(0),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });

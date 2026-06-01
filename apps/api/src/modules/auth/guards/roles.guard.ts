@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import { Request } from 'express';
+
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { RequestUser } from '../types';
 

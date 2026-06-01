@@ -2,6 +2,8 @@ import {
   AdminTaxonomyResponse,
   CategoryMutationResponse,
   CategoryMutationResponseSchema,
+  DeleteCategoryResponse,
+  DeleteCategoryResponseSchema,
   ListCategoriesResponse,
   ListCategoriesResponseSchema,
   TaxonomyResponse,
@@ -52,6 +54,17 @@ export class CategoriesService {
     return CategoryMutationResponseSchema.parse({
       category: this.toResponse(category, UserRole.ADMIN),
     });
+  }
+
+  async deleteCategory(id: string): Promise<DeleteCategoryResponse> {
+    const existing = await this.categoriesRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException('분류를 찾을 수 없습니다.');
+    }
+
+    await this.categoriesRepository.delete(id);
+
+    return DeleteCategoryResponseSchema.parse({ id });
   }
 
   private toResponse(

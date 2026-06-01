@@ -12,6 +12,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
 import { toStringArray } from './transforms';
 
 export class CreateQuestionDto implements CreateQuestionRequest {
@@ -62,6 +63,14 @@ export class CreateQuestionDto implements CreateQuestionRequest {
   @IsString()
   @MaxLength(5000)
   explanation?: string;
+
+  @ApiProperty({ required: false, example: 5, default: 5 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(1000)
+  points?: number;
 
   @ApiProperty({ required: false, example: 90 })
   @IsOptional()

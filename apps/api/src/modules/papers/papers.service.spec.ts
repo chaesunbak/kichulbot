@@ -35,6 +35,7 @@ const exam: Exam = {
 };
 const examWithCategories: Exam & {
   categories: Array<ExamCategory & { category: Category }>;
+  sessions: Array<{ _count: { papers: number } }>;
 } = {
   ...exam,
   categories: [
@@ -45,6 +46,7 @@ const examWithCategories: Exam & {
       category,
     },
   ],
+  sessions: [],
 };
 
 const examSession: ExamSession = {

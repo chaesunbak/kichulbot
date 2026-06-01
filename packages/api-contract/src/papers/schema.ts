@@ -12,6 +12,7 @@ export const QuestionResponseSchema = z.object({
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
   explanation: z.string().nullable(),
+  points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,

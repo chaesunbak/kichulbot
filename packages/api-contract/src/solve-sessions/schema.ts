@@ -22,6 +22,7 @@ export const SolveQuestionResponseSchema = z.object({
   type: QuestionTypeSchema,
   imageUrl: z.string().url().nullable(),
   choiceCount: z.number().int().nullable(),
+  points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
   result: QuestionResultResponseSchema.nullable(),
 });

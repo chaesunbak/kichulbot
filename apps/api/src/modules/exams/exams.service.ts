@@ -1,5 +1,7 @@
 import {
   AdminExamResponse,
+  DeleteExamResponse,
+  DeleteExamResponseSchema,
   ExamMutationResponse,
   ExamMutationResponseSchema,
   ExamResponse,
@@ -19,6 +21,7 @@ import { ExamsRepository } from './exams.repository';
 
 type ExamWithCategories = Exam & {
   categories: Array<ExamCategory & { category: Category }>;
+  sessions?: Array<{ _count: { papers: number } }>;
 };
 
 @Injectable()
@@ -32,8 +35,9 @@ export class ExamsService {
     });
   }
 
-  findById(id: string) {
-    return this.examsRepository.findById(id);
+  async findById(id: string) {
+    const exam = await this.examsRepository.findById(id);
+    return this.disableGradeClassification(exam);
   }
 
   async createExam(dto: CreateExamDto): Promise<ExamMutationResponse> {
@@ -43,7 +47,7 @@ export class ExamsService {
         name: dto.name.trim(),
         categoryIds,
         usesMonth: dto.usesMonth ?? false,
-        usesGrade: dto.usesGrade ?? false,
+        usesGrade: false,
         usesRound: dto.usesRound ?? false,
       })
       .catch((error: unknown) => {
@@ -72,7 +76,7 @@ export class ExamsService {
         name: dto.name?.trim(),
         categoryIds,
         usesMonth: dto.usesMonth,
-        usesGrade: dto.usesGrade,
+        usesGrade: false,
         usesRound: dto.usesRound,
       })
       .catch((error: unknown) => {
@@ -82,6 +86,22 @@ export class ExamsService {
     return ExamMutationResponseSchema.parse({
       exam: this.toResponse(exam, UserRole.ADMIN),
     });
+  }
+
+  async deleteExam(id: string): Promise<DeleteExamResponse> {
+    const result = await this.examsRepository.deleteIfNoPapers(id);
+
+    if (!result.exam) {
+      throw new NotFoundException('시험을 찾을 수 없습니다.');
+    }
+
+    if (result.paperCount > 0) {
+      throw new BadRequestException(
+        '연결된 문제지가 있는 시험은 삭제할 수 없습니다.',
+      );
+    }
+
+    return DeleteExamResponseSchema.parse({ id });
   }
 
   private toResponse(
@@ -96,7 +116,7 @@ export class ExamsService {
         name: category.name,
       })),
       usesMonth: exam.usesMonth,
-      usesGrade: exam.usesGrade,
+      usesGrade: false,
       usesRound: exam.usesRound,
     };
 
@@ -106,9 +126,23 @@ export class ExamsService {
 
     return {
       ...response,
+      paperCount: this.countPapers(exam),
       createdAt: exam.createdAt.toISOString(),
       updatedAt: exam.updatedAt.toISOString(),
     };
+  }
+
+  private countPapers(exam: ExamWithCategories): number {
+    return (
+      exam.sessions?.reduce((sum, session) => sum + session._count.papers, 0) ??
+      0
+    );
+  }
+
+  private disableGradeClassification<T extends { usesGrade: boolean }>(
+    exam: T | null,
+  ): T | null {
+    return exam ? { ...exam, usesGrade: false } : null;
   }
 
   private normalizeCategoryIds(categoryIds: string[]): string[] {

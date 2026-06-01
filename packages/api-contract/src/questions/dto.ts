@@ -11,6 +11,7 @@ export const CreateQuestionRequestSchema = z
     answerChoice: z.number().int().min(1).max(10).optional(),
     answerText: z.string().trim().min(1).max(2000).optional(),
     explanation: z.string().trim().max(5000).optional(),
+    points: z.number().int().min(1).max(1000).optional(),
     recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
     tagIds: z.array(z.string().min(1)).optional(),
   })
@@ -50,6 +51,7 @@ export const UpdateQuestionRequestSchema = z.object({
   answerChoice: z.number().int().min(1).max(10).optional(),
   answerText: z.string().trim().min(1).max(2000).optional(),
   explanation: z.string().trim().max(5000).optional(),
+  points: z.number().int().min(1).max(1000).optional(),
   recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
   tagIds: z.array(z.string().min(1)).optional(),
 });

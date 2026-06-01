@@ -34,7 +34,7 @@ const IMAGE_UPLOAD_OPTIONS = {
   limits: { fileSize: 5 * 1024 * 1024 },
 };
 
-@ApiTags('admin-questions')
+@ApiTags('questions')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
@@ -42,7 +42,7 @@ const IMAGE_UPLOAD_OPTIONS = {
 @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
-@Controller('admin/questions')
+@Controller('questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 

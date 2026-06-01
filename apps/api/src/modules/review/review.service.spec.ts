@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { AnswerMode, AttemptOutcome, QuestionSetKind } from '@prisma/client';
-import { AnswerSessionsService } from '../answer-sessions/answer-sessions.service';
+import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';
 import { ReviewService } from './review.service';
 
@@ -114,7 +114,7 @@ const questionSet = {
 describe('ReviewService', () => {
   let service: ReviewService;
   let repository: jest.Mocked<ReviewRepository>;
-  let answerSessionsService: jest.Mocked<AnswerSessionsService>;
+  let solveSessionsService: jest.Mocked<SolveSessionsService>;
 
   beforeEach(() => {
     repository = {
@@ -122,40 +122,56 @@ describe('ReviewService', () => {
         id: 'user_1',
         timezone: 'Asia/Seoul',
       }),
-      findOrCreateToday: jest.fn(),
-      refreshToday: jest.fn(),
+      findByStudyDate: jest.fn(),
+      findOwnedDailyWrongQuestionSet: jest.fn(),
+      generate: jest.fn(),
+      regenerate: jest.fn(),
     } as unknown as jest.Mocked<ReviewRepository>;
-    answerSessionsService = {
+    solveSessionsService = {
       startQuestionSet: jest.fn(),
-    } as unknown as jest.Mocked<AnswerSessionsService>;
-    service = new ReviewService(repository, answerSessionsService);
+    } as unknown as jest.Mocked<SolveSessionsService>;
+    service = new ReviewService(repository, solveSessionsService);
   });
 
   it('returns omitted questions from the stable daily wrong set', async () => {
-    repository.findOrCreateToday.mockResolvedValue(questionSet as never);
+    repository.findByStudyDate.mockResolvedValue(questionSet as never);
 
-    const response = await service.getToday('user_1');
+    const response = await service.getByStudyDate('user_1', '2026-06-01');
 
-    expect(response.questionSet.questions[0]).toMatchObject({
+    expect(response.questionSet?.questions[0]).toMatchObject({
       id: 'question_1',
       sourceOutcome: 'OMITTED',
       paper: { title: '2025학년도 수능 한국사' },
     });
-    expect(repository.findOrCreateToday).toHaveBeenCalledWith(
+    expect(repository.findByStudyDate).toHaveBeenCalledWith(
+      'user_1',
+      expect.any(Date),
+    );
+  });
+
+  it('generates a wrong question set for the requested study date', async () => {
+    repository.regenerate.mockResolvedValue(questionSet as never);
+
+    const response = await service.generate('user_1', '2026-06-01');
+
+    expect(response.questionSet.id).toBe(questionSet.id);
+    expect(repository.regenerate).toHaveBeenCalledWith(
       'user_1',
       expect.any(Date),
     );
   });
 
   it('starts a one-by-one snapshot session by default', async () => {
-    repository.findOrCreateToday.mockResolvedValue(questionSet as never);
-    answerSessionsService.startQuestionSet.mockResolvedValue({
+    repository.findOwnedDailyWrongQuestionSet.mockResolvedValue(
+      questionSet as never,
+    );
+    solveSessionsService.startQuestionSet.mockResolvedValue({
       session: { id: 'review_session_1' },
     } as never);
 
-    await service.startToday('user_1');
+    await service.start('user_1', questionSet.id);
 
-    expect(answerSessionsService.startQuestionSet).toHaveBeenCalledWith(
+    expect(solveSessionsService.startQuestionSet).toHaveBeenCalledWith(
       'user_1',
       questionSet.id,
       AnswerMode.ONE_BY_ONE,
@@ -163,13 +179,13 @@ describe('ReviewService', () => {
   });
 
   it('rejects starting a review when there are no wrong questions', async () => {
-    repository.findOrCreateToday.mockResolvedValue({
+    repository.findOwnedDailyWrongQuestionSet.mockResolvedValue({
       ...questionSet,
       items: [],
     });
 
-    await expect(service.startToday('user_1')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.start('user_1', questionSet.id),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

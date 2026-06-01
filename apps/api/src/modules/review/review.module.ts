@@ -1,16 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AnswerSessionsModule } from '../answer-sessions/answer-sessions.module';
+import { SolveSessionsModule } from '../solve-sessions/solve-sessions.module';
 import { AuthModule } from '../auth/auth.module';
-import {
-  ReviewController,
-  WrongReviewSessionsController,
-} from './review.controller';
+import { ReviewController } from './review.controller';
 import { ReviewRepository } from './review.repository';
 import { ReviewService } from './review.service';
 
 @Module({
-  imports: [AuthModule, AnswerSessionsModule],
-  controllers: [ReviewController, WrongReviewSessionsController],
+  imports: [AuthModule, SolveSessionsModule],
+  controllers: [ReviewController],
   providers: [ReviewService, ReviewRepository],
 })
 export class ReviewModule {}

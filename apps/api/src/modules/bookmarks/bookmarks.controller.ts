@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,13 +22,13 @@ import { RequestUser } from '../auth/types';
 import { BookmarksService } from './bookmarks.service';
 import { CreateBookmarkListDto } from './dto/bookmark-list.dto';
 
-@ApiTags('bookmarks')
+@ApiTags('question-lists')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard)
-@Controller('bookmark-lists')
+@Controller('me/question-lists')
 export class BookmarksController {
   constructor(private readonly bookmarksService: BookmarksService) {}
 
@@ -56,9 +57,9 @@ export class BookmarksController {
     return this.bookmarksService.getBookmarkList(user.id, bookmarkListId);
   }
 
-  @Post(':bookmarkListId/questions/:questionId')
+  @Put(':bookmarkListId/questions/:questionId')
   @ApiOperation({ summary: '리스트에 문제 북마크 추가' })
-  @ApiCreatedResponse({ description: '선택한 리스트에 문제를 추가합니다.' })
+  @ApiOkResponse({ description: '선택한 리스트에 문제를 추가합니다.' })
   addQuestion(
     @CurrentUser() user: RequestUser,
     @Param('bookmarkListId') bookmarkListId: string,

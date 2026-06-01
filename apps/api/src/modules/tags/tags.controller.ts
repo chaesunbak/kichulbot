@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Patch,
@@ -43,40 +44,35 @@ export class TagsController {
   listTags(
     @CurrentUser() user: RequestUser,
     @Query('subjectId') subjectId?: string,
+    @Query('includeInactive') includeInactive?: string,
   ) {
+    if (includeInactive === 'true') {
+      if (user.role !== UserRole.ADMIN) {
+        throw new ForbiddenException(
+          '관리자만 비활성 태그를 조회할 수 있습니다.',
+        );
+      }
+      return this.tagsService.listAdminTags();
+    }
     return this.tagsService.listTags(user.role, subjectId);
   }
-}
 
-@ApiTags('admin-tags')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse({
-  description: '인증 정보가 없거나 유효하지 않습니다.',
-})
-@ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
-@Controller('admin')
-export class AdminTagsController {
-  constructor(private readonly tagsService: TagsService) {}
-
-  @Get('tags')
-  @ApiOperation({ summary: '관리자 공식 태그 목록 조회' })
-  @ApiOkResponse({ description: '비활성 태그를 포함해 반환합니다.' })
-  listTags() {
-    return this.tagsService.listAdminTags();
-  }
-
-  @Post('tags')
+  @Post()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '공식 태그 생성' })
   @ApiCreatedResponse({ description: '공식 태그를 생성합니다.' })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   createTag(@Body() dto: CreateOfficialTagDto) {
     return this.tagsService.createOfficialTag(dto);
   }
 
-  @Patch('tags/:id')
+  @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '공식 태그 수정 및 활성 상태 변경' })
   @ApiOkResponse({ description: '공식 태그를 수정합니다.' })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   updateTag(@Param('id') id: string, @Body() dto: UpdateOfficialTagDto) {
     return this.tagsService.updateOfficialTag(id, dto);
   }

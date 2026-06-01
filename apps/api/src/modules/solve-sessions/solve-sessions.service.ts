@@ -1,20 +1,20 @@
 import {
-  AnswerSessionLogResponse,
-  AnswerSessionResponse,
+  SolveSessionLogResponse,
+  SolveSessionResponse,
   AnswerResponse,
-  AnswerSessionResultResponse,
-  GetAnswerSessionResponse,
-  GetAnswerSessionResponseSchema,
-  ListAnswerSessionLogsResponse,
-  ListAnswerSessionLogsResponseSchema,
+  SolveSessionResultResponse,
+  GetSolveSessionResponse,
+  GetSolveSessionResponseSchema,
+  ListSolveSessionLogsResponse,
+  ListSolveSessionLogsResponseSchema,
   QuestionResultResponse,
   SaveAnswerResponse,
   SaveAnswerResponseSchema,
-  StartAnswerSessionResponse,
-  StartAnswerSessionResponseSchema,
-  SubmitAnswerSessionResponse,
-  SubmitAnswerSessionResponseSchema,
-} from '@kichulbot/api-contract/answer-sessions';
+  StartSolveSessionResponse,
+  StartSolveSessionResponseSchema,
+  SubmitSolveSessionResponse,
+  SubmitSolveSessionResponseSchema,
+} from '@kichulbot/api-contract/solve-sessions';
 import {
   BadRequestException,
   ForbiddenException,
@@ -29,11 +29,11 @@ import {
 } from '@prisma/client';
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import {
-  AnswerSessionsRepository,
-  SubmittedAnswerSessionError,
-} from './answer-sessions.repository';
+  SolveSessionsRepository,
+  SubmittedSolveSessionError,
+} from './solve-sessions.repository';
 
-type SessionWithRelations = Prisma.AnswerSessionGetPayload<{
+type SessionWithRelations = Prisma.SolveSessionGetPayload<{
   include: {
     paper: {
       include: {
@@ -57,33 +57,33 @@ type StoredAttempt = SessionItem['attempts'][number];
 type StoredRevision = SessionItem['questionRevision'];
 
 @Injectable()
-export class AnswerSessionsService {
+export class SolveSessionsService {
   constructor(
-    private readonly answerSessionsRepository: AnswerSessionsRepository,
+    private readonly solveSessionsRepository: SolveSessionsRepository,
   ) {}
 
   async start(
     userId: string,
     paperId: string,
     mode: AnswerMode,
-  ): Promise<StartAnswerSessionResponse> {
+  ): Promise<StartSolveSessionResponse> {
     const paper =
-      await this.answerSessionsRepository.findPublishedPaper(paperId);
+      await this.solveSessionsRepository.findPublishedPaper(paperId);
     if (!paper) throw new NotFoundException('문제지를 찾을 수 없습니다.');
 
-    const session = await this.answerSessionsRepository.start(
+    const session = await this.solveSessionsRepository.start(
       userId,
       paperId,
       mode,
     );
-    return StartAnswerSessionResponseSchema.parse({
+    return StartSolveSessionResponseSchema.parse({
       session: this.toResponse(session),
     });
   }
 
-  async listLogs(userId: string): Promise<ListAnswerSessionLogsResponse> {
-    const sessions = await this.answerSessionsRepository.findLogs(userId);
-    return ListAnswerSessionLogsResponseSchema.parse({
+  async listLogs(userId: string): Promise<ListSolveSessionLogsResponse> {
+    const sessions = await this.solveSessionsRepository.findLogs(userId);
+    return ListSolveSessionLogsResponseSchema.parse({
       logs: sessions.map((session) => this.toLogResponse(session)),
     });
   }
@@ -93,19 +93,19 @@ export class AnswerSessionsService {
     questionSetId: string,
     mode: AnswerMode,
   ) {
-    const session = await this.answerSessionsRepository.startQuestionSet(
+    const session = await this.solveSessionsRepository.startQuestionSet(
       userId,
       questionSetId,
       mode,
     );
-    return StartAnswerSessionResponseSchema.parse({
+    return StartSolveSessionResponseSchema.parse({
       session: this.toResponse(session),
     });
   }
 
-  async get(userId: string, id: string): Promise<GetAnswerSessionResponse> {
+  async get(userId: string, id: string): Promise<GetSolveSessionResponse> {
     const session = await this.findOwnedSession(userId, id);
-    return GetAnswerSessionResponseSchema.parse({
+    return GetSolveSessionResponseSchema.parse({
       session: this.toResponse(session),
     });
   }
@@ -135,13 +135,13 @@ export class AnswerSessionsService {
         '저장할 답안 또는 풀이 시간을 입력해주세요.',
       );
     }
-    const { draft, attempt } = await this.answerSessionsRepository
+    const { draft, attempt } = await this.solveSessionsRepository
       .saveAnswer(id, item.id, {
         ...answer,
         spentMilliseconds: dto.spentMilliseconds,
       })
       .catch((error: unknown) => {
-        if (error instanceof SubmittedAnswerSessionError) {
+        if (error instanceof SubmittedSolveSessionError) {
           throw new BadRequestException('이미 종료된 풀이입니다.');
         }
         throw error;
@@ -157,18 +157,18 @@ export class AnswerSessionsService {
   async submit(
     userId: string,
     id: string,
-  ): Promise<SubmitAnswerSessionResponse> {
+  ): Promise<SubmitSolveSessionResponse> {
     const existing = await this.findOwnedSession(userId, id);
     const session = existing.submittedAt
       ? existing
-      : await this.answerSessionsRepository.submit(id);
-    return SubmitAnswerSessionResponseSchema.parse({
+      : await this.solveSessionsRepository.submit(id);
+    return SubmitSolveSessionResponseSchema.parse({
       session: this.toResponse(session),
     });
   }
 
   private async findOwnedSession(userId: string, id: string) {
-    const session = await this.answerSessionsRepository.findById(id);
+    const session = await this.solveSessionsRepository.findById(id);
     if (!session) throw new NotFoundException('풀이 세션을 찾을 수 없습니다.');
     if (session.userId !== userId) {
       throw new ForbiddenException(
@@ -202,7 +202,7 @@ export class AnswerSessionsService {
     return { answerChoice: null, answerText };
   }
 
-  private toResponse(session: SessionWithRelations): AnswerSessionResponse {
+  private toResponse(session: SessionWithRelations): SolveSessionResponse {
     return {
       id: session.id,
       mode: session.mode,
@@ -242,7 +242,7 @@ export class AnswerSessionsService {
 
   private toLogResponse(
     session: SessionWithRelations,
-  ): AnswerSessionLogResponse {
+  ): SolveSessionLogResponse {
     return {
       id: session.id,
       mode: session.mode,
@@ -342,7 +342,7 @@ export class AnswerSessionsService {
 
   private toSessionResult(
     session: SessionWithRelations,
-  ): AnswerSessionResultResponse {
+  ): SolveSessionResultResponse {
     const attempts = session.items
       .map((item) => this.latestAttempt(item))
       .filter((attempt): attempt is StoredAttempt => !!attempt);

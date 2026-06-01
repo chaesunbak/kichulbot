@@ -7,10 +7,10 @@ import {
 } from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
-export class SubmittedAnswerSessionError extends Error {}
+export class SubmittedSolveSessionError extends Error {}
 
 @Injectable()
-export class AnswerSessionsRepository {
+export class SolveSessionsRepository {
   constructor(private readonly db: DatabaseService) {}
 
   findPublishedPaper(paperId: string) {
@@ -55,14 +55,14 @@ export class AnswerSessionsRepository {
         items: { orderBy: { position: 'asc' } },
       },
     });
-    const existing = await tx.answerSession.findFirst({
+    const existing = await tx.solveSession.findFirst({
       where: { userId, sourceSetId: questionSetId, mode, submittedAt: null },
       include: this.sessionIncludes(),
       orderBy: { createdAt: 'desc' },
     });
     if (existing) return existing;
 
-    return tx.answerSession.create({
+    return tx.solveSession.create({
       data: {
         userId,
         paperId: questionSet.paper?.id,
@@ -80,14 +80,14 @@ export class AnswerSessionsRepository {
   }
 
   findById(id: string) {
-    return this.db.answerSession.findUnique({
+    return this.db.solveSession.findUnique({
       where: { id },
       include: this.sessionIncludes(),
     });
   }
 
   findLogs(userId: string) {
-    return this.db.answerSession.findMany({
+    return this.db.solveSession.findMany({
       where: { userId, submittedAt: { not: null } },
       include: this.sessionIncludes(),
       orderBy: { submittedAt: 'desc' },
@@ -104,12 +104,12 @@ export class AnswerSessionsRepository {
     },
   ) {
     return this.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "AnswerSession" WHERE "id" = ${sessionId} FOR UPDATE`;
+      await tx.$queryRaw`SELECT "id" FROM "SolveSession" WHERE "id" = ${sessionId} FOR UPDATE`;
       const item = await tx.solveSessionItem.findFirstOrThrow({
         where: { id: sessionItemId, sessionId },
         include: { questionRevision: true, session: true },
       });
-      if (item.session.submittedAt) throw new SubmittedAnswerSessionError();
+      if (item.session.submittedAt) throw new SubmittedSolveSessionError();
 
       const { spentMilliseconds = 0, ...answer } = data;
       const draft = await tx.draftResponse.upsert({
@@ -141,8 +141,8 @@ export class AnswerSessionsRepository {
 
   submit(id: string) {
     return this.db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT "id" FROM "AnswerSession" WHERE "id" = ${id} FOR UPDATE`;
-      const session = await tx.answerSession.findUniqueOrThrow({
+      await tx.$queryRaw`SELECT "id" FROM "SolveSession" WHERE "id" = ${id} FOR UPDATE`;
+      const session = await tx.solveSession.findUniqueOrThrow({
         where: { id },
         include: this.sessionIncludes(),
       });
@@ -175,7 +175,7 @@ export class AnswerSessionsRepository {
         await tx.questionAttempt.createMany({ data: attempts });
       }
 
-      return tx.answerSession.update({
+      return tx.solveSession.update({
         where: { id },
         data: { submittedAt: new Date() },
         include: this.sessionIncludes(),
@@ -200,7 +200,7 @@ export class AnswerSessionsRepository {
         },
         orderBy: { position: 'asc' as const },
       },
-    } satisfies Prisma.AnswerSessionInclude;
+    } satisfies Prisma.SolveSessionInclude;
   }
 
   private hasAnswer(answer?: {

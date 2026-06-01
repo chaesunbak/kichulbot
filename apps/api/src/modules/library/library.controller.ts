@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,13 +23,13 @@ import { RequestUser } from '../auth/types';
 import { CreateBookshelfDto, UpdateBookshelfDto } from './dto/bookshelf.dto';
 import { LibraryService } from './library.service';
 
-@ApiTags('library')
+@ApiTags('paper-lists')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard)
-@Controller('library/bookshelves')
+@Controller('me/paper-lists')
 export class LibraryController {
   constructor(private readonly libraryService: LibraryService) {}
 
@@ -70,9 +71,9 @@ export class LibraryController {
     return this.libraryService.deleteBookshelf(user.id, bookshelfId);
   }
 
-  @Post(':bookshelfId/papers/:paperId')
+  @Put(':bookshelfId/exam-papers/:paperId')
   @ApiOperation({ summary: '책장에 문제지 추가' })
-  @ApiCreatedResponse({ description: '선택한 책장에 문제지를 추가합니다.' })
+  @ApiOkResponse({ description: '선택한 책장에 문제지를 추가합니다.' })
   addPaper(
     @CurrentUser() user: RequestUser,
     @Param('bookshelfId') bookshelfId: string,
@@ -81,7 +82,7 @@ export class LibraryController {
     return this.libraryService.addPaper(user.id, bookshelfId, paperId);
   }
 
-  @Delete(':bookshelfId/papers/:paperId')
+  @Delete(':bookshelfId/exam-papers/:paperId')
   @ApiOperation({ summary: '책장에서 문제지 제거' })
   @ApiOkResponse({ description: '선택한 책장에서 문제지를 제거합니다.' })
   deletePaper(

@@ -50,7 +50,7 @@ model User {
   authType              UserAuthType           @default(ANONYMOUS)
   role                  UserRole               @default(USER)
   bookshelves           Bookshelf[]
-  answerSessions        AnswerSession[]
+  solveSessions        SolveSession[]
   questionSets          QuestionSet[]
   generatedQuestionSets GeneratedQuestionSet[]
   questionAttempts      QuestionAttempt[]
@@ -93,7 +93,7 @@ model Paper {
   questionSet    QuestionSet     @relation(fields: [questionSetId], references: [id])
   questions      Question[]
   users          UserPaper[]
-  answerSessions AnswerSession[]
+  solveSessions SolveSession[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
@@ -193,7 +193,7 @@ model QuestionSet {
   items       QuestionSetItem[]
   generated   GeneratedQuestionSet?
   paper       Paper?
-  sessions    AnswerSession[]
+  sessions    SolveSession[]
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 
@@ -257,7 +257,7 @@ model UserPaper {
   @@index([paperId])
 }
 
-model AnswerSession {
+model SolveSession {
   id          String             @id @default(cuid())
   userId      String
   paperId     String?
@@ -281,7 +281,7 @@ model SolveSessionItem {
   sessionId          String
   questionRevisionId String
   position           Int
-  session            AnswerSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session            SolveSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   questionRevision   QuestionRevision  @relation(fields: [questionRevisionId], references: [id])
   draft              DraftResponse?
   attempts           QuestionAttempt[]

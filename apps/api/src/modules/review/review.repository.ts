@@ -10,8 +10,26 @@ export class ReviewRepository {
     return this.db.user.findUnique({ where: { id: userId } });
   }
 
-  async findOrCreateToday(userId: string, studyDate: Date) {
-    const existing = await this.findToday(userId, studyDate);
+  findByStudyDate(userId: string, studyDate: Date) {
+    return this.db.questionSet.findFirst({
+      where: this.dailyWrongWhere(userId, studyDate),
+      include: this.questionSetIncludes(),
+    });
+  }
+
+  findOwnedDailyWrongQuestionSet(userId: string, questionSetId: string) {
+    return this.db.questionSet.findFirst({
+      where: {
+        id: questionSetId,
+        ownerUserId: userId,
+        kind: QuestionSetKind.DAILY_WRONG,
+      },
+      include: this.questionSetIncludes(),
+    });
+  }
+
+  async generate(userId: string, studyDate: Date) {
+    const existing = await this.findByStudyDate(userId, studyDate);
     if (existing) return existing;
 
     try {
@@ -46,15 +64,15 @@ export class ReviewRepository {
     } catch (error) {
       if (!this.isUniqueConstraintError(error)) throw error;
       return this.db.questionSet.findFirstOrThrow({
-        where: this.todayWhere(userId, studyDate),
+        where: this.dailyWrongWhere(userId, studyDate),
         include: this.questionSetIncludes(),
       });
     }
   }
 
-  async refreshToday(userId: string, studyDate: Date) {
-    const existing = await this.findToday(userId, studyDate);
-    if (!existing) return this.findOrCreateToday(userId, studyDate);
+  async regenerate(userId: string, studyDate: Date) {
+    const existing = await this.findByStudyDate(userId, studyDate);
+    if (!existing) return this.generate(userId, studyDate);
 
     return this.db.$transaction(async (tx) => {
       const candidates = await this.findWrongCandidates(tx, userId);
@@ -83,14 +101,7 @@ export class ReviewRepository {
     });
   }
 
-  private findToday(userId: string, studyDate: Date) {
-    return this.db.questionSet.findFirst({
-      where: this.todayWhere(userId, studyDate),
-      include: this.questionSetIncludes(),
-    });
-  }
-
-  private todayWhere(userId: string, studyDate: Date) {
+  private dailyWrongWhere(userId: string, studyDate: Date) {
     return {
       ownerUserId: userId,
       kind: QuestionSetKind.DAILY_WRONG,

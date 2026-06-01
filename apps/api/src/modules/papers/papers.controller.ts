@@ -27,13 +27,13 @@ import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersService } from './papers.service';
 
-@ApiTags('papers')
+@ApiTags('exam-papers')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard)
-@Controller('papers')
+@Controller('exam-papers')
 export class PapersController {
   constructor(private readonly papersService: PapersService) {}
 

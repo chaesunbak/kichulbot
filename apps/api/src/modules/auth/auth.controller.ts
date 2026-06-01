@@ -86,8 +86,14 @@ export class AuthController {
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
+}
 
-  @Get('me')
+@ApiTags('me')
+@Controller('me')
+export class MeController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '내 사용자 정보 조회' })

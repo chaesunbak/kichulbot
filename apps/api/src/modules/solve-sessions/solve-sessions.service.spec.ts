@@ -11,10 +11,10 @@ import {
   Subject,
 } from '@prisma/client';
 import {
-  AnswerSessionsRepository,
-  SubmittedAnswerSessionError,
-} from './answer-sessions.repository';
-import { AnswerSessionsService } from './answer-sessions.service';
+  SolveSessionsRepository,
+  SubmittedSolveSessionError,
+} from './solve-sessions.repository';
+import { SolveSessionsService } from './solve-sessions.service';
 
 const now = new Date('2026-05-31T00:00:00.000Z');
 const exam = {
@@ -143,9 +143,9 @@ const omittedAttempt = {
   spentMilliseconds: 0,
 };
 
-describe('AnswerSessionsService', () => {
-  let service: AnswerSessionsService;
-  let repository: jest.Mocked<AnswerSessionsRepository>;
+describe('SolveSessionsService', () => {
+  let service: SolveSessionsService;
+  let repository: jest.Mocked<SolveSessionsRepository>;
 
   beforeEach(() => {
     repository = {
@@ -155,8 +155,8 @@ describe('AnswerSessionsService', () => {
       saveAnswer: jest.fn(),
       submit: jest.fn(),
       findLogs: jest.fn(),
-    } as unknown as jest.Mocked<AnswerSessionsRepository>;
-    service = new AnswerSessionsService(repository);
+    } as unknown as jest.Mocked<SolveSessionsRepository>;
+    service = new SolveSessionsService(repository);
   });
 
   it('restores the existing session returned by the repository', async () => {
@@ -233,7 +233,7 @@ describe('AnswerSessionsService', () => {
 
   it('rejects a save when the session is submitted concurrently', async () => {
     repository.findById.mockResolvedValue(session);
-    repository.saveAnswer.mockRejectedValue(new SubmittedAnswerSessionError());
+    repository.saveAnswer.mockRejectedValue(new SubmittedSolveSessionError());
 
     await expect(
       service.saveAnswer('user_1', session.id, question.id, {

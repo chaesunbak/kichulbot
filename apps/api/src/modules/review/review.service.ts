@@ -1,9 +1,9 @@
 import {
+  CreateWrongQuestionSetResponse,
+  CreateWrongQuestionSetResponseSchema,
   DailyWrongQuestionSetResponse,
-  GetTodayWrongQuestionsResponse,
-  GetTodayWrongQuestionsResponseSchema,
-  RefreshTodayWrongQuestionSetResponse,
-  RefreshTodayWrongQuestionSetResponseSchema,
+  GetWrongQuestionSetResponse,
+  GetWrongQuestionSetResponseSchema,
   StartWrongReviewSessionResponse,
 } from '@kichulbot/api-contract/review';
 import {
@@ -12,7 +12,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AnswerMode, AttemptOutcome, Prisma } from '@prisma/client';
-import { AnswerSessionsService } from '../answer-sessions/answer-sessions.service';
+import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';
 
 type DailyWrongQuestionSet = Prisma.QuestionSetGetPayload<{
@@ -44,53 +44,82 @@ type DailyWrongQuestionSet = Prisma.QuestionSetGetPayload<{
 export class ReviewService {
   constructor(
     private readonly reviewRepository: ReviewRepository,
-    private readonly answerSessionsService: AnswerSessionsService,
+    private readonly solveSessionsService: SolveSessionsService,
   ) {}
 
-  async getToday(userId: string): Promise<GetTodayWrongQuestionsResponse> {
-    const questionSet = await this.getOrCreateToday(userId);
-    return GetTodayWrongQuestionsResponseSchema.parse({
-      questionSet: this.toResponse(questionSet),
-    });
-  }
-
-  async refreshToday(
+  async getByStudyDate(
     userId: string,
-  ): Promise<RefreshTodayWrongQuestionSetResponse> {
-    const studyDate = await this.getStudyDate(userId);
-    const questionSet = await this.reviewRepository.refreshToday(
+    studyDateInput?: string,
+  ): Promise<GetWrongQuestionSetResponse> {
+    const studyDate = await this.resolveStudyDate(userId, studyDateInput);
+    const questionSet = await this.reviewRepository.findByStudyDate(
       userId,
       studyDate,
     );
-    return RefreshTodayWrongQuestionSetResponseSchema.parse({
+    return GetWrongQuestionSetResponseSchema.parse({
+      questionSet: questionSet ? this.toResponse(questionSet) : null,
+    });
+  }
+
+  async generate(
+    userId: string,
+    studyDateInput?: string,
+  ): Promise<CreateWrongQuestionSetResponse> {
+    const studyDate = await this.resolveStudyDate(userId, studyDateInput);
+    const questionSet = await this.reviewRepository.regenerate(
+      userId,
+      studyDate,
+    );
+    return CreateWrongQuestionSetResponseSchema.parse({
       questionSet: this.toResponse(questionSet),
     });
   }
 
-  async startToday(
+  async start(
     userId: string,
+    questionSetId: string,
     mode: AnswerMode = AnswerMode.ONE_BY_ONE,
   ): Promise<StartWrongReviewSessionResponse> {
-    const questionSet = await this.getOrCreateToday(userId);
-    if (questionSet.items.length === 0) {
-      throw new BadRequestException('오늘 다시 풀 오답이 없습니다.');
+    const questionSet =
+      await this.reviewRepository.findOwnedDailyWrongQuestionSet(
+        userId,
+        questionSetId,
+      );
+    if (!questionSet) {
+      throw new NotFoundException('오답 세트를 찾을 수 없습니다.');
     }
-    return this.answerSessionsService.startQuestionSet(
+    if (questionSet.items.length === 0) {
+      throw new BadRequestException('다시 풀 오답이 없습니다.');
+    }
+    return this.solveSessionsService.startQuestionSet(
       userId,
       questionSet.id,
       mode,
     );
   }
 
-  private async getOrCreateToday(userId: string) {
-    const studyDate = await this.getStudyDate(userId);
-    return this.reviewRepository.findOrCreateToday(userId, studyDate);
-  }
+  private async resolveStudyDate(userId: string, studyDateInput?: string) {
+    if (studyDateInput) return this.parseStudyDate(studyDateInput);
 
-  private async getStudyDate(userId: string) {
     const user = await this.reviewRepository.findUser(userId);
     if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
     return this.toStudyDate(new Date(), user.timezone);
+  }
+
+  private parseStudyDate(studyDate: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(studyDate)) {
+      throw new BadRequestException(
+        'studyDate는 YYYY-MM-DD 형식이어야 합니다.',
+      );
+    }
+    const parsed = new Date(`${studyDate}T00:00:00Z`);
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10) !== studyDate
+    ) {
+      throw new BadRequestException('studyDate가 올바른 날짜가 아닙니다.');
+    }
+    return parsed;
   }
 
   private toStudyDate(now: Date, timezone: string) {

@@ -11,6 +11,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   DropdownMenu,
@@ -25,10 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
-import {
-  confirmDialog,
-  promptDialog,
-} from '@/shared/components/confirm-dialog';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { PromptDialog } from '@/shared/components/prompt-dialog';
 import type {
   Library,
   LibraryFolder,
@@ -78,12 +77,20 @@ export function LibraryManager({
   const isEmpty = visibleFolders.length === 0 && visiblePapers.length === 0;
 
   const createFolder = async () => {
-    const name = await promptDialog({
-      title: '새 폴더',
-      description: '새 폴더 이름을 입력해 주세요.',
-      placeholder: '폴더 이름',
-      confirmLabel: '만들기',
-    });
+    const name = await overlay.openAsync<string | null>(
+      ({ isOpen, close, unmount }) => (
+        <PromptDialog
+          isOpen={isOpen}
+          title="새 폴더"
+          description="새 폴더 이름을 입력해 주세요."
+          placeholder="폴더 이름"
+          confirmLabel="만들기"
+          onCancel={() => close(null)}
+          onConfirm={(value) => close(value)}
+          onExit={unmount}
+        />
+      ),
+    );
     if (!name?.trim()) return;
     try {
       const folder = await createLibraryFolder({
@@ -100,12 +107,20 @@ export function LibraryManager({
 
   const renameFolder = async () => {
     if (!selectedFolder) return;
-    const name = await promptDialog({
-      title: '폴더 이름 변경',
-      description: '변경할 폴더 이름을 입력해 주세요.',
-      defaultValue: selectedFolder.name,
-      confirmLabel: '변경',
-    });
+    const name = await overlay.openAsync<string | null>(
+      ({ isOpen, close, unmount }) => (
+        <PromptDialog
+          isOpen={isOpen}
+          title="폴더 이름 변경"
+          description="변경할 폴더 이름을 입력해 주세요."
+          defaultValue={selectedFolder.name}
+          confirmLabel="변경"
+          onCancel={() => close(null)}
+          onConfirm={(value) => close(value)}
+          onExit={unmount}
+        />
+      ),
+    );
     if (!name?.trim() || name.trim() === selectedFolder.name) return;
     try {
       const folder = await renameLibraryFolder({
@@ -123,12 +138,20 @@ export function LibraryManager({
 
   const deleteFolder = async () => {
     if (!selectedFolder) return;
-    const shouldDelete = await confirmDialog({
-      title: `"${selectedFolder.name}" 폴더를 삭제할까요?`,
-      description: '비어 있는 폴더만 삭제할 수 있습니다.',
-      confirmLabel: '삭제',
-      destructive: true,
-    });
+    const shouldDelete = await overlay.openAsync<boolean>(
+      ({ isOpen, close, unmount }) => (
+        <ConfirmDialog
+          isOpen={isOpen}
+          title={`"${selectedFolder.name}" 폴더를 삭제할까요?`}
+          description="비어 있는 폴더만 삭제할 수 있습니다."
+          confirmLabel="삭제"
+          destructive
+          onCancel={() => close(false)}
+          onConfirm={() => close(true)}
+          onExit={unmount}
+        />
+      ),
+    );
     if (!shouldDelete) return;
 
     try {

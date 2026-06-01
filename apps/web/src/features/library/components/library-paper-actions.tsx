@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FolderInput, Play, Trash2 } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Select,
@@ -11,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
-import { confirmDialog } from '@/shared/components/confirm-dialog';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import type { LibraryFolder } from '@/features/learning/types';
 import { createSolveSession } from '@/features/learning/api/client';
 import {
@@ -72,12 +73,20 @@ export function LibraryPaperActions({
   };
 
   const remove = async () => {
-    const shouldDelete = await confirmDialog({
-      title: '내 서재에서 제거할까요?',
-      description: '저장 항목만 제거되며 문제지는 그대로 유지됩니다.',
-      confirmLabel: '제거',
-      destructive: true,
-    });
+    const shouldDelete = await overlay.openAsync<boolean>(
+      ({ isOpen, close, unmount }) => (
+        <ConfirmDialog
+          isOpen={isOpen}
+          title="내 서재에서 제거할까요?"
+          description="저장 항목만 제거되며 문제지는 그대로 유지됩니다."
+          confirmLabel="제거"
+          destructive
+          onCancel={() => close(false)}
+          onConfirm={() => close(true)}
+          onExit={unmount}
+        />
+      ),
+    );
     if (!shouldDelete) return;
 
     setIsDeleting(true);

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Bookmark, Plus } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -10,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { promptDialog } from '@/shared/components/confirm-dialog';
+import { PromptDialog } from '@/shared/components/prompt-dialog';
 import type { BookmarkListSummary } from '@/features/learning/types';
 import { createBookmarkList as createBookmarkListApi } from '@/features/library/api/client';
 
@@ -23,12 +24,20 @@ export function BookmarkListManager({
   const [message, setMessage] = useState<string | null>(null);
 
   const createBookmarkList = async () => {
-    const name = await promptDialog({
-      title: '새 북마크 리스트',
-      description: '새 북마크 리스트 이름을 입력해 주세요.',
-      placeholder: '리스트 이름',
-      confirmLabel: '만들기',
-    });
+    const name = await overlay.openAsync<string | null>(
+      ({ isOpen, close, unmount }) => (
+        <PromptDialog
+          isOpen={isOpen}
+          title="새 북마크 리스트"
+          description="새 북마크 리스트 이름을 입력해 주세요."
+          placeholder="리스트 이름"
+          confirmLabel="만들기"
+          onCancel={() => close(null)}
+          onConfirm={(value) => close(value)}
+          onExit={unmount}
+        />
+      ),
+    );
     if (!name?.trim()) return;
     try {
       const bookmarkList = await createBookmarkListApi(name);

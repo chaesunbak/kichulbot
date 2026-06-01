@@ -1,6 +1,7 @@
 import { useParams } from 'react-router';
-import { QuestionManager } from '@/features/questions/components/question-manager';
+
 import { useAuthStore } from '@/features/auth/store';
+import { QuestionManager } from '@/features/questions/components/question-manager';
 
 export function PaperDetailPage() {
   const { paperId = '' } = useParams<{ paperId: string }>();

@@ -2,6 +2,8 @@ import {
   CategoryMutationResponseSchema,
   CreateCategoryRequest,
   CreateExamRequest,
+  DeleteCategoryResponseSchema,
+  DeleteExamResponseSchema,
   ExamMutationResponseSchema,
   ListCategoriesResponseSchema,
   ListExamsResponseSchema,
@@ -35,6 +37,13 @@ export async function updateExam(
   });
 }
 
+export async function deleteExam(token: string, examId: string) {
+  return apiRequest(`/exams/${examId}`, DeleteExamResponseSchema.parse, {
+    token,
+    method: 'DELETE',
+  });
+}
+
 export async function fetchCategories(token: string) {
   return apiRequest('/categories', ListCategoriesResponseSchema.parse, {
     token,
@@ -64,6 +73,17 @@ export async function updateCategory(
       token,
       method: 'PATCH',
       body: input,
+    },
+  );
+}
+
+export async function deleteCategory(token: string, categoryId: string) {
+  return apiRequest(
+    `/categories/${categoryId}`,
+    DeleteCategoryResponseSchema.parse,
+    {
+      token,
+      method: 'DELETE',
     },
   );
 }

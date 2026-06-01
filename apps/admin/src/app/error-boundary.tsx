@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { ErrorPage } from '@/pages/error-page';
 
 interface ErrorBoundaryState {

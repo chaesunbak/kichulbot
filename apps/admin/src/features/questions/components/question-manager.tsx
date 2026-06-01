@@ -64,6 +64,7 @@ const DEFAULT_QUESTION: QuestionValues = {
   answerChoice: 1,
   answerText: '',
   explanation: '',
+  points: 5,
   recommendedTimeSeconds: undefined,
   tagIds: [],
 };
@@ -133,6 +134,7 @@ export function QuestionManager({
       answerChoice: question.answerChoice ?? undefined,
       answerText: question.answerText ?? '',
       explanation: question.explanation ?? '',
+      points: question.points,
       recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
       tagIds: question.tags.map((tag) => tag.id),
     });
@@ -189,10 +191,12 @@ export function QuestionManager({
 
   if (paperQuery.isLoading) {
     return (
-      <div className="
-        mx-auto flex max-w-7xl items-center justify-center px-5 py-24 text-sm
-        text-muted-foreground
-      ">
+      <div
+        className="
+          mx-auto flex max-w-7xl items-center justify-center px-5 py-24 text-sm
+          text-muted-foreground
+        "
+      >
         <RefreshCw className="mr-2 size-4 animate-spin" aria-hidden="true" />
         문제지 상세 불러오는 중
       </div>
@@ -240,10 +244,12 @@ export function QuestionManager({
         total={questionCount}
       />
 
-      <div className="
-        grid gap-5
-        lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]
-      ">
+      <div
+        className="
+          grid gap-5
+          lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]
+        "
+      >
         <QuestionList
           questions={questions}
           editingQuestionId={editingQuestionId}
@@ -279,9 +285,11 @@ export function QuestionManager({
           </CardHeader>
           <CardContent>
             {!editingQuestion && isComplete ? (
-              <div className="
-                rounded-md border border-dashed px-4 py-10 text-center
-              ">
+              <div
+                className="
+                  rounded-md border border-dashed px-4 py-10 text-center
+                "
+              >
                 <CheckCircle2
                   className="mx-auto size-6 text-primary"
                   aria-hidden="true"
@@ -301,14 +309,21 @@ export function QuestionManager({
                 )}
               >
                 <FieldGroup>
-                  <div className="
-                    grid gap-3
-                    sm:grid-cols-2
-                  ">
+                  <div
+                    className="
+                      grid gap-3
+                      sm:grid-cols-2
+                    "
+                  >
                     <NumberField
                       control={questionForm.control}
                       name="number"
                       label="문항 번호"
+                    />
+                    <NumberField
+                      control={questionForm.control}
+                      name="points"
+                      label="배점"
                     />
                     <Controller
                       name="type"
@@ -404,7 +419,7 @@ export function QuestionManager({
                     control={questionForm.control}
                     render={({ field }) => (
                       <Field>
-                        <FieldLabel>공식 태그</FieldLabel>
+                        <FieldLabel>태그</FieldLabel>
                         <div className="grid grid-cols-2 gap-2">
                           {selectableTags.map((tag) => {
                             const checked = field.value.includes(tag.id);
@@ -429,14 +444,13 @@ export function QuestionManager({
                                   }
                                 />
                                 {tag.name}
-                                {!tag.isActive && ' (비활성)'}
                               </label>
                             );
                           })}
                         </div>
                         {(tagsQuery.data?.tags.length ?? 0) === 0 && (
                           <FieldDescription>
-                            이 과목에 적용 가능한 활성 공식 태그가 없습니다.
+                            이 과목에 적용 가능한 태그가 없습니다.
                           </FieldDescription>
                         )}
                       </Field>
@@ -487,7 +501,12 @@ function NumberField({
   label,
 }: {
   control: ReturnType<typeof useForm<QuestionValues>>['control'];
-  name: 'number' | 'choiceCount' | 'answerChoice' | 'recommendedTimeSeconds';
+  name:
+    | 'number'
+    | 'points'
+    | 'choiceCount'
+    | 'answerChoice'
+    | 'recommendedTimeSeconds';
   label: string;
 }) {
   return (

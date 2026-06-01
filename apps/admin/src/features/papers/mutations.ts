@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+
+import type { Exam } from '@/shared/types';
+
 import { createPaper, deletePaper, updatePaperPublished } from './api';
 import { toCreatePaperInput } from './mappers';
 import { paperKeys } from './queries';
 import type { PaperValues } from './schemas';
-import type { Exam } from '@/shared/api/api-client';
 
 export function useCreatePaperMutation(token: string) {
   const queryClient = useQueryClient();

@@ -25,7 +25,7 @@ import {
 import { Plus } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 
-import type { Exam } from '@/shared/api/api-client';
+import type { Exam } from '@/shared/types';
 
 import { useCreatePaperMutation } from '../mutations';
 import { paperSchema, type PaperValues } from '../schemas';
@@ -86,10 +86,12 @@ export function CreatePaperForm({
               label="문제지 제목"
               placeholder="2025학년도 수능 한국사"
             />
-            <div className="
-              grid gap-4
-              sm:grid-cols-2
-            ">
+            <div
+              className="
+                grid gap-4
+                sm:grid-cols-2
+              "
+            >
               <NumberField
                 control={form.control}
                 name="year"

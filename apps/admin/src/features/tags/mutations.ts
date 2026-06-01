@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { createOfficialTag, updateOfficialTag } from './api';
+import { createOfficialTag, deleteOfficialTag, updateOfficialTag } from './api';
 import { tagKeys } from './queries';
 
 export interface TagForm {
   name: string;
-  examIds: string[];
+  examId: string;
 }
 
 function useInvalidateTags() {
@@ -27,9 +27,10 @@ export function useSaveTagMutation(
     mutationFn: (form: TagForm) => {
       const input = {
         name: form.name.trim(),
-        examIds: form.examIds,
+        examId: form.examId,
       };
       if (!input.name) throw new Error('태그 이름을 입력해 주세요.');
+      if (!input.examId) throw new Error('시험을 선택해 주세요.');
       return editingTagId
         ? updateOfficialTag(token, editingTagId, input)
         : createOfficialTag(token, input);
@@ -38,32 +39,31 @@ export function useSaveTagMutation(
       invalidateTags();
       onSuccess();
       toast.success(
-        editingTagId
-          ? '공식 태그를 수정했습니다.'
-          : '공식 태그를 추가했습니다.',
+        editingTagId ? '태그를 수정했습니다.' : '태그를 추가했습니다.',
       );
     },
     onError: (error) =>
       toast.error(
-        error instanceof Error
-          ? error.message
-          : '공식 태그 저장에 실패했습니다.',
+        error instanceof Error ? error.message : '태그 저장에 실패했습니다.',
       ),
   });
 }
 
-export function useUpdateTagActiveMutation(token: string) {
+export function useDeleteTagMutation(
+  token: string,
+  onSuccess?: (tagId: string) => void,
+) {
   const invalidateTags = useInvalidateTags();
   return useMutation({
-    mutationFn: ({ tagId, isActive }: { tagId: string; isActive: boolean }) =>
-      updateOfficialTag(token, tagId, { isActive }),
-    onSuccess: () => {
+    mutationFn: (tagId: string) => deleteOfficialTag(token, tagId),
+    onSuccess: ({ id }) => {
       invalidateTags();
-      toast.success('공식 태그 상태를 변경했습니다.');
+      onSuccess?.(id);
+      toast.success('태그를 삭제했습니다.');
     },
     onError: (error) =>
       toast.error(
-        error instanceof Error ? error.message : '상태 변경에 실패했습니다.',
+        error instanceof Error ? error.message : '태그 삭제에 실패했습니다.',
       ),
   });
 }

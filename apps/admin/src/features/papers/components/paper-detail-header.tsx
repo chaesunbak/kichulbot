@@ -25,10 +25,12 @@ export function PaperDetailHeader({
   onDelete: () => void;
 }) {
   return (
-    <div className="
-      mb-5 flex flex-col gap-4
-      sm:flex-row sm:items-end sm:justify-between
-    ">
+    <div
+      className="
+        mb-5 flex flex-col gap-4
+        sm:flex-row sm:items-end sm:justify-between
+      "
+    >
       <div>
         <Button asChild className="mb-2 -ml-3" variant="ghost" size="sm">
           <Link to="/">

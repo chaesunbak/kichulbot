@@ -21,10 +21,12 @@ export function PapersPage() {
   const papers = useQuery(papersQueryOptions(token)).data?.papers ?? [];
   const exams = useQuery(examsQueryOptions(token)).data?.exams ?? [];
   return (
-    <div className="
-      mx-auto grid max-w-7xl gap-5 px-5 py-6
-      lg:grid-cols-[minmax(320px,420px)_1fr]
-    ">
+    <div
+      className="
+        mx-auto grid max-w-7xl gap-5 px-5 py-6
+        lg:grid-cols-[1fr_minmax(320px,420px)]
+      "
+    >
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

@@ -1,5 +1,6 @@
 import {
   CreateOfficialTagRequest,
+  DeleteOfficialTagResponseSchema,
   ListTagsResponseSchema,
   OfficialTagMutationResponseSchema,
   UpdateOfficialTagRequest,
@@ -13,13 +14,7 @@ export async function fetchTags(token: string, examId?: string) {
 }
 
 export async function fetchAdminTags(token: string) {
-  return apiRequest(
-    '/tags?includeInactive=true',
-    ListTagsResponseSchema.parse,
-    {
-      token,
-    },
-  );
+  return apiRequest('/tags', ListTagsResponseSchema.parse, { token });
 }
 
 export async function createOfficialTag(
@@ -42,5 +37,12 @@ export async function updateOfficialTag(
     token,
     method: 'PATCH',
     body: input,
+  });
+}
+
+export async function deleteOfficialTag(token: string, tagId: string) {
+  return apiRequest(`/tags/${tagId}`, DeleteOfficialTagResponseSchema.parse, {
+    token,
+    method: 'DELETE',
   });
 }

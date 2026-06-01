@@ -44,10 +44,12 @@ const TagsPage = lazy(() =>
 
 function PageFallback() {
   return (
-    <main className="
-      flex min-h-screen items-center justify-center bg-muted/30 px-6 text-sm
-      text-muted-foreground
-    ">
+    <main
+      className="
+        flex min-h-screen items-center justify-center bg-muted/30 px-6 text-sm
+        text-muted-foreground
+      "
+    >
       불러오는 중
     </main>
   );

@@ -1,39 +1,23 @@
 import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
-import { Badge } from '@kichulbot/ui/components/badge';
-import { Button } from '@kichulbot/ui/components/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@kichulbot/ui/components/card';
-import { Checkbox } from '@kichulbot/ui/components/checkbox';
-import { Field, FieldLabel } from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
-import { Switch } from '@kichulbot/ui/components/switch';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@kichulbot/ui/components/table';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/select';
 import { useQuery } from '@tanstack/react-query';
-import { Pencil, Plus, Tags } from 'lucide-react';
 import * as React from 'react';
 
-import type { Taxonomy } from '@/shared/api/api-client';
+import type { Taxonomy } from '@/shared/types';
 
-import {
-  type TagForm,
-  useSaveTagMutation,
-  useUpdateTagActiveMutation,
-} from '../mutations';
-import { adminTagsQueryOptions } from '../queries';
+import type { TagForm } from '../mutations';
+import { useDeleteTagMutation, useSaveTagMutation } from '../mutations';
+import { tagsQueryOptions } from '../queries';
+import { TagFormPanel } from './tag-form';
+import { TagListPanel } from './tag-list';
 
-const EMPTY_FORM: TagForm = { name: '', examIds: [] };
+const EMPTY_FORM: TagForm = { name: '', examId: '' };
 
 export function TagManager({
   token,
@@ -46,12 +30,29 @@ export function TagManager({
     null,
   );
   const [form, setForm] = React.useState<TagForm>(EMPTY_FORM);
+  const [selectedExamId, setSelectedExamId] = React.useState('');
 
-  const tagsQuery = useQuery(adminTagsQueryOptions(token));
+  React.useEffect(() => {
+    if (!selectedExamId && exams.length > 0) {
+      setSelectedExamId(exams[0].id);
+    }
+  }, [exams, selectedExamId]);
+
+  const selectedExam = exams.find((exam) => exam.id === selectedExamId) ?? null;
+  const tagsQuery = useQuery({
+    ...tagsQueryOptions(token, selectedExamId),
+    enabled: !!selectedExamId,
+  });
 
   function resetForm() {
     setEditingTag(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, examId: selectedExamId });
+  }
+
+  function selectExam(examId: string) {
+    setSelectedExamId(examId);
+    setEditingTag(null);
+    setForm({ ...EMPTY_FORM, examId });
   }
 
   const saveMutation = useSaveTagMutation(
@@ -59,174 +60,100 @@ export function TagManager({
     editingTag?.id ?? null,
     resetForm,
   );
-  const activeMutation = useUpdateTagActiveMutation(token);
+  const deleteMutation = useDeleteTagMutation(token, (tagId) => {
+    if (editingTag?.id === tagId) {
+      resetForm();
+    }
+  });
 
   function beginEdit(tag: AdminTagResponse) {
     setEditingTag(tag);
     setForm({
       name: tag.name,
-      examIds: tag.examIds,
+      examId: selectedExamId || tag.examId,
     });
   }
 
-  function toggleExam(examId: string, checked: boolean) {
-    setForm((current) => ({
-      ...current,
-      examIds: checked
-        ? [...current.examIds, examId]
-        : current.examIds.filter((id) => id !== examId),
-    }));
+  function handleDelete(tag: AdminTagResponse) {
+    if (tag.questionCount > 0) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(
+      `${tag.name} 태그를 삭제할까요?\n적용 시험 연결도 함께 정리되며, 이 작업은 되돌릴 수 없습니다.`,
+    );
+    if (shouldDelete) {
+      deleteMutation.mutate(tag.id);
+    }
   }
 
   const tags = (tagsQuery.data?.tags ?? []) as AdminTagResponse[];
 
   return (
-    <div className="
-      mx-auto grid max-w-7xl gap-5 px-5 py-6
-      lg:grid-cols-[minmax(320px,420px)_1fr]
-    ">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Plus className="size-4" aria-hidden="true" />
-            {editingTag ? '공식 태그 수정' : '공식 태그 추가'}
-          </CardTitle>
-          <CardDescription>
-            시험별로 문항 편집에 노출할 공식 태그를 관리합니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            className="space-y-5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              saveMutation.mutate(form);
-            }}
+    <div
+      className="
+        mx-auto grid max-w-7xl gap-5 px-5 py-6
+        lg:grid-cols-[1fr_minmax(320px,420px)]
+      "
+    >
+      <div className="lg:col-span-2">
+        <div
+          className="
+            flex flex-col gap-2
+            sm:flex-row sm:items-center sm:justify-between
+          "
+        >
+          <div>
+            <h1 className="text-xl font-semibold">시험별 태그</h1>
+            <p className="text-sm text-muted-foreground">
+              시험을 먼저 선택한 뒤 해당 시험에서 사용할 태그를 관리합니다.
+            </p>
+          </div>
+          <Select
+            value={selectedExamId}
+            onValueChange={selectExam}
+            disabled={exams.length === 0}
           >
-            <Field>
-              <FieldLabel htmlFor="tag-name">태그 이름</FieldLabel>
-              <Input
-                id="tag-name"
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-                placeholder="조선"
-              />
-            </Field>
-            <Field>
-              <FieldLabel>적용 시험</FieldLabel>
-              <div className="grid gap-2">
-                {exams.map((exam) => (
-                  <label
-                    key={exam.id}
-                    className="
-                      flex cursor-pointer items-center gap-2 rounded-md border
-                      px-3 py-2 text-sm
-                    "
-                  >
-                    <Checkbox
-                      checked={form.examIds.includes(exam.id)}
-                      onCheckedChange={(checked) =>
-                        toggleExam(exam.id, checked === true)
-                      }
-                    />
-                    {exam.name}
-                  </label>
-                ))}
-              </div>
-            </Field>
-            <div className="flex gap-2">
-              {editingTag && (
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  취소
-                </Button>
-              )}
-              <Button
-                className="flex-1"
-                type="submit"
-                disabled={saveMutation.isPending}
-              >
-                {editingTag ? '수정 저장' : '태그 추가'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Tags className="size-4" aria-hidden="true" />
-            공식 태그 목록
-          </CardTitle>
-          <CardDescription>
-            비활성화해도 기존 문항 연결은 유지되며 새 지정만 막힙니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>태그</TableHead>
-                <TableHead>적용 시험</TableHead>
-                <TableHead>활성</TableHead>
-                <TableHead>
-                  <span className="sr-only">수정</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tags.map((tag) => (
-                <TableRow key={tag.id}>
-                  <TableCell>
-                    <div className="font-medium">{tag.name}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {tag.examIds.length === 0 ? (
-                        <span className="text-xs text-muted-foreground">
-                          없음
-                        </span>
-                      ) : (
-                        tag.examIds.map((examId) => (
-                          <Badge key={examId} variant="outline">
-                            {exams.find((exam) => exam.id === examId)?.name ??
-                              examId}
-                          </Badge>
-                        ))
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={tag.isActive}
-                      disabled={activeMutation.isPending}
-                      onCheckedChange={(isActive) =>
-                        activeMutation.mutate({ tagId: tag.id, isActive })
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => beginEdit(tag)}
-                    >
-                      <Pencil className="size-4" aria-hidden="true" />
-                      수정
-                    </Button>
-                  </TableCell>
-                </TableRow>
+            <SelectTrigger
+              className="
+                w-full
+                sm:w-80
+              "
+            >
+              <SelectValue placeholder="시험 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              {exams.map((exam) => (
+                <SelectItem key={exam.id} value={exam.id}>
+                  {exam.name}
+                </SelectItem>
               ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <TagListPanel
+        tags={tags}
+        selectedExam={selectedExam}
+        isLoading={tagsQuery.isLoading}
+        deletingTagId={
+          deleteMutation.isPending ? (deleteMutation.variables ?? null) : null
+        }
+        onEdit={beginEdit}
+        onDelete={handleDelete}
+      />
+      <TagFormPanel
+        selectedExam={selectedExam}
+        editingTag={editingTag}
+        form={form}
+        isSubmitting={saveMutation.isPending || !selectedExam}
+        onSubmit={() => {
+          if (!selectedExamId) return;
+          saveMutation.mutate({ ...form, examId: selectedExamId });
+        }}
+        onCancel={resetForm}
+        onFormChange={setForm}
+      />
     </div>
   );
 }

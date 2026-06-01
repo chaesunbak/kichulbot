@@ -1,7 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { createCategory, createExam, updateCategory, updateExam } from './api';
+import {
+  createCategory,
+  createExam,
+  deleteCategory,
+  deleteExam,
+  updateCategory,
+  updateExam,
+} from './api';
 import { referenceDataKeys } from './queries';
 
 export interface CategoryForm {
@@ -11,7 +18,6 @@ export interface CategoryForm {
 export interface ExamForm extends CategoryForm {
   categoryIds: string[];
   usesMonth: boolean;
-  usesGrade: boolean;
   usesRound: boolean;
 }
 
@@ -45,6 +51,25 @@ export function useSaveCategoryMutation(
   });
 }
 
+export function useDeleteCategoryMutation(
+  token: string,
+  onSuccess?: (categoryId: string) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (categoryId: string) => deleteCategory(token, categoryId),
+    onSuccess: ({ id }) => {
+      queryClient.invalidateQueries({ queryKey: referenceDataKeys.all });
+      onSuccess?.(id);
+      toast.success('분류를 삭제했습니다.');
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : '분류 삭제에 실패했습니다.',
+      ),
+  });
+}
+
 export function useSaveExamMutation(
   token: string,
   editingExamId: string | null,
@@ -57,7 +82,6 @@ export function useSaveExamMutation(
         name: form.name.trim(),
         categoryIds: form.categoryIds,
         usesMonth: form.usesMonth,
-        usesGrade: form.usesGrade,
         usesRound: form.usesRound,
       };
       if (!input.name || input.categoryIds.length === 0) {
@@ -77,6 +101,25 @@ export function useSaveExamMutation(
     onError: (error) =>
       toast.error(
         error instanceof Error ? error.message : '시험 저장에 실패했습니다.',
+      ),
+  });
+}
+
+export function useDeleteExamMutation(
+  token: string,
+  onSuccess?: (examId: string) => void,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (examId: string) => deleteExam(token, examId),
+    onSuccess: ({ id }) => {
+      queryClient.invalidateQueries({ queryKey: referenceDataKeys.all });
+      onSuccess?.(id);
+      toast.success('시험을 삭제했습니다.');
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : '시험 삭제에 실패했습니다.',
       ),
   });
 }

@@ -8,6 +8,7 @@ export const questionSchema = z
     answerChoice: z.number().int().min(1).max(10).optional(),
     answerText: z.string().max(2000).optional(),
     explanation: z.string().max(5000).optional(),
+    points: z.number().int().min(1, '배점은 1점 이상이어야 합니다.').max(1000),
     recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
     tagIds: z.array(z.string()),
   })

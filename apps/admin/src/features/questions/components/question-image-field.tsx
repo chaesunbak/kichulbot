@@ -1,11 +1,12 @@
-import type * as React from 'react';
-import { Upload } from 'lucide-react';
 import {
   Field,
   FieldDescription,
   FieldLabel,
 } from '@kichulbot/ui/components/field';
 import { Input } from '@kichulbot/ui/components/input';
+import { Upload } from 'lucide-react';
+import type * as React from 'react';
+
 import { cn } from '@/shared/lib/utils';
 
 interface QuestionImageFieldProps {
@@ -52,7 +53,12 @@ export function QuestionImageField({
       />
       <label
         className={cn(
-          'flex min-h-44 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-md border border-dashed bg-muted/30 p-4 text-center text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:bg-primary/5',
+          `
+            flex min-h-44 cursor-pointer flex-col items-center justify-center
+            gap-2 overflow-hidden rounded-md border border-dashed bg-muted/30
+            p-4 text-center text-sm text-muted-foreground transition-colors
+            hover:border-primary/60 hover:bg-primary/5
+          `,
           isDragging && 'border-primary bg-primary/10 text-foreground',
         )}
         htmlFor="question-image"

@@ -1,8 +1,9 @@
+import type { QuestionType } from '@kichulbot/api-contract';
 import {
   DeleteQuestionResponseSchema,
   QuestionMutationResponseSchema,
 } from '@kichulbot/api-contract/questions';
-import type { QuestionType } from '@kichulbot/api-contract';
+
 import { apiRequest } from '@/shared/api/api-client';
 
 interface QuestionInput {
@@ -12,6 +13,7 @@ interface QuestionInput {
   answerChoice?: number;
   answerText?: string;
   explanation?: string;
+  points: number;
   recommendedTimeSeconds?: number;
   tagIds: string[];
   image?: File;
@@ -45,6 +47,7 @@ function toQuestionFormData(
   if (input.explanation !== undefined) {
     formData.append('explanation', input.explanation);
   }
+  formData.append('points', String(input.points));
   if (input.recommendedTimeSeconds !== undefined) {
     formData.append(
       'recommendedTimeSeconds',

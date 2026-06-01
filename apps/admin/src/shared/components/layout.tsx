@@ -38,10 +38,12 @@ export function Layout() {
   return (
     <main className="min-h-screen bg-muted/30">
       <header className="border-b bg-background">
-        <div className="
-          mx-auto flex max-w-7xl flex-col gap-4 p-5
-          sm:flex-row sm:items-center sm:justify-between
-        ">
+        <div
+          className="
+            mx-auto flex max-w-7xl flex-col gap-4 p-5
+            sm:flex-row sm:items-center sm:justify-between
+          "
+        >
           <div>
             <h1 className="text-xl font-semibold">기출봇 관리자</h1>
           </div>

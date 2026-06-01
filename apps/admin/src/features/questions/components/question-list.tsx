@@ -1,4 +1,3 @@
-import { ImageIcon, Pencil } from 'lucide-react';
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
 import { Badge } from '@kichulbot/ui/components/badge';
 import {
@@ -8,6 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
+import { ImageIcon, Pencil } from 'lucide-react';
+
 import { cn } from '@/shared/lib/utils';
 
 export function QuestionList({
@@ -29,16 +30,30 @@ export function QuestionList({
       </CardHeader>
       <CardContent>
         {questions.length === 0 ? (
-          <div className="rounded-md border border-dashed px-4 py-16 text-center text-sm text-muted-foreground">
+          <div
+            className="
+              rounded-md border border-dashed px-4 py-16 text-center text-sm
+              text-muted-foreground
+            "
+          >
             아직 등록된 문항이 없습니다.
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div
+            className="
+              grid gap-3
+              sm:grid-cols-2
+            "
+          >
             {questions.map((question) => (
               <button
                 key={question.id}
                 className={cn(
-                  'rounded-md border bg-background p-4 text-left transition-colors hover:bg-muted/50',
+                  `
+                    rounded-md border bg-background p-4 text-left
+                    transition-colors
+                    hover:bg-muted/50
+                  `,
                   editingQuestionId === question.id &&
                     'border-primary bg-primary/5',
                 )}
@@ -47,12 +62,21 @@ export function QuestionList({
               >
                 {question.imageUrl ? (
                   <img
-                    className="mb-3 h-36 w-full rounded-md border bg-muted/30 object-contain"
+                    className="
+                      mb-3 h-36 w-full rounded-md border bg-muted/30
+                      object-contain
+                    "
                     src={question.imageUrl}
                     alt={`${question.number}번 문항 이미지`}
                   />
                 ) : (
-                  <div className="mb-3 flex h-36 items-center justify-center rounded-md border border-dashed bg-muted/30 text-xs text-muted-foreground">
+                  <div
+                    className="
+                      mb-3 flex h-36 items-center justify-center rounded-md
+                      border border-dashed bg-muted/30 text-xs
+                      text-muted-foreground
+                    "
+                  >
                     <ImageIcon className="mr-1.5 size-4" />
                     등록 이미지 없음
                   </div>
@@ -66,6 +90,7 @@ export function QuestionList({
                           ? '객관식'
                           : '서술형'}
                       </Badge>
+                      <Badge variant="secondary">{question.points}점</Badge>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {getAnswerSummary(question)}
@@ -76,13 +101,12 @@ export function QuestionList({
                 <div className="mt-3 flex flex-wrap gap-1">
                   {question.tags.length === 0 ? (
                     <span className="text-xs text-muted-foreground">
-                      공식 태그 없음
+                      태그 없음
                     </span>
                   ) : (
                     question.tags.map((tag) => (
                       <Badge key={tag.id} variant="secondary">
                         {tag.name}
-                        {!tag.isActive && ' (비활성)'}
                       </Badge>
                     ))
                   )}

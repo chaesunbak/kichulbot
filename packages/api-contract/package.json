@@ -25,6 +25,9 @@
       "questions": [
         "dist/questions/index.d.ts"
       ],
+      "review": [
+        "dist/review/index.d.ts"
+      ],
       "taxonomy": [
         "dist/taxonomy/index.d.ts"
       ],
@@ -68,6 +71,11 @@
       "types": "./dist/questions/index.d.ts",
       "import": "./dist/questions/index.js",
       "default": "./dist/questions/index.js"
+    },
+    "./review": {
+      "types": "./dist/review/index.d.ts",
+      "import": "./dist/review/index.js",
+      "default": "./dist/review/index.js"
     },
     "./taxonomy": {
       "types": "./dist/taxonomy/index.d.ts",

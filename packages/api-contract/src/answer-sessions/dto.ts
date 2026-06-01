@@ -2,7 +2,7 @@ import * as z from 'zod';
 import {
   AnswerSessionResponseSchema,
   AnswerSessionLogResponseSchema,
-  DraftAnswerResponseSchema,
+  AnswerResponseSchema,
   QuestionResultResponseSchema,
 } from './schema.js';
 
@@ -26,7 +26,7 @@ export type GetAnswerSessionResponse = z.infer<
   typeof GetAnswerSessionResponseSchema
 >;
 
-export const SaveDraftAnswerRequestSchema = z
+export const SaveAnswerRequestSchema = z
   .object({
     answerChoice: z.number().int().min(1).optional(),
     answerText: z.string().trim().min(1).optional(),
@@ -41,17 +41,13 @@ export const SaveDraftAnswerRequestSchema = z
       message: '답안을 입력해주세요.',
     },
   );
-export type SaveDraftAnswerRequest = z.infer<
-  typeof SaveDraftAnswerRequestSchema
->;
+export type SaveAnswerRequest = z.infer<typeof SaveAnswerRequestSchema>;
 
-export const SaveDraftAnswerResponseSchema = z.object({
-  draftAnswer: DraftAnswerResponseSchema,
+export const SaveAnswerResponseSchema = z.object({
+  answer: AnswerResponseSchema,
   result: QuestionResultResponseSchema.nullable(),
 });
-export type SaveDraftAnswerResponse = z.infer<
-  typeof SaveDraftAnswerResponseSchema
->;
+export type SaveAnswerResponse = z.infer<typeof SaveAnswerResponseSchema>;
 
 export const SubmitAnswerSessionResponseSchema =
   StartAnswerSessionResponseSchema;

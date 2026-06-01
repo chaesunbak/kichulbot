@@ -1,8 +1,8 @@
 import {
   GetAnswerSessionResponseSchema,
   ListAnswerSessionLogsResponseSchema,
-  SaveDraftAnswerRequestSchema,
-  SaveDraftAnswerResponseSchema,
+  SaveAnswerRequestSchema,
+  SaveAnswerResponseSchema,
   StartAnswerSessionRequestSchema,
   StartAnswerSessionResponseSchema,
   SubmitAnswerSessionResponseSchema,
@@ -27,11 +27,11 @@ export const answerSessionsRoutes = {
     request: null,
     response: GetAnswerSessionResponseSchema,
   },
-  saveDraftAnswer: {
+  saveAnswer: {
     method: 'PATCH',
     path: '/answer-sessions/:id/answers/:questionId',
-    request: SaveDraftAnswerRequestSchema,
-    response: SaveDraftAnswerResponseSchema,
+    request: SaveAnswerRequestSchema,
+    response: SaveAnswerResponseSchema,
   },
   submitAnswerSession: {
     method: 'POST',

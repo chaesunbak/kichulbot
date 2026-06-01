@@ -4,6 +4,9 @@ import { AdminPaperResponseSchema, PaperResponseSchema } from './schema.js';
 export const CreatePaperRequestSchema = z.object({
   title: z.string().min(1).max(100),
   year: z.number().int().min(1994).max(2100),
+  month: z.number().int().min(1).max(12).nullable().optional(),
+  grade: z.number().int().min(1).max(3).nullable().optional(),
+  round: z.number().int().min(1).nullable().optional(),
   examId: z.string().min(1),
   subjectId: z.string().min(1),
   questionCount: z.number().int().min(1).max(100).optional(),

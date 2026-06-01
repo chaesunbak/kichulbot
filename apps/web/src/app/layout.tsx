@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
+import { OverlayProvider } from 'overlay-kit';
 import './globals.css';
 import { cn } from '@/shared/lib/utils';
 
@@ -31,7 +32,9 @@ export default function RootLayout({
         geistHeading.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <OverlayProvider>{children}</OverlayProvider>
+      </body>
     </html>
   );
 }

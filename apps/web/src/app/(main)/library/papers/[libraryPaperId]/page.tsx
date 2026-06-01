@@ -9,7 +9,8 @@ import {
 } from '@kichulbot/ui/components/card';
 import { LibraryPaperActions } from '@/features/library/components/library-paper-actions';
 import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
-import { getLibrary, getSolveSessionLogs } from '@/features/learning/api';
+import { getLibrary } from '@/features/library/api/server';
+import { getSolveSessionLogs } from '@/features/learning/api/server';
 import type { LibraryFolder } from '@/features/learning/types';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
 

@@ -6,7 +6,7 @@ import { GuestButton } from '@/features/auth/components/guest-button';
 
 export default async function Home() {
   const user = await getUser();
-  if (user) redirect('/papers');
+  if (user) redirect('/resources');
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-10 px-4">

@@ -4,7 +4,7 @@ import {
   BookshelfSection,
 } from '@/features/library/components/bookshelf-section';
 import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
-import { getPapers, type Paper } from '@/features/papers/api';
+import { getPapers, type Paper } from '@/features/papers/api/server';
 
 export default async function PapersPage() {
   let papers: Paper[];
@@ -15,7 +15,7 @@ export default async function PapersPage() {
       <div className="mx-auto max-w-4xl px-4 py-10">
         <h1 className="text-2xl font-semibold text-zinc-900">자료실</h1>
         <p className="mt-3 text-sm text-destructive">
-          문제지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          학습자료를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
         </p>
       </div>
     );
@@ -28,7 +28,7 @@ export default async function PapersPage() {
 
       {papers.length === 0 ? (
         <p className="mt-3 text-sm text-zinc-500">
-          아직 등록된 문제지가 없습니다.
+          아직 등록된 학습자료가 없습니다.
         </p>
       ) : (
         <BookshelfSection
@@ -52,7 +52,7 @@ export default async function PapersPage() {
                       {gradeGroup.papers.map((paper) => (
                         <li key={paper.id} className="min-w-0 px-1 pb-5">
                           <Link
-                            href={`/papers/${paper.id}`}
+                            href={`/resources/${paper.id}`}
                             className="block min-w-0 rounded-lg"
                             aria-label={`${paper.title} 자세히 보기`}
                           >

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { PaperActions } from '@/features/papers/components/paper-actions';
 import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
-import { getPaper, type Paper } from '@/features/papers/api';
+import { getPaper, type Paper } from '@/features/papers/api/server';
 
 export default async function PaperPage({
   params,

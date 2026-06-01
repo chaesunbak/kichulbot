@@ -10,7 +10,7 @@ import { WrongReviewCard } from '@/features/learning/components/wrong-review-car
 import {
   getSolveSessionLogs,
   getTodayWrongQuestions,
-} from '@/features/learning/api';
+} from '@/features/learning/api/server';
 
 export default async function RecapPage() {
   const [logs, wrongQuestionSet] = await Promise.all([

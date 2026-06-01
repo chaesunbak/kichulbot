@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Mail } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import { Card, CardContent } from '@kichulbot/ui/components/card';
+import { DeleteAccountButton } from '@/features/auth/components/delete-account-button';
 import { LogoutButton } from '@/features/auth/components/logout-button';
 import { getUser } from '@/features/auth/server';
 
@@ -11,8 +12,7 @@ export default async function MyPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
-      <p className="text-sm font-medium text-primary">마이페이지</p>
-      <h1 className="mt-1 text-2xl font-semibold text-zinc-900">내 정보</h1>
+      <h1 className="mt-1 text-2xl font-semibold text-gray-800">마이 페이지</h1>
 
       <Card className="mt-6 max-w-xl">
         <CardContent>
@@ -31,6 +31,7 @@ export default async function MyPage() {
               </Button>
             )}
             <LogoutButton />
+            <DeleteAccountButton />
           </div>
         </CardContent>
       </Card>

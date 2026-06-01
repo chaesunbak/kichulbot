@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/features/auth/store';
+import { anonymousLoginApi } from '@/features/auth/api/client';
 
 export default function GuestPage() {
   const router = useRouter();
@@ -13,15 +14,10 @@ export default function GuestPage() {
     if (started.current) return;
     started.current = true;
 
-    fetch('/api/auth/anonymous', { method: 'POST' })
-      .then(async (res) => {
-        if (res.ok) {
-          const data = await res.json();
-          setAuth(data.user);
-          router.replace('/home');
-        } else {
-          router.replace('/login');
-        }
+    anonymousLoginApi()
+      .then((data) => {
+        setAuth(data.user);
+        router.replace('/home');
       })
       .catch(() => router.replace('/login'));
   }, [router, setAuth]);

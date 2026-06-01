@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { PaperActions } from '@/components/paper-actions';
+import { PaperCoverCard } from '@/components/paper-cover-card';
+import { formatPaperSession } from '@/lib/paper-labels';
 import { getPaper, type Paper } from '@/lib/papers';
 
 export default async function PaperPage({
@@ -17,6 +19,9 @@ export default async function PaperPage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-8">
+        <PaperCoverCard paper={paper} />
+      </div>
       <p className="text-sm text-zinc-500">
         {paper.exam.name} · {paper.subject.name}
       </p>
@@ -24,7 +29,7 @@ export default async function PaperPage({
         {paper.title}
       </h1>
       <p className="mt-3 text-sm text-zinc-500">
-        {paper.year}학년도 · {paper.questionCount}문항
+        {formatPaperSession(paper)} · {paper.questionCount}문항
       </p>
       <PaperActions paperId={paper.id} initialIsInLibrary={paper.isInLibrary} />
     </div>

@@ -8,7 +8,9 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/card';
 import { LibraryPaperActions } from '@/components/library-paper-actions';
+import { PaperCoverCard } from '@/components/paper-cover-card';
 import { getAnswerSessionLogs, getBookshelves } from '@/lib/learning';
+import { formatPaperSession } from '@/lib/paper-labels';
 
 export default async function LibraryPaperPage({
   params,
@@ -31,12 +33,15 @@ export default async function LibraryPaperPage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-8">
+        <PaperCoverCard paper={paper} />
+      </div>
       <p className="text-sm text-zinc-500">{bookshelf.name}</p>
       <h1 className="mt-2 text-2xl font-semibold text-zinc-900">
         {paper.title}
       </h1>
       <p className="mt-3 text-sm text-zinc-500">
-        {paper.exam.name} · {paper.subject.name} · {paper.year}학년도 ·{' '}
+        {paper.exam.name} · {paper.subject.name} · {formatPaperSession(paper)} ·{' '}
         {paper.questionCount}문항
       </p>
 
@@ -60,8 +65,9 @@ export default async function LibraryPaperPage({
                         : '한번에 풀기'}
                     </CardTitle>
                     <CardDescription>
-                      {log.correctCount}/{log.answeredCount} 정답 ·{' '}
-                      {formatDuration(log.totalSpentMilliseconds)} ·{' '}
+                      {log.result.score}점 · {log.result.correctCount}/
+                      {log.result.totalCount} 정답 ·{' '}
+                      {formatDuration(log.result.totalSpentMilliseconds)} ·{' '}
                       {formatDate(log.submittedAt)}
                     </CardDescription>
                     <Button
@@ -70,7 +76,7 @@ export default async function LibraryPaperPage({
                       size="sm"
                       className="w-fit"
                     >
-                      <Link href={`/solve/${log.id}`}>결과 보기</Link>
+                      <Link href={`/results/${log.id}`}>결과 보기</Link>
                     </Button>
                   </CardHeader>
                 </Card>

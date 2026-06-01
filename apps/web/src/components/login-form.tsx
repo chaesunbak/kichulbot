@@ -31,7 +31,7 @@ export default function LoginForm() {
     setServerError(null);
     try {
       const data = await loginApi(values.email, values.password);
-      setAuth(data.accessToken, data.user);
+      setAuth(data.user);
       router.push('/home');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {

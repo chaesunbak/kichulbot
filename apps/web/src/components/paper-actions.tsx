@@ -8,7 +8,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from '@kichulbot/ui/components/native-select';
-import type { Bookshelf } from '@/lib/learning';
+import type { Bookshelf } from '@/lib/learning.types';
 
 export function PaperActions({
   paperId,

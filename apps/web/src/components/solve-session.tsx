@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@kichulbot/ui/components/button';
 import { Textarea } from '@kichulbot/ui/components/textarea';
+import { Clock, FileText } from 'lucide-react';
 import type {
   AnswerSession,
-  DraftAnswer,
+  Answer,
   QuestionResult,
-} from '@/lib/learning';
+} from '@/lib/learning.types';
 import { cn } from '@/lib/utils';
 import { QuestionBookmarkButton } from '@/components/question-bookmark-button';
 
@@ -20,29 +21,42 @@ export function SolveSession({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerText, setAnswerText] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [activeElapsed, setActiveElapsed] = useState(0);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const elapsedMilliseconds = useRef(0);
   const question = session.paper.questions[currentIndex];
-  const draft = session.draftAnswers.find(
+  const answer = session.answers.find(
     (answer) => answer.questionId === question?.id,
   );
 
   const answeredIds = useMemo(
     () =>
       new Set(
-        session.draftAnswers
+        session.answers
           .filter(
             (answer) =>
               answer.answerChoice !== null || answer.answerText !== null,
           )
           .map((answer) => answer.questionId),
       ),
-    [session.draftAnswers],
+    [session.answers],
+  );
+  const totalElapsedMilliseconds = useMemo(
+    () =>
+      session.answers.reduce(
+        (total, answer) => total + answer.spentMilliseconds,
+        0,
+      ) + activeElapsed,
+    [activeElapsed, session.answers],
   );
 
   useEffect(() => {
-    if (session.submittedAt) return;
     const timer = window.setInterval(() => {
-      elapsedMilliseconds.current += 1000;
+      setCurrentTime(new Date());
+      if (!session.submittedAt) {
+        elapsedMilliseconds.current += 1000;
+        setActiveElapsed((current) => current + 1000);
+      }
     }, 1000);
     return () => window.clearInterval(timer);
   }, [session.submittedAt]);
@@ -65,7 +79,7 @@ export function SolveSession({
     );
     if (!response.ok) throw new Error('저장 실패');
     const body = (await response.json()) as {
-      draftAnswer: DraftAnswer;
+      answer: Answer;
       result: QuestionResult | null;
     };
     setSession((current) => ({
@@ -78,11 +92,9 @@ export function SolveSession({
             : item,
         ),
       },
-      draftAnswers: [
-        ...current.draftAnswers.filter(
-          (answer) => answer.questionId !== questionId,
-        ),
-        body.draftAnswer,
+      answers: [
+        ...current.answers.filter((answer) => answer.questionId !== questionId),
+        body.answer,
       ],
     }));
   };
@@ -90,6 +102,7 @@ export function SolveSession({
   const takeElapsed = () => {
     const elapsed = elapsedMilliseconds.current;
     elapsedMilliseconds.current = 0;
+    setActiveElapsed(0);
     return elapsed;
   };
 
@@ -146,130 +159,194 @@ export function SolveSession({
   };
 
   if (!question) {
-    return <p className="text-sm text-zinc-500">등록된 문항이 없습니다.</p>;
+    return (
+      <div className="grid h-full place-items-center text-sm text-zinc-500">
+        등록된 문항이 없습니다.
+      </div>
+    );
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
-      <section className="rounded-xl border border-zinc-200 bg-white p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold">{question.number}번</h2>
-            {question.recommendedTimeSeconds && (
-              <p className="mt-1 text-xs text-zinc-500">
-                권장 풀이시간{' '}
-                {formatDuration(question.recommendedTimeSeconds * 1000)}
-              </p>
+    <div className="flex h-full flex-col overflow-hidden">
+      <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-zinc-200 bg-white px-4 md:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-zinc-900 text-white">
+            <FileText className="size-4" aria-hidden />
+          </div>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-semibold text-zinc-950 md:text-lg">
+              {session.paper.title}
+            </h1>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2 py-2 text-sm text-zinc-600 md:gap-2 md:px-3">
+            <Clock className="size-4" aria-hidden />
+            <span>{formatClock(currentTime)}</span>
+          </div>
+          <div className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-white tabular-nums">
+            {formatDuration(totalElapsedMilliseconds)}
+          </div>
+          {session.submittedAt ? (
+            <span className="hidden rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 sm:inline-flex">
+              종료 완료
+            </span>
+          ) : (
+            <Button type="button" variant="destructive" onClick={finish}>
+              시험 종료
+            </Button>
+          )}
+        </div>
+      </header>
+
+      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-3 md:grid-cols-[1fr_232px] md:gap-4 md:p-4">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white">
+          <div className="flex shrink-0 items-center justify-between gap-4 border-b border-zinc-100 px-4 py-3">
+            <div>
+              <h2 className="text-lg font-semibold">{question.number}번</h2>
+              {question.recommendedTimeSeconds && (
+                <p className="mt-1 text-xs text-zinc-500">
+                  권장 풀이시간{' '}
+                  {formatDuration(question.recommendedTimeSeconds * 1000)}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <QuestionBookmarkButton questionId={question.id} />
+              <span className="text-sm text-zinc-500">
+                {currentIndex + 1} / {session.paper.questions.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 bg-zinc-50 p-3">
+            {question.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={question.imageUrl}
+                alt={`${question.number}번 문제`}
+                className="h-full w-full rounded-md object-contain"
+              />
+            ) : (
+              <div className="grid h-full place-items-center rounded-md bg-white px-4 text-center text-sm text-zinc-500">
+                문제 이미지가 없습니다.
+              </div>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <QuestionBookmarkButton questionId={question.id} />
-            <span className="text-sm text-zinc-500">
-              {currentIndex + 1} / {session.paper.questions.length}
-            </span>
-          </div>
-        </div>
 
-        {question.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={question.imageUrl}
-            alt={`${question.number}번 문제`}
-            className="mt-5 max-h-[560px] w-full rounded-lg object-contain"
-          />
-        ) : (
-          <p className="mt-5 rounded-lg bg-zinc-50 px-4 py-12 text-center text-sm text-zinc-500">
-            문제 이미지가 없습니다.
-          </p>
-        )}
-
-        {question.type === 'MULTIPLE_CHOICE' ? (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {Array.from({ length: question.choiceCount ?? 0 }, (_, index) => {
-              const choice = index + 1;
-              return (
-                <Button
-                  key={choice}
-                  type="button"
-                  variant={
-                    draft?.answerChoice === choice ? 'default' : 'outline'
-                  }
+          <div className="shrink-0 border-t border-zinc-100 px-4 py-3">
+            {question.type === 'MULTIPLE_CHOICE' ? (
+              <div className="flex flex-wrap gap-2">
+                {Array.from(
+                  { length: question.choiceCount ?? 0 },
+                  (_, index) => {
+                    const choice = index + 1;
+                    return (
+                      <Button
+                        key={choice}
+                        type="button"
+                        variant={
+                          answer?.answerChoice === choice
+                            ? 'default'
+                            : 'outline'
+                        }
+                        disabled={!!session.submittedAt}
+                        onClick={() => saveAnswer({ answerChoice: choice })}
+                      >
+                        {choice}
+                      </Button>
+                    );
+                  },
+                )}
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                <Textarea
+                  className="min-h-20"
+                  value={answerText || answer?.answerText || ''}
                   disabled={!!session.submittedAt}
-                  onClick={() => saveAnswer({ answerChoice: choice })}
+                  placeholder="답안을 입력해주세요."
+                  onChange={(event) => setAnswerText(event.target.value)}
+                />
+                <Button
+                  className="justify-self-end"
+                  disabled={!!session.submittedAt}
+                  onClick={() =>
+                    saveAnswer({
+                      answerText: answerText || answer?.answerText || '',
+                    })
+                  }
                 >
-                  {choice}
+                  임시 저장
                 </Button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="mt-5 grid gap-2">
-            <Textarea
-              value={answerText || draft?.answerText || ''}
-              disabled={!!session.submittedAt}
-              placeholder="답안을 입력해주세요."
-              onChange={(event) => setAnswerText(event.target.value)}
-            />
-            <Button
-              className="justify-self-end"
-              disabled={!!session.submittedAt}
-              onClick={() =>
-                saveAnswer({
-                  answerText: answerText || draft?.answerText || '',
-                })
-              }
-            >
-              임시 저장
-            </Button>
-          </div>
-        )}
+              </div>
+            )}
 
-        {question.result && <QuestionResultPanel result={question.result} />}
-        {draft && (
-          <p className="mt-3 text-xs text-zinc-500">
-            누적 풀이시간 {formatDuration(draft.spentMilliseconds)}
-          </p>
-        )}
-        {message && <p className="mt-3 text-xs text-zinc-500">{message}</p>}
-      </section>
-
-      <aside className="rounded-xl border border-zinc-200 bg-white p-4">
-        <p className="text-xs text-zinc-500">
-          {session.mode === 'ONE_BY_ONE' ? '한 문제씩 풀기' : '한번에 풀기'}
-        </p>
-        <h2 className="mt-1 text-sm font-semibold">문제 번호</h2>
-        <div className="mt-3 grid grid-cols-5 gap-2">
-          {session.paper.questions.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              className={cn(
-                'h-8 rounded-md border text-sm',
-                currentIndex === index &&
-                  'border-zinc-900 bg-zinc-900 text-white',
-                currentIndex !== index &&
-                  answeredIds.has(item.id) &&
-                  'border-blue-300 bg-blue-50 text-blue-700',
+            {question.result && (
+              <QuestionResultPanel result={question.result} />
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
+              {answer && (
+                <span>
+                  누적 풀이시간 {formatDuration(answer.spentMilliseconds)}
+                </span>
               )}
-              onClick={() => void moveTo(index)}
-            >
-              {item.number}
-            </button>
-          ))}
-        </div>
-        {session.submittedAt ? (
-          <p className="mt-5 text-center text-xs text-zinc-500">종료 완료</p>
-        ) : (
-          <Button
-            type="button"
-            variant="destructive"
-            className="mt-5 w-full"
-            onClick={finish}
-          >
-            시험 종료
-          </Button>
-        )}
-      </aside>
+              {message && <span>{message}</span>}
+            </div>
+          </div>
+        </section>
+
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white p-4">
+          <p className="text-xs text-zinc-500">
+            {session.mode === 'ONE_BY_ONE' ? '한 문제씩 풀기' : '한번에 풀기'}
+          </p>
+          <h2 className="mt-1 text-sm font-semibold">문제 번호</h2>
+          {session.result && <SessionResultPanel result={session.result} />}
+          <div className="mt-3 grid shrink-0 grid-cols-5 gap-2">
+            {session.paper.questions.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                className={cn(
+                  'h-8 rounded-md border text-sm',
+                  currentIndex === index &&
+                    'border-zinc-900 bg-zinc-900 text-white',
+                  currentIndex !== index &&
+                    item.result?.isCorrect === false &&
+                    'border-red-300 bg-red-50 text-red-700',
+                  currentIndex !== index &&
+                    item.result?.isCorrect !== false &&
+                    answeredIds.has(item.id) &&
+                    'border-blue-300 bg-blue-50 text-blue-700',
+                )}
+                onClick={() => void moveTo(index)}
+              >
+                {item.number}
+              </button>
+            ))}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function SessionResultPanel({
+  result,
+}: {
+  result: NonNullable<AnswerSession['result']>;
+}) {
+  return (
+    <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-xs text-zinc-600">
+      <p className="text-2xl font-bold text-zinc-900">{result.score}점</p>
+      <p className="mt-2">
+        정답 {result.correctCount} · 오답 {result.wrongCount}
+      </p>
+      {result.answeredCount < result.totalCount && (
+        <p className="mt-1">
+          미응답 {result.totalCount - result.answeredCount}문항 포함
+        </p>
+      )}
     </div>
   );
 }
@@ -300,4 +377,11 @@ function QuestionResultPanel({ result }: { result: QuestionResult }) {
 function formatDuration(milliseconds: number) {
   const seconds = Math.round(milliseconds / 1000);
   return `${Math.floor(seconds / 60)}분 ${seconds % 60}초`;
+}
+
+function formatClock(date: Date) {
+  return date.toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

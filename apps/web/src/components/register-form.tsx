@@ -39,7 +39,7 @@ export default function RegisterForm({ isGuestConvert }: Props) {
         values.password,
         values.nickname,
       );
-      setAuth(data.accessToken, data.user);
+      setAuth(data.user);
       router.push('/home');
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {

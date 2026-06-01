@@ -25,9 +25,6 @@ export default async function HomePage() {
         <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
           {user?.nickname ?? '학습자'}님, 무엇을 공부할까요?
         </h1>
-        <p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/80">
-          기출 자료를 찾아 풀고, 내책장과 복습 기록에서 학습 흐름을 이어가세요.
-        </p>
         <Link
           href="/papers"
           className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:bg-white/90"
@@ -79,7 +76,8 @@ export default async function HomePage() {
                   {recentLog.paper.title}
                 </p>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {recentLog.correctCount}/{recentLog.answeredCount}문항 정답
+                  {recentLog.result.score}점 · {recentLog.result.correctCount}/
+                  {recentLog.result.totalCount}문항 정답
                 </p>
               </>
             ) : (

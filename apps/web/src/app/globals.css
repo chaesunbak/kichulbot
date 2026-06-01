@@ -1,1 +1,7 @@
-@import "@kichulbot/ui/globals.css";
+@import '@kichulbot/ui/globals.css';
+
+@layer base {
+  a[href]:not([aria-disabled='true']) {
+    @apply rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1;
+  }
+}

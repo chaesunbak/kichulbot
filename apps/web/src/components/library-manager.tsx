@@ -5,16 +5,15 @@ import Link from 'next/link';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@kichulbot/ui/components/button';
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@kichulbot/ui/components/card';
-import {
   NativeSelect,
   NativeSelectOption,
 } from '@kichulbot/ui/components/native-select';
-import type { Bookshelf } from '@/lib/learning';
+import {
+  BookshelfGrid,
+  BookshelfSection,
+} from '@/components/bookshelf-section';
+import { PaperCoverCard } from '@/components/paper-cover-card';
+import type { Bookshelf } from '@/lib/learning.types';
 
 export function LibraryManager({
   initialBookshelves,
@@ -80,7 +79,7 @@ export function LibraryManager({
 
   return (
     <>
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <div className="mt-7 flex flex-wrap items-center gap-2">
         {bookshelves.length > 0 && (
           <NativeSelect
             className="min-w-52"
@@ -128,34 +127,35 @@ export function LibraryManager({
       </div>
       {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
       {!selected ? (
-        <p className="mt-6 text-sm text-zinc-500">
+        <p className="mt-6 rounded-2xl border border-dashed border-zinc-300 px-4 py-8 text-center text-sm ">
           책장이 없습니다. 새 책장을 만들어 문제지를 정리해 보세요.
         </p>
       ) : selected.papers.length === 0 ? (
-        <p className="mt-6 text-sm text-zinc-500">
-          이 책장에 추가한 문제지가 없습니다.
-        </p>
+        <section className="mt-5 rounded-3xl border px-4 py-10 text-center ">
+          <h2 className="mt-3 font-semibold text-zinc-800">{selected.name}</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            이 책장에 추가한 문제지가 없습니다.
+          </p>
+        </section>
       ) : (
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-          {selected.papers.map(({ paper }) => (
-            <li key={paper.id}>
-              <Link
-                href={`/library/${selected.id}/papers/${paper.id}`}
-                className="block"
-              >
-                <Card className="transition hover:bg-zinc-50">
-                  <CardHeader>
-                    <CardTitle>{paper.title}</CardTitle>
-                    <CardDescription>
-                      {paper.exam.name} · {paper.subject.name} · {paper.year}
-                      학년도 · {paper.questionCount}문항
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <BookshelfSection
+          title={selected.name}
+          countLabel={`${selected.papers.length}권`}
+        >
+          <BookshelfGrid>
+            {selected.papers.map(({ paper }) => (
+              <li key={paper.id} className="min-w-0 px-1 pb-5">
+                <Link
+                  href={`/library/${selected.id}/papers/${paper.id}`}
+                  className="block min-w-0 rounded-lg"
+                  aria-label={`${paper.title} 자세히 보기`}
+                >
+                  <PaperCoverCard paper={paper} />
+                </Link>
+              </li>
+            ))}
+          </BookshelfGrid>
+        </BookshelfSection>
       )}
     </>
   );

@@ -17,7 +17,7 @@ export function GuestButton() {
     setError(null);
     try {
       const data = await anonymousLoginApi();
-      setAuth(data.accessToken, data.user);
+      setAuth(data.user);
       router.push('/home');
     } catch {
       setError('게스트 로그인에 실패했습니다. 다시 시도해주세요.');
@@ -33,7 +33,7 @@ export function GuestButton() {
         disabled={loading}
         onClick={handleClick}
       >
-        {loading ? '시작 중...' : '게스트로 시작하기'}
+        {loading ? '시작 중...' : '시작하기'}
       </Button>
       {error && (
         <p role="alert" className="mt-2 text-sm text-destructive">

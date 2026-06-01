@@ -5,7 +5,7 @@ export function proxyErrorResponse(error: unknown) {
   if (error instanceof ApiError) {
     return NextResponse.json(
       { message: error.message },
-      { status: error.status },
+      { status: error.status === 0 ? 502 : error.status },
     );
   }
   return NextResponse.json(

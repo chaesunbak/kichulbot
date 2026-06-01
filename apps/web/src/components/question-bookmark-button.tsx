@@ -7,7 +7,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from '@kichulbot/ui/components/native-select';
-import type { BookmarkListSummary } from '@/lib/learning';
+import type { BookmarkListSummary } from '@/lib/learning.types';
 
 export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +50,7 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
         북마크
       </Button>
       {isOpen && (
-        <div className="absolute right-0 top-11 z-10 grid w-64 gap-3 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg">
+        <div className="absolute right-0 top-11 z-10 grid w-64 gap-3 rounded-lg border border-zinc-200 bg-white p-3 ">
           {lists?.length ? (
             <>
               <NativeSelect

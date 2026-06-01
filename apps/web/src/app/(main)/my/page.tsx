@@ -16,9 +16,6 @@ export default async function MyPage() {
 
       <Card className="mt-6 max-w-xl">
         <CardContent>
-          <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <UserRound className="size-6" />
-          </div>
           <p className="mt-4 text-lg font-semibold text-zinc-900">
             {user.nickname ?? '게스트'}
           </p>

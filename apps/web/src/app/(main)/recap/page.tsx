@@ -6,18 +6,22 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { getAnswerSessionLogs } from '@/lib/learning';
+import { WrongReviewCard } from '@/components/wrong-review-card';
+import { getAnswerSessionLogs, getTodayWrongQuestions } from '@/lib/learning';
 
 export default async function RecapPage() {
-  const logs = await getAnswerSessionLogs();
+  const [logs, wrongQuestionSet] = await Promise.all([
+    getAnswerSessionLogs(),
+    getTodayWrongQuestions(),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
-      <p className="text-sm font-medium text-primary">복습</p>
-      <h1 className="mt-1 text-2xl font-semibold text-zinc-900">풀이 기록</h1>
-      <p className="mt-2 text-sm text-zinc-500">
-        풀었던 자료와 결과를 다시 확인해 보세요.
-      </p>
+      <h1 className="mt-1 text-2xl font-semibold text-gray-800">복습</h1>
+      {wrongQuestionSet && (
+        <WrongReviewCard initialQuestionSet={wrongQuestionSet} />
+      )}
+
       {logs.length === 0 ? (
         <p className="mt-6 text-sm text-zinc-500">종료한 풀이가 없습니다.</p>
       ) : (
@@ -31,8 +35,9 @@ export default async function RecapPage() {
                     {log.mode === 'ONE_BY_ONE'
                       ? '한 문제씩 풀기'
                       : '한번에 풀기'}{' '}
-                    · {log.correctCount}/{log.answeredCount} 정답 ·{' '}
-                    {formatDuration(log.totalSpentMilliseconds)}
+                    · {log.result.score}점 · {log.result.correctCount}/
+                    {log.result.totalCount} 정답 ·{' '}
+                    {formatDuration(log.result.totalSpentMilliseconds)}
                   </CardDescription>
                   <Button
                     asChild
@@ -40,7 +45,7 @@ export default async function RecapPage() {
                     size="sm"
                     className="mt-3 w-fit"
                   >
-                    <Link href={`/solve/${log.id}`}>결과 보기</Link>
+                    <Link href={`/results/${log.id}`}>결과 보기</Link>
                   </Button>
                 </CardHeader>
               </Card>

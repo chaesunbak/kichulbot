@@ -1,29 +1,50 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface AuthUser {
   id: string;
   email: string | null;
   nickname: string | null;
-  authType: "ANONYMOUS" | "EMAIL";
-  role: "USER" | "ADMIN";
+  authType: 'ANONYMOUS' | 'EMAIL';
+  role: 'USER' | 'ADMIN';
 }
 
 interface AuthStore {
-  token: string | null;
   user: AuthUser | null;
-  setAuth: (token: string, user: AuthUser) => void;
+  setAuth: (user: AuthUser) => void;
   clearAuth: () => void;
+}
+
+interface PersistedAuthState {
+  user?: AuthUser | null;
 }
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
-      token: null,
       user: null,
-      setAuth: (token, user) => set({ token, user }),
-      clearAuth: () => set({ token: null, user: null }),
+      setAuth: (user) => set({ user }),
+      clearAuth: () => set({ user: null }),
     }),
-    { name: "kichulbot-auth" },
+    {
+      name: 'kichulbot-auth',
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as PersistedAuthState | undefined;
+        return { user: state?.user ?? null };
+      },
+      merge: (persistedState, currentState) => {
+        const state = persistedState as PersistedAuthState | undefined;
+        return { ...currentState, user: state?.user ?? null };
+      },
+      partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          state.setAuth(state.user);
+        } else {
+          state?.clearAuth();
+        }
+      },
+    },
   ),
 );

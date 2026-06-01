@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { UserRound } from 'lucide-react';
+
 import { DesktopNavigation } from '@/components/main-navigation';
 import type { AuthUser } from '@/lib/auth';
 
@@ -19,9 +19,6 @@ export default function MainHeader({ user }: Props) {
           href="/my"
           className="flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
         >
-          <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <UserRound className="size-4" />
-          </span>
           <span className="hidden lg:inline">
             {user.nickname ?? user.email ?? '게스트'}
           </span>

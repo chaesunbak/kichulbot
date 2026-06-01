@@ -21,7 +21,7 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   { href: '/home', label: '홈', icon: House },
   { href: '/papers', label: '자료실', icon: BookOpen },
-  { href: '/library', label: '내책장', icon: LibraryBig },
+  { href: '/library', label: '내서재', icon: LibraryBig },
   { href: '/recap', label: '복습', icon: RotateCcw },
   { href: '/my', label: '마이페이지', icon: UserRound },
 ] as const;
@@ -74,7 +74,7 @@ export function MobileBottomNavigation() {
               href={href}
               className={cn(
                 'flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium transition-colors',
-                isActive ? 'text-primary' : 'text-zinc-400',
+                isActive ? 'text-zinc-500' : 'text-zinc-400',
               )}
               aria-current={isActive ? 'page' : undefined}
             >

@@ -17,7 +17,7 @@ export default function GuestPage() {
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
-          setAuth(data.accessToken, data.user);
+          setAuth(data.user);
           router.replace('/home');
         } else {
           router.replace('/login');
@@ -27,8 +27,6 @@ export default function GuestPage() {
   }, [router, setAuth]);
 
   return (
-    <div className="flex min-h-full items-center justify-center">
-      <p className="text-sm text-zinc-500">잠시만 기다려주세요...</p>
-    </div>
+    <p className="text-center text-sm text-zinc-500">잠시만 기다려주세요...</p>
   );
 }

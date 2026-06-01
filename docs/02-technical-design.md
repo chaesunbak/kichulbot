@@ -52,6 +52,8 @@ MVP는 PostgreSQL + Prisma로 시작한다.
 
 배포 환경에서는 Render Postgres를 사용한다. 로컬 개발에서는 Docker Compose로 PostgreSQL을 실행한다.
 
+풀이 이력과 오답 복습 확장을 위한 목표 스키마는 [QuestionSet 기반 풀이 도메인 재설계](./04-solving-domain-redesign.md)를 기준으로 한다. 현재 구현의 `Paper`, `Question`, `BookmarkList`, `AnswerSession`, `Answer`는 단계별 이관 전의 MVP 모델이며, 신규 복습 기능은 목표 스키마로 전환한 뒤 확장한다.
+
 ### File Storage
 
 문제 이미지는 DB에 저장하지 않고 오브젝트 스토리지에 저장한다.
@@ -219,6 +221,17 @@ MVP에서는 게스트 시작과 이메일/비밀번호 기반 인증을 함께 
 - 로그인 사용자 정보 조회
 - access token은 `Authorization: Bearer {accessToken}` 헤더로 전달
 
+### 클라이언트별 토큰 경계
+
+NestJS API는 리소스 요청에서 `Authorization: Bearer {accessToken}`만 검증한다.
+
+- Web Browser: Next BFF가 NestJS API의 access token을 `httpOnly`, `Secure`, `SameSite=Lax` 쿠키에 저장한다. 브라우저 JavaScript에는 JWT를 반환하거나 `localStorage`에 저장하지 않는다.
+- Web BFF: 쿠키의 access token을 NestJS API 요청의 Bearer 헤더로 전달한다. 쿠키 기반 쓰기 요청은 same-origin `Origin` 헤더를 검증한다.
+- Native App: NestJS API 로그인 API를 직접 호출해 받은 access token을 iOS Keychain 또는 Android Keystore 기반 secure storage에 저장하고 Bearer 헤더로 전달한다.
+- Admin Web: 현재는 NestJS API를 직접 호출하는 별도 관리 도구이므로 기존 Bearer token 흐름을 유지한다.
+
+현재 단계에서는 refresh token을 도입하지 않는다. access token이 만료되면 다시 로그인한다. refresh token rotation과 서버 측 세션 폐기 정책은 별도 작업으로 다룬다.
+
 ### 제외
 
 - 소셜 로그인
@@ -270,7 +283,9 @@ StorageService는 다음 메서드를 제공한다.
 
 로컬 개발에서도 가능하면 R2 개발 버킷을 사용한다. 네트워크 없이 개발해야 하는 경우에만 로컬 파일 저장 어댑터를 별도로 둔다.
 
-## 도메인 모델
+## 현재 구현 도메인 모델
+
+이 절은 단계별 이관 전 MVP 구현을 설명한다. 복습 기능 확장을 위한 목표 모델은 [QuestionSet 기반 풀이 도메인 재설계](./04-solving-domain-redesign.md)를 따른다.
 
 ### User
 
@@ -395,23 +410,24 @@ MVP에서는 시대 태그만 사용하지만, 구조는 여러 태그 타입을
 
 `mode` 예시:
 
-- `PAPER`
-- `REVIEW_WRONG`
+- `ONE_BY_ONE`
+- `EXAM`
 
-### DraftAnswer
+### Answer
 
-사용자가 문제지를 푸는 도중 선택한 임시 답안.
+사용자의 문항별 답안. 제출 전에는 수정 가능한 임시 답안으로 사용하고, 제출 후에는 확정된 풀이 기록으로 유지한다.
 
 주요 필드:
 
-- `id`
 - `sessionId`
-- `userId`
 - `questionId`
-- `selectedAnswer`
+- `answerChoice`
+- `answerText`
+- `isCorrect`
+- `spentMilliseconds`
 - `updatedAt`
 
-최종 제출 전 새로고침이나 화면 이동이 발생해도 사용자의 선택 답안을 복원하기 위해 사용한다.
+최종 제출 전 새로고침이나 화면 이동이 발생해도 사용자의 선택 답안을 복원하기 위해 사용한다. 최종 제출 시 `isCorrect`를 계산해 확정하고, 이후에는 수정하지 않는다.
 
 ### WrongQuestionSet
 
@@ -433,21 +449,9 @@ MVP에서는 시대 태그만 사용하지만, 구조는 여러 태그 타입을
 - `setId`
 - `questionId`
 
-### AnswerLog
+## 현재 구현 Prisma Schema 메모
 
-사용자의 문항별 답안 제출 기록.
-
-주요 필드:
-
-- `id`
-- `sessionId`
-- `userId`
-- `questionId`
-- `selectedAnswer`
-- `isCorrect`
-- `answeredAt`
-
-## Prisma Schema 초안
+아래 스키마는 MVP 구현의 전환 전 형태를 설명한다. `QuestionRevision`, `QuestionSet`, `SolveSessionItem`, `DraftResponse`, `QuestionAttempt`를 포함한 목표 스키마와 이관 순서는 [QuestionSet 기반 풀이 도메인 재설계](./04-solving-domain-redesign.md)를 따른다.
 
 ```prisma
 enum UserRole {
@@ -465,8 +469,8 @@ enum TagType {
 }
 
 enum AnswerSessionMode {
-  PAPER
-  REVIEW_WRONG
+  ONE_BY_ONE
+  EXAM
 }
 
 model User {
@@ -481,8 +485,6 @@ model User {
 
   papers        UserPaper[]
   sessions      AnswerSession[]
-  answerLogs    AnswerLog[]
-  draftAnswers  DraftAnswer[]
   wrongSets     WrongQuestionSet[]
 }
 
@@ -534,8 +536,7 @@ model Question {
 
   paper      Paper         @relation(fields: [paperId], references: [id])
   tags       QuestionTag[]
-  answerLogs AnswerLog[]
-  draftAnswers DraftAnswer[]
+  answers Answer[]
   wrongSetItems WrongQuestionSetItem[]
 
   @@unique([paperId, number])
@@ -583,41 +584,22 @@ model AnswerSession {
 
   user       User        @relation(fields: [userId], references: [id])
   paper      Paper       @relation(fields: [paperId], references: [id])
-  answerLogs AnswerLog[]
-  draftAnswers DraftAnswer[]
+  answers Answer[]
 }
 
-model AnswerLog {
-  id             String   @id @default(cuid())
-  sessionId      String
-  userId         String
-  questionId     String
-  selectedAnswer Int
-  isCorrect      Boolean
-  answeredAt     DateTime @default(now())
+model Answer {
+  sessionId         String
+  questionId        String
+  answerChoice      Int?
+  answerText        String?
+  isCorrect         Boolean?
+  spentMilliseconds Int      @default(0)
+  updatedAt         DateTime @updatedAt
 
   session  AnswerSession @relation(fields: [sessionId], references: [id])
-  user     User          @relation(fields: [userId], references: [id])
   question Question      @relation(fields: [questionId], references: [id])
 
-  @@index([userId, questionId])
-  @@index([userId, isCorrect])
-}
-
-model DraftAnswer {
-  id             String   @id @default(cuid())
-  sessionId      String
-  userId         String
-  questionId     String
-  selectedAnswer Int
-  updatedAt      DateTime @updatedAt
-
-  session  AnswerSession @relation(fields: [sessionId], references: [id])
-  user     User          @relation(fields: [userId], references: [id])
-  question Question      @relation(fields: [questionId], references: [id])
-
-  @@unique([sessionId, questionId])
-  @@index([userId])
+  @@id([sessionId, questionId])
 }
 
 model WrongQuestionSet {
@@ -714,6 +696,17 @@ Response:
 
 - `user`
 
+### Web BFF Auth
+
+웹 브라우저는 NestJS API의 인증 응답을 직접 사용하지 않고 Next Route Handler를 호출한다.
+
+- `POST /api/auth/anonymous`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+
+로그인, 회원가입, 게스트 시작 응답은 브라우저에 `user`만 반환한다. access token은 Next BFF의 `httpOnly` 쿠키에만 저장한다. 리소스별 Route Handler는 공통 프록시를 사용하며, 허용된 경로와 HTTP method만 NestJS API로 전달한다.
+
 ### Papers
 
 #### `GET /api/papers`
@@ -790,10 +783,6 @@ Response:
 
 문제지 답안 제출.
 
-Request:
-
-- `answers`: `{ questionId, selectedAnswer }[]`
-
 Response:
 
 - `sessionId`
@@ -803,22 +792,23 @@ Response:
 - `wrongCount`
 - `results`
 
-#### `PUT /api/answer-sessions/:sessionId/draft-answers`
+#### `PATCH /api/answer-sessions/:sessionId/answers/:questionId`
 
-문항별 임시 답안 저장.
+문항별 답안과 풀이 시간 저장. 제출 전에는 동일 문항의 답안을 수정할 수 있다.
 
 Request:
 
-- `questionId`
-- `selectedAnswer`
+- `answerChoice`
+- `answerText`
+- `spentMilliseconds`
 
 Response:
 
-- `draftAnswer`
+- `answer`
 
-#### `GET /api/answer-sessions/:sessionId/draft-answers`
+#### `GET /api/answer-sessions/:sessionId`
 
-풀이 세션의 임시 답안 목록 조회.
+풀이 세션, 문항 목록, 저장된 답안 목록 조회.
 
 Response:
 
@@ -872,7 +862,7 @@ Response:
 
 ## 약점 분석 계산 방식
 
-MVP에서는 `AnswerLog`를 기준으로 태그별 정답률을 계산한다.
+전환 전 MVP에서는 제출이 완료된 `AnswerSession`의 `Answer`를 기준으로 태그별 정답률을 계산한다. 목표 스키마 전환 후에는 append-only `QuestionAttempt`를 기준으로 집계한다.
 
 계산 기준:
 
@@ -886,26 +876,26 @@ MVP에서는 `AnswerLog`를 기준으로 태그별 정답률을 계산한다.
 1. 오답 수가 많은 태그
 2. 정답률이 낮은 태그
 
-## 임시 답안 저장 기준
+## 답안 저장 기준
 
-문항 선택 시 `DraftAnswer`를 upsert한다.
+전환 전 MVP에서는 문항 선택 시 `Answer`를 upsert한다. 목표 스키마 전환 후에는 `DraftResponse`만 upsert하고, 채점 결과는 append-only `QuestionAttempt`로 추가한다.
 
 기준:
 
 - 세션당 문제 1개에 임시 답안 1개만 유지한다.
 - 사용자가 선택지를 바꾸면 기존 임시 답안을 갱신한다.
-- 최종 제출 시 `DraftAnswer`를 기준으로 `AnswerLog`를 생성한다.
-- 최종 제출이 완료된 세션의 임시 답안은 유지해도 되지만, MVP에서는 제출 후 삭제한다.
+- 최종 제출 시 각 `Answer`의 `isCorrect`를 계산해 확정한다.
+- 최종 제출이 완료된 세션의 `Answer`는 풀이 기록으로 유지하고 이후 수정을 막는다.
 
 ## 오답 복습 기준
 
-오답 복습은 매일 갱신되는 오답 문제지로 제공한다.
+오답 복습은 `DAILY_WRONG` 종류의 `QuestionSet`으로 제공한다. 생성 정책과 snapshot 기준은 [QuestionSet 기반 풀이 도메인 재설계](./04-solving-domain-redesign.md)를 따른다.
 
 기준:
 
-- 하루에 사용자별 오답 문제지 1개를 만든다.
-- 오늘의 오답 문제지는 사용자의 답안 기록을 기준으로 생성한다.
-- 기본 포함 대상은 최근 풀이 기준으로 틀린 상태인 문제다.
+- 사용자 timezone 기준으로 하루에 사용자별 오답 문제지 1개를 만든다.
+- 오늘의 오답 문제지는 `QuestionAttempt`를 기준으로 lazy generation한다.
+- 기본 포함 대상은 최근 풀이 기준으로 `INCORRECT` 또는 `OMITTED` 상태인 문제다.
 - 사용자가 오늘의 오답 문제지를 다시 풀어도, 같은 날의 오답 문제지 구성은 유지한다.
 - 다음 날 갱신 시 다시 맞힌 문제는 오답 문제지에서 제외될 수 있다.
 
@@ -983,7 +973,7 @@ services:
     container_name: kichulbot-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_USER: kichulbot
       POSTGRES_PASSWORD: kichulbot

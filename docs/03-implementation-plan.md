@@ -56,7 +56,10 @@ Product Brief, MVP Spec, Technical Design은 방향과 설계를 정하는 문�
 - 이메일 인증 메일은 발송하지 않음
 - Web 로그인/회원가입 화면 구현
 - Web 게스트 시작 버튼 구현
-- Web 인증 상태 저장
+- Web 인증 상태는 사용자 정보만 저장
+- Web BFF가 access token을 `httpOnly` 쿠키에 저장
+- Web 쓰기 요청 same-origin 검증
+- Web BFF 공통 Bearer 프록시 적용
 
 완료 기준:
 
@@ -67,6 +70,7 @@ Product Brief, MVP Spec, Technical Design은 방향과 설계를 정하는 문�
 - 로그인한 사용자 정보를 조회할 수 있다.
 - `ADMIN`만 관리자 API에 접근할 수 있다.
 - access token은 `Authorization` 헤더로 전달된다.
+- 웹 브라우저 JavaScript와 `localStorage`에는 JWT가 노출되지 않는다.
 
 ## Phase 2. 문제지와 태그 기반 데이터
 
@@ -142,7 +146,7 @@ Product Brief, MVP Spec, Technical Design은 방향과 설계를 정하는 문�
 작업:
 
 - AnswerSession 모델 구현
-- DraftAnswer 모델 구현
+- Answer 모델 구현
 - 풀이 세션 시작 API
 - 문제지 풀이 데이터 조회 API
 - 문항별 임시 답안 저장 API
@@ -165,20 +169,39 @@ Product Brief, MVP Spec, Technical Design은 방향과 설계를 정하는 문�
 
 작업:
 
-- AnswerLog 모델 구현
 - 최종 제출 API
 - 정오답 계산
 - 점수 계산
-- 제출 후 DraftAnswer 정리
+- 제출 시 Answer 정오답 확정
 - 결과 화면 구현
 - 틀린 문제 표시
 
 완료 기준:
 
 - 사용자가 20문항 답안을 최종 제출할 수 있다.
-- 사용자별 AnswerLog가 저장된다.
+- 사용자별 제출 Answer가 풀이 세션에 저장된다.
 - 결과 화면에서 점수, 정답 수, 오답 수를 볼 수 있다.
 - 틀린 문제를 확인할 수 있다.
+
+## Phase 6.5. QuestionSet 기반 풀이 도메인 전환
+
+목표: 공식 문제지, 커스텀 목록, 날짜별 오답, 추천 세트를 같은 풀이 세션 구조로 표현하고 변경 가능한 답안과 불변 학습 이력을 분리한다.
+
+작업:
+
+- [QuestionSet 기반 풀이 도메인 재설계](./04-solving-domain-redesign.md)에 따라 풀이 이력 스키마를 단계별 전환
+- `QuestionRevision`, `QuestionSet`, `QuestionSetItem` 도입
+- 공식 문제지를 `OFFICIAL_PAPER` set으로 이관
+- 북마크 목록을 `CUSTOM` set으로 이관
+- `SolveSessionItem` snapshot 도입
+- mutable `DraftResponse`와 append-only `QuestionAttempt` 분리
+
+완료 기준:
+
+- 공식 문제지, 커스텀 목록, 날짜별 오답, 취약유형 추천을 같은 풀이 세션 구조로 표현할 수 있다.
+- 문항 수정 이후에도 과거 풀이 결과를 당시 revision 기준으로 재현할 수 있다.
+- 답안 임시 저장과 채점 완료 이력이 분리된다.
+- 제출 기록별 오답 다시 풀기와 날짜별 오답 세트 구현이 공통 모델을 사용할 수 있다.
 
 ## Phase 7. 태그별 약점 분석
 
@@ -203,8 +226,9 @@ Product Brief, MVP Spec, Technical Design은 방향과 설계를 정하는 문�
 
 작업:
 
-- WrongQuestionSet 모델 구현
-- WrongQuestionSetItem 모델 구현
+- `DAILY_WRONG` 종류의 QuestionSet lazy generation
+- 사용자 timezone 기준 `studyDate` 계산
+- 미응답 `OMITTED` 문항 포함
 - 오늘의 오답 문제지 생성/갱신 API
 - 오늘의 오답 문제지 조회 API
 - 오답 복습 세션 시작 API
@@ -214,6 +238,7 @@ Product Brief, MVP Spec, Technical Design은 방향과 설계를 정하는 문�
 
 - 사용자별 오늘의 오답 문제지가 생성된다.
 - 최근 풀이 기준으로 틀린 문제가 오답 문제지에 포함된다.
+- 미응답 문항도 오답 문제지에 포함된다.
 - 같은 날에는 오답 문제지 구성이 유지된다.
 - 다음 날 갱신 시 다시 맞힌 문제는 제외될 수 있다.
 - 사용자가 오답 문제지를 다시 풀 수 있다.

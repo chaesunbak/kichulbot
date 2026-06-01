@@ -3,7 +3,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-import { zodNamespaceImportRule } from './rules.js';
+import { importSortRule, zodNamespaceImportRule } from './rules.js';
 
 export function nestConfig({ tsconfigRootDir }) {
   return tseslint.config(
@@ -26,6 +26,7 @@ export function nestConfig({ tsconfigRootDir }) {
         },
       },
     },
+    importSortRule,
     {
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',

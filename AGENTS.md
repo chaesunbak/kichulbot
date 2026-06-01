@@ -75,6 +75,15 @@ apps/api/src/
 
 use `gh` to read and write issues and RRs.
 
+## Turbo Repo
+
+This project uses Turborepo. Prefer Turbo commands for builds and checks.
+
+```bash
+pnpm turbo run build --filter=@kichulbot/api
+pnpm turbo run check --filter=@kichulbot/api
+```
+
 ## Build
 
 Run frontend builds outside the sandbox because `next/font` fetches Google Fonts.

@@ -7,7 +7,7 @@
 
   - pdfplumber  (MIT)        : 텍스트 좌표 / 중앙 구분선(rects·lines) / 이미지 위치
   - pypdfium2   (Apache-2.0) : 페이지 렌더링 (PDFium, BSD)
-  - Pillow      (HPND)       : 크롭 / PNG 저장
+  - Pillow      (HPND)       : 크롭 / 이미지 저장
 
 원리(동일):
   1) 문항 번호 마커("1.", "2." … 13pt 전용폰트)를 좌표로 자동 검출
@@ -15,19 +15,20 @@
   3) 머리말/꼬리말은 마커 슬랩 밖이라 자동 제외
   4) 단 경계·여백·하단은 실제 콘텐츠 좌표에서 자동 산출
   5) 중앙 세로 구분선을 자동 검출해 크롭에서 제외
-  6) 각 문항 영역을 고해상도로 렌더·크롭하여 PNG 저장 + manifest.json 생성
+  6) 각 문항 영역을 고해상도로 렌더·크롭하여 webp/png/jpeg 저장 + manifest.json 생성
 
 의존성:  pip install pdfplumber pypdfium2 Pillow
 사용법:
   python3 extract_questions.py 한국사영역_문제지.pdf
-  python3 extract_questions.py 한국사영역_문제지.pdf --form even --dpi 300 --out assets
-  python3 extract_questions.py 한국사영역_문제지.pdf --form both
+  python3 extract_questions.py 한국사영역_문제지.pdf --variant even --dpi 300 --out assets
+  python3 extract_questions.py 한국사영역_문제지.pdf --variant both --image-format webp
 """
 
 import argparse
 import json
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 try:
@@ -35,7 +36,8 @@ try:
     import pypdfium2 as pdfium
     from PIL import Image  # noqa: F401  (pypdfium2 to_pil 사용 시 필요)
 except ImportError:
-    sys.exit("의존성 필요:  pip install pdfplumber pypdfium2 Pillow")
+    pdfplumber = None
+    pdfium = None
 
 
 # ── 검출/크롭 파라미터 (대부분 자동 산출되지만 안전장치로 둔다) ──────────────
@@ -49,6 +51,39 @@ GAP = 7            # 같은 단 다음 문항과의 간격(pt) — 다음 문항
 SIDE_PAD = 8       # 단 바깥쪽(좌/우) 여백(pt)
 BOTTOM_PAD = 8     # 단 마지막 문항 아래 여백(pt)
 DIVIDER_GAP = 2.5  # 중앙 구분선 안쪽으로 더 당길 간격(pt) — 구분선이 안 보이게
+
+DEFAULT_LAYOUT = "csat"
+DEFAULT_VARIANT = "odd"
+DEFAULT_IMAGE_FORMAT = "webp"
+DEFAULT_QUALITY = 82
+DEFAULT_OUT_ROOT = "output"
+
+LAYOUT_CHOICES = {
+    "csat": "수능 2단형",
+}
+
+VARIANT_CHOICES = {
+    "odd": "홀수형",
+    "even": "짝수형",
+    "both": "둘 다",
+}
+
+IMAGE_FORMAT_CHOICES = {
+    "webp": "webp (권장: 용량 작음)",
+    "png": "png (무손실, 용량 큼)",
+    "jpeg": "jpeg (호환성 좋음)",
+}
+
+
+@dataclass(frozen=True)
+class ImageOptions:
+    image_format: str = DEFAULT_IMAGE_FORMAT
+    quality: int = DEFAULT_QUALITY
+    webp_lossless: bool = False
+
+    @property
+    def extension(self):
+        return "jpg" if self.image_format == "jpeg" else self.image_format
 
 
 def detect_markers(pdf):
@@ -180,7 +215,51 @@ def slab_has_figure(page, box):
     return False
 
 
-def extract(pdf_path, out_dir, forms, dpi):
+def ensure_dependencies():
+    if pdfplumber is None or pdfium is None:
+        sys.exit("의존성 필요:  pip install pdfplumber pypdfium2 Pillow")
+
+
+def output_dir_for_pdf(pdf_path, out_root):
+    """PDF 파일명 기준으로 겹치지 않는 출력 폴더를 만든다."""
+    stem = Path(pdf_path).stem
+    safe_stem = re.sub(r"[^0-9A-Za-z가-힣._-]+", "_", stem).strip("._-")
+    return Path(out_root) / (safe_stem or "pdf")
+
+
+def save_crop(crop, path, image_options):
+    """크롭 이미지를 선택된 저용량 포맷으로 저장한다."""
+    fmt = image_options.image_format
+    if fmt == "webp":
+        crop.save(
+            path,
+            "WEBP",
+            quality=image_options.quality,
+            method=6,
+            lossless=image_options.webp_lossless,
+        )
+        return
+    if fmt == "jpeg":
+        crop.convert("RGB").save(
+            path,
+            "JPEG",
+            quality=image_options.quality,
+            optimize=True,
+            progressive=True,
+        )
+        return
+    if fmt == "png":
+        crop.save(path, "PNG", optimize=True)
+        return
+    raise ValueError(f"지원하지 않는 이미지 형식: {fmt}")
+
+
+def extract(pdf_path, out_dir, forms, dpi, image_options=None, layout=DEFAULT_LAYOUT):
+    if layout != "csat":
+        raise ValueError(f"지원하지 않는 문제지 형식: {layout}")
+    ensure_dependencies()
+    image_options = image_options or ImageOptions()
+
     plumb = pdfplumber.open(pdf_path)         # 좌표/구분선/이미지 위치
     render_doc = pdfium.PdfDocument(pdf_path)  # 렌더링
     try:
@@ -204,7 +283,15 @@ def extract(pdf_path, out_dir, forms, dpi):
             targets = [wanted[f] for f in forms]
         multi = len(targets) > 1
 
-        manifest = {"source": Path(pdf_path).name, "dpi": dpi, "questions": []}
+        manifest = {
+            "source": Path(pdf_path).name,
+            "layout": layout,
+            "dpi": dpi,
+            "image_format": image_options.image_format,
+            "quality": image_options.quality if image_options.image_format in {"webp", "jpeg"} else None,
+            "webp_lossless": image_options.webp_lossless if image_options.image_format == "webp" else None,
+            "questions": [],
+        }
         total = 0
         for form in targets:
             fmarkers = [m for m in markers if m["form"] == form] if form else markers
@@ -227,9 +314,9 @@ def extract(pdf_path, out_dir, forms, dpi):
                 px = (max(0, px[0]), max(0, px[1]),
                       min(pil.width, px[2]), min(pil.height, px[3]))
                 crop = pil.crop(px)
-                fname = f"q{mk['num']:02d}.png"
+                fname = f"q{mk['num']:02d}.{image_options.extension}"
                 fpath = sub / fname
-                crop.save(fpath)
+                save_crop(crop, fpath, image_options)
                 total += 1
                 manifest["questions"].append({
                     "number": mk["num"],
@@ -252,6 +339,8 @@ def extract(pdf_path, out_dir, forms, dpi):
         print(f"  좌단={geom['left_bound']:.0f}~{geom['left_inner']:.0f}, "
               f"우단={geom['right_inner']:.0f}~{geom['right_bound']:.0f}, "
               f"하단={geom['bottom']:.0f}pt, DPI={dpi}")
+        quality_label = image_options.quality if image_options.image_format in {"webp", "jpeg"} else "n/a"
+        print(f"  이미지 형식={image_options.image_format}, quality={quality_label}")
         print(f"  manifest: {Path(out_dir) / 'manifest.json'}")
         return manifest
     finally:
@@ -259,15 +348,102 @@ def extract(pdf_path, out_dir, forms, dpi):
         render_doc.close()
 
 
+def choose_option(title, choices, default):
+    """터미널에서 숫자/값 입력으로 옵션을 고르게 한다."""
+    items = list(choices.items())
+    default_index = next((i for i, (value, _) in enumerate(items, start=1) if value == default), 1)
+
+    print(f"\n{title}")
+    for i, (value, label) in enumerate(items, start=1):
+        suffix = " (기본)" if value == default else ""
+        print(f"  {i}. {label} [{value}]{suffix}")
+
+    while True:
+        raw = input(f"선택 [{default_index}]: ").strip()
+        if not raw:
+            return default
+        if raw in choices:
+            return raw
+        if raw.isdigit():
+            index = int(raw)
+            if 1 <= index <= len(items):
+                return items[index - 1][0]
+        print("목록의 번호 또는 값을 입력해 주세요.")
+
+
+def choose_int(title, default, min_value, max_value):
+    print(f"\n{title}")
+    while True:
+        raw = input(f"값 입력 [{default}]: ").strip()
+        if not raw:
+            return default
+        try:
+            value = int(raw)
+        except ValueError:
+            print("숫자를 입력해 주세요.")
+            continue
+        if min_value <= value <= max_value:
+            return value
+        print(f"{min_value}~{max_value} 사이의 값을 입력해 주세요.")
+
+
+def resolve_cli_options(args):
+    interactive = not args.no_interactive and sys.stdin.isatty()
+
+    layout = args.layout
+    variant = args.variant
+    image_format = args.image_format
+    quality = args.quality
+
+    if interactive:
+        if layout is None:
+            layout = choose_option("문제지 형식을 선택하세요.", LAYOUT_CHOICES, DEFAULT_LAYOUT)
+        if variant is None:
+            variant = choose_option("홀/짝 형식을 선택하세요.", VARIANT_CHOICES, DEFAULT_VARIANT)
+        if image_format is None:
+            image_format = choose_option("이미지 형식을 선택하세요.", IMAGE_FORMAT_CHOICES, DEFAULT_IMAGE_FORMAT)
+        if quality is None and image_format in {"webp", "jpeg"}:
+            quality = choose_int("이미지 품질을 선택하세요. 숫자가 높을수록 선명하지만 용량이 커집니다.", DEFAULT_QUALITY, 1, 100)
+
+    layout = layout or DEFAULT_LAYOUT
+    variant = variant or DEFAULT_VARIANT
+    image_format = image_format or DEFAULT_IMAGE_FORMAT
+    quality = DEFAULT_QUALITY if quality is None else quality
+
+    if not 1 <= quality <= 100:
+        raise SystemExit("--quality는 1~100 사이여야 합니다.")
+
+    return layout, variant, ImageOptions(
+        image_format=image_format,
+        quality=quality,
+        webp_lossless=args.webp_lossless,
+    )
+
+
 def main():
     ap = argparse.ArgumentParser(description="기출 PDF에서 문항별 이미지 추출")
     ap.add_argument("pdf", help="입력 PDF 경로")
-    ap.add_argument("--out", default="questions", help="출력 폴더 (기본: questions)")
-    ap.add_argument("--form", default="odd", choices=["odd", "even", "both"],
-                    help="추출할 형식: odd=홀수형(기본), even=짝수형, both=둘 다")
+    ap.add_argument("--out", default=DEFAULT_OUT_ROOT,
+                    help="출력 루트 폴더 (기본: output, 실제 결과는 output/<PDF 파일명>/)")
+    ap.add_argument("--layout", choices=sorted(LAYOUT_CHOICES), default=None,
+                    help="문제지 형식: csat=수능 2단형")
+    ap.add_argument("--variant", choices=sorted(VARIANT_CHOICES), default=None,
+                    help="추출할 홀/짝 형식: odd=홀수형, even=짝수형, both=둘 다")
+    ap.add_argument("--form", dest="variant", choices=sorted(VARIANT_CHOICES),
+                    help="deprecated: --variant와 동일")
+    ap.add_argument("--image-format", choices=sorted(IMAGE_FORMAT_CHOICES), default=None,
+                    help="저장 이미지 형식: webp(기본), png, jpeg")
+    ap.add_argument("--quality", type=int, default=None,
+                    help="webp/jpeg 품질 1~100 (기본: 82)")
+    ap.add_argument("--webp-lossless", action="store_true",
+                    help="webp를 무손실로 저장")
+    ap.add_argument("--no-interactive", action="store_true",
+                    help="터미널 선택 없이 기본값/전달된 옵션으로 실행")
     ap.add_argument("--dpi", type=int, default=216, help="렌더 해상도 (기본 216)")
     args = ap.parse_args()
-    extract(args.pdf, args.out, [args.form], args.dpi)
+    layout, variant, image_options = resolve_cli_options(args)
+    out_dir = output_dir_for_pdf(args.pdf, args.out)
+    extract(args.pdf, out_dir, [variant], args.dpi, image_options=image_options, layout=layout)
 
 
 if __name__ == "__main__":

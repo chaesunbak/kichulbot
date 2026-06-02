@@ -1,9 +1,13 @@
 import { notFound } from 'next/navigation';
 
+import { getSolveSessionLogs } from '@/features/learning/api/server';
+import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import { getPaper, type Paper } from '@/features/papers/api/server';
 import { PaperActions } from '@/features/papers/components/paper-actions';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
+import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 
 export default async function PaperPage({
   params,
@@ -17,9 +21,10 @@ export default async function PaperPage({
   } catch {
     notFound();
   }
+  const logs = await getSolveSessionLogs();
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <PageContainer>
       <div
         className="
           grid gap-8
@@ -30,19 +35,18 @@ export default async function PaperPage({
           <PaperCover paper={paper} />
         </div>
         <div>
-          <p className="text-sm text-zinc-500">{paper.exam.name}</p>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-900">
-            {paper.title}
-          </h1>
-          <p className="mt-3 text-sm text-zinc-500">
+          <div className="text-sm text-zinc-500">{paper.exam.name}</div>
+          <PageTitle>{paper.title}</PageTitle>
+          <div className="text-sm text-zinc-500">
             {formatPaperSession(paper)} · {paper.questionCount}문항
-          </p>
+          </div>
           <PaperActions
             paperId={paper.id}
             initialIsInLibrary={paper.isInLibrary}
           />
         </div>
       </div>
-    </div>
+      <PaperSolveHistorySection logs={logs} paperId={paper.id} />
+    </PageContainer>
   );
 }

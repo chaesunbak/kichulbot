@@ -1,0 +1,181 @@
+'use client';
+
+import { Button } from '@kichulbot/ui/components/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@kichulbot/ui/components/dialog';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@kichulbot/ui/components/native-select';
+import { toast } from '@kichulbot/ui/components/sonner';
+import { Textarea } from '@kichulbot/ui/components/textarea';
+import { Flag, Loader2 } from 'lucide-react';
+import { overlay } from 'overlay-kit';
+import { useEffect, useState } from 'react';
+
+import { createQuestionReport } from '@/features/learning/api/client';
+import type { QuestionReportCategory } from '@/features/learning/types';
+
+const reportCategories = [
+  { value: 'QUESTION_ERROR', label: '문제 오류' },
+  { value: 'IMAGE_ERROR', label: '그림 오류' },
+  { value: 'CHOICE_ERROR', label: '보기 오류' },
+  { value: 'ANSWER_ERROR', label: '정답 오류' },
+  { value: 'EXPLANATION_ERROR', label: '해설 오류' },
+  { value: 'CATEGORY_ERROR', label: '분류 오류' },
+  { value: 'OTHER', label: '기타' },
+] satisfies Array<{ value: QuestionReportCategory; label: string }>;
+
+export function QuestionReportButton({
+  questionId,
+  questionRevisionId,
+}: {
+  questionId: string;
+  questionRevisionId: string;
+}) {
+  const [isOpening, setIsOpening] = useState(false);
+
+  const openReport = async () => {
+    setIsOpening(true);
+    try {
+      await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+        <QuestionReportDialog
+          isOpen={isOpen}
+          questionId={questionId}
+          questionRevisionId={questionRevisionId}
+          onClose={close}
+          onExit={unmount}
+        />
+      ));
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={isOpening}
+      onClick={() => void openReport()}
+    >
+      {isOpening ? <Loader2 className="animate-spin" /> : <Flag />}
+      신고
+    </Button>
+  );
+}
+
+function QuestionReportDialog({
+  isOpen,
+  questionId,
+  questionRevisionId,
+  onClose,
+  onExit,
+}: {
+  isOpen: boolean;
+  questionId: string;
+  questionRevisionId: string;
+  onClose: () => void;
+  onExit: () => void;
+}) {
+  const [category, setCategory] =
+    useState<QuestionReportCategory>('QUESTION_ERROR');
+  const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const trimmedContent = content.trim();
+
+  useEffect(() => {
+    if (isOpen) return;
+
+    const timeoutId = window.setTimeout(onExit, 120);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen, onExit]);
+
+  const submit = async () => {
+    if (!trimmedContent) {
+      toast.error('신고 내용을 입력해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createQuestionReport({
+        questionId,
+        questionRevisionId,
+        category,
+        content: trimmedContent,
+      });
+      toast.success('문제 신고를 접수했습니다.');
+      onClose();
+    } catch {
+      toast.error('문제 신고를 접수하지 못했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>문제 신고</DialogTitle>
+          <DialogDescription>
+            문제를 확인할 수 있도록 오류 유형과 내용을 적어주세요.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <label className="grid gap-2 text-sm font-medium text-zinc-900">
+            신고 분류
+            <NativeSelect
+              className="w-full"
+              value={category}
+              onChange={(event) =>
+                setCategory(event.target.value as QuestionReportCategory)
+              }
+            >
+              {reportCategories.map((item) => (
+                <NativeSelectOption key={item.value} value={item.value}>
+                  {item.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="grid gap-2 text-sm font-medium text-zinc-900">
+            신고 내용
+            <Textarea
+              className="min-h-40"
+              value={content}
+              maxLength={5000}
+              placeholder="어떤 부분을 확인해야 하는지 알려주세요."
+              onChange={(event) => setContent(event.target.value)}
+            />
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" disabled={isSubmitting} onClick={onClose}>
+            취소
+          </Button>
+          <Button
+            disabled={isSubmitting || !trimmedContent}
+            onClick={() => void submit()}
+          >
+            {isSubmitting && <Loader2 className="animate-spin" />}
+            접수
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

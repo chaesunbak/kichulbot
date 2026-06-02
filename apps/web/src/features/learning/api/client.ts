@@ -2,6 +2,7 @@ import type {
   Answer,
   DailyWrongQuestionSet,
   QuestionNote,
+  QuestionReportCategory,
   QuestionResult,
   SolveSession,
 } from '@/features/learning/types';
@@ -110,4 +111,22 @@ export async function saveQuestionNote({
     { content },
   );
   return body.note;
+}
+
+export async function createQuestionReport({
+  questionId,
+  questionRevisionId,
+  category,
+  content,
+}: {
+  questionId: string;
+  questionRevisionId: string;
+  category: QuestionReportCategory;
+  content: string;
+}) {
+  await clientApi.post(`/api/question-reports/${questionId}`, {
+    questionRevisionId,
+    category,
+    content,
+  });
 }

@@ -13,6 +13,7 @@ import {
 } from '@/features/learning/api/client';
 import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
 import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
+import { QuestionReportButton } from '@/features/learning/components/question-report-button';
 import {
   formatClock,
   formatDuration,
@@ -390,6 +391,10 @@ function QuestionHeader({
       </div>
       <div className="flex items-center gap-3">
         <QuestionNoteButton questionId={question.id} />
+        <QuestionReportButton
+          questionId={question.id}
+          questionRevisionId={question.questionRevisionId}
+        />
         <QuestionBookmarkButton questionId={question.id} />
         <span className="text-sm text-zinc-500">
           {currentIndex + 1} / {questionCount}

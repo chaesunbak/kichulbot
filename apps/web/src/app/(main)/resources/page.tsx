@@ -4,6 +4,7 @@ import { getExams } from '@/features/exams/api/server';
 import { getPapersByExamId } from '@/features/papers/api/server';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 import { cn } from '@/shared/lib/utils';
 
 export default async function PapersPage() {
@@ -23,17 +24,17 @@ export default async function PapersPage() {
     );
   } catch {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <h1 className="text-2xl font-semibold text-zinc-900">자료실</h1>
+      <PageContainer>
+        <PageTitle>자료실</PageTitle>
         <p className="mt-3 text-sm text-destructive">
           학습자료를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
         </p>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <PageContainer className="flex max-w-5xl flex-col">
+    <PageContainer>
       {examsWithPapers.length === 0 ? (
         <section className="px-6 py-12 text-center">
           <p className="text-sm text-zinc-500">아직 등록된 시험이 없습니다.</p>

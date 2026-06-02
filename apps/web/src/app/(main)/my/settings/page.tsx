@@ -11,16 +11,16 @@ import { DeleteAccountButton } from '@/features/auth/components/delete-account-b
 import { LogoutButton } from '@/features/auth/components/logout-button';
 import { getCachedUser } from '@/features/auth/server';
 import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 
 export default async function SettingsPage() {
   const user = await getCachedUser();
   if (!user) return null;
 
   return (
-    <PageContainer className="flex max-w-5xl flex-col">
-      <h1 className="mt-1 text-2xl font-semibold text-gray-800">설정</h1>
-
-      <Card className="mt-6">
+    <PageContainer>
+      <PageTitle>설정</PageTitle>
+      <Card className="mx-auto w-full">
         <CardHeader>
           <CardTitle>계정</CardTitle>
         </CardHeader>

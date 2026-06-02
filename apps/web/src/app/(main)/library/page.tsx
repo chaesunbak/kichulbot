@@ -10,7 +10,7 @@ export default async function LibraryPage() {
   ]);
 
   return (
-    <PageContainer className="flex max-w-5xl flex-col gap-6">
+    <PageContainer>
       <LibraryManager initialLibrary={library} />
       <BookmarkListManager initialBookmarkLists={bookmarkLists} />
     </PageContainer>

@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 
 import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
 import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
+import { QuestionReportButton } from '@/features/learning/components/question-report-button';
 import { formatDate, formatDuration } from '@/features/learning/lib/format';
 import type {
   Answer,
@@ -210,6 +211,10 @@ export function ResultSession({ session }: { session: SolveSession }) {
             </div>
             <div className="flex items-center gap-2">
               <QuestionNoteButton questionId={selectedQuestion.id} />
+              <QuestionReportButton
+                questionId={selectedQuestion.id}
+                questionRevisionId={selectedQuestion.questionRevisionId}
+              />
               <QuestionBookmarkButton questionId={selectedQuestion.id} />
             </div>
           </div>

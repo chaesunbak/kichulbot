@@ -11,15 +11,15 @@ import Link from 'next/link';
 
 import { getCachedUser } from '@/features/auth/server';
 import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 
 export default async function MyPage() {
   const user = await getCachedUser();
   if (!user) return null;
 
   return (
-    <PageContainer className="flex max-w-5xl flex-col">
-      <h1 className="mt-1 text-2xl font-semibold text-gray-800">마이 페이지</h1>
-
+    <PageContainer>
+      <PageTitle>마이 페이지</PageTitle>
       <section
         className="
           mt-6 grid gap-4

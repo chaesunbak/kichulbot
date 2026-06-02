@@ -54,8 +54,18 @@ export interface QuestionNote {
   updatedAt: string;
 }
 
+export type QuestionReportCategory =
+  | 'QUESTION_ERROR'
+  | 'IMAGE_ERROR'
+  | 'CHOICE_ERROR'
+  | 'ANSWER_ERROR'
+  | 'EXPLANATION_ERROR'
+  | 'CATEGORY_ERROR'
+  | 'OTHER';
+
 export interface SolveQuestion {
   id: string;
+  questionRevisionId: string;
   number: number;
   type: 'MULTIPLE_CHOICE' | 'WRITTEN';
   imageUrl: string | null;

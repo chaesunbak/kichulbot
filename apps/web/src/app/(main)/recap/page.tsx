@@ -12,8 +12,10 @@ import {
   getTodayWrongQuestions,
 } from '@/features/learning/api/server';
 import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
+import { formatDuration } from '@/features/learning/lib/format';
 import type { SolveSessionLog } from '@/features/learning/types';
 import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 
 export default async function RecapPage() {
   const [logs, wrongQuestionSet] = await Promise.all([
@@ -23,16 +25,27 @@ export default async function RecapPage() {
   const completedLogs = logs.filter(isCompletedLog);
 
   return (
-    <PageContainer className="flex max-w-5xl flex-col">
-      <h1 className="mt-1 text-2xl font-semibold text-gray-800">복습</h1>
+    <PageContainer>
+      <PageTitle>복습</PageTitle>
       {wrongQuestionSet && (
         <WrongReviewCard initialQuestionSet={wrongQuestionSet} />
       )}
+      <Card>
+        <CardHeader>
+          <CardTitle>나의 학습 분석</CardTitle>
+          <CardDescription>
+            정답률, 풀이량, 취약 태그를 차트로 확인해보세요.
+          </CardDescription>
+          <Button asChild size="sm" className="mt-3 w-fit">
+            <Link href="/report">확인해보세요</Link>
+          </Button>
+        </CardHeader>
+      </Card>
 
       {completedLogs.length === 0 ? (
-        <p className="mt-6 text-sm text-zinc-500">종료한 풀이가 없습니다.</p>
+        <div className="text-sm text-zinc-500">종료한 풀이가 없습니다.</div>
       ) : (
-        <ul className="mt-6 grid gap-4">
+        <ul className="grid gap-4">
           {completedLogs.map((log) => (
             <li key={log.id}>
               <Card>
@@ -71,9 +84,4 @@ type CompletedSolveSessionLog = SolveSessionLog & {
 
 function isCompletedLog(log: SolveSessionLog): log is CompletedSolveSessionLog {
   return !!log.submittedAt && !!log.result;
-}
-
-function formatDuration(milliseconds: number) {
-  const seconds = Math.round(milliseconds / 1000);
-  return `${Math.floor(seconds / 60)}분 ${seconds % 60}초`;
 }

@@ -4,6 +4,7 @@ import type { BookmarkList } from '@/features/learning/types';
 import { getBookmarkList } from '@/features/library/api/server';
 import { BookmarkListDetail } from '@/features/library/components/bookmark-list-detail';
 import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 
 export default async function BookmarkListPage({
   params,
@@ -19,11 +20,9 @@ export default async function BookmarkListPage({
   }
 
   return (
-    <PageContainer className="max-w-5xl">
+    <PageContainer>
       <div className="flex items-center gap-4">
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          {bookmarkList.name}
-        </h1>
+        <PageTitle>{bookmarkList.name}</PageTitle>
         <div className="mt-2 text-sm text-zinc-500">
           {bookmarkList.questionCount}개
         </div>

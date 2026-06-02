@@ -16,14 +16,12 @@ import {
 } from '@kichulbot/ui/components/select';
 import {
   ChevronLeft,
-  Folder,
   FolderPlus,
   MoreVertical,
   Pencil,
   Plus,
   Trash2,
 } from 'lucide-react';
-import Link from 'next/link';
 import { overlay } from 'overlay-kit';
 import { useMemo, useState } from 'react';
 
@@ -37,10 +35,11 @@ import {
   deleteLibraryFolder,
   renameLibraryFolder,
 } from '@/features/library/api/client';
-import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
-import { cn } from '@/shared/lib/utils';
+
+import { FileCard } from './file-card';
+import { FolderCard } from './folder-card';
 
 const SORT_OPTIONS = {
   recent: '최근 추가순',
@@ -168,7 +167,7 @@ export function LibraryManager({
   };
 
   return (
-    <section className="mt-7">
+    <section>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-4">
           <h2 className="text-2xl font-semibold text-zinc-900">{title}</h2>
@@ -186,14 +185,6 @@ export function LibraryManager({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 pt-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="폴더 만들기"
-            onClick={createFolder}
-          >
-            <Plus className="size-5" />
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="현재 폴더 메뉴">
@@ -249,14 +240,9 @@ export function LibraryManager({
 
       {isEmpty ? (
         <section
-          className="
-            mt-8 rounded-2xl border border-zinc-200 px-4 py-14 text-center
-          "
+          className="mt-8 rounded-2xl border px-4 py-14 text-center"
         >
-          <Folder className="mx-auto size-12 text-sky-300" />
-          <h3 className="mt-4 text-lg font-semibold text-zinc-900">
-            비어 있습니다
-          </h3>
+          <div className="mt-4 text-lg text-zinc-800">비어 있습니다</div>
         </section>
       ) : (
         <ul
@@ -275,138 +261,11 @@ export function LibraryManager({
             />
           ))}
           {visiblePapers.map((libraryPaper) => (
-            <PaperCard key={libraryPaper.id} libraryPaper={libraryPaper} />
+            <FileCard key={libraryPaper.id} libraryPaper={libraryPaper} />
           ))}
         </ul>
       )}
     </section>
-  );
-}
-
-function FolderCard({
-  folder,
-  count,
-  onOpen,
-}: {
-  folder: LibraryFolder;
-  count: number;
-  onOpen: () => void;
-}) {
-  return (
-    <li>
-      <button
-        type="button"
-        className="
-          flex min-h-40 w-full items-center gap-5 rounded-2xl border bg-white
-          p-6 text-left transition
-          hover:border-sky-200 hover:bg-sky-50/40
-          md:min-h-56 md:flex-col md:items-center md:justify-center
-          md:text-center
-        "
-        onClick={onOpen}
-      >
-        <span
-          className="
-            relative flex h-20 w-24 shrink-0 items-end
-            md:h-24 md:w-32
-          "
-        >
-          <span className="
-            absolute top-2 left-1 h-5 w-10 rounded-t-xl bg-sky-400
-          " />
-          <span
-            className="
-              relative h-16 w-24 rounded-xl bg-sky-300 shadow-sm
-              md:h-20 md:w-32
-            "
-          />
-        </span>
-        <span
-          className="
-            min-w-0 flex-1
-            md:flex-none
-          "
-        >
-          <span
-            className="
-              block truncate text-2xl font-semibold text-zinc-950
-              md:text-xl
-            "
-          >
-            {folder.name}
-          </span>
-          <span
-            className="
-              mt-4 block text-xl text-zinc-400
-              md:text-lg
-            "
-          >
-            {count}개
-          </span>
-        </span>
-      </button>
-    </li>
-  );
-}
-
-function PaperCard({ libraryPaper }: { libraryPaper: LibraryPaper }) {
-  const { paper } = libraryPaper;
-
-  return (
-    <li>
-      <Link
-        href={`/library/papers/${libraryPaper.id}`}
-        className={cn(
-          `
-            flex min-h-40 gap-5 rounded-2xl border p-5 transition
-            hover:border-zinc-300 hover:bg-zinc-50
-          `,
-          'md:min-h-56 md:flex-col md:gap-4',
-        )}
-        aria-label={`${paper.title} 자세히 보기`}
-      >
-        <PaperCover
-          paper={paper}
-          className="
-            w-24 shrink-0 rounded-none
-            md:mx-auto md:w-full md:max-w-32
-          "
-        />
-        <div
-          className="
-            flex min-w-0 flex-1 flex-col
-            md:flex-none
-          "
-        >
-          <h3
-            className="
-              line-clamp-2 text-2xl/tight font-medium break-keep text-zinc-950
-              md:text-lg
-            "
-          >
-            {paper.title}
-          </h3>
-          <p
-            className="
-              mt-3 truncate text-lg text-zinc-400
-              md:text-sm
-            "
-          >
-            {paper.exam.name}
-          </p>
-          <div
-            className="
-              mt-auto flex items-end justify-between gap-3 pt-6 text-lg
-              text-zinc-400
-              md:text-sm
-            "
-          >
-            <span>{formatQuestionCount(paper.questionCount)}</span>
-            <span>{formatRelativeTime(libraryPaper.createdAt)} 추가</span>
-          </div>
-        </div>
-      </Link>
-    </li>
   );
 }
 
@@ -447,20 +306,4 @@ function getDirectItemCount(
     (childrenByParent.get(folderId)?.length ?? 0) +
     papers.filter((paper) => paper.folderId === folderId).length
   );
-}
-
-function formatQuestionCount(count: number) {
-  return `${count}문항`;
-}
-
-function formatRelativeTime(value: string) {
-  const diffMs = Date.now() - new Date(value).getTime();
-  const minute = 60 * 1000;
-  const hour = 60 * minute;
-  const day = 24 * hour;
-
-  if (diffMs < minute) return '방금';
-  if (diffMs < hour) return `${Math.floor(diffMs / minute)}분 전`;
-  if (diffMs < day) return `${Math.floor(diffMs / hour)}시간 전`;
-  return `${Math.floor(diffMs / day)}일 전`;
 }

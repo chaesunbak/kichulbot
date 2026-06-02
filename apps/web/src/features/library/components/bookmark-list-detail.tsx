@@ -41,10 +41,7 @@ export function BookmarkListDetail({
       {message && <p className="mt-4 text-sm text-zinc-500">{message}</p>}
       <ul className="mt-6 grid gap-5">
         {questions.map((question) => (
-          <li
-            key={question.id}
-            className="rounded-xl border border-zinc-200 bg-white p-5"
-          >
+          <li key={question.id} className="rounded-xl border bg-card p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-semibold text-zinc-900">

@@ -12,6 +12,7 @@ import { ExamsModule } from './modules/exams/exams.module';
 import { LibraryModule } from './modules/library/library.module';
 import { PaperImportDraftsModule } from './modules/paper-import-drafts/paper-import-drafts.module';
 import { PapersModule } from './modules/papers/papers.module';
+import { QuestionAttemptsModule } from './modules/question-attempts/question-attempts.module';
 import { QuestionNotesModule } from './modules/question-notes/question-notes.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { ReviewModule } from './modules/review/review.module';
@@ -41,6 +42,7 @@ import { TagsModule } from './modules/tags/tags.module';
     TagsModule,
     PaperImportDraftsModule,
     PapersModule,
+    QuestionAttemptsModule,
     QuestionNotesModule,
     QuestionsModule,
     ReviewModule,

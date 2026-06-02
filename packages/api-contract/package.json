@@ -13,6 +13,9 @@
       "solve-sessions": [
         "dist/solve-sessions/index.d.ts"
       ],
+      "question-attempts": [
+        "dist/question-attempts/index.d.ts"
+      ],
       "bookmarks": [
         "dist/bookmarks/index.d.ts"
       ],
@@ -54,6 +57,11 @@
       "types": "./dist/solve-sessions/index.d.ts",
       "import": "./dist/solve-sessions/index.js",
       "default": "./dist/solve-sessions/index.js"
+    },
+    "./question-attempts": {
+      "types": "./dist/question-attempts/index.d.ts",
+      "import": "./dist/question-attempts/index.js",
+      "default": "./dist/question-attempts/index.js"
     },
     "./bookmarks": {
       "types": "./dist/bookmarks/index.d.ts",

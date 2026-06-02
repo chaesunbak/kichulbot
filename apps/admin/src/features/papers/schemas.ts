@@ -21,5 +21,3 @@ export const paperSchema = z.object({
     .max(100, '문항 수는 100개 이하여야 합니다.'),
   isPublished: z.enum(['false', 'true']),
 });
-
-export type PaperValues = z.infer<typeof paperSchema>;

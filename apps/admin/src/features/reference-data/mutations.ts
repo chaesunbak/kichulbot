@@ -84,8 +84,8 @@ export function useSaveExamMutation(
         usesMonth: form.usesMonth,
         usesRound: form.usesRound,
       };
-      if (!input.name || input.categoryIds.length === 0) {
-        throw new Error('시험 이름과 분류를 입력해 주세요.');
+      if (!input.name) {
+        throw new Error('시험 이름을 입력해 주세요.');
       }
       return editingExamId
         ? updateExam(token, editingExamId, input)

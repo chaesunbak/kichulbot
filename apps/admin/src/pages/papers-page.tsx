@@ -6,11 +6,18 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/card';
 import { Separator } from '@kichulbot/ui/components/separator';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@kichulbot/ui/components/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/store';
 import { CreatePaperForm } from '@/features/papers/components/create-paper-form';
+import { ImportPaperForm } from '@/features/papers/components/import-paper-form';
 import { PapersSummary } from '@/features/papers/components/papers-summary';
 import { PapersTable } from '@/features/papers/components/papers-table';
 import { papersQueryOptions } from '@/features/papers/queries';
@@ -43,7 +50,18 @@ export function PapersPage() {
           <PapersTable papers={papers} />
         </CardContent>
       </Card>
-      <CreatePaperForm token={token} exams={exams} />
+      <Tabs defaultValue="pdf" className="gap-4">
+        <TabsList className="w-full">
+          <TabsTrigger value="pdf">PDF</TabsTrigger>
+          <TabsTrigger value="manual">수동</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pdf">
+          <ImportPaperForm token={token} exams={exams} />
+        </TabsContent>
+        <TabsContent value="manual">
+          <CreatePaperForm token={token} exams={exams} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

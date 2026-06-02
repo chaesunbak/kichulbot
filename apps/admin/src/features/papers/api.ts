@@ -1,7 +1,9 @@
 import {
   AdminPaperResponseSchema,
   CreatePaperResponseSchema,
+  type CreatePaperWithQuestionsRequest,
   DeletePaperResponseSchema,
+  PaperImportDraftResponseSchema,
   UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
 import * as z from 'zod';
@@ -46,6 +48,50 @@ export async function createPaper(token: string, input: CreatePaperInput) {
     method: 'POST',
     token,
     body: input,
+  });
+}
+
+export interface CreatePaperImportDraftInput {
+  questionPdf: File;
+  answerPdf: File;
+  layout: string;
+  variant: string;
+}
+
+export async function createPaperImportDraft(
+  token: string,
+  input: CreatePaperImportDraftInput,
+) {
+  const formData = new FormData();
+  formData.append('questionPdf', input.questionPdf);
+  formData.append('answerPdf', input.answerPdf);
+  formData.append('layout', input.layout);
+  formData.append('variant', input.variant);
+
+  return apiRequest(
+    '/paper-import-drafts',
+    PaperImportDraftResponseSchema.parse,
+    {
+      method: 'POST',
+      token,
+      body: formData,
+    },
+  );
+}
+
+export async function createPaperWithQuestions(
+  token: string,
+  payload: CreatePaperWithQuestionsRequest,
+  images: File[],
+) {
+  const formData = new FormData();
+  formData.append('payload', JSON.stringify(payload));
+  images.forEach((image) => formData.append('images', image, image.name));
+
+  return apiRequest('/exam-papers', CreatePaperResponseSchema.parse, {
+    method: 'POST',
+    token,
+    body: formData,
   });
 }
 

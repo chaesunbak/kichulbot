@@ -28,7 +28,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { Exam } from '@/shared/types';
 
 import { useCreatePaperMutation } from '../mutations';
-import { paperSchema, type PaperValues } from '../schemas';
+import { paperSchema } from '../schemas';
+import type { PaperValues } from '../types';
 
 const defaults: PaperValues = {
   title: '',

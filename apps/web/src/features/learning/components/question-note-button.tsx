@@ -45,6 +45,7 @@ export function QuestionNoteButton({ questionId }: { questionId: string }) {
 
   return (
     <Button
+      type="button"
       variant="outline"
       size="sm"
       disabled={isOpening}
@@ -114,10 +115,15 @@ function QuestionNoteDialog({
           onChange={(event) => setContent(event.target.value)}
         />
         <DialogFooter>
-          <Button variant="outline" disabled={isSaving} onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSaving}
+            onClick={onClose}
+          >
             취소
           </Button>
-          <Button disabled={isSaving} onClick={() => void save()}>
+          <Button type="button" disabled={isSaving} onClick={() => void save()}>
             {isSaving && <Loader2 className="animate-spin" />}
             저장
           </Button>

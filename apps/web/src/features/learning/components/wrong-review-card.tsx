@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
+import { toast } from '@kichulbot/ui/components/sonner';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -23,13 +24,11 @@ export function WrongReviewCard({
 }) {
   const router = useRouter();
   const [questionSet, setQuestionSet] = useState(initialQuestionSet);
-  const [message, setMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const didAutoRefresh = useRef(false);
 
   const start = async () => {
     setIsPending(true);
-    setMessage(null);
     try {
       const session = await createWrongQuestionSolveSession({
         questionSetId: questionSet.id,
@@ -37,7 +36,8 @@ export function WrongReviewCard({
       });
       router.push(`/solve/${session.id}`);
     } catch {
-      setMessage('오답 복습을 시작하지 못했습니다.');
+      toast.error('오답 복습을 시작하지 못했습니다.');
+    } finally {
       setIsPending(false);
     }
   };
@@ -45,15 +45,14 @@ export function WrongReviewCard({
   const refresh = useCallback(
     async ({ silent = false } = {}) => {
       setIsPending(true);
-      if (!silent) setMessage(null);
       try {
         const nextQuestionSet = await refreshWrongQuestionSet(
           questionSet.studyDate,
         );
         setQuestionSet(nextQuestionSet);
-        if (!silent) setMessage('최신 풀이 기록으로 갱신했습니다.');
+        if (!silent) toast.success('최신 풀이 기록으로 갱신했습니다.');
       } catch {
-        if (!silent) setMessage('오늘의 오답을 갱신하지 못했습니다.');
+        if (!silent) toast.error('오늘의 오답을 갱신하지 못했습니다.');
       } finally {
         setIsPending(false);
       }
@@ -76,6 +75,7 @@ export function WrongReviewCard({
         </CardDescription>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button
+            type="button"
             size="sm"
             disabled={isPending || questionSet.questionCount === 0}
             onClick={() => void start()}
@@ -86,7 +86,6 @@ export function WrongReviewCard({
         {questionSet.questionCount === 0 && (
           <p className="text-xs text-zinc-500">오늘 다시 풀 오답이 없습니다.</p>
         )}
-        {message && <p className="text-xs text-zinc-500">{message}</p>}
       </CardHeader>
     </Card>
   );

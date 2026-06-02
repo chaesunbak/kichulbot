@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
+import { toast } from '@kichulbot/ui/components/sonner';
 import { Bookmark, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { overlay } from 'overlay-kit';
@@ -22,7 +23,6 @@ export function BookmarkListManager({
   initialBookmarkLists: BookmarkListSummary[];
 }) {
   const [bookmarkLists, setBookmarkLists] = useState(initialBookmarkLists);
-  const [message, setMessage] = useState<string | null>(null);
 
   const createBookmarkList = async () => {
     const name = await overlay.openAsync<string | null>(
@@ -43,9 +43,9 @@ export function BookmarkListManager({
     try {
       const bookmarkList = await createBookmarkListApi(name);
       setBookmarkLists((current) => [...current, bookmarkList]);
-      setMessage('새 북마크 리스트를 만들었습니다.');
+      toast.success('새 북마크 리스트를 만들었습니다.');
     } catch {
-      setMessage('북마크 리스트를 만들지 못했습니다.');
+      toast.error('북마크 리스트를 만들지 못했습니다.');
     }
   };
 
@@ -53,12 +53,15 @@ export function BookmarkListManager({
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-semibold text-zinc-900">북마크</h2>
-
-        <Button variant="outline" size="sm" onClick={createBookmarkList}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={createBookmarkList}
+        >
           <Plus />새 리스트
         </Button>
       </div>
-      {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
       {bookmarkLists.length === 0 ? (
         <p className="mt-5 text-sm text-zinc-500">
           북마크 리스트가 없습니다. 새 리스트를 만들어 문제를 모아보세요.

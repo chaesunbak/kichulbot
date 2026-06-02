@@ -1,7 +1,7 @@
 import type { PaperImportDraftQuestion } from '@kichulbot/api-contract/papers';
-import * as z from 'zod';
+import type * as z from 'zod';
 
-import { paperSchema } from './schemas';
+import type { paperSchema } from './schemas';
 
 export type PaperValues = z.infer<typeof paperSchema>;
 

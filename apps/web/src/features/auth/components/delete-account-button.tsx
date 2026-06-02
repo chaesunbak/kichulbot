@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from '@kichulbot/ui/components/alert-dialog';
 import { Button } from '@kichulbot/ui/components/button';
+import { toast } from '@kichulbot/ui/components/sonner';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { MouseEvent } from 'react';
@@ -24,12 +25,10 @@ export function DeleteAccountButton() {
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isPending, setIsPending] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDelete = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsPending(true);
-    setErrorMessage(null);
 
     try {
       await deleteAccountApi();
@@ -41,7 +40,8 @@ export function DeleteAccountButton() {
         error instanceof ApiError
           ? error.message
           : '계정 삭제 중 오류가 발생했습니다.';
-      setErrorMessage(message);
+      toast.error(message);
+    } finally {
       setIsPending(false);
     }
   };
@@ -49,7 +49,7 @@ export function DeleteAccountButton() {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
+        <Button type="button" variant="destructive">
           <Trash2 />
           계정 삭제
         </Button>
@@ -62,9 +62,6 @@ export function DeleteAccountButton() {
             되돌릴 수 없습니다.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {errorMessage && (
-          <p className="text-sm font-medium text-red-600">{errorMessage}</p>
-        )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
           <AlertDialogAction

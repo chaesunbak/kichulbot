@@ -16,7 +16,7 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="secondary" onClick={logout}>
+    <Button type="button" variant="secondary" onClick={logout}>
       <LogOut className="size-4" />
       로그아웃
     </Button>

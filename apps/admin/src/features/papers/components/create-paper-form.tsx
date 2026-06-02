@@ -159,7 +159,11 @@ export function CreatePaperForm({
               )}
             />
           </FieldGroup>
-          <Button className="w-full" disabled={mutation.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={mutation.isPending}
+          >
             <Plus className="size-4" />
             문제지 생성
           </Button>

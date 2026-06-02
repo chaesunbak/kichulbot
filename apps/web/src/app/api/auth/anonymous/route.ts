@@ -1,7 +1,7 @@
 import { ApiError, serverApi } from '@/shared/api/server';
+import type { AuthResponse } from '@/shared/lib/route-helpers';
 import {
   authErrorResponse,
-  AuthResponse,
   authSuccessResponse,
   rejectCrossOriginRequest,
 } from '@/shared/lib/route-helpers';

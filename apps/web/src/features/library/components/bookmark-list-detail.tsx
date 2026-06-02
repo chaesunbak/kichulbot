@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@kichulbot/ui/components/button';
+import { toast } from '@kichulbot/ui/components/sonner';
 import { Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
@@ -23,7 +24,6 @@ export function BookmarkListDetail({
   const router = useRouter();
   const [questions, setQuestions] = useState(initialList.questions);
   const [isStarting, setIsStarting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   const chooseMode = async () => {
     const mode = await overlay.openAsync<SolveMode | null>(
@@ -43,7 +43,6 @@ export function BookmarkListDetail({
 
   const start = async (mode: SolveMode) => {
     setIsStarting(true);
-    setMessage(null);
     try {
       const session = await createBookmarkListSolveSession({
         bookmarkListId: initialList.id,
@@ -51,8 +50,9 @@ export function BookmarkListDetail({
       });
       router.push(`/solve/${session.id}`);
     } catch {
+      toast.error('풀이를 시작하지 못했습니다.');
+    } finally {
       setIsStarting(false);
-      setMessage('풀이를 시작하지 못했습니다.');
     }
   };
 
@@ -65,9 +65,9 @@ export function BookmarkListDetail({
       setQuestions((current) =>
         current.filter((question) => question.id !== questionId),
       );
-      setMessage('북마크를 제거했습니다.');
+      toast.success('북마크를 제거했습니다.');
     } catch {
-      setMessage('북마크를 제거하지 못했습니다.');
+      toast.error('북마크를 제거하지 못했습니다.');
     }
   };
 
@@ -90,7 +90,6 @@ export function BookmarkListDetail({
           {isStarting ? '준비 중' : '풀기'}
         </Button>
       </div>
-      {message && <p className="mt-4 text-sm text-zinc-500">{message}</p>}
       <ul className="mt-6 grid gap-5">
         {questions.map((question) => (
           <li key={question.id} className="rounded-xl border bg-card p-5">

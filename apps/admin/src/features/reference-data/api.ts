@@ -1,14 +1,16 @@
-import {
-  CategoryMutationResponseSchema,
+import type {
   CreateCategoryRequest,
   CreateExamRequest,
+  UpdateCategoryRequest,
+  UpdateExamRequest,
+} from '@kichulbot/api-contract/taxonomy';
+import {
+  CategoryMutationResponseSchema,
   DeleteCategoryResponseSchema,
   DeleteExamResponseSchema,
   ExamMutationResponseSchema,
   ListCategoriesResponseSchema,
   ListExamsResponseSchema,
-  UpdateCategoryRequest,
-  UpdateExamRequest,
 } from '@kichulbot/api-contract/taxonomy';
 
 import { apiRequest } from '@/shared/api/api-client';

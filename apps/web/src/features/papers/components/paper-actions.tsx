@@ -76,6 +76,7 @@ export function PaperActions({
     <div className="mt-4">
       <div className="flex flex-wrap gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
           disabled={isAdding}
@@ -91,6 +92,7 @@ export function PaperActions({
           {isAdding ? '추가 중' : isInLibrary ? '추가됨' : '내 서재에 추가'}
         </Button>
         <Button
+          type="button"
           size="sm"
           disabled={isStarting}
           onClick={() => void chooseMode()}

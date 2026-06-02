@@ -525,6 +525,7 @@ function WrittenAnswerInput({
         onChange={(event) => onAnswerTextChange(event.target.value)}
       />
       <Button
+        type="button"
         className="justify-self-end"
         disabled={disabled}
         onClick={() => onSave(value)}

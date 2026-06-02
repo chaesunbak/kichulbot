@@ -32,9 +32,6 @@ const ADMIN_NAV_ITEMS = [
 ] as const;
 
 export function AdminHeader() {
-  const queryClient = useQueryClient();
-  const isFetching = useIsFetching() > 0;
-
   return (
     <header className="border-b bg-background">
       <div
@@ -43,9 +40,7 @@ export function AdminHeader() {
           sm:flex-row sm:items-center sm:justify-between
         "
       >
-        <div>
-          <h1 className="text-xl font-semibold">기출봇 관리자</h1>
-        </div>
+        <h1 className="text-xl font-semibold">기출봇 관리자</h1>
         <div className="flex gap-2">
           {ADMIN_NAV_ITEMS.map((item) => (
             <Button asChild variant="outline" key={item.to}>
@@ -55,20 +50,30 @@ export function AdminHeader() {
               </Link>
             </Button>
           ))}
-          <Button
-            variant="outline"
-            disabled={isFetching}
-            onClick={() => {
-              queryClient.invalidateQueries();
-              toast.success('관리자 데이터를 불러왔습니다.');
-            }}
-          >
-            <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
-            새로고침
-          </Button>
+          <AdminRefreshButton />
           <LogoutButton />
         </div>
       </div>
     </header>
+  );
+}
+
+function AdminRefreshButton() {
+  const queryClient = useQueryClient();
+  const isFetching = useIsFetching() > 0;
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      disabled={isFetching}
+      onClick={() => {
+        queryClient.invalidateQueries();
+        toast.success('관리자 데이터를 불러왔습니다.');
+      }}
+    >
+      <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
+      새로고침
+    </Button>
   );
 }

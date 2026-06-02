@@ -164,10 +164,16 @@ function QuestionReportDialog({
           </label>
         </div>
         <DialogFooter>
-          <Button variant="outline" disabled={isSubmitting} onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting}
+            onClick={onClose}
+          >
             취소
           </Button>
           <Button
+            type="button"
             disabled={isSubmitting || !trimmedContent}
             onClick={() => void submit()}
           >

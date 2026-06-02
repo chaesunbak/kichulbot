@@ -1,14 +1,16 @@
-import {
+import type {
   CreateOfficialTagRequest,
   CreateTagGroupRequest,
+  UpdateOfficialTagRequest,
+  UpdateTagGroupRequest,
+} from '@kichulbot/api-contract/tags';
+import {
   DeleteOfficialTagResponseSchema,
   DeleteTagGroupResponseSchema,
   ListTagGroupsResponseSchema,
   ListTagsResponseSchema,
   OfficialTagMutationResponseSchema,
   TagGroupMutationResponseSchema,
-  UpdateOfficialTagRequest,
-  UpdateTagGroupRequest,
 } from '@kichulbot/api-contract/tags';
 
 import { apiRequest } from '@/shared/api/api-client';

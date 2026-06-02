@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
+import { toast } from '@kichulbot/ui/components/sonner';
 import { FolderInput, Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
@@ -51,17 +52,16 @@ export function LibraryPaperActions({
   const [isStarting, setIsStarting] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   const start = async (mode: 'ONE_BY_ONE' | 'EXAM') => {
     setIsStarting(true);
-    setMessage(null);
     try {
       const session = await createSolveSession({ paperId, mode });
       router.push(`/solve/${session.id}`);
     } catch {
+      toast.error('풀이를 시작하지 못했습니다.');
+    } finally {
       setIsStarting(false);
-      setMessage('풀이를 시작하지 못했습니다.');
     }
   };
 
@@ -69,7 +69,6 @@ export function LibraryPaperActions({
     const targetFolderId =
       nextFolderId === ROOT_FOLDER_VALUE ? null : nextFolderId;
     setIsMoving(true);
-    setMessage(null);
     try {
       await moveLibraryPaper({
         libraryPaperId,
@@ -77,10 +76,10 @@ export function LibraryPaperActions({
       });
       setFolderId(nextFolderId);
       setIsMoveDialogOpen(false);
-      setMessage('문제지를 이동했습니다.');
+      toast.success('문제지를 이동했습니다.');
       router.refresh();
     } catch {
-      setMessage('문제지를 이동하지 못했습니다.');
+      toast.error('문제지를 이동하지 못했습니다.');
     } finally {
       setIsMoving(false);
     }
@@ -104,14 +103,15 @@ export function LibraryPaperActions({
     if (!shouldDelete) return;
 
     setIsDeleting(true);
-    setMessage(null);
     try {
       await removeLibraryPaper(libraryPaperId);
+      toast.success('문제지를 제거했습니다.');
       router.push('/library');
       router.refresh();
     } catch {
+      toast.error('문제지를 제거하지 못했습니다.');
+    } finally {
       setIsDeleting(false);
-      setMessage('문제지를 제거하지 못했습니다.');
     }
   };
 
@@ -213,7 +213,6 @@ export function LibraryPaperActions({
           </form>
         </DialogContent>
       </Dialog>
-      {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
     </div>
   );
 }

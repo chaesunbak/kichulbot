@@ -1,10 +1,10 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { COOKIE_NAME } from '@/features/auth/server';
 import { ApiError, serverApi } from '@/shared/api/server';
+import type { AuthResponse } from '@/shared/lib/route-helpers';
 import {
   authErrorResponse,
-  AuthResponse,
   authSuccessResponse,
   rejectCrossOriginRequest,
 } from '@/shared/lib/route-helpers';

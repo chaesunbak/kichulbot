@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/select';
+import { toast } from '@kichulbot/ui/components/sonner';
 import {
   ChevronLeft,
   FolderPlus,
@@ -57,7 +58,6 @@ export function LibraryManager({
   const [papers] = useState(initialLibrary.papers);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('recent');
-  const [message, setMessage] = useState<string | null>(null);
   const selectedFolder = folders.find(
     (folder) => folder.id === selectedFolderId,
   );
@@ -98,9 +98,9 @@ export function LibraryManager({
       });
       setFolders((current) => [...current, folder]);
       setSelectedFolderId(folder.id);
-      setMessage('새 폴더를 만들었습니다.');
+      toast.success('새 폴더를 만들었습니다.');
     } catch {
-      setMessage('폴더를 만들지 못했습니다.');
+      toast.error('폴더를 만들지 못했습니다.');
     }
   };
 
@@ -129,9 +129,9 @@ export function LibraryManager({
       setFolders((current) =>
         current.map((item) => (item.id === folder.id ? folder : item)),
       );
-      setMessage('폴더 이름을 바꿨습니다.');
+      toast.success('폴더 이름을 바꿨습니다.');
     } catch {
-      setMessage('폴더 이름을 바꾸지 못했습니다.');
+      toast.error('폴더 이름을 바꾸지 못했습니다.');
     }
   };
 
@@ -159,9 +159,9 @@ export function LibraryManager({
         current.filter((folder) => folder.id !== selectedFolder.id),
       );
       setSelectedFolderId(parentFolderId);
-      setMessage('폴더를 삭제했습니다.');
+      toast.success('폴더를 삭제했습니다.');
     } catch {
-      setMessage('비어 있는 폴더만 삭제할 수 있습니다.');
+      toast.error('비어 있는 폴더만 삭제할 수 있습니다.');
     }
   };
 
@@ -172,6 +172,7 @@ export function LibraryManager({
           <h2 className="text-2xl font-semibold text-zinc-900">{title}</h2>
           {selectedFolder && (
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               className="mb-1 -ml-2 text-zinc-500"
@@ -186,7 +187,12 @@ export function LibraryManager({
         <div className="flex shrink-0 items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="현재 폴더 메뉴">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="현재 폴더 메뉴"
+              >
                 <MoreVertical className="size-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -234,8 +240,6 @@ export function LibraryManager({
           {visibleFolders.length + visiblePapers.length}개
         </p>
       </div>
-
-      {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
 
       {isEmpty ? (
         <section className="rounded-2xl border px-4 py-14 text-center">

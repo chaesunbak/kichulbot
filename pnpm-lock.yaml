@@ -246,9 +246,6 @@ importers:
       overlay-kit:
         specifier: ^1.9.0
         version: 1.9.0(react@19.2.4)
-      radix-ui:
-        specifier: ^1.4.3
-        version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -258,9 +255,6 @@ importers:
       react-hook-form:
         specifier: ^7.76.1
         version: 7.76.1(react@19.2.4)
-      shadcn:
-        specifier: ^4.8.2
-        version: 4.8.2(@types/node@20.19.41)(typescript@5.9.3)
       sooner:
         specifier: ^1.1.4
         version: 1.1.4
@@ -400,6 +394,9 @@ importers:
       recharts:
         specifier: 3.8.0
         version: 3.8.0(@types/react@19.2.15)(react-dom@19.2.4(react@19.2.4))(react-is@18.3.1)(react@19.2.4)(redux@5.0.1)
+      shadcn:
+        specifier: ^4.8.2
+        version: 4.8.2(@types/node@20.19.41)(typescript@5.9.3)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -425,9 +422,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.15)
-      shadcn:
-        specifier: ^4.8.2
-        version: 4.8.2(@types/node@20.19.41)(typescript@5.9.3)
       tailwindcss:
         specifier: ^4
         version: 4.3.0

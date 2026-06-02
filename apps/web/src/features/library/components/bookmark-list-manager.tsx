@@ -50,17 +50,11 @@ export function BookmarkListManager({
   };
 
   return (
-    <section className="mt-12">
+    <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold text-zinc-900"> 북마크</h2>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={createBookmarkList}
-        >
+        <h2 className="text-2xl font-semibold text-zinc-900">북마크</h2>
+
+        <Button variant="outline" size="sm" onClick={createBookmarkList}>
           <Plus />새 리스트
         </Button>
       </div>

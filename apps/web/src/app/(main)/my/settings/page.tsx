@@ -9,19 +9,15 @@ import Link from 'next/link';
 
 import { DeleteAccountButton } from '@/features/auth/components/delete-account-button';
 import { LogoutButton } from '@/features/auth/components/logout-button';
-import { getUser } from '@/features/auth/server';
+import { getCachedUser } from '@/features/auth/server';
+import { PageContainer } from '@/shared/components/page-container';
 
 export default async function SettingsPage() {
-  const user = await getUser();
+  const user = await getCachedUser();
   if (!user) return null;
 
   return (
-    <div
-      className="
-        mx-auto flex w-full max-w-5xl flex-col px-4 py-8
-        sm:px-6 sm:py-10
-      "
-    >
+    <PageContainer className="flex max-w-5xl flex-col">
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">설정</h1>
 
       <Card className="mt-6">
@@ -40,6 +36,6 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

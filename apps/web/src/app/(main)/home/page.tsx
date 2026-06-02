@@ -4,6 +4,7 @@ import {
   getRecentStreakRange,
   StreakSection,
 } from '@/features/question-attempts/components/streak-section';
+import { PageContainer } from '@/shared/components/page-container';
 
 export default async function HomePage() {
   const currentWeek = getCurrentWeekRange();
@@ -14,13 +15,8 @@ export default async function HomePage() {
   );
 
   return (
-    <div
-      className="
-        mx-auto max-w-5xl px-4 py-8
-        sm:py-10
-      "
-    >
+    <PageContainer className="max-w-5xl">
       <StreakSection questionAttempts={questionAttempts} />
-    </div>
+    </PageContainer>
   );
 }

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getExams } from '@/features/exams/api/server';
 import { getPapersByExamId } from '@/features/papers/api/server';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
+import { PageContainer } from '@/shared/components/page-container';
 import { cn } from '@/shared/lib/utils';
 
 export default async function PapersPage() {
@@ -32,12 +33,7 @@ export default async function PapersPage() {
   }
 
   return (
-    <div
-      className="
-        mx-auto flex max-w-5xl flex-col px-4 py-8
-        sm:px-6 sm:py-10
-      "
-    >
+    <PageContainer className="flex max-w-5xl flex-col">
       {examsWithPapers.length === 0 ? (
         <section className="px-6 py-12 text-center">
           <p className="text-sm text-zinc-500">아직 등록된 시험이 없습니다.</p>
@@ -98,6 +94,6 @@ export default async function PapersPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

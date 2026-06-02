@@ -13,6 +13,7 @@ import {
 } from '@/features/learning/api/server';
 import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
 import type { SolveSessionLog } from '@/features/learning/types';
+import { PageContainer } from '@/shared/components/page-container';
 
 export default async function RecapPage() {
   const [logs, wrongQuestionSet] = await Promise.all([
@@ -22,12 +23,7 @@ export default async function RecapPage() {
   const completedLogs = logs.filter(isCompletedLog);
 
   return (
-    <div
-      className="
-        mx-auto flex max-w-5xl flex-col px-4 py-8
-        sm:px-6 sm:py-10
-      "
-    >
+    <PageContainer className="flex max-w-5xl flex-col">
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">복습</h1>
       {wrongQuestionSet && (
         <WrongReviewCard initialQuestionSet={wrongQuestionSet} />
@@ -64,7 +60,7 @@ export default async function RecapPage() {
           ))}
         </ul>
       )}
-    </div>
+    </PageContainer>
   );
 }
 

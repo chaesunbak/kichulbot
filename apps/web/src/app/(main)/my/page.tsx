@@ -9,19 +9,15 @@ import {
 import { ChevronRight, Mail } from 'lucide-react';
 import Link from 'next/link';
 
-import { getUser } from '@/features/auth/server';
+import { getCachedUser } from '@/features/auth/server';
+import { PageContainer } from '@/shared/components/page-container';
 
 export default async function MyPage() {
-  const user = await getUser();
+  const user = await getCachedUser();
   if (!user) return null;
 
   return (
-    <div
-      className="
-        mx-auto flex w-full max-w-5xl flex-col px-4 py-8
-        sm:px-6 sm:py-10
-      "
-    >
+    <PageContainer className="flex max-w-5xl flex-col">
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">마이 페이지</h1>
 
       <section
@@ -80,6 +76,6 @@ export default async function MyPage() {
           </CardHeader>
         </Card>
       </section>
-    </div>
+    </PageContainer>
   );
 }

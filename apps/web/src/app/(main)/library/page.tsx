@@ -1,6 +1,7 @@
 import { getBookmarkLists, getLibrary } from '@/features/library/api/server';
 import { BookmarkListManager } from '@/features/library/components/bookmark-list-manager';
 import { LibraryManager } from '@/features/library/components/library-manager';
+import { PageContainer } from '@/shared/components/page-container';
 
 export default async function LibraryPage() {
   const [library, bookmarkLists] = await Promise.all([
@@ -9,14 +10,9 @@ export default async function LibraryPage() {
   ]);
 
   return (
-    <div
-      className="
-        mx-auto max-w-5xl px-4 py-8 flex flex-col gap-6
-        sm:px-6 sm:py-10
-      "
-    >
+    <PageContainer className="flex max-w-5xl flex-col gap-6">
       <LibraryManager initialLibrary={library} />
       <BookmarkListManager initialBookmarkLists={bookmarkLists} />
-    </div>
+    </PageContainer>
   );
 }

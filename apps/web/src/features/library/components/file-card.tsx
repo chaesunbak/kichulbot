@@ -67,15 +67,3 @@ export function FileCard({ libraryPaper }: FileCardProps) {
     </li>
   );
 }
-
-function formatRelativeTime(value: string) {
-  const diffMs = Date.now() - new Date(value).getTime();
-  const minute = 60 * 1000;
-  const hour = 60 * minute;
-  const day = 24 * hour;
-
-  if (diffMs < minute) return '방금';
-  if (diffMs < hour) return `${Math.floor(diffMs / minute)}분 전`;
-  if (diffMs < day) return `${Math.floor(diffMs / hour)}시간 전`;
-  return `${Math.floor(diffMs / day)}일 전`;
-}

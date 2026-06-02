@@ -4,7 +4,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';

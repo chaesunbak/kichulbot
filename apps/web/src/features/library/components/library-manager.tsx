@@ -19,7 +19,6 @@ import {
   FolderPlus,
   MoreVertical,
   Pencil,
-  Plus,
   Trash2,
 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
@@ -239,9 +238,7 @@ export function LibraryManager({
       {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
 
       {isEmpty ? (
-        <section
-          className="mt-8 rounded-2xl border px-4 py-14 text-center"
-        >
+        <section className="mt-8 rounded-2xl border px-4 py-14 text-center">
           <div className="mt-4 text-lg text-zinc-800">비어 있습니다</div>
         </section>
       ) : (
@@ -249,7 +246,8 @@ export function LibraryManager({
           className="
             mt-8 grid gap-4
             md:grid-cols-2
-            xl:grid-cols-3
+            lg:grid-cols-3
+            xl:grid-cols-4
           "
         >
           {visibleFolders.map((folder) => (

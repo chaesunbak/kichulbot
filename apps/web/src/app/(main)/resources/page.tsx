@@ -1,12 +1,9 @@
 import Link from 'next/link';
 
 import { getExams } from '@/features/exams/api/server';
-import {
-  BookshelfGrid,
-  BookshelfSection,
-} from '@/features/library/components/bookshelf-section';
 import { getPapersByExamId } from '@/features/papers/api/server';
-import { PaperCoverCard } from '@/features/papers/components/paper-cover-card';
+import { PaperCover } from '@/features/papers/components/paper-cover-card';
+import { cn } from '@/shared/lib/utils';
 
 export default async function PapersPage() {
   let examsWithPapers: Array<{
@@ -33,62 +30,75 @@ export default async function PapersPage() {
       </div>
     );
   }
-  const totalPaperCount = examsWithPapers.reduce(
-    (count, exam) => count + exam.papers.length,
-    0,
-  );
 
   return (
     <div
       className="
-        mx-auto max-w-6xl px-4 py-8
-        sm:py-10
+        mx-auto flex max-w-6xl flex-col px-4 py-8
+        sm:px-6 sm:py-10
       "
     >
-      <h1 className="mt-1 text-2xl font-semibold text-zinc-900">자료실</h1>
-
       {examsWithPapers.length === 0 ? (
-        <p className="mt-3 text-sm text-zinc-500">
-          아직 등록된 시험이 없습니다.
-        </p>
-      ) : (
-        <BookshelfSection
-          title="문제지 자료실"
-          countLabel={`${totalPaperCount}권`}
+        <section
+          className="px-6 py-12 text-center"
         >
-          <div className="divide-y divide-[#e5dacb]">
-            {examsWithPapers.map((exam) => (
+          <p className="text-sm text-zinc-500">아직 등록된 시험이 없습니다.</p>
+        </section>
+      ) : (
+        <div
+          className="
+            space-y-5
+            sm:space-y-6
+          "
+        >
+          {examsWithPapers.map((exam, index) => (
+            <section
+              key={exam.id}
+              className={cn(
+                `
+                  overflow-hidden px-4
+                  sm:p-7
+                `,
+              )}
+            >
               <div
-                key={exam.id}
                 className="
-                  px-3 py-6
-                  sm:px-6
+                  flex flex-col gap-4
+                  sm:flex-row sm:items-start sm:justify-between
                 "
               >
-                <h2 className="text-lg font-bold text-zinc-900">{exam.name}</h2>
-                {exam.papers.length === 0 ? (
-                  <p className="mt-3 text-sm text-zinc-500">
-                    등록된 시험지가 없습니다.
-                  </p>
-                ) : (
-                  <BookshelfGrid className="mt-5 p-0">
-                    {exam.papers.map((paper) => (
-                      <li key={paper.id} className="min-w-0 px-1 pb-5">
-                        <Link
-                          href={`/resources/${paper.id}`}
-                          className="block min-w-0 rounded-lg"
-                          aria-label={`${paper.title} 자세히 보기`}
-                        >
-                          <PaperCoverCard paper={paper} />
-                        </Link>
-                      </li>
-                    ))}
-                  </BookshelfGrid>
-                )}
+                <div className="min-w-0">
+                  <h2 className="text-2xl">{exam.name}</h2>
+                </div>
               </div>
-            ))}
-          </div>
-        </BookshelfSection>
+
+              <ul
+                className="
+                  mt-6 grid grid-cols-2 gap-x-3 gap-y-7
+                  sm:grid-cols-3 sm:gap-x-5
+                  lg:grid-cols-4
+                "
+              >
+                {exam.papers.map((paper) => (
+                  <li key={paper.id} className="min-w-0">
+                    <Link
+                      href={`/resources/${paper.id}`}
+                      className="group block rounded-[1.4rem] p-2 transition"
+                      aria-label={`${paper.title} 자세히 보기`}
+                    >
+                      <PaperCover paper={paper} />
+                      <div className="mt-3 text-center">
+                        <p className="text-sm font-medium text-zinc-900">
+                          {paper.title}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
     </div>
   );

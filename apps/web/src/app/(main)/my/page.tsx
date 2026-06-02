@@ -14,8 +14,8 @@ export default async function MyPage() {
   return (
     <div
       className="
-        mx-auto max-w-5xl px-4 py-8
-        sm:py-10
+        mx-auto flex max-w-6xl flex-col px-4 py-8
+        sm:px-6 sm:py-10
       "
     >
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">마이 페이지</h1>

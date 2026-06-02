@@ -24,13 +24,14 @@ export default async function BookmarkListPage({
         sm:py-10
       "
     >
-      <p className="text-sm font-medium text-primary">문제 북마크</p>
-      <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-        {bookmarkList.name}
-      </h1>
-      <p className="mt-2 text-sm text-zinc-500">
-        저장한 문제 {bookmarkList.questionCount}개
-      </p>
+      <div className="flex items-center gap-4">
+        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+          {bookmarkList.name}
+        </h1>
+        <div className="mt-2 text-sm text-zinc-500">
+          {bookmarkList.questionCount}개
+        </div>
+      </div>
       <BookmarkListDetail initialList={bookmarkList} />
     </div>
   );

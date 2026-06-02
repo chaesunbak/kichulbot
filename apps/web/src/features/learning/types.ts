@@ -47,6 +47,13 @@ export interface BookmarkList extends BookmarkListSummary {
   questions: BookmarkedQuestion[];
 }
 
+export interface QuestionNote {
+  questionId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SolveQuestion {
   id: string;
   number: number;
@@ -98,9 +105,11 @@ export interface SolveSessionLog {
   id: string;
   mode: 'ONE_BY_ONE' | 'EXAM';
   paper: Paper;
-  result: SolveSessionResult;
-  submittedAt: string;
+  result: SolveSessionResult | null;
+  submittedAt: string | null;
+  totalSpentMilliseconds: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface DailyWrongQuestionSet {

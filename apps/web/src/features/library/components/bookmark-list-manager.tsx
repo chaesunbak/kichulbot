@@ -54,9 +54,6 @@ export function BookmarkListManager({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-zinc-900"> 북마크</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            풀이 중 저장한 개별 문제를 리스트별로 확인하세요.
-          </p>
         </div>
         <Button
           type="button"

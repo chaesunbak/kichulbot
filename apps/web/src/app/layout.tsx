@@ -1,5 +1,6 @@
 import './globals.css';
 
+import { Toaster } from '@kichulbot/ui/components/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import { OverlayProvider } from 'overlay-kit';
@@ -36,6 +37,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <OverlayProvider>{children}</OverlayProvider>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

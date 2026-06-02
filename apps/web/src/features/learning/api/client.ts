@@ -1,6 +1,7 @@
 import type {
   Answer,
   DailyWrongQuestionSet,
+  QuestionNote,
   QuestionResult,
   SolveSession,
 } from '@/features/learning/types';
@@ -31,6 +32,20 @@ export async function createWrongQuestionSolveSession({
 }): Promise<SolveSession> {
   const body = await clientApi.post<{ session: SolveSession }>(
     `/api/me/wrong-question-sets/${questionSetId}/solve-sessions`,
+    { mode },
+  );
+  return body.session;
+}
+
+export async function createBookmarkListSolveSession({
+  bookmarkListId,
+  mode,
+}: {
+  bookmarkListId: string;
+  mode: SolveMode;
+}): Promise<SolveSession> {
+  const body = await clientApi.post<{ session: SolveSession }>(
+    `/api/me/question-lists/${bookmarkListId}/solve-sessions`,
     { mode },
   );
   return body.session;
@@ -72,4 +87,27 @@ export async function submitSolveSession(
     `/api/me/solve-sessions/${sessionId}/submissions`,
   );
   return body.session;
+}
+
+export async function getQuestionNote(
+  questionId: string,
+): Promise<QuestionNote | null> {
+  const body = await clientApi.get<{ note: QuestionNote | null }>(
+    `/api/me/question-notes/${questionId}`,
+  );
+  return body.note;
+}
+
+export async function saveQuestionNote({
+  questionId,
+  content,
+}: {
+  questionId: string;
+  content: string;
+}): Promise<QuestionNote | null> {
+  const body = await clientApi.put<{ note: QuestionNote | null }>(
+    `/api/me/question-notes/${questionId}`,
+    { content },
+  );
+  return body.note;
 }

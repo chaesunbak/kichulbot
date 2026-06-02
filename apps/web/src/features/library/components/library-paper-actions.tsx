@@ -2,6 +2,14 @@
 
 import { Button } from '@kichulbot/ui/components/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@kichulbot/ui/components/dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -38,6 +46,8 @@ export function LibraryPaperActions({
   const [folderId, setFolderId] = useState(
     initialFolderId ?? ROOT_FOLDER_VALUE,
   );
+  const [nextFolderId, setNextFolderId] = useState(folderId);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -56,14 +66,17 @@ export function LibraryPaperActions({
   };
 
   const move = async () => {
-    const nextFolderId = folderId === ROOT_FOLDER_VALUE ? null : folderId;
+    const targetFolderId =
+      nextFolderId === ROOT_FOLDER_VALUE ? null : nextFolderId;
     setIsMoving(true);
     setMessage(null);
     try {
       await moveLibraryPaper({
         libraryPaperId,
-        folderId: nextFolderId,
+        folderId: targetFolderId,
       });
+      setFolderId(nextFolderId);
+      setIsMoveDialogOpen(false);
       setMessage('문제지를 이동했습니다.');
       router.refresh();
     } catch {
@@ -132,32 +145,74 @@ export function LibraryPaperActions({
           <Trash2 />
           {isDeleting ? '제거 중' : '내 서재에서 제거'}
         </Button>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2 rounded-lg bg-zinc-50 p-3">
-        <Select value={folderId} onValueChange={setFolderId}>
-          <SelectTrigger aria-label="이동할 폴더 선택">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ROOT_FOLDER_VALUE}>루트</SelectItem>
-            {flattenFolders(folders).map(({ folder, depth }) => (
-              <SelectItem key={folder.id} value={folder.id}>
-                {`${'  '.repeat(depth)}${folder.name}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          disabled={isMoving || isDeleting}
-          onClick={move}
+          disabled={isStarting || isMoving || isDeleting}
+          onClick={() => {
+            setNextFolderId(folderId);
+            setIsMoveDialogOpen(true);
+          }}
         >
           <FolderInput />
-          {isMoving ? '이동 중' : '이동'}
+          {isMoving ? '이동 중' : '폴더 이동'}
         </Button>
       </div>
+      <Dialog
+        open={isMoveDialogOpen}
+        onOpenChange={(open) => {
+          if (isMoving) return;
+          setIsMoveDialogOpen(open);
+        }}
+      >
+        <DialogContent showCloseButton={!isMoving}>
+          <form
+            className="grid gap-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void move();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>어느 폴더로 이동할까요?</DialogTitle>
+              <DialogDescription>
+                문제지를 옮길 폴더를 선택해 주세요.
+              </DialogDescription>
+            </DialogHeader>
+            <Select
+              value={nextFolderId}
+              disabled={isMoving}
+              onValueChange={setNextFolderId}
+            >
+              <SelectTrigger aria-label="이동할 폴더 선택" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ROOT_FOLDER_VALUE}>루트</SelectItem>
+                {flattenFolders(folders).map(({ folder, depth }) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {`${'  '.repeat(depth)}${folder.name}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isMoving}
+                onClick={() => setIsMoveDialogOpen(false)}
+              >
+                취소
+              </Button>
+              <Button type="submit" disabled={isMoving}>
+                {isMoving ? '이동 중' : '이동'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
     </div>
   );

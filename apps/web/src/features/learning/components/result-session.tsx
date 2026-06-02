@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
+import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
+import { formatDate, formatDuration } from '@/features/learning/lib/format';
 import type {
   Answer,
   QuestionResult,
@@ -184,9 +186,7 @@ export function ResultSession({ session }: { session: SolveSession }) {
           )}
         </aside>
 
-        <section
-          className="overflow-hidden rounded-lg border bg-card"
-        >
+        <section className="overflow-hidden rounded-lg border bg-card">
           <div
             className="
               flex flex-wrap items-center justify-between gap-3 border-b px-4
@@ -208,7 +208,10 @@ export function ResultSession({ session }: { session: SolveSession }) {
                 {formatDuration(selectedAnswer?.spentMilliseconds ?? 0)}
               </p>
             </div>
-            <QuestionBookmarkButton questionId={selectedQuestion.id} />
+            <div className="flex items-center gap-2">
+              <QuestionNoteButton questionId={selectedQuestion.id} />
+              <QuestionBookmarkButton questionId={selectedQuestion.id} />
+            </div>
           </div>
 
           <div
@@ -316,9 +319,9 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div
-      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
-    >
+    <div className="
+      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
+    ">
       <p className="font-semibold text-blue-900">해설</p>
       <p className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}
@@ -391,16 +394,4 @@ function formatUserAnswer(question: SolveQuestion, answer?: Answer) {
 function formatCorrectAnswer(result: QuestionResult | null) {
   if (!result) return '채점 결과 없음';
   return result.answerChoice ? `${result.answerChoice}번` : result.answerText;
-}
-
-function formatDuration(milliseconds: number) {
-  const seconds = Math.round(milliseconds / 1000);
-  return `${Math.floor(seconds / 60)}분 ${seconds % 60}초`;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
 }

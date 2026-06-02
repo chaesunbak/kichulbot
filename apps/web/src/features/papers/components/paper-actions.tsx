@@ -1,23 +1,20 @@
 'use client';
 
 import { Button } from '@kichulbot/ui/components/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@kichulbot/ui/components/select';
-import { BookCheck, BookPlus, FolderPlus, Play } from 'lucide-react';
+import { toast } from '@kichulbot/ui/components/sonner';
+import { BookCheck, BookPlus, Loader2, Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { overlay } from 'overlay-kit';
 import { useState } from 'react';
 
-import { createSolveSession } from '@/features/learning/api/client';
-import type { LibraryFolder } from '@/features/learning/types';
-import { getLibrary } from '@/features/library/api/client';
+import {
+  createSolveSession,
+  type SolveMode,
+} from '@/features/learning/api/client';
+import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
 import { addExamPaperToLibrary } from '@/features/papers/api/client';
 
-const ROOT_FOLDER_VALUE = '__root__';
+const MIN_ADDING_DURATION_MS = 400;
 
 export function PaperActions({
   paperId,
@@ -28,40 +25,50 @@ export function PaperActions({
 }) {
   const router = useRouter();
   const [isInLibrary, setIsInLibrary] = useState(initialIsInLibrary);
-  const [message, setMessage] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const [isStarting, setIsStarting] = useState(false);
-  const [isChoosingMode, setIsChoosingMode] = useState(false);
 
   const addToLibrary = async (targetFolderId: string | null) => {
     setIsAdding(true);
-    setMessage(null);
     try {
-      await addExamPaperToLibrary(paperId, targetFolderId);
+      await Promise.all([
+        addExamPaperToLibrary(paperId, targetFolderId),
+        delay(MIN_ADDING_DURATION_MS),
+      ]);
       setIsInLibrary(true);
-      setMessage(
-        targetFolderId
-          ? '선택한 폴더에 추가했습니다.'
-          : '내 서재에 추가했습니다.',
-      );
       router.refresh();
     } catch {
-      setMessage('내 서재 추가에 실패했습니다.');
+      toast.error('내 서재 추가에 실패했습니다.');
     } finally {
       setIsAdding(false);
     }
   };
 
-  const start = async (mode: 'ONE_BY_ONE' | 'EXAM') => {
+  const chooseMode = async () => {
+    const mode = await overlay.openAsync<SolveMode | null>(
+      ({ isOpen, close, unmount }) => (
+        <SolveModeDialog
+          isOpen={isOpen}
+          onCancel={() => close(null)}
+          onSelect={(selectedMode) => close(selectedMode)}
+          onExit={unmount}
+        />
+      ),
+    );
+    if (!mode) return;
+
+    await start(mode);
+  };
+
+  const start = async (mode: SolveMode) => {
     setIsStarting(true);
-    setMessage(null);
     try {
       const session = await createSolveSession({ paperId, mode });
       router.push(`/solve/${session.id}`);
     } catch {
       setIsStarting(false);
-      setMessage('풀이를 시작하지 못했습니다.');
+      toast.error('풀이를 시작하지 못했습니다.');
     }
   };
 
@@ -74,72 +81,30 @@ export function PaperActions({
           disabled={isAdding}
           onClick={() => addToLibrary(null)}
         >
-          {isInLibrary ? <BookCheck /> : <BookPlus />}
-          {isAdding ? '추가 중' : '내 서재에 추가'}
+          {isAdding ? (
+            <Loader2 className="animate-spin" />
+          ) : isInLibrary ? (
+            <BookCheck />
+          ) : (
+            <BookPlus />
+          )}
+          {isAdding ? '추가 중' : isInLibrary ? '추가됨' : '내 서재에 추가'}
         </Button>
         <Button
           size="sm"
           disabled={isStarting}
-          onClick={() => setIsChoosingMode((current) => !current)}
+          onClick={() => void chooseMode()}
         >
           <Play />
           {isStarting ? '준비 중' : '풀기'}
         </Button>
       </div>
-      {isChoosingMode && !isStarting && (
-        <div className="mt-3 grid gap-2 rounded-lg bg-zinc-50 p-3 text-xs">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => start('ONE_BY_ONE')}
-          >
-            한 문제씩 풀기
-          </Button>
-          <p className="text-zinc-500">
-            문제를 푼 직후 정답과 해설을 확인합니다.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => start('EXAM')}
-          >
-            한번에 풀기
-          </Button>
-          <p className="text-zinc-500">
-            시험 종료 후 결과와 해설을 확인합니다.
-          </p>
-        </div>
-      )}
-      {message && <p className="mt-2 text-xs text-zinc-500">{message}</p>}
     </div>
   );
 }
 
-function flattenFolders(folders: LibraryFolder[]) {
-  const childrenByParent = new Map<string | null, LibraryFolder[]>();
-  folders.forEach((folder) => {
-    const siblings = childrenByParent.get(folder.parentId) ?? [];
-    siblings.push(folder);
-    childrenByParent.set(folder.parentId, siblings);
+function delay(ms: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
   });
-  childrenByParent.forEach((siblings) => {
-    siblings.sort(
-      (a, b) =>
-        a.sortOrder - b.sortOrder ||
-        a.createdAt.localeCompare(b.createdAt) ||
-        a.name.localeCompare(b.name),
-    );
-  });
-
-  const flattened: Array<{ folder: LibraryFolder; depth: number }> = [];
-  const visit = (parentId: string | null, depth: number) => {
-    (childrenByParent.get(parentId) ?? []).forEach((folder) => {
-      flattened.push({ folder, depth });
-      visit(folder.id, depth + 1);
-    });
-  };
-  visit(null, 0);
-  return flattened;
 }

@@ -52,7 +52,10 @@ export function PaperCover({
   return (
     <div
       className={cn(
-        'relative aspect-3/4 overflow-hidden rounded-lg border',
+        `
+          @container relative mx-auto aspect-3/4 max-w-52 overflow-hidden
+          rounded-lg border
+        `,
         palette.cover,
         palette.border,
         className,
@@ -68,8 +71,8 @@ export function PaperCover({
           <p
             className={cn(
               `
-                mt-1 text-xl font-black break-keep
-                sm:text-2xl
+                mt-1 max-w-full text-[clamp(0.95rem,14cqw,2rem)] leading-[1.15]
+                font-black text-balance wrap-break-word
               `,
               palette.ink,
             )}
@@ -80,25 +83,15 @@ export function PaperCover({
         <div
           className={cn(
             `
-              relative z-10 border-y border-current/15 bg-card/20 p-2
-              text-center text-xs font-extrabold
-              sm:text-sm
+              relative z-10 border-t border-current/15 bg-card/20 p-2
+              text-center text-[clamp(0.625rem,6cqw,0.95rem)] font-extrabold
+              text-balance wrap-break-word
             `,
             palette.accent,
           )}
         >
           {paper.exam.name}
         </div>
-      </div>
-    </div>
-  );
-}
-
-export function PaperCoverCard({ paper }: { paper: Paper }) {
-  return (
-    <div>
-      <div className="mx-auto max-w-52">
-        <PaperCover paper={paper} />
       </div>
     </div>
   );

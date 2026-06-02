@@ -1,9 +1,17 @@
 'use client';
 
 import { Button } from '@kichulbot/ui/components/button';
-import { Trash2 } from 'lucide-react';
+import { Play, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { overlay } from 'overlay-kit';
 import { useState } from 'react';
 
+import {
+  createBookmarkListSolveSession,
+  type SolveMode,
+} from '@/features/learning/api/client';
+import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
+import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
 import type { BookmarkList } from '@/features/learning/types';
 import { removeQuestionFromBookmarkList } from '@/features/library/api/client';
 
@@ -12,8 +20,41 @@ export function BookmarkListDetail({
 }: {
   initialList: BookmarkList;
 }) {
+  const router = useRouter();
   const [questions, setQuestions] = useState(initialList.questions);
+  const [isStarting, setIsStarting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const chooseMode = async () => {
+    const mode = await overlay.openAsync<SolveMode | null>(
+      ({ isOpen, close, unmount }) => (
+        <SolveModeDialog
+          isOpen={isOpen}
+          onCancel={() => close(null)}
+          onSelect={(selectedMode) => close(selectedMode)}
+          onExit={unmount}
+        />
+      ),
+    );
+    if (!mode) return;
+
+    await start(mode);
+  };
+
+  const start = async (mode: SolveMode) => {
+    setIsStarting(true);
+    setMessage(null);
+    try {
+      const session = await createBookmarkListSolveSession({
+        bookmarkListId: initialList.id,
+        mode,
+      });
+      router.push(`/solve/${session.id}`);
+    } catch {
+      setIsStarting(false);
+      setMessage('풀이를 시작하지 못했습니다.');
+    }
+  };
 
   const removeQuestion = async (questionId: string) => {
     try {
@@ -38,6 +79,17 @@ export function BookmarkListDetail({
 
   return (
     <>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          disabled={isStarting}
+          onClick={() => void chooseMode()}
+        >
+          <Play />
+          {isStarting ? '준비 중' : '풀기'}
+        </Button>
+      </div>
       {message && <p className="mt-4 text-sm text-zinc-500">{message}</p>}
       <ul className="mt-6 grid gap-5">
         {questions.map((question) => (
@@ -51,15 +103,19 @@ export function BookmarkListDetail({
                   {question.paper.examName} · {question.paper.year}학년도
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => removeQuestion(question.id)}
-              >
-                <Trash2 />
-                제거
-              </Button>
+              <div className="flex items-center gap-2">
+                <QuestionNoteButton questionId={question.id} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isStarting}
+                  onClick={() => void removeQuestion(question.id)}
+                >
+                  <Trash2 />
+                  제거
+                </Button>
+              </div>
             </div>
             {question.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

@@ -12,18 +12,20 @@ import {
   getTodayWrongQuestions,
 } from '@/features/learning/api/server';
 import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
+import type { SolveSessionLog } from '@/features/learning/types';
 
 export default async function RecapPage() {
   const [logs, wrongQuestionSet] = await Promise.all([
     getSolveSessionLogs(),
     getTodayWrongQuestions(),
   ]);
+  const completedLogs = logs.filter(isCompletedLog);
 
   return (
     <div
       className="
-        mx-auto max-w-5xl px-4 py-8
-        sm:py-10
+        mx-auto flex max-w-6xl flex-col px-4 py-8
+        sm:px-6 sm:py-10
       "
     >
       <h1 className="mt-1 text-2xl font-semibold text-gray-800">복습</h1>
@@ -31,11 +33,11 @@ export default async function RecapPage() {
         <WrongReviewCard initialQuestionSet={wrongQuestionSet} />
       )}
 
-      {logs.length === 0 ? (
+      {completedLogs.length === 0 ? (
         <p className="mt-6 text-sm text-zinc-500">종료한 풀이가 없습니다.</p>
       ) : (
         <ul className="mt-6 grid gap-4">
-          {logs.map((log) => (
+          {completedLogs.map((log) => (
             <li key={log.id}>
               <Card>
                 <CardHeader>
@@ -64,6 +66,15 @@ export default async function RecapPage() {
       )}
     </div>
   );
+}
+
+type CompletedSolveSessionLog = SolveSessionLog & {
+  result: NonNullable<SolveSessionLog['result']>;
+  submittedAt: string;
+};
+
+function isCompletedLog(log: SolveSessionLog): log is CompletedSolveSessionLog {
+  return !!log.submittedAt && !!log.result;
 }
 
 function formatDuration(milliseconds: number) {

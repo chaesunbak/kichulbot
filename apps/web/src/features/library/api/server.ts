@@ -4,22 +4,36 @@ import type {
   BookmarkListSummary,
   Library,
 } from '@/features/learning/types';
-import { serverApi } from '@/shared/api/server';
+import { ApiError, serverApi } from '@/shared/api/server';
 
 export const getLibrary = async (): Promise<Library> => {
   const token = await getToken();
   if (!token) return { folders: [], papers: [] };
-  const res = await serverApi.get<{ data: Library }>('/me/library', token);
-  return res.data;
+  try {
+    const res = await serverApi.get<{ data: Library }>('/me/library', token);
+    return res.data;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      return { folders: [], papers: [] };
+    }
+    throw err;
+  }
 };
 
 export const getBookmarkLists = async (): Promise<BookmarkListSummary[]> => {
   const token = await getToken();
   if (!token) return [];
-  const res = await serverApi.get<{
-    data: { bookmarkLists: BookmarkListSummary[] };
-  }>('/me/question-lists', token);
-  return res.data.bookmarkLists;
+  try {
+    const res = await serverApi.get<{
+      data: { bookmarkLists: BookmarkListSummary[] };
+    }>('/me/question-lists', token);
+    return res.data.bookmarkLists;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      return [];
+    }
+    throw err;
+  }
 };
 
 export const getBookmarkList = async (id: string): Promise<BookmarkList> => {

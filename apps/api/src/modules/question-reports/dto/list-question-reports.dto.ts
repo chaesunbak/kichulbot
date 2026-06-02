@@ -1,10 +1,14 @@
 import { ListAdminQuestionReportsQuery } from '@kichulbot/api-contract/question-reports';
 import { ApiProperty } from '@nestjs/swagger';
 import { QuestionReportCategory, QuestionReportStatus } from '@prisma/client';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-export class ListQuestionReportsDto implements ListAdminQuestionReportsQuery {
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+
+export class ListQuestionReportsDto
+  extends PaginationDto
+  implements ListAdminQuestionReportsQuery
+{
   @ApiProperty({ required: false, enum: QuestionReportStatus })
   @IsOptional()
   @IsEnum(QuestionReportStatus)
@@ -19,19 +23,4 @@ export class ListQuestionReportsDto implements ListAdminQuestionReportsQuery {
   @IsOptional()
   @IsString()
   questionId?: string;
-
-  @ApiProperty({ required: false, default: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page = 1;
-
-  @ApiProperty({ required: false, default: 20 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit = 20;
 }

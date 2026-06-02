@@ -1,5 +1,6 @@
 import {
   GetSolveSessionResponseSchema,
+  ListSolveSessionLogsQuerySchema,
   ListSolveSessionLogsResponseSchema,
   SaveAnswerRequestSchema,
   SaveAnswerResponseSchema,
@@ -12,7 +13,7 @@ export const solveSessionsRoutes = {
   listSolveSessionLogs: {
     method: 'GET',
     path: '/me/solve-sessions',
-    request: null,
+    request: ListSolveSessionLogsQuerySchema,
     response: ListSolveSessionLogsResponseSchema,
   },
   startSolveSession: {

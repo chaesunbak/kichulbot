@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { PaginationQuerySchema } from '../common.js';
 import {
   SolveSessionResponseSchema,
   SolveSessionLogResponseSchema,
@@ -54,8 +55,26 @@ export type SubmitSolveSessionResponse = z.infer<
   typeof SubmitSolveSessionResponseSchema
 >;
 
+export const SolveSessionLogStatusSchema = z.enum([
+  'all',
+  'completed',
+  'in_progress',
+]);
+export type SolveSessionLogStatus = z.infer<typeof SolveSessionLogStatusSchema>;
+
+export const ListSolveSessionLogsQuerySchema = PaginationQuerySchema.extend({
+  status: SolveSessionLogStatusSchema.default('all'),
+});
+export type ListSolveSessionLogsQuery = z.infer<
+  typeof ListSolveSessionLogsQuerySchema
+>;
+
 export const ListSolveSessionLogsResponseSchema = z.object({
   logs: z.array(SolveSessionLogResponseSchema),
+  total: z.number().int().nonnegative(),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  totalPages: z.number().int().nonnegative(),
 });
 export type ListSolveSessionLogsResponse = z.infer<
   typeof ListSolveSessionLogsResponseSchema

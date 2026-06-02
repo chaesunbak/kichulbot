@@ -1,3 +1,4 @@
+import type { SolveSessionLogStatus } from '@kichulbot/api-contract/solve-sessions';
 import { Injectable } from '@nestjs/common';
 import {
   AnswerMode,
@@ -10,6 +11,12 @@ import {
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 export class SubmittedSolveSessionError extends Error {}
+
+type SolveSessionLogListFilters = {
+  page: number;
+  limit: number;
+  status: SolveSessionLogStatus;
+};
 
 @Injectable()
 export class SolveSessionsRepository {
@@ -88,12 +95,29 @@ export class SolveSessionsRepository {
     });
   }
 
-  findLogs(userId: string) {
-    return this.db.solveSession.findMany({
-      where: { userId },
-      include: this.sessionIncludes(),
-      orderBy: { updatedAt: 'desc' },
-    });
+  async findLogs(userId: string, filters: SolveSessionLogListFilters) {
+    const where: Prisma.SolveSessionWhereInput = {
+      userId,
+      OR: [
+        { sourceSetId: null },
+        { sourceSet: { is: { kind: { not: QuestionSetKind.DAILY_WRONG } } } },
+      ],
+      ...(filters.status === 'completed' ? { submittedAt: { not: null } } : {}),
+      ...(filters.status === 'in_progress' ? { submittedAt: null } : {}),
+    };
+    const skip = (filters.page - 1) * filters.limit;
+    const [sessions, total] = await this.db.$transaction([
+      this.db.solveSession.findMany({
+        where,
+        include: this.sessionIncludes(),
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: filters.limit,
+      }),
+      this.db.solveSession.count({ where }),
+    ]);
+
+    return { sessions, total };
   }
 
   saveAnswer(

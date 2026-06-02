@@ -2,6 +2,7 @@ import {
   AnswerResponse,
   GetSolveSessionResponse,
   GetSolveSessionResponseSchema,
+  ListSolveSessionLogsQuery,
   ListSolveSessionLogsResponse,
   ListSolveSessionLogsResponseSchema,
   QuestionResultResponse,
@@ -83,12 +84,27 @@ export class SolveSessionsService {
     });
   }
 
-  async listLogs(userId: string): Promise<ListSolveSessionLogsResponse> {
-    const sessions = await this.solveSessionsRepository.findLogs(userId);
+  async listLogs(
+    userId: string,
+    query: Partial<ListSolveSessionLogsQuery> = {},
+  ): Promise<ListSolveSessionLogsResponse> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const status = query.status ?? 'all';
+    const { sessions, total } = await this.solveSessionsRepository.findLogs(
+      userId,
+      {
+        page,
+        limit,
+        status,
+      },
+    );
     return ListSolveSessionLogsResponseSchema.parse({
-      logs: sessions
-        .filter((session) => this.shouldIncludeInLogs(session))
-        .map((session) => this.toLogResponse(session)),
+      logs: sessions.map((session) => this.toLogResponse(session)),
+      total,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit),
     });
   }
 
@@ -364,10 +380,6 @@ export class SolveSessionsService {
 
   private shouldCreateAttempts(session: SessionWithRelations) {
     return session.sourceSet?.kind !== QuestionSetKind.DAILY_WRONG;
-  }
-
-  private shouldIncludeInLogs(session: SessionWithRelations) {
-    return this.shouldCreateAttempts(session);
   }
 
   private getTotalSpentMilliseconds(session: SessionWithRelations) {

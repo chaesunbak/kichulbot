@@ -1,19 +1,14 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import type { Exam, ExamSession, Paper, Question } from '@prisma/client';
 import {
   AnswerMode,
   AttemptOutcome,
-  Exam,
-  ExamSession,
-  Paper,
-  Question,
   QuestionSetKind,
   QuestionType,
 } from '@prisma/client';
 
-import {
-  SolveSessionsRepository,
-  SubmittedSolveSessionError,
-} from './solve-sessions.repository';
+import type { SolveSessionsRepository } from './solve-sessions.repository';
+import { SubmittedSolveSessionError } from './solve-sessions.repository';
 import { SolveSessionsService } from './solve-sessions.service';
 
 const now = new Date('2026-05-31T00:00:00.000Z');
@@ -261,22 +256,26 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('keeps daily wrong review sessions out of solve logs', async () => {
-    repository.findLogs.mockResolvedValue([
-      {
-        ...session,
-        sourceSet: {
-          ...session.sourceSet,
-          kind: QuestionSetKind.DAILY_WRONG,
-        },
-      },
-      session,
-    ]);
+  it('returns paginated solve logs', async () => {
+    repository.findLogs.mockResolvedValue({ sessions: [session], total: 1 });
 
-    const response = await service.listLogs('user_1');
+    const response = await service.listLogs('user_1', {
+      status: 'completed',
+      page: 2,
+      limit: 5,
+    });
 
     expect(response.logs).toHaveLength(1);
     expect(response.logs[0].id).toBe(session.id);
+    expect(response.total).toBe(1);
+    expect(response.page).toBe(2);
+    expect(response.limit).toBe(5);
+    expect(response.totalPages).toBe(1);
+    expect(repository.findLogs).toHaveBeenCalledWith('user_1', {
+      status: 'completed',
+      page: 2,
+      limit: 5,
+    });
   });
 
   it('grades daily wrong review answers without a persisted attempt', async () => {
@@ -371,10 +370,14 @@ describe('SolveSessionsService', () => {
   });
 
   it('lists only the current user logs', async () => {
-    repository.findLogs.mockResolvedValue([]);
+    repository.findLogs.mockResolvedValue({ sessions: [], total: 0 });
 
     await service.listLogs('user_1');
 
-    expect(repository.findLogs).toHaveBeenCalledWith('user_1');
+    expect(repository.findLogs).toHaveBeenCalledWith('user_1', {
+      status: 'all',
+      page: 1,
+      limit: 20,
+    });
   });
 });

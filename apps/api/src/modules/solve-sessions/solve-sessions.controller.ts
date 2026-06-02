@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,6 +20,7 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
+import { ListSolveSessionLogsDto } from './dto/list-solve-session-logs.dto';
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import { StartSolveSessionDto } from './dto/start-solve-session.dto';
 import { SolveSessionsService } from './solve-sessions.service';
@@ -38,8 +40,11 @@ export class SolveSessionsController {
   @ApiOkResponse({
     description: '진행 중이거나 종료한 풀이 로그를 반환합니다.',
   })
-  listLogs(@CurrentUser() user: RequestUser) {
-    return this.solveSessionsService.listLogs(user.id);
+  listLogs(
+    @CurrentUser() user: RequestUser,
+    @Query() query: ListSolveSessionLogsDto,
+  ) {
+    return this.solveSessionsService.listLogs(user.id, query);
   }
 
   @Post()

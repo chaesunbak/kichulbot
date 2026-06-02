@@ -15,7 +15,6 @@
     "./lib/*": "./src/lib/*.ts"
   },
   "scripts": {
-    "check": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

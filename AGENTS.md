@@ -71,17 +71,13 @@ apps/api/src/
         └── guards/
 ```
 
-## GitHub
-
-use `gh` to read and write issues and RRs.
-
 ## Turbo Repo
 
 This project uses Turborepo. Prefer Turbo commands for builds and checks.
 
 ```bash
 pnpm turbo run build --filter=@kichulbot/api
-pnpm turbo run check --filter=@kichulbot/api
+pnpm turbo run typecheck --filter=@kichulbot/api
 ```
 
 ## Build

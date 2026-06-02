@@ -9,7 +9,6 @@
     "db:sync": "pnpm --filter @kichulbot/api prisma:push",
     "dev": "pnpm db:up && pnpm db:sync && turbo run dev --filter=@kichulbot/api --filter=@kichulbot/web --filter=@kichulbot/admin",
     "build": "turbo run build",
-    "check": "turbo run check",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "lint-staged": "lint-staged",

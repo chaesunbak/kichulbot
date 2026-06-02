@@ -48,7 +48,7 @@ const sections = [
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-180 border-collapse text-left text-sm">
             <thead>
-              <tr className="border-y border-zinc-200 bg-zinc-50 text-zinc-900">
+              <tr className="border-y bg-zinc-50 text-zinc-900">
                 <th className="p-3 font-semibold">구분</th>
                 <th className="p-3 font-semibold">처리 항목</th>
                 <th className="p-3 font-semibold">처리 목적</th>
@@ -57,7 +57,7 @@ const sections = [
             </thead>
             <tbody>
               {processingRows.map((row) => (
-                <tr key={row.category} className="border-b border-zinc-100">
+                <tr key={row.category} className="border-b">
                   <td className="p-3 align-top font-medium text-zinc-900">
                     {row.category}
                   </td>
@@ -219,7 +219,7 @@ export default function PrivacyPage() {
       <Link href="/" className="text-sm font-medium text-zinc-500">
         기출봇
       </Link>
-      <header className="mt-8 border-b border-zinc-200 pb-6">
+      <header className="mt-8 border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">
           개인정보처리방침
         </h1>

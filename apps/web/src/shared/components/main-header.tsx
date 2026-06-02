@@ -9,7 +9,7 @@ interface Props {
 
 export default function MainHeader({ user }: Props) {
   return (
-    <header className="sticky top-0 z-40 bg-white/90 px-4 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 bg-card/90 px-4 backdrop-blur-sm">
       <div
         className="
           mx-auto flex h-16 max-w-5xl items-center justify-between gap-6

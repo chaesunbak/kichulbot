@@ -3,9 +3,7 @@ import Link from 'next/link';
 export default function GlobalFooter() {
   return (
     <footer
-      className="
-        h-40 border-t border-zinc-100 bg-white px-4 py-8 text-sm text-zinc-500
-      "
+      className="h-40 border-t bg-background px-4 py-8 text-sm text-zinc-500"
     >
       <div
         className="

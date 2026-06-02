@@ -65,7 +65,7 @@ export function PaperCover({
         <span
           className="
             absolute top-8 right-2 flex size-6 items-center justify-center
-            rounded-full bg-white/65
+            rounded-full bg-card/65
           "
           aria-label="내서재에 저장됨"
           title="내서재에 저장됨"
@@ -117,7 +117,7 @@ export function PaperCover({
         <div
           className={cn(
             `
-              relative z-10 border-y border-current/15 bg-white/20 p-2
+              relative z-10 border-y border-current/15 bg-card/20 p-2
               text-center text-xs font-extrabold
               sm:text-sm
             `,

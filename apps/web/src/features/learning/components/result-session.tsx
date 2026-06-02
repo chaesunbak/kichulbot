@@ -122,7 +122,7 @@ export function ResultSession({ session }: { session: SolveSession }) {
           lg:grid-cols-[280px_1fr]
         "
       >
-        <aside className="h-fit rounded-lg border border-zinc-200 bg-white p-4">
+        <aside className="h-fit rounded-lg border bg-card p-4">
           <div
             className="
               flex items-center gap-2 text-sm font-semibold text-zinc-900
@@ -184,13 +184,13 @@ export function ResultSession({ session }: { session: SolveSession }) {
           )}
         </aside>
 
-        <section className="
-          overflow-hidden rounded-lg border border-zinc-200 bg-white
-        ">
+        <section
+          className="overflow-hidden rounded-lg border bg-card"
+        >
           <div
             className="
-              flex flex-wrap items-center justify-between gap-3 border-b
-              border-zinc-100 px-4 py-3
+              flex flex-wrap items-center justify-between gap-3 border-b px-4
+              py-3
             "
           >
             <div>
@@ -228,7 +228,7 @@ export function ResultSession({ session }: { session: SolveSession }) {
               ) : (
                 <div
                   className="
-                    grid min-h-99 place-items-center rounded-md bg-white px-4
+                    grid min-h-99 place-items-center rounded-md bg-card px-4
                     text-center text-sm text-zinc-500
                   "
                 >
@@ -239,7 +239,7 @@ export function ResultSession({ session }: { session: SolveSession }) {
 
             <div
               className="
-                border-t border-zinc-100 p-4
+                border-t p-4
                 lg:border-t-0 lg:border-l
               "
             >
@@ -270,7 +270,7 @@ function SummaryTile({
   tone?: 'default' | 'wrong';
 }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
+    <div className="rounded-lg border bg-card p-4">
       <p className="text-sm text-zinc-500">{label}</p>
       <p
         className={cn(
@@ -316,9 +316,9 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="
-      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
-    ">
+    <div
+      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
+    >
       <p className="font-semibold text-blue-900">해설</p>
       <p className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}

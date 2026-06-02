@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@kichulbot/ui/components/button';
-import { AlertTriangle, Home, RotateCcw } from 'lucide-react';
+import { Home, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ErrorPage({
@@ -19,15 +19,6 @@ export default function ErrorPage({
       "
     >
       <section className="w-full max-w-md text-center">
-        <div
-          className="
-            mx-auto flex size-14 items-center justify-center rounded-full border
-            border-destructive/20 bg-destructive/10 text-destructive
-          "
-        >
-          <AlertTriangle className="size-7" />
-        </div>
-        <p className="mt-8 text-sm font-semibold text-destructive">Error</p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
           문제가 발생했습니다
         </h1>

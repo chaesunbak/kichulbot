@@ -62,7 +62,7 @@ export function QuestionBookmarkButton({ questionId }: { questionId: string }) {
         <div
           className="
             absolute top-11 right-0 z-10 grid w-64 gap-3 rounded-lg border
-            border-zinc-200 bg-white p-3
+            bg-card p-3
           "
         >
           {lists?.length ? (

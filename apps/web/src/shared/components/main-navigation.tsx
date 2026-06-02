@@ -54,7 +54,7 @@ export function DesktopNavigation() {
                 ? 'text-primary'
                 : `
                   text-zinc-500
-                  hover:bg-zinc-100 hover:text-zinc-900
+                  hover:text-zinc-900
                 `,
             )}
             aria-current={isActive ? 'page' : undefined}
@@ -73,7 +73,7 @@ export function MobileBottomNavigation() {
   return (
     <nav
       className="
-        fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white/95
+        fixed inset-x-0 bottom-0 z-50 border-t bg-card/95
         pb-[env(safe-area-inset-bottom)] backdrop-blur-sm
         md:hidden
       "

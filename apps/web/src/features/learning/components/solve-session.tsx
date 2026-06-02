@@ -156,8 +156,8 @@ export function SolveSession({
     <div className="flex h-full flex-col overflow-hidden">
       <header
         className="
-          flex h-16 shrink-0 items-center justify-between gap-4 border-b
-          border-zinc-200 bg-white px-4
+          flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-card
+          px-4
           md:px-6
         "
       >
@@ -189,8 +189,8 @@ export function SolveSession({
         >
           <div
             className="
-              flex items-center gap-1.5 rounded-lg border border-zinc-200 p-2
-              text-sm text-zinc-600
+              flex items-center gap-1.5 rounded-lg border p-2 text-sm
+              text-zinc-600
               md:gap-2 md:px-3
             "
           >
@@ -208,8 +208,7 @@ export function SolveSession({
           {session.submittedAt ? (
             <span
               className="
-                hidden rounded-lg border border-zinc-200 px-3 py-2 text-sm
-                text-zinc-500
+                hidden rounded-lg border px-3 py-2 text-sm text-zinc-500
                 sm:inline-flex
               "
             >
@@ -231,14 +230,13 @@ export function SolveSession({
       >
         <section
           className="
-            flex min-h-0 flex-col overflow-hidden rounded-lg border
-            border-zinc-200 bg-white
+            flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card
           "
         >
           <div
             className="
-              flex shrink-0 items-center justify-between gap-4 border-b
-              border-zinc-100 px-4 py-3
+              flex shrink-0 items-center justify-between gap-4 border-b px-4
+              py-3
             "
           >
             <div>
@@ -279,7 +277,7 @@ export function SolveSession({
             ) : (
               <div
                 className="
-                  grid h-full place-items-center rounded-md bg-white px-4
+                  grid h-full place-items-center rounded-md bg-card px-4
                   text-center text-sm text-zinc-500
                 "
               >
@@ -288,7 +286,7 @@ export function SolveSession({
             )}
           </div>
 
-          <div className="shrink-0 border-t border-zinc-100 px-4 py-3">
+          <div className="shrink-0 border-t px-4 py-3">
             {question.type === 'MULTIPLE_CHOICE' ? (
               <div className="flex flex-wrap gap-2">
                 {Array.from(
@@ -357,8 +355,7 @@ export function SolveSession({
 
         <aside
           className="
-            flex min-h-0 flex-col overflow-hidden rounded-lg border
-            border-zinc-200 bg-white p-4
+            flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card p-4
           "
         >
           <p className="text-xs text-zinc-500">
@@ -417,9 +414,9 @@ function SessionResultPanel({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div
-      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
-    >
+    <div className="
+      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
+    ">
       <p className="font-semibold text-blue-900">
         {result.isCorrect === null
           ? '정답 확인'

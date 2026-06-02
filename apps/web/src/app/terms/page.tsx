@@ -106,7 +106,7 @@ export default function TermsPage() {
       <Link href="/" className="text-sm font-medium text-zinc-500">
         기출봇
       </Link>
-      <header className="mt-8 border-b border-zinc-200 pb-6">
+      <header className="mt-8 border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">
           이용약관
         </h1>

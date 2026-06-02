@@ -5,24 +5,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
+import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 import {
-  getSolveSessionLogs,
+  getSolveSessionLogPage,
   getTodayWrongQuestions,
 } from '@/features/learning/api/server';
+import { SolveSessionLogList } from '@/features/learning/components/solve-session-log-list';
 import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
-import { formatDuration } from '@/features/learning/lib/format';
-import type { SolveSessionLog } from '@/features/learning/types';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function RecapPage() {
-  const [logs, wrongQuestionSet] = await Promise.all([
-    getSolveSessionLogs(),
+  const [logPage, wrongQuestionSet] = await Promise.all([
+    getSolveSessionLogPage({ status: 'completed', limit: 5 }),
     getTodayWrongQuestions(),
   ]);
-  const completedLogs = logs.filter(isCompletedLog);
 
   return (
     <PageContainer>
@@ -41,47 +40,19 @@ export default async function RecapPage() {
           </Button>
         </CardHeader>
       </Card>
-
-      {completedLogs.length === 0 ? (
-        <div className="text-sm text-zinc-500">종료한 풀이가 없습니다.</div>
-      ) : (
-        <ul className="grid gap-4">
-          {completedLogs.map((log) => (
-            <li key={log.id}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{log.paper.title}</CardTitle>
-                  <CardDescription>
-                    {log.mode === 'ONE_BY_ONE'
-                      ? '한 문제씩 풀기'
-                      : '한번에 풀기'}{' '}
-                    · {log.result.score}점 · {log.result.correctCount}/
-                    {log.result.totalCount} 정답 ·{' '}
-                    {formatDuration(log.result.totalSpentMilliseconds)}
-                  </CardDescription>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 w-fit"
-                  >
-                    <Link href={`/results/${log.id}`}>결과 보기</Link>
-                  </Button>
-                </CardHeader>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="flex items-center justify-between gap-4">
+        <div className="text-lg font-semibold">나의 최근 풀이</div>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/log">
+            더보기
+            <ChevronRight className="size-4" />
+          </Link>
+        </Button>
+      </div>
+      <SolveSessionLogList
+        logs={logPage.logs}
+        emptyMessage="종료한 풀이가 없습니다."
+      />
     </PageContainer>
   );
-}
-
-type CompletedSolveSessionLog = SolveSessionLog & {
-  result: NonNullable<SolveSessionLog['result']>;
-  submittedAt: string;
-};
-
-function isCompletedLog(log: SolveSessionLog): log is CompletedSolveSessionLog {
-  return !!log.submittedAt && !!log.result;
 }

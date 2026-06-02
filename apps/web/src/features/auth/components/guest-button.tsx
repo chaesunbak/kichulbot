@@ -29,6 +29,7 @@ export function GuestButton() {
   return (
     <div className="w-full">
       <Button
+        type="button"
         size="lg"
         className="w-full"
         disabled={loading}

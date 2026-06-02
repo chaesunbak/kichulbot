@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { IsoDateStringSchema } from '../common.js';
+import { TagResponseSchema } from '../tags/schema.js';
 
 export const QuestionAttemptOutcomeSchema = z.enum([
   'CORRECT',
@@ -20,6 +21,7 @@ export const QuestionAttemptResponseSchema = z.object({
   outcome: QuestionAttemptOutcomeSchema,
   spentMilliseconds: z.number().int().nonnegative(),
   gradedAt: IsoDateStringSchema,
+  tags: z.array(TagResponseSchema).optional(),
 });
 export type QuestionAttemptResponse = z.infer<
   typeof QuestionAttemptResponseSchema

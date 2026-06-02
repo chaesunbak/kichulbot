@@ -6,7 +6,12 @@ import { DatabaseService } from '../../infrastructure/database/database.service'
 export class QuestionAttemptsRepository {
   constructor(private readonly db: DatabaseService) {}
 
-  findByUserAndRange(userId: string, from: Date, toExclusive: Date) {
+  findByUserAndRange(
+    userId: string,
+    from: Date,
+    toExclusive: Date,
+    includeTags = false,
+  ) {
     return this.db.questionAttempt.findMany({
       where: {
         userId,
@@ -27,6 +32,34 @@ export class QuestionAttemptsRepository {
         questionRevision: {
           select: {
             questionId: true,
+            ...(includeTags
+              ? {
+                  question: {
+                    select: {
+                      tags: {
+                        select: {
+                          tag: {
+                            select: {
+                              id: true,
+                              name: true,
+                              tagGroup: {
+                                select: {
+                                  id: true,
+                                  examId: true,
+                                  name: true,
+                                  selectionMode: true,
+                                  sortOrder: true,
+                                  isActive: true,
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                }
+              : {}),
           },
         },
       },

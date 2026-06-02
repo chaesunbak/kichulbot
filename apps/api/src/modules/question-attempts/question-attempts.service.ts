@@ -5,13 +5,35 @@ import { QuestionAttemptsRepository } from './question-attempts.repository';
 const KST_OFFSET = '+09:00';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+type AttemptQuestionRevisionWithTags = {
+  question?: {
+    tags?: Array<{
+      tag: {
+        id: string;
+        name: string;
+        tagGroup: {
+          id: string;
+          examId: string;
+          name: string;
+          selectionMode: 'SINGLE' | 'MULTIPLE';
+          sortOrder: number;
+          isActive: boolean;
+        } | null;
+      };
+    }>;
+  };
+};
+
 @Injectable()
 export class QuestionAttemptsService {
   constructor(
     private readonly questionAttemptsRepository: QuestionAttemptsRepository,
   ) {}
 
-  async list(userId: string, query: { from: string; to: string }) {
+  async list(
+    userId: string,
+    query: { from: string; to: string; includeTags?: boolean },
+  ) {
     const from = this.toStartOfKstDay(query.from);
     const toExclusive = this.toStartOfNextKstDay(query.to);
 
@@ -23,20 +45,51 @@ export class QuestionAttemptsService {
       userId,
       from,
       toExclusive,
+      query.includeTags ?? false,
     );
 
     return {
-      questionAttempts: attempts.map((attempt) => ({
-        id: attempt.id,
-        sessionItemId: attempt.sessionItemId,
-        questionRevisionId: attempt.questionRevisionId,
-        questionId: attempt.questionRevision.questionId,
-        answerChoice: attempt.answerChoice,
-        answerText: attempt.answerText,
-        outcome: attempt.outcome,
-        spentMilliseconds: attempt.spentMilliseconds,
-        gradedAt: attempt.gradedAt.toISOString(),
-      })),
+      questionAttempts: attempts.map((attempt) => {
+        const response = {
+          id: attempt.id,
+          sessionItemId: attempt.sessionItemId,
+          questionRevisionId: attempt.questionRevisionId,
+          questionId: attempt.questionRevision.questionId,
+          answerChoice: attempt.answerChoice,
+          answerText: attempt.answerText,
+          outcome: attempt.outcome,
+          spentMilliseconds: attempt.spentMilliseconds,
+          gradedAt: attempt.gradedAt.toISOString(),
+        };
+
+        if (!query.includeTags) {
+          return response;
+        }
+
+        const taggedRevision =
+          attempt.questionRevision as typeof attempt.questionRevision &
+            AttemptQuestionRevisionWithTags;
+
+        return {
+          ...response,
+          tags:
+            taggedRevision.question?.tags?.map(({ tag }) => ({
+              id: tag.id,
+              name: tag.name,
+              kind: 'OFFICIAL' as const,
+              tagGroup: tag.tagGroup
+                ? {
+                    id: tag.tagGroup.id,
+                    examId: tag.tagGroup.examId,
+                    name: tag.tagGroup.name,
+                    selectionMode: tag.tagGroup.selectionMode,
+                    sortOrder: tag.tagGroup.sortOrder,
+                    isActive: tag.tagGroup.isActive,
+                  }
+                : null,
+            })) ?? [],
+        };
+      }),
     };
   }
 

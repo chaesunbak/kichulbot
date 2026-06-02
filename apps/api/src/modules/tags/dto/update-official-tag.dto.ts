@@ -13,4 +13,13 @@ export class UpdateOfficialTagDto implements UpdateOfficialTagRequest {
   @IsOptional()
   @IsString()
   examId?: string;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    example: 'clx0000000000000000000001',
+  })
+  @IsOptional()
+  @IsString()
+  tagGroupId?: string | null;
 }

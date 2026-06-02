@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsISO8601 } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsISO8601, IsOptional } from 'class-validator';
 
 export class ListQuestionAttemptsDto {
   @ApiProperty({
@@ -17,4 +18,18 @@ export class ListQuestionAttemptsDto {
   })
   @IsISO8601({ strict: true })
   to: string;
+
+  @ApiProperty({
+    required: false,
+    example: true,
+    description: 'true이면 문항에 연결된 태그와 태그 그룹 정보를 포함합니다.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === undefined) return undefined;
+    if (typeof value === 'boolean') return value;
+    return value === 'true';
+  })
+  includeTags?: boolean;
 }

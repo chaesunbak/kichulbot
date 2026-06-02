@@ -218,6 +218,7 @@ export class SolveSessionsService {
           const gradedAnswer = this.toGradedAnswer(session, item);
           return {
             id: item.questionRevision.questionId,
+            questionRevisionId: item.questionRevisionId,
             number: item.position,
             type: item.questionRevision.type,
             imageUrl: item.questionRevision.imageUrl,

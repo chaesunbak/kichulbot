@@ -22,6 +22,9 @@
       "question-notes": [
         "dist/question-notes/index.d.ts"
       ],
+      "question-reports": [
+        "dist/question-reports/index.d.ts"
+      ],
       "library": [
         "dist/library/index.d.ts"
       ],
@@ -73,6 +76,11 @@
       "import": "./dist/question-notes/index.js",
       "default": "./dist/question-notes/index.js"
     },
+    "./question-reports": {
+      "types": "./dist/question-reports/index.d.ts",
+      "import": "./dist/question-reports/index.js",
+      "default": "./dist/question-reports/index.js"
+    },
     "./library": {
       "types": "./dist/library/index.d.ts",
       "import": "./dist/library/index.js",
@@ -106,7 +114,6 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

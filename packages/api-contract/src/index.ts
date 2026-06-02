@@ -6,6 +6,7 @@ export * from './library/index.js';
 export * from './papers/index.js';
 export * from './question-notes/index.js';
 export * from './question-attempts/index.js';
+export * from './question-reports/index.js';
 export * from './questions/index.js';
 export * from './review/index.js';
 export * from './tags/index.js';

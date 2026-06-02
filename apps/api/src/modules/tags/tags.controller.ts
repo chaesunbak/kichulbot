@@ -26,7 +26,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreateOfficialTagDto } from './dto/create-official-tag.dto';
+import { CreateTagGroupDto } from './dto/create-tag-group.dto';
 import { UpdateOfficialTagDto } from './dto/update-official-tag.dto';
+import { UpdateTagGroupDto } from './dto/update-tag-group.dto';
 import { TagsService } from './tags.service';
 
 @ApiTags('tags')
@@ -79,5 +81,51 @@ export class TagsController {
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   deleteTag(@Param('id') id: string) {
     return this.tagsService.deleteOfficialTag(id);
+  }
+}
+
+@ApiTags('tag-groups')
+@ApiBearerAuth()
+@ApiUnauthorizedResponse({
+  description: '인증 정보가 없거나 유효하지 않습니다.',
+})
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
+@Controller('tag-groups')
+export class TagGroupsController {
+  constructor(private readonly tagsService: TagsService) {}
+
+  @Get()
+  @ApiOperation({ summary: '태그 그룹 목록 조회' })
+  @ApiOkResponse({ description: '태그 그룹 목록을 반환합니다.' })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  listTagGroups(@Query('examId') examId?: string) {
+    return this.tagsService.listTagGroups(examId);
+  }
+
+  @Post()
+  @ApiOperation({ summary: '태그 그룹 생성' })
+  @ApiCreatedResponse({ description: '태그 그룹을 생성합니다.' })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  createTagGroup(@Body() dto: CreateTagGroupDto) {
+    return this.tagsService.createTagGroup(dto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: '태그 그룹 수정' })
+  @ApiOkResponse({ description: '태그 그룹을 수정합니다.' })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  updateTagGroup(@Param('id') id: string, @Body() dto: UpdateTagGroupDto) {
+    return this.tagsService.updateTagGroup(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '태그 그룹 삭제' })
+  @ApiOkResponse({
+    description: '태그가 연결되지 않은 그룹을 삭제합니다.',
+  })
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  deleteTagGroup(@Param('id') id: string) {
+    return this.tagsService.deleteTagGroup(id);
   }
 }

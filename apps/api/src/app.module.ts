@@ -14,6 +14,7 @@ import { PaperImportDraftsModule } from './modules/paper-import-drafts/paper-imp
 import { PapersModule } from './modules/papers/papers.module';
 import { QuestionAttemptsModule } from './modules/question-attempts/question-attempts.module';
 import { QuestionNotesModule } from './modules/question-notes/question-notes.module';
+import { QuestionReportsModule } from './modules/question-reports/question-reports.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { ReviewModule } from './modules/review/review.module';
 import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
@@ -44,6 +45,7 @@ import { TagsModule } from './modules/tags/tags.module';
     PapersModule,
     QuestionAttemptsModule,
     QuestionNotesModule,
+    QuestionReportsModule,
     QuestionsModule,
     ReviewModule,
     LibraryModule,

@@ -18,6 +18,7 @@ export type QuestionResultResponse = z.infer<
 
 export const SolveQuestionResponseSchema = z.object({
   id: z.string(),
+  questionRevisionId: z.string(),
   number: z.number().int(),
   type: QuestionTypeSchema,
   imageUrl: z.string().url().nullable(),

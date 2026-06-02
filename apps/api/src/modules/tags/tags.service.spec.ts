@@ -105,6 +105,8 @@ function makeTag() {
     id: 'tag_1',
     name: '조선',
     examId: 'exam_1',
+    tagGroupId: null,
+    tagGroup: null,
     createdAt: now,
     updatedAt: now,
     _count: { questions: 0 },

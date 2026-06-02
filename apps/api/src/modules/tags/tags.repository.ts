@@ -4,8 +4,15 @@ import { Prisma } from '@prisma/client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 
 const tagInclude = {
+  tagGroup: true,
   _count: {
     select: { questions: true },
+  },
+};
+
+const tagGroupInclude = {
+  _count: {
+    select: { tags: true },
   },
 };
 
@@ -19,14 +26,23 @@ export class TagsRepository {
         ...(examId ? { examId } : {}),
       },
       include: tagInclude,
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { tagGroup: { sortOrder: 'asc' } },
+        { tagGroup: { name: 'asc' } },
+        { name: 'asc' },
+      ],
     });
   }
 
   findMany() {
     return this.db.tag.findMany({
       include: tagInclude,
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { examId: 'asc' },
+        { tagGroup: { sortOrder: 'asc' } },
+        { tagGroup: { name: 'asc' } },
+        { name: 'asc' },
+      ],
     });
   }
 
@@ -46,6 +62,32 @@ export class TagsRepository {
     });
   }
 
+  findManyTagGroups(examId?: string) {
+    return this.db.tagGroup.findMany({
+      where: {
+        ...(examId ? { examId } : {}),
+      },
+      include: tagGroupInclude,
+      orderBy: [{ examId: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+    });
+  }
+
+  findTagGroupById(id: string) {
+    return this.db.tagGroup.findUnique({
+      where: { id },
+      include: tagGroupInclude,
+    });
+  }
+
+  countTagGroupsByIds(tagGroupIds: string[], examId: string) {
+    return this.db.tagGroup.count({
+      where: {
+        id: { in: tagGroupIds },
+        examId,
+      },
+    });
+  }
+
   async existsExamById(examId: string) {
     const count = await this.db.exam.count({ where: { id: examId } });
     return count > 0;
@@ -55,6 +97,13 @@ export class TagsRepository {
     return this.db.tag.create({
       data,
       include: tagInclude,
+    });
+  }
+
+  createTagGroup(data: Prisma.TagGroupUncheckedCreateInput) {
+    return this.db.tagGroup.create({
+      data,
+      include: tagGroupInclude,
     });
   }
 
@@ -83,6 +132,14 @@ export class TagsRepository {
     });
   }
 
+  updateTagGroup(id: string, data: Prisma.TagGroupUncheckedUpdateInput) {
+    return this.db.tagGroup.update({
+      where: { id },
+      data,
+      include: tagGroupInclude,
+    });
+  }
+
   async deleteIfUnused(id: string) {
     return this.db.$transaction(async (tx) => {
       const tag = await tx.tag.findUnique({
@@ -102,6 +159,28 @@ export class TagsRepository {
       await tx.tag.delete({ where: { id } });
 
       return { tag, questionCount };
+    });
+  }
+
+  async deleteTagGroupIfUnused(id: string) {
+    return this.db.$transaction(async (tx) => {
+      const tagGroup = await tx.tagGroup.findUnique({
+        where: { id },
+        include: tagGroupInclude,
+      });
+
+      if (!tagGroup) {
+        return { tagGroup: null, tagCount: 0 };
+      }
+
+      const tagCount = tagGroup._count.tags;
+      if (tagCount > 0) {
+        return { tagGroup, tagCount };
+      }
+
+      await tx.tagGroup.delete({ where: { id } });
+
+      return { tagGroup, tagCount };
     });
   }
 }

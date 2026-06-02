@@ -1,0 +1,8 @@
+BEGIN;
+
+DROP INDEX IF EXISTS "TagGroup_examId_key_key";
+
+ALTER TABLE "TagGroup"
+  DROP COLUMN IF EXISTS "key";
+
+COMMIT;

@@ -41,23 +41,47 @@ enum AttemptOutcome {
   OMITTED
 }
 
+enum QuestionReportCategory {
+  QUESTION_ERROR
+  IMAGE_ERROR
+  CHOICE_ERROR
+  ANSWER_ERROR
+  EXPLANATION_ERROR
+  CATEGORY_ERROR
+  OTHER
+}
+
+enum QuestionReportStatus {
+  PENDING
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum TagSelectionMode {
+  SINGLE
+  MULTIPLE
+}
+
 model User {
-  id                    String                 @id @default(cuid())
-  email                 String?                @unique
-  passwordHash          String?
-  nickname              String?
-  timezone              String                 @default("Asia/Seoul")
-  authType              UserAuthType           @default(ANONYMOUS)
-  role                  UserRole               @default(USER)
-  libraryFolders        LibraryFolder[]
-  libraryPapers         UserPaper[]
-  solveSessions         SolveSession[]
-  questionSets          QuestionSet[]
-  generatedQuestionSets GeneratedQuestionSet[]
-  questionAttempts      QuestionAttempt[]
-  questionNotes         QuestionNote[]
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  id                      String                 @id @default(cuid())
+  email                   String?                @unique
+  passwordHash            String?
+  nickname                String?
+  timezone                String                 @default("Asia/Seoul")
+  authType                UserAuthType           @default(ANONYMOUS)
+  role                    UserRole               @default(USER)
+  libraryFolders          LibraryFolder[]
+  libraryPapers           UserPaper[]
+  solveSessions           SolveSession[]
+  questionSets            QuestionSet[]
+  generatedQuestionSets   GeneratedQuestionSet[]
+  questionAttempts        QuestionAttempt[]
+  questionNotes           QuestionNote[]
+  questionReports         QuestionReport[]       @relation("QuestionReportReporter")
+  reviewedQuestionReports QuestionReport[]       @relation("QuestionReportReviewer")
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
 }
 
 model Exam {
@@ -68,6 +92,7 @@ model Exam {
   usesRound  Boolean        @default(false)
   categories ExamCategory[]
   tags       Tag[]
+  tagGroups  TagGroup[]
   sessions   ExamSession[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
@@ -128,15 +153,33 @@ model ExamSession {
 }
 
 model Tag {
-  id        String        @id @default(cuid())
-  name      String
-  examId    String
-  exam      Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
-  questions QuestionTag[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  name       String
+  examId     String
+  tagGroupId String?
+  exam       Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  tagGroup   TagGroup?     @relation(fields: [tagGroupId], references: [id], onDelete: SetNull)
+  questions  QuestionTag[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   @@index([examId])
+  @@index([tagGroupId])
+}
+
+model TagGroup {
+  id            String           @id @default(cuid())
+  examId        String
+  name          String
+  selectionMode TagSelectionMode @default(MULTIPLE)
+  sortOrder     Int              @default(0)
+  isActive      Boolean          @default(true)
+  exam          Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  tags          Tag[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([examId, isActive, sortOrder])
 }
 
 model Question {
@@ -155,6 +198,7 @@ model Question {
   revisions              QuestionRevision[]
   tags                   QuestionTag[]
   notes                  QuestionNote[]
+  reports                QuestionReport[]
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
@@ -178,6 +222,7 @@ model QuestionRevision {
   questionSetItems       QuestionSetItem[]
   solveSessionItems      SolveSessionItem[]
   attempts               QuestionAttempt[]
+  reports                QuestionReport[]
   createdAt              DateTime           @default(now())
 
   @@unique([questionId, revision])
@@ -355,4 +400,30 @@ model QuestionNote {
 
   @@unique([userId, questionId])
   @@index([questionId])
+}
+
+model QuestionReport {
+  id                 String                 @id @default(cuid())
+  reporterUserId     String?
+  questionId         String
+  questionRevisionId String?
+  category           QuestionReportCategory
+  content            String                 @db.Text
+  status             QuestionReportStatus   @default(PENDING)
+  adminMemo          String?                @db.Text
+  reviewedByUserId   String?
+  reviewedAt         DateTime?
+  reporter           User?                  @relation("QuestionReportReporter", fields: [reporterUserId], references: [id], onDelete: SetNull)
+  question           Question               @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionRevision   QuestionRevision?      @relation(fields: [questionRevisionId], references: [id], onDelete: SetNull)
+  reviewedBy         User?                  @relation("QuestionReportReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([status, createdAt])
+  @@index([category])
+  @@index([questionId, status])
+  @@index([questionRevisionId])
+  @@index([reporterUserId, createdAt])
+  @@index([reviewedByUserId])
 }

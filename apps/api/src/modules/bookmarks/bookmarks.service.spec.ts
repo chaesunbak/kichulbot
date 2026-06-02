@@ -7,6 +7,7 @@ import {
   QuestionSetKind,
 } from '@prisma/client';
 
+import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { BookmarksRepository } from './bookmarks.repository';
 import { BookmarksService } from './bookmarks.service';
 
@@ -96,6 +97,7 @@ const questionSetItem = {
 describe('BookmarksService', () => {
   let service: BookmarksService;
   let repository: jest.Mocked<BookmarksRepository>;
+  let solveSessionsService: jest.Mocked<SolveSessionsService>;
 
   beforeEach(() => {
     repository = {
@@ -107,7 +109,10 @@ describe('BookmarksService', () => {
       findBookmarkedQuestion: jest.fn(),
       deleteQuestion: jest.fn(),
     } as unknown as jest.Mocked<BookmarksRepository>;
-    service = new BookmarksService(repository);
+    solveSessionsService = {
+      startQuestionSet: jest.fn(),
+    } as unknown as jest.Mocked<SolveSessionsService>;
+    service = new BookmarksService(repository, solveSessionsService);
   });
 
   it('uses an idempotent repository operation when the same question is added again', async () => {
@@ -159,5 +164,14 @@ describe('BookmarksService', () => {
       bookmarkList.id,
       question.id,
     );
+  });
+
+  it('does not start an empty bookmark list', async () => {
+    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+
+    await expect(
+      service.startSolveSession('user_1', bookmarkList.id, 'ONE_BY_ONE'),
+    ).rejects.toThrow('풀 문제가 없습니다.');
+    expect(solveSessionsService.startQuestionSet).not.toHaveBeenCalled();
   });
 });

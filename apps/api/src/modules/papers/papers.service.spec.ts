@@ -12,6 +12,7 @@ import {
 
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
+import { QuestionsService } from '../questions/questions.service';
 import { PapersRepository } from './papers.repository';
 import { PapersService } from './papers.service';
 
@@ -87,6 +88,7 @@ describe('PapersService', () => {
   let repository: jest.Mocked<PapersRepository>;
   let examsService: jest.Mocked<ExamsService>;
   let storageService: jest.Mocked<StorageService>;
+  let questionsService: jest.Mocked<QuestionsService>;
 
   beforeEach(() => {
     repository = {
@@ -104,8 +106,16 @@ describe('PapersService', () => {
       getPublicUrl: jest.fn(),
       deleteObject: jest.fn().mockResolvedValue(undefined),
     };
+    questionsService = {
+      createQuestion: jest.fn(),
+    } as unknown as jest.Mocked<QuestionsService>;
 
-    service = new PapersService(repository, examsService, storageService);
+    service = new PapersService(
+      repository,
+      examsService,
+      storageService,
+      questionsService,
+    );
   });
 
   it('returns only published papers for normal users without admin fields', async () => {
@@ -164,6 +174,20 @@ describe('PapersService', () => {
       'user_1',
     );
     expect(response.papers[0]).toMatchObject({ isInLibrary: true });
+  });
+
+  it('filters papers by exam id when provided', async () => {
+    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+
+    await service.listPapers(UserRole.USER, undefined, { examId: 'exam_1' });
+
+    expect(repository.findMany).toHaveBeenCalledWith(
+      {
+        isPublished: true,
+        examSession: { examId: 'exam_1' },
+      },
+      undefined,
+    );
   });
 
   it('rejects creating a paper when the exam id is invalid', async () => {

@@ -10,7 +10,7 @@ const questionSet = {
   id: 'daily_wrong_1',
   kind: QuestionSetKind.DAILY_WRONG,
   ownerUserId: 'user_1',
-  title: '2026-06-01 오늘의 오답',
+  title: '2026년 6월 1일 오늘의 오답',
   createdAt: now,
   updatedAt: now,
   generated: {

@@ -55,29 +55,30 @@ model User {
   questionSets          QuestionSet[]
   generatedQuestionSets GeneratedQuestionSet[]
   questionAttempts      QuestionAttempt[]
+  questionNotes         QuestionNote[]
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
 }
 
 model Exam {
-  id         String        @id @default(cuid())
+  id         String         @id @default(cuid())
   name       String
-  usesMonth  Boolean       @default(false)
-  usesGrade  Boolean       @default(false)
-  usesRound  Boolean       @default(false)
+  usesMonth  Boolean        @default(false)
+  usesGrade  Boolean        @default(false)
+  usesRound  Boolean        @default(false)
   categories ExamCategory[]
   tags       Tag[]
   sessions   ExamSession[]
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }
 
 model Category {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   name      String
   exams     ExamCategory[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 model ExamCategory {
@@ -153,6 +154,7 @@ model Question {
   paper                  Paper              @relation(fields: [paperId], references: [id], onDelete: Cascade)
   revisions              QuestionRevision[]
   tags                   QuestionTag[]
+  notes                  QuestionNote[]
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
@@ -339,4 +341,18 @@ model QuestionTag {
 
   @@id([questionId, tagId])
   @@index([tagId])
+}
+
+model QuestionNote {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  content    String   @db.Text
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([questionId])
 }

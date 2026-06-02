@@ -13,9 +13,15 @@ import {
   ListBookmarkListsResponse,
   ListBookmarkListsResponseSchema,
 } from '@kichulbot/api-contract/bookmarks';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { StartSolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { AnswerMode, Prisma } from '@prisma/client';
 
+import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { BookmarksRepository } from './bookmarks.repository';
 
 type BookmarkListSummary = Prisma.QuestionSetGetPayload<{
@@ -46,7 +52,10 @@ type BookmarkListItemWithQuestion = BookmarkListWithQuestions['items'][number];
 
 @Injectable()
 export class BookmarksService {
-  constructor(private readonly bookmarksRepository: BookmarksRepository) {}
+  constructor(
+    private readonly bookmarksRepository: BookmarksRepository,
+    private readonly solveSessionsService: SolveSessionsService,
+  ) {}
 
   async listBookmarkLists(userId: string): Promise<ListBookmarkListsResponse> {
     const bookmarkLists =
@@ -123,6 +132,25 @@ export class BookmarksService {
       bookmarkListId,
       questionId,
     });
+  }
+
+  async startSolveSession(
+    userId: string,
+    bookmarkListId: string,
+    mode: AnswerMode,
+  ): Promise<StartSolveSessionResponse> {
+    const bookmarkList = await this.getOwnedBookmarkList(
+      userId,
+      bookmarkListId,
+    );
+    if (bookmarkList.items.length === 0) {
+      throw new BadRequestException('풀 문제가 없습니다.');
+    }
+    return this.solveSessionsService.startQuestionSet(
+      userId,
+      bookmarkList.id,
+      mode,
+    );
   }
 
   private async getOwnedBookmarkList(userId: string, bookmarkListId: string) {

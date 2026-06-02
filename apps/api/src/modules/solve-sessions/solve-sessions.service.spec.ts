@@ -253,11 +253,62 @@ describe('SolveSessionsService', () => {
     const response = await service.submit('user_1', session.id);
 
     expect(response.session.result).toMatchObject({
-      score: 100,
+      score: 5,
       totalCount: 1,
       answeredCount: 1,
       correctCount: 1,
       wrongCount: 0,
+    });
+  });
+
+  it('keeps daily wrong review sessions out of solve logs', async () => {
+    repository.findLogs.mockResolvedValue([
+      {
+        ...session,
+        sourceSet: {
+          ...session.sourceSet,
+          kind: QuestionSetKind.DAILY_WRONG,
+        },
+      },
+      session,
+    ]);
+
+    const response = await service.listLogs('user_1');
+
+    expect(response.logs).toHaveLength(1);
+    expect(response.logs[0].id).toBe(session.id);
+  });
+
+  it('grades daily wrong review answers without a persisted attempt', async () => {
+    repository.findById.mockResolvedValue({
+      ...session,
+      mode: AnswerMode.ONE_BY_ONE,
+      paper: null,
+      sourceSet: {
+        id: 'daily_wrong_1',
+        kind: QuestionSetKind.DAILY_WRONG,
+        ownerUserId: session.userId,
+        title: '2026년 6월 1일 오늘의 오답',
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+    repository.saveAnswer.mockResolvedValue({
+      draft: correctDraft,
+      attempt: null,
+    });
+
+    const response = await service.saveAnswer(
+      'user_1',
+      session.id,
+      question.id,
+      { answerChoice: 3, spentMilliseconds: 1000 },
+    );
+
+    expect(response.answer.isCorrect).toBe(true);
+    expect(response.result).toMatchObject({
+      answerChoice: 3,
+      isCorrect: true,
     });
   });
 
@@ -277,6 +328,45 @@ describe('SolveSessionsService', () => {
       answeredCount: 0,
       correctCount: 0,
       wrongCount: 1,
+    });
+  });
+
+  it('calculates submitted daily wrong review results from drafts', async () => {
+    repository.findById.mockResolvedValue({
+      ...session,
+      paper: null,
+      sourceSet: {
+        id: 'daily_wrong_1',
+        kind: QuestionSetKind.DAILY_WRONG,
+        ownerUserId: session.userId,
+        title: '2026년 6월 1일 오늘의 오답',
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+    repository.submit.mockResolvedValue({
+      ...session,
+      paper: null,
+      sourceSet: {
+        id: 'daily_wrong_1',
+        kind: QuestionSetKind.DAILY_WRONG,
+        ownerUserId: session.userId,
+        title: '2026년 6월 1일 오늘의 오답',
+        createdAt: now,
+        updatedAt: now,
+      },
+      submittedAt: now,
+      items: [{ ...sessionItem, draft: correctDraft, attempts: [] }],
+    });
+
+    const response = await service.submit('user_1', session.id);
+
+    expect(response.session.result).toMatchObject({
+      score: 5,
+      totalCount: 1,
+      answeredCount: 1,
+      correctCount: 1,
+      wrongCount: 0,
     });
   });
 

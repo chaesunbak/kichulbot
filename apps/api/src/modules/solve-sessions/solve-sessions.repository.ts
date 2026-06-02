@@ -4,6 +4,7 @@ import {
   AttemptOutcome,
   Prisma,
   QuestionRevision,
+  QuestionSetKind,
 } from '@prisma/client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
@@ -89,9 +90,9 @@ export class SolveSessionsRepository {
 
   findLogs(userId: string) {
     return this.db.solveSession.findMany({
-      where: { userId, submittedAt: { not: null } },
+      where: { userId },
       include: this.sessionIncludes(),
-      orderBy: { submittedAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 
@@ -108,7 +109,10 @@ export class SolveSessionsRepository {
       await tx.$queryRaw`SELECT "id" FROM "SolveSession" WHERE "id" = ${sessionId} FOR UPDATE`;
       const item = await tx.solveSessionItem.findFirstOrThrow({
         where: { id: sessionItemId, sessionId },
-        include: { questionRevision: true, session: true },
+        include: {
+          questionRevision: true,
+          session: { include: { sourceSet: true } },
+        },
       });
       if (item.session.submittedAt) throw new SubmittedSolveSessionError();
 
@@ -122,7 +126,9 @@ export class SolveSessionsRepository {
         },
       });
       const attempt =
-        item.session.mode === AnswerMode.ONE_BY_ONE && this.hasAnswer(answer)
+        this.shouldCreateAttempts(item.session) &&
+        item.session.mode === AnswerMode.ONE_BY_ONE &&
+        this.hasAnswer(answer)
           ? await tx.questionAttempt.create({
               data: {
                 userId: item.session.userId,
@@ -149,8 +155,9 @@ export class SolveSessionsRepository {
       });
       if (session.submittedAt) return session;
 
-      const attempts =
-        session.mode === AnswerMode.EXAM
+      const attempts = !this.shouldCreateAttempts(session)
+        ? []
+        : session.mode === AnswerMode.EXAM
           ? session.items.map((item) => ({
               userId: session.userId,
               sessionItemId: item.id,
@@ -208,6 +215,12 @@ export class SolveSessionsRepository {
     answerText?: string | null;
   }) {
     return answer?.answerChoice != null || answer?.answerText != null;
+  }
+
+  private shouldCreateAttempts(session: {
+    sourceSet?: { kind: QuestionSetKind } | null;
+  }) {
+    return session.sourceSet?.kind !== QuestionSetKind.DAILY_WRONG;
   }
 
   private toOutcome(

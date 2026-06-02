@@ -22,6 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
 import { BookmarksService } from './bookmarks.service';
 import { CreateBookmarkListDto } from './dto/bookmark-list.dto';
+import { StartBookmarkListSessionDto } from './dto/start-bookmark-list-session.dto';
 
 @ApiTags('question-lists')
 @ApiBearerAuth()
@@ -56,6 +57,23 @@ export class BookmarksController {
     @Param('bookmarkListId') bookmarkListId: string,
   ) {
     return this.bookmarksService.getBookmarkList(user.id, bookmarkListId);
+  }
+
+  @Post(':bookmarkListId/solve-sessions')
+  @ApiOperation({ summary: '북마크 리스트 풀이 세션 시작' })
+  @ApiCreatedResponse({
+    description: '북마크 리스트의 문제로 풀이를 시작합니다.',
+  })
+  startSolveSession(
+    @CurrentUser() user: RequestUser,
+    @Param('bookmarkListId') bookmarkListId: string,
+    @Body() dto: StartBookmarkListSessionDto,
+  ) {
+    return this.bookmarksService.startSolveSession(
+      user.id,
+      bookmarkListId,
+      dto.mode,
+    );
   }
 
   @Put(':bookmarkListId/questions/:questionId')

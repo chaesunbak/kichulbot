@@ -35,7 +35,9 @@ export class SolveSessionsController {
 
   @Get()
   @ApiOperation({ summary: '내 풀이 로그 조회' })
-  @ApiOkResponse({ description: '종료한 풀이 로그를 반환합니다.' })
+  @ApiOkResponse({
+    description: '진행 중이거나 종료한 풀이 로그를 반환합니다.',
+  })
   listLogs(@CurrentUser() user: RequestUser) {
     return this.solveSessionsService.listLogs(user.id);
   }

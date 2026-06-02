@@ -157,7 +157,11 @@ export class ReviewRepository {
   }
 
   private toTitle(studyDate: Date) {
-    return `${studyDate.toISOString().slice(0, 10)} 오늘의 오답`;
+    const year = studyDate.getUTCFullYear();
+    const month = studyDate.getUTCMonth() + 1;
+    const date = studyDate.getUTCDate();
+
+    return `${year}년 ${month}월 ${date}일 오늘의 오답`;
   }
 
   private toParameters(questionCount: number) {

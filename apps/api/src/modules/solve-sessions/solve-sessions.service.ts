@@ -25,6 +25,7 @@ import {
   AnswerMode,
   AttemptOutcome,
   Prisma,
+  QuestionSetKind,
   QuestionType,
 } from '@prisma/client';
 
@@ -55,6 +56,7 @@ type SessionItem = SessionWithRelations['items'][number];
 type StoredDraft = NonNullable<SessionItem['draft']>;
 type StoredAttempt = SessionItem['attempts'][number];
 type StoredRevision = SessionItem['questionRevision'];
+type GradedAnswer = Pick<StoredAttempt, 'outcome'>;
 
 @Injectable()
 export class SolveSessionsService {
@@ -84,7 +86,9 @@ export class SolveSessionsService {
   async listLogs(userId: string): Promise<ListSolveSessionLogsResponse> {
     const sessions = await this.solveSessionsRepository.findLogs(userId);
     return ListSolveSessionLogsResponseSchema.parse({
-      logs: sessions.map((session) => this.toLogResponse(session)),
+      logs: sessions
+        .filter((session) => this.shouldIncludeInLogs(session))
+        .map((session) => this.toLogResponse(session)),
     });
   }
 
@@ -146,10 +150,12 @@ export class SolveSessionsService {
         }
         throw error;
       });
+    const gradedAnswer =
+      attempt ?? this.toEphemeralGradedAnswer(session, item, draft);
     return SaveAnswerResponseSchema.parse({
-      answer: this.toAnswerResponse(item, draft, attempt),
-      result: attempt
-        ? this.toQuestionResult(item.questionRevision, attempt)
+      answer: this.toAnswerResponse(item, draft, gradedAnswer ?? null),
+      result: gradedAnswer
+        ? this.toQuestionResult(item.questionRevision, gradedAnswer)
         : null,
     });
   }
@@ -209,7 +215,7 @@ export class SolveSessionsService {
       paper: {
         ...this.toPaperResponse(session),
         questions: session.items.map((item) => {
-          const attempt = this.latestAttempt(item);
+          const gradedAnswer = this.toGradedAnswer(session, item);
           return {
             id: item.questionRevision.questionId,
             number: item.position,
@@ -219,8 +225,8 @@ export class SolveSessionsService {
             points: item.questionRevision.points,
             recommendedTimeSeconds:
               item.questionRevision.recommendedTimeSeconds,
-            result: this.shouldRevealResult(session, attempt)
-              ? this.toQuestionResult(item.questionRevision, attempt)
+            result: this.shouldRevealResult(session, gradedAnswer)
+              ? this.toQuestionResult(item.questionRevision, gradedAnswer)
               : null,
           };
         }),
@@ -231,7 +237,7 @@ export class SolveSessionsService {
           this.toAnswerResponse(
             item,
             item.draft!,
-            this.latestAttempt(item) ?? null,
+            this.toGradedAnswer(session, item) ?? null,
           ),
         ),
       result: session.submittedAt ? this.toSessionResult(session) : null,
@@ -248,9 +254,11 @@ export class SolveSessionsService {
       id: session.id,
       mode: session.mode,
       paper: this.toPaperResponse(session),
-      result: this.toSessionResult(session),
-      submittedAt: session.submittedAt!.toISOString(),
+      result: session.submittedAt ? this.toSessionResult(session) : null,
+      submittedAt: session.submittedAt?.toISOString() ?? null,
+      totalSpentMilliseconds: this.getTotalSpentMilliseconds(session),
       createdAt: session.createdAt.toISOString(),
+      updatedAt: session.updatedAt.toISOString(),
     };
   }
 
@@ -290,36 +298,38 @@ export class SolveSessionsService {
 
   private shouldRevealResult(
     session: SessionWithRelations,
-    attempt?: StoredAttempt,
+    gradedAnswer?: GradedAnswer,
   ) {
     return (
       (!!session.submittedAt || session.mode === AnswerMode.ONE_BY_ONE) &&
-      !!attempt
+      !!gradedAnswer
     );
   }
 
   private toQuestionResult(
     question: StoredRevision,
-    attempt?: StoredAttempt,
+    gradedAnswer?: GradedAnswer,
   ): QuestionResultResponse {
     return {
       answerChoice: question.answerChoice,
       answerText: question.answerText,
       explanation: question.explanation,
-      isCorrect: attempt?.outcome === AttemptOutcome.CORRECT,
+      isCorrect: gradedAnswer?.outcome === AttemptOutcome.CORRECT,
     };
   }
 
   private toAnswerResponse(
     item: SessionItem,
     draft: StoredDraft,
-    attempt: StoredAttempt | null,
+    gradedAnswer: GradedAnswer | null,
   ): AnswerResponse {
     return {
       questionId: item.questionRevision.questionId,
       answerChoice: draft.answerChoice,
       answerText: draft.answerText,
-      isCorrect: attempt ? attempt.outcome === AttemptOutcome.CORRECT : null,
+      isCorrect: gradedAnswer
+        ? gradedAnswer.outcome === AttemptOutcome.CORRECT
+        : null,
       spentMilliseconds: draft.spentMilliseconds,
       updatedAt: draft.updatedAt.toISOString(),
     };
@@ -329,12 +339,49 @@ export class SolveSessionsService {
     return item.attempts.at(-1);
   }
 
+  private toGradedAnswer(session: SessionWithRelations, item: SessionItem) {
+    return (
+      this.latestAttempt(item) ??
+      this.toEphemeralGradedAnswer(session, item, item.draft)
+    );
+  }
+
+  private toEphemeralGradedAnswer(
+    session: SessionWithRelations,
+    item: SessionItem,
+    draft?: StoredDraft | null,
+  ): GradedAnswer | undefined {
+    if (this.shouldCreateAttempts(session)) return undefined;
+    if (!draft) {
+      return session.submittedAt
+        ? { outcome: AttemptOutcome.OMITTED }
+        : undefined;
+    }
+    if (!this.hasAnswer(draft) && !session.submittedAt) return undefined;
+    return { outcome: this.toOutcome(item.questionRevision, draft) };
+  }
+
+  private shouldCreateAttempts(session: SessionWithRelations) {
+    return session.sourceSet?.kind !== QuestionSetKind.DAILY_WRONG;
+  }
+
+  private shouldIncludeInLogs(session: SessionWithRelations) {
+    return this.shouldCreateAttempts(session);
+  }
+
+  private getTotalSpentMilliseconds(session: SessionWithRelations) {
+    return session.items.reduce(
+      (total, item) => total + (item.draft?.spentMilliseconds ?? 0),
+      0,
+    );
+  }
+
   private toSessionResult(
     session: SessionWithRelations,
   ): SolveSessionResultResponse {
     const attempts = session.items
-      .map((item) => this.latestAttempt(item))
-      .filter((attempt): attempt is StoredAttempt => !!attempt);
+      .map((item) => this.toGradedAnswer(session, item))
+      .filter((attempt): attempt is GradedAnswer => !!attempt);
     const answered = attempts.filter(
       (attempt) => attempt.outcome !== AttemptOutcome.OMITTED,
     );
@@ -343,8 +390,8 @@ export class SolveSessionsService {
     ).length;
     const totalCount = session.items.length;
     const score = session.items.reduce((total, item) => {
-      const attempt = this.latestAttempt(item);
-      return attempt?.outcome === AttemptOutcome.CORRECT
+      const gradedAnswer = this.toGradedAnswer(session, item);
+      return gradedAnswer?.outcome === AttemptOutcome.CORRECT
         ? total + item.questionRevision.points
         : total;
     }, 0);
@@ -354,10 +401,26 @@ export class SolveSessionsService {
       answeredCount: answered.length,
       correctCount,
       wrongCount: totalCount - correctCount,
-      totalSpentMilliseconds: session.items.reduce(
-        (total, item) => total + (item.draft?.spentMilliseconds ?? 0),
-        0,
-      ),
+      totalSpentMilliseconds: this.getTotalSpentMilliseconds(session),
     };
+  }
+
+  private toOutcome(
+    question: StoredRevision,
+    draft?: StoredDraft | null,
+  ): AttemptOutcome {
+    if (!draft || !this.hasAnswer(draft)) return AttemptOutcome.OMITTED;
+    const isCorrect =
+      question.type === QuestionType.MULTIPLE_CHOICE
+        ? draft.answerChoice === question.answerChoice
+        : draft.answerText?.trim() === question.answerText?.trim();
+    return isCorrect ? AttemptOutcome.CORRECT : AttemptOutcome.INCORRECT;
+  }
+
+  private hasAnswer(answer?: {
+    answerChoice?: number | null;
+    answerText?: string | null;
+  }) {
+    return answer?.answerChoice != null || answer?.answerText != null;
   }
 }

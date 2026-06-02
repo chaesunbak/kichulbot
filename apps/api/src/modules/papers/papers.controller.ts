@@ -6,10 +6,15 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -19,6 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
+import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -27,6 +33,10 @@ import { RequestUser } from '../auth/types';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersService } from './papers.service';
+
+const BULK_IMAGE_UPLOAD_OPTIONS = {
+  limits: { fileSize: 5 * 1024 * 1024 },
+};
 
 @ApiTags('exam-papers')
 @ApiBearerAuth()
@@ -52,13 +62,27 @@ export class PapersController {
   @Post()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
+  @UseInterceptors(FilesInterceptor('images', 100, BULK_IMAGE_UPLOAD_OPTIONS))
+  @ApiConsumes('application/json', 'multipart/form-data')
+  @ApiBody({ type: CreatePaperDto })
   @ApiOperation({ summary: '문제지 생성' })
   @ApiCreatedResponse({ description: '문제지를 생성합니다.' })
   @ApiForbiddenResponse({
     description: '관리자만 문제지를 생성할 수 있습니다.',
   })
-  createPaper(@CurrentUser() user: RequestUser, @Body() dto: CreatePaperDto) {
-    return this.papersService.createPaper(dto, user.role);
+  createPaper(
+    @CurrentUser() user: RequestUser,
+    @Body() body: CreatePaperDto & { payload?: string },
+    @UploadedFiles() images: UploadedImageFile[] = [],
+  ) {
+    if (body.payload) {
+      return this.papersService.createPaperWithQuestions(
+        body.payload,
+        images,
+        user.role,
+      );
+    }
+    return this.papersService.createPaper(body, user.role);
   }
 
   @Get(':id')

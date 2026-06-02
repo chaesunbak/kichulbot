@@ -41,7 +41,7 @@ export class ExamsService {
   }
 
   async createExam(dto: CreateExamDto): Promise<ExamMutationResponse> {
-    const categoryIds = this.normalizeCategoryIds(dto.categoryIds);
+    const categoryIds = this.normalizeCategoryIds(dto.categoryIds ?? []);
     const exam = await this.examsRepository
       .create({
         name: dto.name.trim(),
@@ -68,9 +68,10 @@ export class ExamsService {
       throw new NotFoundException('시험을 찾을 수 없습니다.');
     }
 
-    const categoryIds = dto.categoryIds
-      ? this.normalizeCategoryIds(dto.categoryIds)
-      : undefined;
+    const categoryIds =
+      dto.categoryIds !== undefined
+        ? this.normalizeCategoryIds(dto.categoryIds)
+        : undefined;
     const exam = await this.examsRepository
       .update(id, {
         name: dto.name?.trim(),

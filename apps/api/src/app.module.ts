@@ -10,6 +10,7 @@ import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { LibraryModule } from './modules/library/library.module';
+import { PaperImportDraftsModule } from './modules/paper-import-drafts/paper-import-drafts.module';
 import { PapersModule } from './modules/papers/papers.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { ReviewModule } from './modules/review/review.module';
@@ -37,6 +38,7 @@ import { TagsModule } from './modules/tags/tags.module';
     CategoriesModule,
     ExamsModule,
     TagsModule,
+    PaperImportDraftsModule,
     PapersModule,
     QuestionsModule,
     ReviewModule,

@@ -1,7 +1,10 @@
 import {
   AdminPaperResponse,
+  CreatePaperRequestSchema,
   CreatePaperResponse,
   CreatePaperResponseSchema,
+  CreatePaperWithQuestionsRequest,
+  CreatePaperWithQuestionsRequestSchema,
   DeletePaperResponse,
   DeletePaperResponseSchema,
   GetPaperResponse,
@@ -28,7 +31,9 @@ import {
 } from '@prisma/client';
 
 import { StorageService } from '../../infrastructure/storage/storage.service';
+import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
+import { QuestionsService } from '../questions/questions.service';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersRepository } from './papers.repository';
@@ -53,34 +58,88 @@ export class PapersService {
     private readonly papersRepository: PapersRepository,
     private readonly examsService: ExamsService,
     private readonly storageService: StorageService,
+    private readonly questionsService: QuestionsService,
   ) {}
 
   async createPaper(
     dto: CreatePaperDto,
     role: UserRole,
   ): Promise<CreatePaperResponse> {
-    const exam = await this.examsService.findById(dto.examId);
+    const parsedDto = this.parseCreatePaperRequest(dto);
+    const exam = await this.examsService.findById(parsedDto.examId);
 
     if (!exam) {
       throw new BadRequestException('시험을 찾을 수 없습니다.');
     }
 
-    this.assertSessionFields(exam, dto);
+    this.assertSessionFields(exam, parsedDto);
 
     const paper = await this.papersRepository.create({
-      title: dto.title,
-      examId: dto.examId,
-      displayYear: dto.year,
-      month: dto.month ?? null,
-      grade: dto.grade ?? null,
-      round: dto.round ?? null,
-      questionCount: dto.questionCount ?? 20,
-      isPublished: dto.isPublished ?? false,
+      title: parsedDto.title,
+      examId: parsedDto.examId,
+      displayYear: parsedDto.year,
+      month: parsedDto.month ?? null,
+      grade: parsedDto.grade ?? null,
+      round: parsedDto.round ?? null,
+      questionCount: parsedDto.questionCount ?? 20,
+      isPublished: parsedDto.isPublished ?? false,
     });
 
     return CreatePaperResponseSchema.parse({
       paper: this.toPaperResponse(paper, role),
     });
+  }
+
+  async createPaperWithQuestions(
+    payload: string,
+    files: UploadedImageFile[],
+    role: UserRole,
+  ): Promise<CreatePaperResponse> {
+    const input = this.parseCreatePaperWithQuestionsRequest(payload);
+    this.assertBulkQuestionInput(input);
+    const imageMap = this.toImageMap(files);
+
+    for (const question of input.questions) {
+      if (!imageMap.has(question.imageFileName)) {
+        throw new BadRequestException(
+          `${question.number}번 문항 이미지(${question.imageFileName})를 찾을 수 없습니다.`,
+        );
+      }
+    }
+
+    let paperId: string | null = null;
+    try {
+      const { paper } = await this.createPaper(input.paper, role);
+      paperId = paper.id;
+
+      for (const question of input.questions) {
+        const image = imageMap.get(question.imageFileName);
+        if (!image) continue;
+        await this.questionsService.createQuestion(
+          {
+            paperId,
+            number: question.number,
+            type: question.type,
+            choiceCount: question.choiceCount ?? undefined,
+            answerChoice: question.answerChoice ?? undefined,
+            answerText: question.answerText ?? undefined,
+            explanation: question.explanation ?? undefined,
+            points: question.points,
+            recommendedTimeSeconds:
+              question.recommendedTimeSeconds ?? undefined,
+            tagIds: question.tagIds,
+          },
+          image,
+        );
+      }
+
+      return this.getPaper(paperId, role) as Promise<CreatePaperResponse>;
+    } catch (error) {
+      if (paperId) {
+        await this.deletePaper(paperId).catch(() => undefined);
+      }
+      throw error;
+    }
   }
 
   async listPapers(
@@ -221,6 +280,63 @@ export class PapersService {
     this.assertSessionField(exam.usesMonth, dto.month, '시행 월');
     this.assertSessionField(exam.usesGrade, dto.grade, '대상 학년');
     this.assertSessionField(exam.usesRound, dto.round, '시험 회차');
+  }
+
+  private parseCreatePaperRequest(input: unknown) {
+    const result = CreatePaperRequestSchema.safeParse(input);
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+    return result.data;
+  }
+
+  private parseCreatePaperWithQuestionsRequest(
+    payload: string,
+  ): CreatePaperWithQuestionsRequest {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      throw new BadRequestException(
+        '문제지 생성 payload가 올바른 JSON이 아닙니다.',
+      );
+    }
+
+    const result = CreatePaperWithQuestionsRequestSchema.safeParse(parsed);
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+    return result.data;
+  }
+
+  private assertBulkQuestionInput(input: CreatePaperWithQuestionsRequest) {
+    if (input.questions.length > (input.paper.questionCount ?? 20)) {
+      throw new BadRequestException(
+        '등록할 문항 수는 문제지 문항 수를 넘을 수 없습니다.',
+      );
+    }
+
+    const numbers = new Set<number>();
+    for (const question of input.questions) {
+      if (numbers.has(question.number)) {
+        throw new BadRequestException(
+          `${question.number}번 문항이 중복되었습니다.`,
+        );
+      }
+      numbers.add(question.number);
+    }
+  }
+
+  private toImageMap(files: UploadedImageFile[]) {
+    const map = new Map<string, UploadedImageFile>();
+    for (const file of files) {
+      map.set(file.originalname, file);
+    }
+    return map;
   }
 
   private assertSessionField(

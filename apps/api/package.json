@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "PORT=4000 WEB_ORIGINS=http://localhost:3000,http://localhost:3001 nest start --watch",
     "build": "nest build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/main",
     "start:dev": "PORT=4000 WEB_ORIGINS=http://localhost:3000,http://localhost:3001 nest start --watch",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",

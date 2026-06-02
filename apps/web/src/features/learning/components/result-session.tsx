@@ -319,9 +319,9 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="
-      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
-    ">
+    <div
+      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
+    >
       <p className="font-semibold text-blue-900">해설</p>
       <p className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}

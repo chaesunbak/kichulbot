@@ -10,9 +10,9 @@ export default async function Home() {
   if (user) redirect('/resources');
 
   return (
-    <div
-      className="flex flex-1 flex-col items-center justify-center gap-10 px-4"
-    >
+    <div className="
+      flex flex-1 flex-col items-center justify-center gap-10 px-4
+    ">
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight text-zinc-900">
           기출봇

@@ -39,9 +39,7 @@ export default async function PapersPage() {
       "
     >
       {examsWithPapers.length === 0 ? (
-        <section
-          className="px-6 py-12 text-center"
-        >
+        <section className="px-6 py-12 text-center">
           <p className="text-sm text-zinc-500">아직 등록된 시험이 없습니다.</p>
         </section>
       ) : (
@@ -51,7 +49,7 @@ export default async function PapersPage() {
             sm:space-y-6
           "
         >
-          {examsWithPapers.map((exam, index) => (
+          {examsWithPapers.map((exam) => (
             <section
               key={exam.id}
               className={cn(

@@ -20,10 +20,12 @@ export default async function PaperPage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="
-        grid gap-8
-        md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:items-start
-      ">
+      <div
+        className="
+          grid gap-8
+          md:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] md:items-start
+        "
+      >
         <div className="md:sticky md:top-10">
           <PaperCover paper={paper} />
         </div>

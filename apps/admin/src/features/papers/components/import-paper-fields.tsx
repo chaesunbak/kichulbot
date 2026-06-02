@@ -40,10 +40,12 @@ export function ImportPaperFields({
           }
         />
       </Field>
-      <div className="
-        grid gap-3
-        sm:grid-cols-2
-      ">
+      <div
+        className="
+          grid gap-3
+          sm:grid-cols-2
+        "
+      >
         <ImportPaperNumberField
           label="시행 연도"
           value={values.year}
@@ -101,10 +103,12 @@ export function ImportPaperFields({
           onChange={(round) => onChange({ ...values, round })}
         />
       )}
-      <div className="
-        grid gap-3
-        sm:grid-cols-2
-      ">
+      <div
+        className="
+          grid gap-3
+          sm:grid-cols-2
+        "
+      >
         <Field>
           <FieldLabel>문제지 형식</FieldLabel>
           <Select

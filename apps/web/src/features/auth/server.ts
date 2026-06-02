@@ -22,13 +22,14 @@ export async function getToken(): Promise<string | null> {
   return store.get(COOKIE_NAME)?.value ?? null;
 }
 
-export const getUser = cache(async (): Promise<AuthUser | null> => {
+export async function getUser(): Promise<AuthUser | null> {
   const token = await getToken();
   if (!token) return null;
   try {
     return await getCurrentUser(token);
   } catch {
-    (await cookies()).delete(COOKIE_NAME);
     return null;
   }
-});
+}
+
+export const getCachedUser = cache(getUser);

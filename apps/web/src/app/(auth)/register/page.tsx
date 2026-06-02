@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
 import RegisterForm from '@/features/auth/components/register-form';
-import { getUser } from '@/features/auth/server';
+import { getCachedUser } from '@/features/auth/server';
 
 export default async function RegisterPage() {
-  const user = await getUser();
+  const user = await getCachedUser();
   const isGuestConvert = user?.authType === 'ANONYMOUS';
 
   return (

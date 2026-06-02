@@ -3,16 +3,16 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { GuestButton } from '@/features/auth/components/guest-button';
-import { getUser } from '@/features/auth/server';
+import { getCachedUser } from '@/features/auth/server';
 
 export default async function Home() {
-  const user = await getUser();
+  const user = await getCachedUser();
   if (user) redirect('/home');
 
   return (
-    <div
-      className="flex flex-1 flex-col items-center justify-center gap-10 px-4"
-    >
+    <div className="
+      flex flex-1 flex-col items-center justify-center gap-10 px-4
+    ">
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight text-zinc-900">
           기출봇

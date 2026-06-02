@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/server';
+import { getCachedUser } from '@/features/auth/server';
 import GlobalFooter from '@/shared/components/global-footer';
 import MainHeader from '@/shared/components/main-header';
 import { MobileBottomNavigation } from '@/shared/components/main-navigation';
@@ -10,7 +10,7 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
+  const user = await getCachedUser();
   if (!user) redirect('/login');
 
   return (

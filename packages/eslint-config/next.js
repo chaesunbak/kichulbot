@@ -4,7 +4,9 @@ import nextTs from 'eslint-config-next/typescript';
 
 import {
   betterTailwindConfig,
+  consistentTypeImportsRule,
   importSortRule,
+  kichulbotRule,
   zodNamespaceImportRule,
 } from './rules.js';
 
@@ -12,9 +14,11 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   importSortRule,
+  kichulbotRule,
   betterTailwindConfig(),
   {
     rules: {
+      ...consistentTypeImportsRule,
       ...zodNamespaceImportRule,
     },
   },

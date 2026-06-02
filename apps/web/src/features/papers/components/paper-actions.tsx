@@ -30,29 +30,9 @@ export function PaperActions({
   const [isInLibrary, setIsInLibrary] = useState(initialIsInLibrary);
   const [message, setMessage] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [isChoosingFolder, setIsChoosingFolder] = useState(false);
-  const [folders, setFolders] = useState<LibraryFolder[]>([]);
-  const [folderId, setFolderId] = useState(ROOT_FOLDER_VALUE);
+
   const [isStarting, setIsStarting] = useState(false);
   const [isChoosingMode, setIsChoosingMode] = useState(false);
-
-  const loadFolders = async () => {
-    try {
-      const library = await getLibrary();
-      setFolders(library.folders);
-      return true;
-    } catch {
-      setMessage('폴더 목록을 불러오지 못했습니다.');
-      return false;
-    }
-  };
-
-  const toggleFolderPicker = async () => {
-    if (isChoosingFolder) return setIsChoosingFolder(false);
-    setMessage(null);
-    const loaded = await loadFolders();
-    if (loaded) setIsChoosingFolder(true);
-  };
 
   const addToLibrary = async (targetFolderId: string | null) => {
     setIsAdding(true);
@@ -60,7 +40,6 @@ export function PaperActions({
     try {
       await addExamPaperToLibrary(paperId, targetFolderId);
       setIsInLibrary(true);
-      setIsChoosingFolder(false);
       setMessage(
         targetFolderId
           ? '선택한 폴더에 추가했습니다.'
@@ -90,7 +69,6 @@ export function PaperActions({
     <div className="mt-4">
       <div className="flex flex-wrap gap-2">
         <Button
-          type="button"
           variant="outline"
           size="sm"
           disabled={isAdding}
@@ -100,17 +78,6 @@ export function PaperActions({
           {isAdding ? '추가 중' : '내 서재에 추가'}
         </Button>
         <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isAdding}
-          onClick={toggleFolderPicker}
-        >
-          <FolderPlus />
-          폴더 선택
-        </Button>
-        <Button
-          type="button"
           size="sm"
           disabled={isStarting}
           onClick={() => setIsChoosingMode((current) => !current)}
@@ -119,32 +86,6 @@ export function PaperActions({
           {isStarting ? '준비 중' : '풀기'}
         </Button>
       </div>
-      {isChoosingFolder && !isAdding && (
-        <div className="mt-3 flex flex-wrap gap-2 rounded-lg bg-zinc-50 p-3">
-          <Select value={folderId} onValueChange={setFolderId}>
-            <SelectTrigger aria-label="추가할 폴더 선택">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ROOT_FOLDER_VALUE}>루트</SelectItem>
-              {flattenFolders(folders).map(({ folder, depth }) => (
-                <SelectItem key={folder.id} value={folder.id}>
-                  {`${'  '.repeat(depth)}${folder.name}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() =>
-              addToLibrary(folderId === ROOT_FOLDER_VALUE ? null : folderId)
-            }
-          >
-            추가
-          </Button>
-        </div>
-      )}
       {isChoosingMode && !isStarting && (
         <div className="mt-3 grid gap-2 rounded-lg bg-zinc-50 p-3 text-xs">
           <Button

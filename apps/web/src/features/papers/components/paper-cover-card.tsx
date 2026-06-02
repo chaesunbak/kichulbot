@@ -1,6 +1,3 @@
-import { BookCheck } from 'lucide-react';
-
-import { formatPaperSession } from '@/features/papers/lib/paper-labels';
 import type { Paper } from '@/features/papers/types';
 import { cn } from '@/shared/lib/utils';
 
@@ -61,18 +58,6 @@ export function PaperCover({
         className,
       )}
     >
-      {paper.isInLibrary && (
-        <span
-          className="
-            absolute top-8 right-2 flex size-6 items-center justify-center
-            rounded-full bg-card/65
-          "
-          aria-label="내서재에 저장됨"
-          title="내서재에 저장됨"
-        >
-          <BookCheck className="size-3.5" />
-        </span>
-      )}
       <div className="relative flex h-full flex-col">
         <div
           className="
@@ -83,35 +68,13 @@ export function PaperCover({
           <p
             className={cn(
               `
-                text-[11px] font-bold
-                sm:text-xs
-              `,
-              palette.accent,
-            )}
-          >
-            {formatPaperSession(paper)}
-          </p>
-          <p
-            className={cn(
-              `
                 mt-1 text-xl font-black break-keep
                 sm:text-2xl
               `,
               palette.ink,
             )}
           >
-            {paper.exam.name}
-          </p>
-          <p
-            className={cn(
-              `
-                mt-1 text-sm font-extrabold
-                sm:text-base
-              `,
-              palette.ink,
-            )}
-          >
-            기출문제
+            {paper.title}
           </p>
         </div>
         <div
@@ -136,16 +99,6 @@ export function PaperCoverCard({ paper }: { paper: Paper }) {
     <div>
       <div className="mx-auto max-w-52">
         <PaperCover paper={paper} />
-      </div>
-      <div className="px-1 pt-3">
-        <h3
-          className="
-            line-clamp-2 text-sm/5 font-bold break-keep text-zinc-900
-            sm:text-base
-          "
-        >
-          {paper.title}
-        </h3>
       </div>
     </div>
   );

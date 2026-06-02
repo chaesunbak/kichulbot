@@ -46,19 +46,26 @@ export function QuestionList({
             "
           >
             {questions.map((question) => (
-              <button
+              <div
                 key={question.id}
                 className={cn(
                   `
-                    rounded-md border bg-background p-4 text-left
+                    cursor-pointer rounded-md border bg-background p-4 text-left
                     transition-colors
                     hover:bg-muted/50
                   `,
                   editingQuestionId === question.id &&
                     'border-primary bg-primary/5',
                 )}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => onEdit(question)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onEdit(question);
+                  }
+                }}
               >
                 {question.imageUrl ? (
                   <img
@@ -111,7 +118,7 @@ export function QuestionList({
                     ))
                   )}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}

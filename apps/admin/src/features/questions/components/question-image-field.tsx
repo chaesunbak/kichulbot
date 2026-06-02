@@ -9,6 +9,8 @@ import type * as React from 'react';
 
 import { cn } from '@/shared/lib/utils';
 
+import { QuestionImagePreviewDialog } from './question-image-preview-dialog';
+
 interface QuestionImageFieldProps {
   existingImageUrl?: string | null;
   image: File | null;
@@ -54,7 +56,7 @@ export function QuestionImageField({
       <label
         className={cn(
           `
-            flex min-h-44 cursor-pointer flex-col items-center justify-center
+            flex min-h-64 cursor-pointer flex-col items-center justify-center
             gap-2 overflow-hidden rounded-md border border-dashed bg-muted/30
             p-4 text-center text-sm text-muted-foreground transition-colors
             hover:border-primary/60 hover:bg-primary/5
@@ -79,7 +81,7 @@ export function QuestionImageField({
         {previewUrl || existingImageUrl ? (
           <>
             <img
-              className="max-h-64 w-full object-contain"
+              className="max-h-112 w-full object-contain"
               src={previewUrl ?? existingImageUrl ?? ''}
               alt="문제 이미지 미리보기"
             />
@@ -92,9 +94,17 @@ export function QuestionImageField({
           </>
         )}
       </label>
+      {previewUrl || existingImageUrl ? (
+        <div className="mt-2 flex justify-end">
+          <QuestionImagePreviewDialog
+            imageUrl={previewUrl ?? existingImageUrl ?? ''}
+            title="문제 이미지 크게보기"
+          />
+        </div>
+      ) : null}
       <FieldDescription>
         {existingImageUrl
-          ? '새 이미지를 선택하면 기존 이미지를 교체합니다.'
+          ? ''
           : 'png, jpg, jpeg, webp 형식의 5MB 이하 이미지를 업로드해 주세요.'}
       </FieldDescription>
     </Field>

@@ -30,6 +30,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   RefreshCw,
   Trash2,
@@ -77,6 +79,7 @@ export function QuestionManager({
   token: string;
 }) {
   const navigate = useNavigate();
+  const formCardRef = React.useRef<HTMLDivElement | null>(null);
   const [editingQuestionId, setEditingQuestionId] = React.useState<
     string | null
   >(null);
@@ -111,6 +114,44 @@ export function QuestionManager({
     defaultValues: DEFAULT_QUESTION,
   });
   const questionType = questionForm.watch('type');
+  const editingQuestionIndex = questions.findIndex(
+    (question) => question.id === editingQuestionId,
+  );
+  const previousQuestion =
+    editingQuestionIndex > 0 ? questions[editingQuestionIndex - 1] : null;
+  const nextQuestion =
+    editingQuestionIndex >= 0 && editingQuestionIndex < questions.length - 1
+      ? questions[editingQuestionIndex + 1]
+      : null;
+
+  const resetFormForQuestion = React.useCallback(
+    (question: AdminPaperQuestionResponse) => {
+      setEditingQuestionId(question.id);
+      imageField.reset();
+      questionForm.reset({
+        type: question.type,
+        number: question.number,
+        choiceCount: question.choiceCount ?? undefined,
+        answerChoice: question.answerChoice ?? undefined,
+        answerText: question.answerText ?? '',
+        explanation: question.explanation ?? '',
+        points: question.points,
+        recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
+        tagIds: question.tags.map((tag) => tag.id),
+      });
+    },
+    [imageField, questionForm],
+  );
+
+  React.useEffect(() => {
+    if (!editingQuestionId) return;
+    formCardRef.current?.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+      block: 'start',
+    });
+  }, [editingQuestionId]);
 
   const beginCreate = React.useCallback(
     (nextQuestions = questions) => {
@@ -125,19 +166,7 @@ export function QuestionManager({
   );
 
   function beginEdit(question: AdminPaperQuestionResponse) {
-    setEditingQuestionId(question.id);
-    imageField.reset();
-    questionForm.reset({
-      type: question.type,
-      number: question.number,
-      choiceCount: question.choiceCount ?? undefined,
-      answerChoice: question.answerChoice ?? undefined,
-      answerText: question.answerText ?? '',
-      explanation: question.explanation ?? '',
-      points: question.points,
-      recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
-      tagIds: question.tags.map((tag) => tag.id),
-    });
+    resetFormForQuestion(question);
   }
 
   const saveQuestionMutation = useSaveQuestionMutation({
@@ -146,6 +175,10 @@ export function QuestionManager({
     editingQuestionId,
     image: imageField.image,
     onSuccess: (question) => {
+      if (editingQuestionId) {
+        resetFormForQuestion(question);
+        return;
+      }
       const nextQuestions = [
         ...questions.filter((item) => item.id !== question.id),
         question,
@@ -247,7 +280,7 @@ export function QuestionManager({
       <div
         className="
           grid gap-5
-          lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]
+          lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]
         "
       >
         <QuestionList
@@ -256,129 +289,189 @@ export function QuestionManager({
           onEdit={beginEdit}
         />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <CardTitle className="text-base">
-                  {editingQuestion
-                    ? `${editingQuestion.number}번 문항 수정`
-                    : '문항 등록'}
-                </CardTitle>
-                <CardDescription className="mt-1">
-                  {editingQuestion
-                    ? '이미지를 바꾸지 않으면 기존 이미지를 유지합니다.'
-                    : '문제 이미지를 포함해 새 문항을 등록합니다.'}
-                </CardDescription>
+        <div ref={formCardRef}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-base">
+                    {editingQuestion
+                      ? `${editingQuestion.number}번 문항 수정`
+                      : '문항 등록'}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {editingQuestion
+                      ? '이미지를 바꾸지 않으면 기존 이미지를 유지합니다.'
+                      : '문제 이미지를 포함해 새 문항을 등록합니다.'}
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {editingQuestion && (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={!previousQuestion}
+                        onClick={() =>
+                          previousQuestion && beginEdit(previousQuestion)
+                        }
+                      >
+                        <ChevronLeft className="size-4" aria-hidden="true" />
+                        이전문제
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={!nextQuestion}
+                        onClick={() => nextQuestion && beginEdit(nextQuestion)}
+                      >
+                        다음문제
+                        <ChevronRight className="size-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => beginCreate()}
+                      >
+                        <Plus className="size-4" aria-hidden="true" />새 문항
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-              {editingQuestion && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => beginCreate()}
+            </CardHeader>
+            <CardContent>
+              {!editingQuestion && isComplete ? (
+                <div
+                  className="
+                    rounded-md border border-dashed px-4 py-10 text-center
+                  "
                 >
-                  <Plus className="size-4" aria-hidden="true" />새 문항
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {!editingQuestion && isComplete ? (
-              <div
-                className="
-                  rounded-md border border-dashed px-4 py-10 text-center
-                "
-              >
-                <CheckCircle2
-                  className="mx-auto size-6 text-primary"
-                  aria-hidden="true"
-                />
-                <p className="mt-3 text-sm font-medium">
-                  {questionCount}문항 등록을 완료했습니다.
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  왼쪽 문항을 선택하면 내용을 수정할 수 있습니다.
-                </p>
-              </div>
-            ) : (
-              <form
-                className="space-y-5"
-                onSubmit={questionForm.handleSubmit((values) =>
-                  saveQuestionMutation.mutate(values),
-                )}
-              >
-                <FieldGroup>
-                  <div
-                    className="
-                      grid gap-3
-                      sm:grid-cols-2
-                    "
-                  >
-                    <NumberField
-                      control={questionForm.control}
-                      name="number"
-                      label="문항 번호"
+                  <CheckCircle2
+                    className="mx-auto size-6 text-primary"
+                    aria-hidden="true"
+                  />
+                  <p className="mt-3 text-sm font-medium">
+                    {questionCount}문항 등록을 완료했습니다.
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    왼쪽 문항을 선택하면 내용을 수정할 수 있습니다.
+                  </p>
+                </div>
+              ) : (
+                <form
+                  className="space-y-5"
+                  onSubmit={questionForm.handleSubmit((values) =>
+                    saveQuestionMutation.mutate(values),
+                  )}
+                >
+                  <FieldGroup>
+                    <QuestionImageField
+                      {...imageField}
+                      existingImageUrl={editingQuestion?.imageUrl}
                     />
-                    <NumberField
-                      control={questionForm.control}
-                      name="points"
-                      label="배점"
-                    />
-                    <Controller
-                      name="type"
-                      control={questionForm.control}
-                      render={({ field }) => (
-                        <Field>
-                          <FieldLabel htmlFor={field.name}>
-                            문항 유형
-                          </FieldLabel>
-                          <Select
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger id={field.name} className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="MULTIPLE_CHOICE">
-                                객관식
-                              </SelectItem>
-                              <SelectItem value="WRITTEN">서술형</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                      )}
-                    />
-                  </div>
-
-                  {questionType === 'MULTIPLE_CHOICE' ? (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div
+                      className="
+                        grid gap-3
+                        sm:grid-cols-2
+                      "
+                    >
                       <NumberField
                         control={questionForm.control}
-                        name="choiceCount"
-                        label="선택지"
+                        name="number"
+                        label="문항 번호"
                       />
                       <NumberField
                         control={questionForm.control}
-                        name="answerChoice"
-                        label="정답"
+                        name="points"
+                        label="배점"
+                      />
+                      <Controller
+                        name="type"
+                        control={questionForm.control}
+                        render={({ field }) => (
+                          <Field>
+                            <FieldLabel htmlFor={field.name}>
+                              문항 유형
+                            </FieldLabel>
+                            <Select
+                              name={field.name}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger id={field.name} className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="MULTIPLE_CHOICE">
+                                  객관식
+                                </SelectItem>
+                                <SelectItem value="WRITTEN">서술형</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </Field>
+                        )}
                       />
                     </div>
-                  ) : (
+
+                    {questionType === 'MULTIPLE_CHOICE' ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <NumberField
+                          control={questionForm.control}
+                          name="choiceCount"
+                          label="선택지"
+                        />
+                        <NumberField
+                          control={questionForm.control}
+                          name="answerChoice"
+                          label="정답"
+                        />
+                      </div>
+                    ) : (
+                      <Controller
+                        name="answerText"
+                        control={questionForm.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              모범답안
+                            </FieldLabel>
+                            <Textarea
+                              {...field}
+                              id={field.name}
+                              value={field.value ?? ''}
+                              aria-invalid={fieldState.invalid}
+                              placeholder="서술형 문항의 모범답안을 입력해 주세요."
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+                    )}
+
+                    <NumberField
+                      control={questionForm.control}
+                      name="recommendedTimeSeconds"
+                      label="권장 풀이시간(초)"
+                    />
+
                     <Controller
-                      name="answerText"
+                      name="explanation"
                       control={questionForm.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor={field.name}>모범답안</FieldLabel>
+                          <FieldLabel htmlFor={field.name}>해설</FieldLabel>
                           <Textarea
                             {...field}
                             id={field.name}
                             value={field.value ?? ''}
                             aria-invalid={fieldState.invalid}
-                            placeholder="서술형 문항의 모범답안을 입력해 주세요."
+                            placeholder="선택 입력입니다."
                           />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
@@ -386,110 +479,79 @@ export function QuestionManager({
                         </Field>
                       )}
                     />
-                  )}
 
-                  <NumberField
-                    control={questionForm.control}
-                    name="recommendedTimeSeconds"
-                    label="권장 풀이시간(초)"
-                  />
+                    <Controller
+                      name="tagIds"
+                      control={questionForm.control}
+                      render={({ field }) => (
+                        <Field>
+                          <FieldLabel>태그</FieldLabel>
+                          <div className="grid grid-cols-2 gap-2">
+                            {selectableTags.map((tag) => {
+                              const checked = field.value.includes(tag.id);
+                              return (
+                                <label
+                                  key={tag.id}
+                                  className="
+                                    flex cursor-pointer items-center gap-2
+                                    rounded-md border px-3 py-2 text-sm
+                                  "
+                                >
+                                  <Checkbox
+                                    checked={checked}
+                                    onCheckedChange={(nextChecked) =>
+                                      field.onChange(
+                                        nextChecked
+                                          ? [...field.value, tag.id]
+                                          : field.value.filter(
+                                              (tagId) => tagId !== tag.id,
+                                            ),
+                                      )
+                                    }
+                                  />
+                                  {tag.name}
+                                </label>
+                              );
+                            })}
+                          </div>
+                          {(tagsQuery.data?.tags.length ?? 0) === 0 && (
+                            <FieldDescription>
+                              이 과목에 적용 가능한 태그가 없습니다.
+                            </FieldDescription>
+                          )}
+                        </Field>
+                      )}
+                    />
+                  </FieldGroup>
 
-                  <Controller
-                    name="explanation"
-                    control={questionForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor={field.name}>해설</FieldLabel>
-                        <Textarea
-                          {...field}
-                          id={field.name}
-                          value={field.value ?? ''}
-                          aria-invalid={fieldState.invalid}
-                          placeholder="선택 입력입니다."
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
+                  <Separator />
+                  <div className="flex gap-2">
+                    {editingQuestion && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        aria-label={`${editingQuestion.number}번 문항 삭제`}
+                        disabled={deleteQuestionMutation.isPending}
+                        onClick={() => handleDeleteQuestion(editingQuestion)}
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      </Button>
                     )}
-                  />
-
-                  <Controller
-                    name="tagIds"
-                    control={questionForm.control}
-                    render={({ field }) => (
-                      <Field>
-                        <FieldLabel>태그</FieldLabel>
-                        <div className="grid grid-cols-2 gap-2">
-                          {selectableTags.map((tag) => {
-                            const checked = field.value.includes(tag.id);
-                            return (
-                              <label
-                                key={tag.id}
-                                className="
-                                  flex cursor-pointer items-center gap-2
-                                  rounded-md border px-3 py-2 text-sm
-                                "
-                              >
-                                <Checkbox
-                                  checked={checked}
-                                  onCheckedChange={(nextChecked) =>
-                                    field.onChange(
-                                      nextChecked
-                                        ? [...field.value, tag.id]
-                                        : field.value.filter(
-                                            (tagId) => tagId !== tag.id,
-                                          ),
-                                    )
-                                  }
-                                />
-                                {tag.name}
-                              </label>
-                            );
-                          })}
-                        </div>
-                        {(tagsQuery.data?.tags.length ?? 0) === 0 && (
-                          <FieldDescription>
-                            이 과목에 적용 가능한 태그가 없습니다.
-                          </FieldDescription>
-                        )}
-                      </Field>
-                    )}
-                  />
-
-                  <QuestionImageField
-                    {...imageField}
-                    existingImageUrl={editingQuestion?.imageUrl}
-                  />
-                </FieldGroup>
-
-                <Separator />
-                <div className="flex gap-2">
-                  {editingQuestion && (
                     <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      aria-label={`${editingQuestion.number}번 문항 삭제`}
-                      disabled={deleteQuestionMutation.isPending}
-                      onClick={() => handleDeleteQuestion(editingQuestion)}
+                      className="flex-1"
+                      type="submit"
+                      disabled={saveQuestionMutation.isPending}
                     >
-                      <Trash2 className="size-4" aria-hidden="true" />
+                      <Upload className="size-4" aria-hidden="true" />
+                      {editingQuestion ? '문항 수정' : '문항 등록'}
                     </Button>
-                  )}
-                  <Button
-                    className="flex-1"
-                    type="submit"
-                    disabled={saveQuestionMutation.isPending}
-                  >
-                    <Upload className="size-4" aria-hidden="true" />
-                    {editingQuestion ? '문항 수정' : '문항 등록'}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+                  </div>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

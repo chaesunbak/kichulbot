@@ -16,6 +16,19 @@ export const getPapers = cache(async (): Promise<Paper[]> => {
   return res.data.papers;
 });
 
+export const getPapersByExamId = cache(
+  async (examId: string): Promise<Paper[]> => {
+    const token = await getToken();
+    if (!token) return [];
+    const query = new URLSearchParams({ examId }).toString();
+    const res = await serverApi.get<{ data: { papers: Paper[] } }>(
+      `/exam-papers?${query}`,
+      token,
+    );
+    return res.data.papers;
+  },
+);
+
 export const getPaper = cache(async (id: string): Promise<Paper> => {
   const token = await getToken();
   if (!token) throw new Error('인증 정보가 없습니다.');

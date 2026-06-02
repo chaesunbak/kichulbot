@@ -145,9 +145,14 @@ export class PapersService {
   async listPapers(
     role: UserRole,
     userId?: string,
+    filters?: { examId?: string },
   ): Promise<ListPapersResponse> {
+    const examId = filters?.examId?.trim();
     const papers = await this.papersRepository.findMany(
-      role === UserRole.ADMIN ? {} : { isPublished: true },
+      {
+        ...(role === UserRole.ADMIN ? {} : { isPublished: true }),
+        ...(examId ? { examSession: { examId } } : {}),
+      },
       userId,
     );
 

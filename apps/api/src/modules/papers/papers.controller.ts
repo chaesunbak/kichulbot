@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -55,8 +56,11 @@ export class PapersController {
       '일반 사용자는 공개된 문제지만, 관리자는 모든 문제지를 조회합니다.',
   })
   @ApiOkResponse({ description: '문제지 목록을 반환합니다.' })
-  listPapers(@CurrentUser() user: RequestUser) {
-    return this.papersService.listPapers(user.role, user.id);
+  listPapers(
+    @CurrentUser() user: RequestUser,
+    @Query('examId') examId?: string,
+  ) {
+    return this.papersService.listPapers(user.role, user.id, { examId });
   }
 
   @Post()

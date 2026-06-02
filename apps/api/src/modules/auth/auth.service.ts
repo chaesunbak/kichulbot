@@ -1,4 +1,14 @@
 import {
+  AuthResponse,
+  AuthResponseSchema,
+  DeleteMeResponse,
+  DeleteMeResponseSchema,
+  MeResponse,
+  MeResponseSchema,
+  UpdateMeResponse,
+  UpdateMeResponseSchema,
+} from '@kichulbot/api-contract/auth';
+import {
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -11,7 +21,12 @@ import { User, UserAuthType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 import { serializeUser } from './auth.serializer';
-import { ConvertAnonymousDto, LoginDto, RegisterDto } from './dto/auth.dto';
+import {
+  ConvertAnonymousDto,
+  LoginDto,
+  RegisterDto,
+  UpdateMeDto,
+} from './dto/auth.dto';
 import { JwtUser } from './types';
 import { UsersRepository } from './users.repository';
 
@@ -110,6 +125,21 @@ export class AuthService {
     });
   }
 
+  async updateMe(userId: string, dto: UpdateMeDto): Promise<UpdateMeResponse> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
+    }
+
+    const updatedUser = await this.usersRepository.updateProfile(userId, {
+      nickname: dto.nickname.trim(),
+    });
+
+    return UpdateMeResponseSchema.parse({
+      user: serializeUser(updatedUser),
+    });
+  }
+
   async deleteMe(userId: string): Promise<DeleteMeResponse> {
     const user = await this.usersRepository.findById(userId);
     if (!user) {
@@ -172,11 +202,3 @@ export class AuthService {
     }
   }
 }
-import {
-  AuthResponse,
-  AuthResponseSchema,
-  DeleteMeResponse,
-  DeleteMeResponseSchema,
-  MeResponse,
-  MeResponseSchema,
-} from '@kichulbot/api-contract/auth';

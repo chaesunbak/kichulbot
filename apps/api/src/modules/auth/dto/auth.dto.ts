@@ -5,6 +5,8 @@ import {
   LoginRequest,
   MeResponse,
   RegisterRequest,
+  UpdateMeRequest,
+  UpdateMeResponse,
   UserResponse,
 } from '@kichulbot/api-contract/auth';
 import { ApiProperty } from '@nestjs/swagger';
@@ -72,6 +74,19 @@ export class ConvertAnonymousDto
   extends RegisterDto
   implements ConvertAnonymousRequest {}
 
+export class UpdateMeDto implements UpdateMeRequest {
+  @ApiProperty({
+    minLength: 2,
+    maxLength: 20,
+    example: '기출왕',
+    description: '수정할 사용자 닉네임입니다.',
+  })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(20)
+  nickname: string;
+}
+
 export class UserResponseDto implements UserResponse {
   @ApiProperty({ example: 'clx0000000000000000000000' })
   id: string;
@@ -115,6 +130,11 @@ export class AuthResponseDto implements AuthResponse {
 }
 
 export class MeResponseDto implements MeResponse {
+  @ApiProperty({ type: UserResponseDto })
+  user: UserResponseDto;
+}
+
+export class UpdateMeResponseDto implements UpdateMeResponse {
   @ApiProperty({ type: UserResponseDto })
   user: UserResponseDto;
 }

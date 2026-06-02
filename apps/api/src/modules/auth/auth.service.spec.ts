@@ -40,6 +40,7 @@ describe('AuthService', () => {
       findByEmail: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
+      updateProfile: jest.fn(),
       convertAnonymousUser: jest.fn(),
       isUniqueConstraintError: jest.fn(),
     } as unknown as jest.Mocked<UsersRepository>;
@@ -239,5 +240,21 @@ describe('AuthService', () => {
       UnauthorizedException,
     );
     expect(usersRepository.deleteById).not.toHaveBeenCalled();
+  });
+
+  it('updates the current user nickname', async () => {
+    usersRepository.findById.mockResolvedValue(user());
+    usersRepository.updateProfile.mockResolvedValue(
+      user({ nickname: '새 닉네임' }),
+    );
+
+    await expect(
+      service.updateMe('user_1', { nickname: '  새 닉네임  ' }),
+    ).resolves.toEqual({
+      user: expect.objectContaining({ nickname: '새 닉네임' }),
+    });
+    expect(usersRepository.updateProfile).toHaveBeenCalledWith('user_1', {
+      nickname: '새 닉네임',
+    });
   });
 });

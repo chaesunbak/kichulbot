@@ -62,6 +62,20 @@ export class UsersRepository {
     });
   }
 
+  updateProfile(
+    userId: string,
+    data: {
+      nickname: string;
+    },
+  ) {
+    return this.db.user.update({
+      where: { id: userId },
+      data: {
+        nickname: data.nickname,
+      },
+    });
+  }
+
   convertAnonymousUser(
     userId: string,
     data: {

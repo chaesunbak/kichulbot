@@ -37,3 +37,7 @@ export async function logoutApi(): Promise<void> {
 export async function deleteAccountApi(): Promise<void> {
   await clientApi.delete('/api/auth/account');
 }
+
+export async function updateProfileApi(nickname: string): Promise<AuthResult> {
+  return clientApi.patch<AuthResult>('/api/me', { nickname });
+}

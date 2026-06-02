@@ -25,3 +25,10 @@ export const registerSchema = z
     message: '비밀번호가 일치하지 않습니다',
     path: ['passwordConfirm'],
   });
+
+export const updateProfileSchema = z.object({
+  nickname: z
+    .string()
+    .min(2, '닉네임은 2자 이상 입력해주세요')
+    .max(20, '닉네임은 20자 이하로 입력해주세요'),
+});

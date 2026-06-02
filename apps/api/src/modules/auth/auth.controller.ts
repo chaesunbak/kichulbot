@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -20,6 +28,8 @@ import {
   LoginDto,
   MeResponseDto,
   RegisterDto,
+  UpdateMeDto,
+  UpdateMeResponseDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RequestUser } from './types';
@@ -108,6 +118,22 @@ export class MeController {
   })
   me(@CurrentUser() user: RequestUser) {
     return this.authService.getMe(user.id);
+  }
+
+  @Patch()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '내 프로필 수정' })
+  @ApiOkResponse({
+    description: '현재 인증된 사용자의 프로필을 수정합니다.',
+    type: UpdateMeResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
+  @ApiUnauthorizedResponse({
+    description: '인증 정보가 없거나 유효하지 않습니다.',
+  })
+  updateMe(@CurrentUser() user: RequestUser, @Body() dto: UpdateMeDto) {
+    return this.authService.updateMe(user.id, dto);
   }
 
   @Delete()

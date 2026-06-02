@@ -1,6 +1,6 @@
 import { UserAuthType, UserRole } from '@prisma/client';
 
-import { AuthController } from './auth.controller';
+import { AuthController, MeController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 const serializedUser = {
@@ -64,6 +64,42 @@ describe('AuthController', () => {
     expect(authService.convertAnonymous).toHaveBeenCalledWith('user_1', {
       email: 'student@example.com',
       password: 'password123',
+    });
+  });
+});
+
+describe('MeController', () => {
+  let controller: MeController;
+  let authService: jest.Mocked<AuthService>;
+
+  beforeEach(() => {
+    authService = {
+      getMe: jest.fn(),
+      updateMe: jest.fn(),
+      deleteMe: jest.fn(),
+    } as unknown as jest.Mocked<AuthService>;
+
+    controller = new MeController(authService);
+  });
+
+  it('passes current user id to updateMe', async () => {
+    authService.updateMe.mockResolvedValue({
+      user: { ...serializedUser, nickname: '새 닉네임' },
+    });
+
+    await controller.updateMe(
+      {
+        id: 'user_1',
+        email: null,
+        nickname: null,
+        authType: UserAuthType.ANONYMOUS,
+        role: UserRole.USER,
+      },
+      { nickname: '새 닉네임' },
+    );
+
+    expect(authService.updateMe).toHaveBeenCalledWith('user_1', {
+      nickname: '새 닉네임',
     });
   });
 });

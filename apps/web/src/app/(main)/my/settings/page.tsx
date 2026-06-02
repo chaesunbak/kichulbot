@@ -2,7 +2,6 @@ import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
@@ -19,11 +18,13 @@ export default async function SettingsPage() {
   return (
     <div
       className="
-        mx-auto flex max-w-6xl flex-col px-4 py-8
+        mx-auto flex w-full max-w-5xl flex-col px-4 py-8
         sm:px-6 sm:py-10
       "
     >
-      <Card className="mt-6 max-w-xl">
+      <h1 className="mt-1 text-2xl font-semibold text-gray-800">설정</h1>
+
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle>계정</CardTitle>
         </CardHeader>

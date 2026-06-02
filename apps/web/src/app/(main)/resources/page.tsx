@@ -34,7 +34,7 @@ export default async function PapersPage() {
   return (
     <div
       className="
-        mx-auto flex max-w-6xl flex-col px-4 py-8
+        mx-auto flex max-w-5xl flex-col px-4 py-8
         sm:px-6 sm:py-10
       "
     >

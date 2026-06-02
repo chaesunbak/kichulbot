@@ -11,7 +11,7 @@ export default async function LibraryPage() {
   return (
     <div
       className="
-        mx-auto max-w-6xl px-4 py-8
+        mx-auto max-w-5xl px-4 py-8 flex flex-col gap-6
         sm:px-6 sm:py-10
       "
     >

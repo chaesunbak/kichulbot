@@ -16,7 +16,10 @@ export function BookshelfSection({
 }) {
   return (
     <section
-      className={cn('mt-5 overflow-hidden rounded-3xl border', className)}
+      className={cn(
+        'flex flex-col gap-4 overflow-hidden rounded-3xl border',
+        className,
+      )}
     >
       <div
         className="

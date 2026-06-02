@@ -20,10 +20,11 @@ import { useAuthStore } from '@/features/auth/store';
 import type { UpdateProfileFormValues } from '@/features/auth/types';
 
 interface ProfileFormProps {
+  email: string | null;
   nickname: string;
 }
 
-export function ProfileForm({ nickname }: ProfileFormProps) {
+export function ProfileForm({ email, nickname }: ProfileFormProps) {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -60,6 +61,16 @@ export function ProfileForm({ nickname }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <FieldGroup className="gap-5">
+        <Field>
+          <FieldLabel htmlFor="email">이메일</FieldLabel>
+          <Input
+            id="email"
+            type="text"
+            defaultValue={email ?? '게스트 계정'}
+            disabled
+          />
+        </Field>
+
         <Field>
           <FieldLabel htmlFor="nickname">닉네임</FieldLabel>
           <Input

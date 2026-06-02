@@ -166,7 +166,7 @@ export function LibraryManager({
   };
 
   return (
-    <section>
+    <section className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-4">
           <h2 className="text-2xl font-semibold text-zinc-900">{title}</h2>
@@ -183,7 +183,7 @@ export function LibraryManager({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5 pt-1">
+        <div className="flex shrink-0 items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="현재 폴더 메뉴">
@@ -214,7 +214,7 @@ export function LibraryManager({
         </div>
       </div>
 
-      <div className="mt-7 flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <Select
           value={sortKey}
           onValueChange={(value) => setSortKey(value as SortKey)}
@@ -238,13 +238,13 @@ export function LibraryManager({
       {message && <p className="mt-3 text-sm text-zinc-500">{message}</p>}
 
       {isEmpty ? (
-        <section className="mt-8 rounded-2xl border px-4 py-14 text-center">
-          <div className="mt-4 text-lg text-zinc-800">비어 있습니다</div>
+        <section className="rounded-2xl border px-4 py-14 text-center">
+          <div className="text-lg text-zinc-800">비어 있습니다</div>
         </section>
       ) : (
         <ul
           className="
-            mt-8 grid gap-4
+            grid gap-4
             md:grid-cols-2
             lg:grid-cols-3
             xl:grid-cols-4

@@ -47,7 +47,7 @@ export function FileCard({ libraryPaper }: FileCardProps) {
           </h3>
           <p
             className="
-              mt-3 truncate text-sm text-zinc-400
+              mt-1 truncate text-sm text-zinc-400
               md:text-sm
             "
           >
@@ -60,17 +60,12 @@ export function FileCard({ libraryPaper }: FileCardProps) {
               md:text-sm
             "
           >
-            <span>{formatQuestionCount(paper.questionCount)}</span>
-            <span>{formatRelativeTime(libraryPaper.createdAt)} 추가</span>
+            <span>{paper.questionCount} 문항</span>
           </div>
         </div>
       </Link>
     </li>
   );
-}
-
-function formatQuestionCount(count: number) {
-  return `${count}문항`;
 }
 
 function formatRelativeTime(value: string) {

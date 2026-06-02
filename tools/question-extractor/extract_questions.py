@@ -60,6 +60,7 @@ DEFAULT_OUT_ROOT = "output"
 
 LAYOUT_CHOICES = {
     "csat": "수능 2단형",
+    "korean-history": "한능검 심화 2단형",
 }
 
 VARIANT_CHOICES = {
@@ -73,6 +74,17 @@ IMAGE_FORMAT_CHOICES = {
     "png": "png (무손실, 용량 큼)",
     "jpeg": "jpeg (호환성 좋음)",
 }
+
+KOREAN_HISTORY_FIRST_BODY_TOP = 150
+KOREAN_HISTORY_BODY_TOP = 68
+KOREAN_HISTORY_FOOTER_GUARD_Y = 958
+KOREAN_HISTORY_LEFT_X0 = 38
+KOREAN_HISTORY_RIGHT_MARGIN = 42
+KOREAN_HISTORY_CENTER_GAP = 8
+KOREAN_HISTORY_ROW_THRESHOLD = 246
+KOREAN_HISTORY_ROW_MIN_RATIO = 0.012
+KOREAN_HISTORY_MIN_SEGMENT_HEIGHT = 18
+KOREAN_HISTORY_MERGE_GAP = 34
 
 
 @dataclass(frozen=True)
@@ -255,6 +267,8 @@ def save_crop(crop, path, image_options):
 
 
 def extract(pdf_path, out_dir, forms, dpi, image_options=None, layout=DEFAULT_LAYOUT):
+    if layout == "korean-history":
+        return extract_korean_history(pdf_path, out_dir, dpi, image_options=image_options)
     if layout != "csat":
         raise ValueError(f"지원하지 않는 문제지 형식: {layout}")
     ensure_dependencies()
@@ -348,6 +362,161 @@ def extract(pdf_path, out_dir, forms, dpi, image_options=None, layout=DEFAULT_LA
         render_doc.close()
 
 
+def korean_history_column_bounds(page_width):
+    center = page_width / 2.0
+    return {
+        "L": (KOREAN_HISTORY_LEFT_X0, center - KOREAN_HISTORY_CENTER_GAP),
+        "R": (center + KOREAN_HISTORY_CENTER_GAP, page_width - KOREAN_HISTORY_RIGHT_MARGIN),
+    }
+
+
+def korean_history_body_top(page_index):
+    return KOREAN_HISTORY_FIRST_BODY_TOP if page_index == 0 else KOREAN_HISTORY_BODY_TOP
+
+
+def is_korean_history_content_pixel(pixel):
+    r, g, b = pixel
+    return (
+        r < KOREAN_HISTORY_ROW_THRESHOLD
+        or g < KOREAN_HISTORY_ROW_THRESHOLD
+        or b < KOREAN_HISTORY_ROW_THRESHOLD
+    )
+
+
+def detect_korean_history_segments(pil, page_index, scale):
+    """이미지 기반 한능검 PDF에서 좌/우 단의 문항 덩어리를 검출한다."""
+    page_width = pil.width / scale
+    body_top = korean_history_body_top(page_index)
+    footer = min(KOREAN_HISTORY_FOOTER_GUARD_Y, pil.height / scale)
+    pix = pil.load()
+    segments = []
+
+    for col, (x0_pt, x1_pt) in korean_history_column_bounds(page_width).items():
+        x0 = max(0, round(x0_pt * scale))
+        x1 = min(pil.width, round(x1_pt * scale))
+        y0 = max(0, round(body_top * scale))
+        y1 = min(pil.height, round(footer * scale))
+        min_count = max(8, round((x1 - x0) * KOREAN_HISTORY_ROW_MIN_RATIO))
+        content_rows = []
+
+        for y in range(y0, y1):
+            count = 0
+            for x in range(x0, x1):
+                if is_korean_history_content_pixel(pix[x, y]):
+                    count += 1
+            if count >= min_count:
+                content_rows.append(y)
+
+        groups = []
+        merge_gap = round(KOREAN_HISTORY_MERGE_GAP * scale)
+        for y in content_rows:
+            if not groups or y - groups[-1][1] > merge_gap:
+                groups.append([y, y])
+            else:
+                groups[-1][1] = y
+
+        min_height = KOREAN_HISTORY_MIN_SEGMENT_HEIGHT * scale
+        for top, bottom in groups:
+            if bottom - top + 1 < min_height:
+                continue
+            segments.append({
+                "column": col,
+                "x0": x0_pt,
+                "x1": x1_pt,
+                "y0": max(body_top, top / scale - TOP_PAD),
+                "y1": min(footer, bottom / scale + BOTTOM_PAD),
+            })
+
+    return sorted(segments, key=lambda s: (0 if s["column"] == "L" else 1, s["y0"]))
+
+
+def crop_has_color(crop):
+    """한능검 이미지 PDF용 느슨한 그림/컬러 자료 포함 추정값."""
+    sample_step = max(1, min(crop.width, crop.height) // 240)
+    sampled = 0
+    colored = 0
+    for y in range(0, crop.height, sample_step):
+        for x in range(0, crop.width, sample_step):
+            r, g, b = crop.getpixel((x, y))
+            if r > 248 and g > 248 and b > 248:
+                continue
+            sampled += 1
+            if max(r, g, b) - min(r, g, b) > 12:
+                colored += 1
+    return bool(sampled and colored / sampled > 0.03)
+
+
+def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
+    ensure_dependencies()
+    image_options = image_options or ImageOptions()
+    render_doc = pdfium.PdfDocument(pdf_path)
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+
+    try:
+        scale = dpi / 72.0
+        manifest = {
+            "source": Path(pdf_path).name,
+            "layout": "korean-history",
+            "dpi": dpi,
+            "image_format": image_options.image_format,
+            "quality": image_options.quality if image_options.image_format in {"webp", "jpeg"} else None,
+            "webp_lossless": image_options.webp_lossless if image_options.image_format == "webp" else None,
+            "questions": [],
+        }
+        question_number = 1
+
+        for pi in range(len(render_doc)):
+            pil = render_doc[pi].render(scale=scale).to_pil().convert("RGB")
+            segments = detect_korean_history_segments(pil, pi, scale)
+            for segment in segments:
+                box = (
+                    segment["x0"],
+                    segment["y0"],
+                    segment["x1"],
+                    segment["y1"],
+                )
+                px = (
+                    max(0, round(box[0] * scale)),
+                    max(0, round(box[1] * scale)),
+                    min(pil.width, round(box[2] * scale)),
+                    min(pil.height, round(box[3] * scale)),
+                )
+                crop = pil.crop(px)
+                fname = f"q{question_number:02d}.{image_options.extension}"
+                fpath = Path(out_dir) / fname
+                save_crop(crop, fpath, image_options)
+                manifest["questions"].append({
+                    "number": question_number,
+                    "form": None,
+                    "page": pi + 1,
+                    "column": segment["column"],
+                    "image": fname,
+                    "width_px": crop.width,
+                    "height_px": crop.height,
+                    "bbox_pt": [round(v, 1) for v in box],
+                    "has_figure": crop_has_color(crop),
+                })
+                question_number += 1
+
+        with open(Path(out_dir) / "manifest.json", "w", encoding="utf-8") as f:
+            json.dump(manifest, f, ensure_ascii=False, indent=2)
+
+        total = len(manifest["questions"])
+        page_counts = {}
+        for question in manifest["questions"]:
+            page_counts[question["page"]] = page_counts.get(question["page"], 0) + 1
+
+        print(f"✓ {total}개 문항 이미지 추출 완료 → {out_dir}/")
+        print("  한능검 이미지 기반 레이아웃: " + ", ".join(
+            f"{page}p={count}개" for page, count in sorted(page_counts.items())
+        ))
+        print(f"  이미지 형식={image_options.image_format}, DPI={dpi}")
+        print(f"  manifest: {Path(out_dir) / 'manifest.json'}")
+        return manifest
+    finally:
+        render_doc.close()
+
+
 def choose_option(title, choices, default):
     """터미널에서 숫자/값 입력으로 옵션을 고르게 한다."""
     items = list(choices.items())
@@ -426,7 +595,7 @@ def main():
     ap.add_argument("--out", default=DEFAULT_OUT_ROOT,
                     help="출력 루트 폴더 (기본: output, 실제 결과는 output/<PDF 파일명>/)")
     ap.add_argument("--layout", choices=sorted(LAYOUT_CHOICES), default=None,
-                    help="문제지 형식: csat=수능 2단형")
+                    help="문제지 형식: csat=수능 2단형, korean-history=한능검 심화 2단형")
     ap.add_argument("--variant", choices=sorted(VARIANT_CHOICES), default=None,
                     help="추출할 홀/짝 형식: odd=홀수형, even=짝수형, both=둘 다")
     ap.add_argument("--form", dest="variant", choices=sorted(VARIANT_CHOICES),

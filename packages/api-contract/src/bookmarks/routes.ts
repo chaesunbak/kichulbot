@@ -5,6 +5,8 @@ import {
   CreateBookmarkListRequestSchema,
   DeleteBookmarkedQuestionResponseSchema,
   ListBookmarkListsResponseSchema,
+  StartBookmarkListSessionRequestSchema,
+  StartBookmarkListSessionResponseSchema,
 } from './dto.js';
 
 export const bookmarkRoutes = {
@@ -25,6 +27,12 @@ export const bookmarkRoutes = {
     path: '/me/question-lists/:bookmarkListId',
     request: null,
     response: BookmarkListResponseEnvelopeSchema,
+  },
+  startSolveSession: {
+    method: 'POST',
+    path: '/me/question-lists/:bookmarkListId/solve-sessions',
+    request: StartBookmarkListSessionRequestSchema,
+    response: StartBookmarkListSessionResponseSchema,
   },
   addBookmarkedQuestion: {
     method: 'PUT',

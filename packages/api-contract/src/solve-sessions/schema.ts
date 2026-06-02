@@ -68,9 +68,11 @@ export const SolveSessionLogResponseSchema = z.object({
   id: z.string(),
   mode: AnswerModeSchema,
   paper: PaperResponseSchema,
-  result: SolveSessionResultResponseSchema,
-  submittedAt: IsoDateStringSchema,
+  result: SolveSessionResultResponseSchema.nullable(),
+  submittedAt: IsoDateStringSchema.nullable(),
+  totalSpentMilliseconds: z.number().int().nonnegative(),
   createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
 });
 export type SolveSessionLogResponse = z.infer<
   typeof SolveSessionLogResponseSchema

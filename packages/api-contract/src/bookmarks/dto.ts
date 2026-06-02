@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { StartSolveSessionResponseSchema } from '../solve-sessions/dto.js';
 import {
   BookmarkListResponseSchema,
   BookmarkListSummaryResponseSchema,
@@ -46,4 +47,17 @@ export const DeleteBookmarkedQuestionResponseSchema = z.object({
 });
 export type DeleteBookmarkedQuestionResponse = z.infer<
   typeof DeleteBookmarkedQuestionResponseSchema
+>;
+
+export const StartBookmarkListSessionRequestSchema = z.object({
+  mode: z.enum(['ONE_BY_ONE', 'EXAM']),
+});
+export type StartBookmarkListSessionRequest = z.infer<
+  typeof StartBookmarkListSessionRequestSchema
+>;
+
+export const StartBookmarkListSessionResponseSchema =
+  StartSolveSessionResponseSchema;
+export type StartBookmarkListSessionResponse = z.infer<
+  typeof StartBookmarkListSessionResponseSchema
 >;

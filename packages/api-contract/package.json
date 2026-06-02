@@ -16,6 +16,9 @@
       "bookmarks": [
         "dist/bookmarks/index.d.ts"
       ],
+      "question-notes": [
+        "dist/question-notes/index.d.ts"
+      ],
       "library": [
         "dist/library/index.d.ts"
       ],
@@ -56,6 +59,11 @@
       "types": "./dist/bookmarks/index.d.ts",
       "import": "./dist/bookmarks/index.js",
       "default": "./dist/bookmarks/index.js"
+    },
+    "./question-notes": {
+      "types": "./dist/question-notes/index.d.ts",
+      "import": "./dist/question-notes/index.js",
+      "default": "./dist/question-notes/index.js"
     },
     "./library": {
       "types": "./dist/library/index.d.ts",

@@ -1,4 +1,7 @@
-import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
+import type {
+  AdminTagGroupResponse,
+  AdminTagResponse,
+} from '@kichulbot/api-contract/tags';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -9,6 +12,13 @@ import {
 } from '@kichulbot/ui/components/card';
 import { Field, FieldLabel } from '@kichulbot/ui/components/field';
 import { Input } from '@kichulbot/ui/components/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/select';
 import { Plus } from 'lucide-react';
 import * as React from 'react';
 
@@ -18,6 +28,7 @@ import { type TagForm } from '../mutations';
 
 export interface TagFormPanelProps {
   selectedExam: Taxonomy | null;
+  tagGroups: AdminTagGroupResponse[];
   editingTag: AdminTagResponse | null;
   form: TagForm;
   isSubmitting: boolean;
@@ -28,6 +39,7 @@ export interface TagFormPanelProps {
 
 export function TagFormPanel({
   selectedExam,
+  tagGroups,
   editingTag,
   form,
   isSubmitting,
@@ -69,6 +81,31 @@ export function TagFormPanel({
               }
               placeholder="조선"
             />
+          </Field>
+          <Field>
+            <FieldLabel>태그 그룹</FieldLabel>
+            <Select
+              value={form.tagGroupId ?? 'none'}
+              onValueChange={(value) =>
+                onFormChange((current) => ({
+                  ...current,
+                  tagGroupId: value === 'none' ? null : value,
+                }))
+              }
+              disabled={!selectedExam}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="그룹 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">그룹 없음</SelectItem>
+                {tagGroups.map((tagGroup) => (
+                  <SelectItem key={tagGroup.id} value={tagGroup.id}>
+                    {tagGroup.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <div className="flex gap-2">
             {editingTag && (

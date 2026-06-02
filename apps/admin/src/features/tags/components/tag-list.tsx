@@ -54,6 +54,7 @@ export function TagListPanel({
           <TableHeader>
             <TableRow>
               <TableHead>태그</TableHead>
+              <TableHead>그룹</TableHead>
               <TableHead>문항</TableHead>
               <TableHead>
                 <span className="sr-only">관리</span>
@@ -70,6 +71,11 @@ export function TagListPanel({
                 <TableRow key={tag.id}>
                   <TableCell>
                     <div className="font-medium">{tag.name}</div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {tag.tagGroup?.name ?? '-'}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm">{questionCount}개</span>
@@ -108,7 +114,7 @@ export function TagListPanel({
             {tags.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={4}
                   className="h-28 text-center text-sm text-muted-foreground"
                 >
                   {isLoading

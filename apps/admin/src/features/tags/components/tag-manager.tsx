@@ -1,4 +1,7 @@
-import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
+import type {
+  AdminTagGroupResponse,
+  AdminTagResponse,
+} from '@kichulbot/api-contract/tags';
 import {
   Select,
   SelectContent,
@@ -11,13 +14,26 @@ import * as React from 'react';
 
 import type { Taxonomy } from '@/shared/types';
 
-import type { TagForm } from '../mutations';
-import { useDeleteTagMutation, useSaveTagMutation } from '../mutations';
-import { tagsQueryOptions } from '../queries';
+import type { TagForm, TagGroupForm } from '../mutations';
+import {
+  useDeleteTagGroupMutation,
+  useDeleteTagMutation,
+  useSaveTagGroupMutation,
+  useSaveTagMutation,
+} from '../mutations';
+import { tagGroupsQueryOptions, tagsQueryOptions } from '../queries';
 import { TagFormPanel } from './tag-form';
+import { TagGroupPanel } from './tag-group-panel';
 import { TagListPanel } from './tag-list';
 
-const EMPTY_FORM: TagForm = { name: '', examId: '' };
+const EMPTY_FORM: TagForm = { name: '', examId: '', tagGroupId: null };
+const EMPTY_GROUP_FORM: TagGroupForm = {
+  examId: '',
+  name: '',
+  selectionMode: 'MULTIPLE',
+  sortOrder: 0,
+  isActive: true,
+};
 
 export function TagManager({
   token,
@@ -29,12 +45,19 @@ export function TagManager({
   const [editingTag, setEditingTag] = React.useState<AdminTagResponse | null>(
     null,
   );
+  const [editingTagGroup, setEditingTagGroup] =
+    React.useState<AdminTagGroupResponse | null>(null);
   const [form, setForm] = React.useState<TagForm>(EMPTY_FORM);
+  const [groupForm, setGroupForm] =
+    React.useState<TagGroupForm>(EMPTY_GROUP_FORM);
   const [selectedExamId, setSelectedExamId] = React.useState('');
 
   React.useEffect(() => {
     if (!selectedExamId && exams.length > 0) {
-      setSelectedExamId(exams[0].id);
+      const firstExamId = exams[0].id;
+      setSelectedExamId(firstExamId);
+      setForm({ ...EMPTY_FORM, examId: firstExamId });
+      setGroupForm({ ...EMPTY_GROUP_FORM, examId: firstExamId });
     }
   }, [exams, selectedExamId]);
 
@@ -43,16 +66,27 @@ export function TagManager({
     ...tagsQueryOptions(token, selectedExamId),
     enabled: !!selectedExamId,
   });
+  const tagGroupsQuery = useQuery({
+    ...tagGroupsQueryOptions(token, selectedExamId),
+    enabled: !!selectedExamId,
+  });
 
   function resetForm() {
     setEditingTag(null);
-    setForm({ ...EMPTY_FORM, examId: selectedExamId });
+    setForm({ ...EMPTY_FORM, examId: selectedExamId, tagGroupId: null });
+  }
+
+  function resetGroupForm() {
+    setEditingTagGroup(null);
+    setGroupForm({ ...EMPTY_GROUP_FORM, examId: selectedExamId });
   }
 
   function selectExam(examId: string) {
     setSelectedExamId(examId);
     setEditingTag(null);
-    setForm({ ...EMPTY_FORM, examId });
+    setEditingTagGroup(null);
+    setForm({ ...EMPTY_FORM, examId, tagGroupId: null });
+    setGroupForm({ ...EMPTY_GROUP_FORM, examId });
   }
 
   const saveMutation = useSaveTagMutation(
@@ -65,12 +99,34 @@ export function TagManager({
       resetForm();
     }
   });
+  const saveGroupMutation = useSaveTagGroupMutation(
+    token,
+    editingTagGroup?.id ?? null,
+    resetGroupForm,
+  );
+  const deleteGroupMutation = useDeleteTagGroupMutation(token, (tagGroupId) => {
+    if (editingTagGroup?.id === tagGroupId) {
+      resetGroupForm();
+    }
+  });
 
   function beginEdit(tag: AdminTagResponse) {
     setEditingTag(tag);
     setForm({
       name: tag.name,
       examId: selectedExamId || tag.examId,
+      tagGroupId: tag.tagGroupId,
+    });
+  }
+
+  function beginEditTagGroup(tagGroup: AdminTagGroupResponse) {
+    setEditingTagGroup(tagGroup);
+    setGroupForm({
+      examId: selectedExamId || tagGroup.examId,
+      name: tagGroup.name,
+      selectionMode: tagGroup.selectionMode,
+      sortOrder: tagGroup.sortOrder,
+      isActive: tagGroup.isActive,
     });
   }
 
@@ -87,7 +143,21 @@ export function TagManager({
     }
   }
 
+  function handleDeleteTagGroup(tagGroup: AdminTagGroupResponse) {
+    if (tagGroup.tagCount > 0) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(
+      `${tagGroup.name} 태그 그룹을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`,
+    );
+    if (shouldDelete) {
+      deleteGroupMutation.mutate(tagGroup.id);
+    }
+  }
+
   const tags = (tagsQuery.data?.tags ?? []) as AdminTagResponse[];
+  const tagGroups = tagGroupsQuery.data?.tagGroups ?? [];
 
   return (
     <div
@@ -144,6 +214,7 @@ export function TagManager({
       />
       <TagFormPanel
         selectedExam={selectedExam}
+        tagGroups={tagGroups}
         editingTag={editingTag}
         form={form}
         isSubmitting={saveMutation.isPending || !selectedExam}
@@ -154,6 +225,32 @@ export function TagManager({
         onCancel={resetForm}
         onFormChange={setForm}
       />
+      <div className="lg:col-span-2">
+        <TagGroupPanel
+          selectedExam={selectedExam}
+          tagGroups={tagGroups}
+          editingTagGroup={editingTagGroup}
+          form={groupForm}
+          isLoading={tagGroupsQuery.isLoading}
+          isSubmitting={saveGroupMutation.isPending || !selectedExam}
+          deletingTagGroupId={
+            deleteGroupMutation.isPending
+              ? (deleteGroupMutation.variables ?? null)
+              : null
+          }
+          onEdit={beginEditTagGroup}
+          onDelete={handleDeleteTagGroup}
+          onSubmit={() => {
+            if (!selectedExamId) return;
+            saveGroupMutation.mutate({
+              ...groupForm,
+              examId: selectedExamId,
+            });
+          }}
+          onCancel={resetGroupForm}
+          onFormChange={setGroupForm}
+        />
+      </div>
     </div>
   );
 }

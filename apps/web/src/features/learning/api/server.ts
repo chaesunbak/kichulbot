@@ -3,6 +3,8 @@ import type {
   DailyWrongQuestionSet,
   SolveSession,
   SolveSessionLog,
+  SolveSessionLogPage,
+  SolveSessionLogStatus,
 } from '@/features/learning/types';
 import { serverApi } from '@/shared/api/server';
 
@@ -17,13 +19,45 @@ export const getSolveSession = async (id: string): Promise<SolveSession> => {
 };
 
 export const getSolveSessionLogs = async (): Promise<SolveSessionLog[]> => {
+  const logs: SolveSessionLog[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const result = await getSolveSessionLogPage({ page, limit: 100 });
+    logs.push(...result.logs);
+    totalPages = result.totalPages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return logs;
+};
+
+type GetSolveSessionLogPageOptions = {
+  status?: SolveSessionLogStatus;
+  page?: number;
+  limit?: number;
+};
+
+export const getSolveSessionLogPage = async ({
+  status = 'all',
+  page = 1,
+  limit = 20,
+}: GetSolveSessionLogPageOptions = {}): Promise<SolveSessionLogPage> => {
   const token = await getToken();
-  if (!token) return [];
-  const res = await serverApi.get<{ data: { logs: SolveSessionLog[] } }>(
-    '/me/solve-sessions',
+  if (!token) {
+    return { logs: [], total: 0, page, limit, totalPages: 0 };
+  }
+  const query = new URLSearchParams({
+    status,
+    page: String(page),
+    limit: String(limit),
+  });
+  const res = await serverApi.get<{ data: SolveSessionLogPage }>(
+    `/me/solve-sessions?${query}`,
     token,
   );
-  return res.data.logs;
+  return res.data;
 };
 
 export const getTodayWrongQuestions =

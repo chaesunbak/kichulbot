@@ -122,6 +122,16 @@ export interface SolveSessionLog {
   updatedAt: string;
 }
 
+export type SolveSessionLogStatus = 'all' | 'completed' | 'in_progress';
+
+export interface SolveSessionLogPage {
+  logs: SolveSessionLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface DailyWrongQuestionSet {
   id: string;
   title: string;

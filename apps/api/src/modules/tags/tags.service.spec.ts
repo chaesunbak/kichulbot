@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 
-import { TagsRepository } from './tags.repository';
+import type { TagsRepository } from './tags.repository';
 import { TagsService } from './tags.service';
 
 const now = new Date('2026-05-28T00:00:00.000Z');

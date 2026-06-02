@@ -1,9 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { QuestionType } from '@prisma/client';
 
-import { StorageService } from '../../infrastructure/storage/storage.service';
-import { TagsService } from '../tags/tags.service';
-import { QuestionsRepository } from './questions.repository';
+import type { StorageService } from '../../infrastructure/storage/storage.service';
+import type { TagsService } from '../tags/tags.service';
+import type { QuestionsRepository } from './questions.repository';
 import { QuestionsService } from './questions.service';
 
 const image = {

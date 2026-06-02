@@ -4,12 +4,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { User, UserAuthType, UserRole } from '@prisma/client';
+import type { JwtService } from '@nestjs/jwt';
+import type { User } from '@prisma/client';
+import { UserAuthType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 import { AuthService } from './auth.service';
-import { UsersRepository } from './users.repository';
+import type { UsersRepository } from './users.repository';
 
 const now = new Date('2026-05-28T00:00:00.000Z');
 

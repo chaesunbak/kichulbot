@@ -1,5 +1,6 @@
-import { UserResponse, UserResponseSchema } from '@kichulbot/api-contract/auth';
-import { User } from '@prisma/client';
+import type { UserResponse } from '@kichulbot/api-contract/auth';
+import { UserResponseSchema } from '@kichulbot/api-contract/auth';
+import type { User } from '@prisma/client';
 
 export function serializeUser(user: User): UserResponse {
   return UserResponseSchema.parse({

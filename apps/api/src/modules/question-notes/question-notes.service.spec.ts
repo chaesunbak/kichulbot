@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
-import { QuestionNote } from '@prisma/client';
+import type { QuestionNote } from '@prisma/client';
 
-import { QuestionNotesRepository } from './question-notes.repository';
+import type { QuestionNotesRepository } from './question-notes.repository';
 import { QuestionNotesService } from './question-notes.service';
 
 const now = new Date('2026-06-02T00:00:00.000Z');

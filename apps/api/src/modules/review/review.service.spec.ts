@@ -1,8 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import { AnswerMode, AttemptOutcome, QuestionSetKind } from '@prisma/client';
 
-import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
-import { ReviewRepository } from './review.repository';
+import type { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
+import type { ReviewRepository } from './review.repository';
 import { ReviewService } from './review.service';
 
 const now = new Date('2026-06-01T00:00:00.000Z');

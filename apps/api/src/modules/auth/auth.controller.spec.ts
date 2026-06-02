@@ -1,7 +1,7 @@
 import { UserAuthType, UserRole } from '@prisma/client';
 
 import { AuthController, MeController } from './auth.controller';
-import { AuthService } from './auth.service';
+import type { AuthService } from './auth.service';
 
 const serializedUser = {
   id: 'user_1',

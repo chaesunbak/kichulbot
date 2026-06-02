@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import {
+import type {
   Category,
   Exam,
   ExamCategory,
@@ -7,13 +7,13 @@ import {
   Paper,
   Question,
   UserPaper,
-  UserRole,
 } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
-import { StorageService } from '../../infrastructure/storage/storage.service';
-import { ExamsService } from '../exams/exams.service';
-import { QuestionsService } from '../questions/questions.service';
-import { PapersRepository } from './papers.repository';
+import type { StorageService } from '../../infrastructure/storage/storage.service';
+import type { ExamsService } from '../exams/exams.service';
+import type { QuestionsService } from '../questions/questions.service';
+import type { PapersRepository } from './papers.repository';
 import { PapersService } from './papers.service';
 
 const now = new Date('2026-05-28T00:00:00.000Z');

@@ -1,4 +1,4 @@
-import { TransformFnParams } from 'class-transformer';
+import type { TransformFnParams } from 'class-transformer';
 
 /**
  * multipart/form-data 의 태그 필드를 string[] 로 정규화한다.

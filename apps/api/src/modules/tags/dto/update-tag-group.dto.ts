@@ -1,4 +1,4 @@
-import { UpdateTagGroupRequest } from '@kichulbot/api-contract/tags';
+import type { UpdateTagGroupRequest } from '@kichulbot/api-contract/tags';
 import { PartialType } from '@nestjs/swagger';
 
 import { CreateTagGroupDto } from './create-tag-group.dto';

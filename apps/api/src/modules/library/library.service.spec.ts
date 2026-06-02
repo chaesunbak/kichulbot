@@ -1,7 +1,7 @@
 import { ConflictException } from '@nestjs/common';
-import { Exam, ExamSession, LibraryFolder, Paper } from '@prisma/client';
+import type { Exam, ExamSession, LibraryFolder, Paper } from '@prisma/client';
 
-import { LibraryRepository } from './library.repository';
+import type { LibraryRepository } from './library.repository';
 import { LibraryService } from './library.service';
 
 const now = new Date('2026-05-31T00:00:00.000Z');

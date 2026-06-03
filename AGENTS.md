@@ -1,5 +1,3 @@
-# AGENTS.md
-
 ## Workspace Overview
 
 ```text
@@ -7,13 +5,13 @@ kichulbot/
 ├── apps/
 │   ├── api/      # NestJS backend
 │   ├── web/      # Next.js user-facing frontend
-│   └── admin/    # Next.js admin frontend
+│   └── admin/    # Vite + react-router admin frontend
 └── packages/
     ├── api-contract/       # Shared API types between frontend and backend
     ├── ui/                 # Shared React component library (shadcn/ui-based)
-    ├── eslint-config/      # Shared ESLint configurations
-    ├── prettier-config/    # Shared Prettier configuration
-    └── typescript-config/  # Shared TypeScript tsconfig presets
+    ├── eslint-config/
+    ├── prettier-config/
+    └── typescript-config/
 ```
 
 ## Web Frontend Structure
@@ -25,9 +23,7 @@ apps/web/
 ├── public/
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/          # Auth pages such as guest, login, and register
-│   │   ├── (main)/          # Main authenticated app pages
-│   │   ├── (solve)/         # Solve-focused route layout
+│   │   ├── (group)/
 │   │   ├── api/             # Route handlers and backend proxy routes(BFF)
 │   │   ├── globals.css
 │   │   ├── layout.tsx
@@ -53,14 +49,13 @@ apps/api/src/
 ├── main.ts
 ├── app.module.ts
 ├── common/                  # Shared decorators, filters, guards, pipes, DTOs, etc.
-├── config/                  # App configuration and environment validation
-├── infrastructure/          # Adapters that touch external systems
-│   └── database/            # Database adapter
-│       ├── database.module.ts
+├── config/
+├── infrastructure/
+│   └── database/
 │       ├── database.service.ts
 │       ├── schema.prisma
 │       └── seed.ts
-└── modules/                 # Domain feature modules
+└── modules/
     └── auth/
         ├── auth.module.ts
         ├── auth.controller.ts

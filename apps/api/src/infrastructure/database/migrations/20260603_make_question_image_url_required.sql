@@ -1,0 +1,2 @@
+ALTER TABLE "Question" ALTER COLUMN "imageUrl" SET NOT NULL;
+ALTER TABLE "QuestionRevision" ALTER COLUMN "imageUrl" SET NOT NULL;

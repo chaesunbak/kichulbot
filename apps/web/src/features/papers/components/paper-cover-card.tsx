@@ -54,7 +54,7 @@ export function PaperCover({
       className={cn(
         `
           @container relative mx-auto aspect-3/4 max-w-52 overflow-hidden
-          rounded-lg border
+          rounded-sm border
         `,
         palette.cover,
         palette.border,

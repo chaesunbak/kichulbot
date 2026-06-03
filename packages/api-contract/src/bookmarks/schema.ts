@@ -4,7 +4,7 @@ import { IsoDateStringSchema } from '../common.js';
 export const BookmarkedQuestionResponseSchema = z.object({
   id: z.string(),
   number: z.number().int(),
-  imageUrl: z.string().nullable(),
+  imageUrl: z.string().url(),
   paper: z.object({
     id: z.string(),
     title: z.string(),

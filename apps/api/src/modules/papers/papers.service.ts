@@ -357,7 +357,7 @@ export class PapersService {
     }
   }
 
-  private async deleteStoredImage(imageUrl: string | null): Promise<void> {
+  private async deleteStoredImage(imageUrl: string): Promise<void> {
     if (!imageUrl) {
       return;
     }

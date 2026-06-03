@@ -7,7 +7,7 @@ export const QuestionResponseSchema = z.object({
   id: z.string(),
   number: z.number().int(),
   type: QuestionTypeSchema,
-  imageUrl: z.string().url().nullable(),
+  imageUrl: z.string().url(),
   choiceCount: z.number().int().nullable(),
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),

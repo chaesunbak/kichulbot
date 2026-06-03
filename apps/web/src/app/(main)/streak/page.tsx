@@ -3,13 +3,16 @@ import Link from 'next/link';
 
 import { getQuestionAttempts } from '@/features/question-attempts/api/server';
 import { MonthlyStreakCalendar } from '@/features/question-attempts/components/monthly-streak-calendar';
+import { WeeklyStreakSection } from '@/features/question-attempts/components/weekly-streak-section';
 import {
   formatMonthTitle,
+  getCurrentWeekRange,
   getMonthRange,
+  getRecentStreakRange,
   normalizeMonth,
   shiftMonth,
-  toAttemptDate,
 } from '@/features/question-attempts/lib/streak-date';
+import { countAttemptsByDate } from '@/features/question-attempts/lib/streak-summary';
 
 interface StreakPageProps {
   searchParams?: Promise<{
@@ -17,22 +20,17 @@ interface StreakPageProps {
   }>;
 }
 
-function countAttemptsByDate(gradedAts: string[]) {
-  return gradedAts.reduce<Record<string, number>>((acc, gradedAt) => {
-    const date = toAttemptDate(gradedAt);
-    acc[date] = (acc[date] ?? 0) + 1;
-    return acc;
-  }, {});
-}
-
 export default async function StreakPage({ searchParams }: StreakPageProps) {
   const params = await searchParams;
   const month = normalizeMonth(params?.month);
   const range = getMonthRange(month);
-  const questionAttempts = await getQuestionAttempts(range.from, range.to);
-  const countsByDate = countAttemptsByDate(
-    questionAttempts.map(({ gradedAt }) => gradedAt),
-  );
+  const currentWeek = getCurrentWeekRange();
+  const streakRange = getRecentStreakRange();
+  const [questionAttempts, weeklyQuestionAttempts] = await Promise.all([
+    getQuestionAttempts(range.from, range.to),
+    getQuestionAttempts(streakRange.from, currentWeek.to),
+  ]);
+  const countsByDate = countAttemptsByDate(questionAttempts);
   const previousMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
 
@@ -43,10 +41,14 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
         sm:py-10
       "
     >
-      <section className="
-        flex flex-col gap-4
-        sm:flex-row sm:items-end sm:justify-between
-      ">
+      <WeeklyStreakSection questionAttempts={weeklyQuestionAttempts} />
+
+      <section
+        className="
+          flex flex-col gap-4
+          sm:flex-row sm:items-end sm:justify-between
+        "
+      >
         <h2 className="text-2xl font-semibold text-zinc-900">
           {formatMonthTitle(month)}
         </h2>

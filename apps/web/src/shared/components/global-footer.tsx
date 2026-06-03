@@ -2,9 +2,9 @@ import Link from 'next/link';
 
 export default function GlobalFooter() {
   return (
-    <footer className="
-      h-40 border-t bg-background px-4 py-8 text-sm text-zinc-500
-    ">
+    <footer
+      className="h-60 border-t bg-background px-4 py-8 text-sm text-zinc-500"
+    >
       <div
         className="
           mx-auto flex max-w-5xl flex-col gap-4

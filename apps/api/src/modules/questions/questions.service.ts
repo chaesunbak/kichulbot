@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   AdminQuestionResponse,
   DeleteQuestionResponse,
@@ -62,38 +64,37 @@ export class QuestionsService {
       paper.examSession.examId,
     );
 
-    let created: QuestionWithTags;
+    const id = randomUUID();
+    let uploadedObjectKey: string | null = null;
+
     try {
-      created = await this.questionsRepository.create(
+      const { objectKey, url } = await this.storageService.uploadQuestionImage(
+        file,
+        id,
+      );
+      uploadedObjectKey = objectKey;
+
+      const created = await this.questionsRepository.create(
         {
+          id,
           paperId: dto.paperId,
           number: dto.number,
           ...answerData,
           explanation: dto.explanation?.trim() || null,
           points: dto.points ?? 5,
           recommendedTimeSeconds: dto.recommendedTimeSeconds,
-          imageUrl: null,
+          imageUrl: url,
         },
         tagIds,
       );
+      return this.toMutationResponse(created);
     } catch (error) {
+      if (uploadedObjectKey) {
+        await this.storageService
+          .deleteObject(uploadedObjectKey)
+          .catch(() => undefined);
+      }
       throw this.mapKnownError(error);
-    }
-
-    try {
-      const { url } = await this.storageService.uploadQuestionImage(
-        file,
-        created.id,
-      );
-      const updated = await this.questionsRepository.updateImageUrl(
-        created.id,
-        url,
-      );
-      return this.toMutationResponse(updated);
-    } catch (error) {
-      // 이미지 저장 실패 시 방금 만든 문제 레코드를 정리한다.
-      await this.questionsRepository.delete(created.id).catch(() => undefined);
-      throw error;
     }
   }
 
@@ -236,7 +237,7 @@ export class QuestionsService {
   }
 
   private async deleteStaleImage(
-    previousUrl: string | null,
+    previousUrl: string,
     nextUrl: string,
   ): Promise<void> {
     if (!previousUrl || previousUrl === nextUrl) {
@@ -246,7 +247,7 @@ export class QuestionsService {
     await this.deleteStoredImage(previousUrl);
   }
 
-  private async deleteStoredImage(imageUrl: string | null): Promise<void> {
+  private async deleteStoredImage(imageUrl: string): Promise<void> {
     if (!imageUrl) {
       return;
     }

@@ -33,7 +33,7 @@ export interface BookmarkListSummary {
 export interface BookmarkedQuestion {
   id: string;
   number: number;
-  imageUrl: string | null;
+  imageUrl: string;
   paper: {
     id: string;
     title: string;
@@ -68,7 +68,7 @@ export interface SolveQuestion {
   questionRevisionId: string;
   number: number;
   type: 'MULTIPLE_CHOICE' | 'WRITTEN';
-  imageUrl: string | null;
+  imageUrl: string;
   choiceCount: number | null;
   points: number;
   recommendedTimeSeconds: number | null;
@@ -140,7 +140,7 @@ export interface DailyWrongQuestionSet {
   questions: {
     id: string;
     number: number;
-    imageUrl: string | null;
+    imageUrl: string;
     sourceOutcome: 'INCORRECT' | 'OMITTED';
     paper: {
       id: string;

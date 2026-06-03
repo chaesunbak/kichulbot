@@ -24,7 +24,6 @@ describe('QuestionsService', () => {
       create: jest.fn(),
       findById: jest.fn(),
       findPaper: jest.fn(),
-      updateImageUrl: jest.fn(),
       delete: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<QuestionsRepository>;
@@ -67,7 +66,7 @@ describe('QuestionsService', () => {
       choiceCount: 5,
       answerChoice: 1,
       answerText: null,
-      imageUrl: null,
+      imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
       tags: [],
     } as never);
     repository.findPaper.mockResolvedValue({
@@ -109,7 +108,7 @@ describe('QuestionsService', () => {
       choiceCount: 5,
       answerChoice: 2,
       answerText: null,
-      imageUrl: null,
+      imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
       tags: [],
     } as never);
     repository.update.mockResolvedValue({
@@ -123,7 +122,7 @@ describe('QuestionsService', () => {
       explanation: null,
       points: 5,
       recommendedTimeSeconds: null,
-      imageUrl: null,
+      imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
       tags: [],
       createdAt: new Date('2026-05-31T00:00:00.000Z'),
       updatedAt: new Date('2026-05-31T00:00:00.000Z'),

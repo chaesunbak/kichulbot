@@ -47,7 +47,7 @@ const question = {
   paperId: 'paper_1',
   number: 1,
   type: 'MULTIPLE_CHOICE',
-  imageUrl: null,
+  imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
   choiceCount: 5,
   answerChoice: 3,
   answerText: null,

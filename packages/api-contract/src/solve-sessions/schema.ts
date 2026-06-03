@@ -21,7 +21,7 @@ export const SolveQuestionResponseSchema = z.object({
   questionRevisionId: z.string(),
   number: z.number().int(),
   type: QuestionTypeSchema,
-  imageUrl: z.string().url().nullable(),
+  imageUrl: z.string().url(),
   choiceCount: z.number().int().nullable(),
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),

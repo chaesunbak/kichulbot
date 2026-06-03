@@ -6,9 +6,7 @@ import { BookOpenCheck, CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
-import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
-import { QuestionReportButton } from '@/features/learning/components/question-report-button';
+import { QuestionActions } from '@/features/learning/components/question-actions';
 import { formatDate, formatDuration } from '@/features/learning/lib/format';
 import type {
   Answer,
@@ -63,7 +61,7 @@ export function ResultSession({ session }: { session: SolveSession }) {
   return (
     <div
       className="
-        mx-auto max-w-5xl px-4 py-8
+        mx-auto max-w-6xl px-4 py-8
         sm:py-10
       "
     >
@@ -91,48 +89,106 @@ export function ResultSession({ session }: { session: SolveSession }) {
 
       <section
         className="
-          mt-6 grid gap-3
-          sm:grid-cols-2
+          mt-5 grid gap-2
+          sm:grid-cols-4
           lg:grid-cols-4
         "
       >
-        <SummaryTile
-          label="점수"
-          value={`${session.result.score}점`}
-          detail={`${session.result.correctCount}/${session.result.totalCount} 정답`}
-        />
+        <SummaryTile label="점수" value={`${session.result.score}점`} />
         <SummaryTile
           label="오답"
           value={`${session.result.wrongCount}문항`}
-          detail="해설을 먼저 확인하세요"
           tone="wrong"
         />
         <SummaryTile
           label="미응답"
           value={`${session.result.totalCount - session.result.answeredCount}문항`}
-          detail={`${session.result.answeredCount}문항 응답`}
         />
         <SummaryTile
           label="총 풀이시간"
           value={formatDuration(session.result.totalSpentMilliseconds)}
-          detail="제출 시점 기준"
         />
       </section>
 
       <div
         className="
           mt-8 grid gap-5
-          lg:grid-cols-[280px_1fr]
+          lg:grid-cols-[minmax(0,1fr)_300px]
         "
       >
-        <aside className="h-fit rounded-lg border bg-card p-4">
+        <section className="overflow-hidden rounded-lg border bg-card">
+          <div
+            className="
+              flex flex-wrap items-center justify-between gap-3 border-b px-4
+              py-3
+            "
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-zinc-950">
+                  {selectedQuestion.number}번
+                </h2>
+                <StatusBadge
+                  question={selectedQuestion}
+                  answer={selectedAnswer}
+                />
+              </div>
+              <p className="mt-1 text-xs text-zinc-500">
+                풀이시간{' '}
+                {formatDuration(selectedAnswer?.spentMilliseconds ?? 0)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <QuestionActions
+                questionId={selectedQuestion.id}
+                questionRevisionId={selectedQuestion.questionRevisionId}
+              />
+            </div>
+          </div>
+
+          <div
+            className="
+              grid gap-0
+              lg:grid-cols-[minmax(0,1fr)_320px]
+            "
+          >
+            <div className="min-h-105 bg-zinc-50 p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selectedQuestion.imageUrl}
+                alt={`${selectedQuestion.number}번 문제`}
+                className="size-full min-h-99 rounded-md object-contain"
+              />
+            </div>
+
+            <div
+              className="
+                border-t p-4
+                lg:border-t-0 lg:border-l
+              "
+            >
+              <AnswerBlock
+                question={selectedQuestion}
+                answer={selectedAnswer}
+              />
+              {selectedQuestion.result && (
+                <QuestionResultPanel result={selectedQuestion.result} />
+              )}
+            </div>
+          </div>
+        </section>
+
+        <aside className="
+          h-fit rounded-lg border bg-card p-4
+          lg:sticky lg:top-24
+        ">
           <div
             className="
               flex items-center gap-2 text-sm font-semibold text-zinc-900
             "
           >
             <BookOpenCheck className="size-4" aria-hidden />
-            문항별 채점
+            필터 및 네비게이션
           </div>
           <div className="mt-4 grid grid-cols-4 gap-2">
             {(Object.keys(filterLabels) as ResultFilter[]).map((item) => (
@@ -186,81 +242,6 @@ export function ResultSession({ session }: { session: SolveSession }) {
             </p>
           )}
         </aside>
-
-        <section className="overflow-hidden rounded-lg border bg-card">
-          <div
-            className="
-              flex flex-wrap items-center justify-between gap-3 border-b px-4
-              py-3
-            "
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-zinc-950">
-                  {selectedQuestion.number}번
-                </h2>
-                <StatusBadge
-                  question={selectedQuestion}
-                  answer={selectedAnswer}
-                />
-              </div>
-              <p className="mt-1 text-xs text-zinc-500">
-                풀이시간{' '}
-                {formatDuration(selectedAnswer?.spentMilliseconds ?? 0)}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <QuestionNoteButton questionId={selectedQuestion.id} />
-              <QuestionReportButton
-                questionId={selectedQuestion.id}
-                questionRevisionId={selectedQuestion.questionRevisionId}
-              />
-              <QuestionBookmarkButton questionId={selectedQuestion.id} />
-            </div>
-          </div>
-
-          <div
-            className="
-              grid gap-0
-              lg:grid-cols-[minmax(0,1fr)_320px]
-            "
-          >
-            <div className="min-h-105 bg-zinc-50 p-3">
-              {selectedQuestion.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={selectedQuestion.imageUrl}
-                  alt={`${selectedQuestion.number}번 문제`}
-                  className="size-full min-h-99 rounded-md object-contain"
-                />
-              ) : (
-                <div
-                  className="
-                    grid min-h-99 place-items-center rounded-md bg-card px-4
-                    text-center text-sm text-zinc-500
-                  "
-                >
-                  문제 이미지가 없습니다.
-                </div>
-              )}
-            </div>
-
-            <div
-              className="
-                border-t p-4
-                lg:border-t-0 lg:border-l
-              "
-            >
-              <AnswerBlock
-                question={selectedQuestion}
-                answer={selectedAnswer}
-              />
-              {selectedQuestion.result && (
-                <QuestionResultPanel result={selectedQuestion.result} />
-              )}
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );
@@ -269,26 +250,25 @@ export function ResultSession({ session }: { session: SolveSession }) {
 function SummaryTile({
   label,
   value,
-  detail,
+
   tone = 'default',
 }: {
   label: string;
   value: string;
-  detail: string;
+
   tone?: 'default' | 'wrong';
 }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p
+    <div className="flex flex-col rounded-md border bg-card px-3 py-2.5">
+      <span className="text-xs font-medium text-zinc-500">{label}</span>
+      <span
         className={cn(
-          'mt-2 text-2xl font-bold text-zinc-950',
-          tone === 'wrong' && 'text-red-700',
+          'mt-1 text-xl/tight font-bold text-zinc-950',
+          tone === 'wrong' && 'text-destructive',
         )}
       >
         {value}
-      </p>
-      <p className="mt-2 text-xs text-zinc-500">{detail}</p>
+      </span>
     </div>
   );
 }
@@ -303,20 +283,20 @@ function AnswerBlock({
   return (
     <div className="grid gap-3 text-sm">
       <div>
-        <p className="text-xs font-medium text-zinc-500">내 답안</p>
-        <p className="mt-1 rounded-md bg-zinc-50 px-3 py-2 text-zinc-900">
+        <span className="text-xs font-medium text-zinc-500">내 답안</span>
+        <span className="mt-1 rounded-md bg-zinc-50 px-3 py-2 text-zinc-900">
           {formatUserAnswer(question, answer)}
-        </p>
+        </span>
       </div>
       <div>
-        <p className="text-xs font-medium text-zinc-500">정답</p>
-        <p
+        <span className="text-xs font-medium text-zinc-500">정답</span>
+        <span
           className="
             mt-1 rounded-md bg-emerald-50 px-3 py-2 font-medium text-emerald-800
           "
         >
           {formatCorrectAnswer(question.result)}
-        </p>
+        </span>
       </div>
     </div>
   );
@@ -324,13 +304,13 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="
-      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
-    ">
-      <p className="font-semibold text-blue-900">해설</p>
-      <p className="mt-2 whitespace-pre-wrap text-blue-800">
+    <div
+      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
+    >
+      <span className="font-semibold text-blue-900">해설</span>
+      <span className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}
-      </p>
+      </span>
     </div>
   );
 }

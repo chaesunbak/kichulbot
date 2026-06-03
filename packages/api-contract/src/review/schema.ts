@@ -4,7 +4,7 @@ import { IsoDateStringSchema } from '../common.js';
 export const WrongQuestionResponseSchema = z.object({
   id: z.string(),
   number: z.number().int(),
-  imageUrl: z.string().nullable(),
+  imageUrl: z.string().url(),
   sourceOutcome: z.enum(['INCORRECT', 'OMITTED']),
   paper: z.object({
     id: z.string(),

@@ -13,34 +13,12 @@ export class QuestionsRepository {
   constructor(private readonly db: DatabaseService) {}
 
   create(data: Prisma.QuestionUncheckedCreateInput, tagIds: string[]) {
-    return this.db.question.create({
-      data: {
-        ...data,
-        tags: { create: tagIds.map((tagId) => ({ tagId })) },
-      },
-      include: this.questionIncludes(),
-    });
-  }
-
-  findById(id: string) {
-    return this.db.question.findUnique({
-      where: { id },
-      include: this.questionIncludes(),
-    });
-  }
-
-  findPaper(paperId: string) {
-    return this.db.paper.findUnique({
-      where: { id: paperId },
-      include: { examSession: true },
-    });
-  }
-
-  updateImageUrl(id: string, imageUrl: string) {
     return this.db.$transaction(async (tx) => {
-      const question = await tx.question.update({
-        where: { id },
-        data: { imageUrl },
+      const question = await tx.question.create({
+        data: {
+          ...data,
+          tags: { create: tagIds.map((tagId) => ({ tagId })) },
+        },
         include: { paper: true },
       });
       const revision = await tx.questionRevision.create({
@@ -55,9 +33,23 @@ export class QuestionsRepository {
       });
 
       return tx.question.findUniqueOrThrow({
-        where: { id },
+        where: { id: question.id },
         include: this.questionIncludes(),
       });
+    });
+  }
+
+  findById(id: string) {
+    return this.db.question.findUnique({
+      where: { id },
+      include: this.questionIncludes(),
+    });
+  }
+
+  findPaper(paperId: string) {
+    return this.db.paper.findUnique({
+      where: { id: paperId },
+      include: { examSession: true },
     });
   }
 

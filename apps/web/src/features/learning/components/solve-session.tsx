@@ -1,9 +1,22 @@
 'use client';
 
 import { Button } from '@kichulbot/ui/components/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@kichulbot/ui/components/dropdown-menu';
 import { toast } from '@kichulbot/ui/components/sonner';
 import { Textarea } from '@kichulbot/ui/components/textarea';
-import { Clock } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  List,
+  XCircle,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -11,9 +24,7 @@ import {
   saveSolveSessionAnswer,
   submitSolveSession,
 } from '@/features/learning/api/client';
-import { QuestionBookmarkButton } from '@/features/learning/components/question-bookmark-button';
-import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
-import { QuestionReportButton } from '@/features/learning/components/question-report-button';
+import { QuestionActions } from '@/features/learning/components/question-actions';
 import {
   formatClock,
   formatDuration,
@@ -190,26 +201,27 @@ export function SolveSession({
 
       <div
         className="
-          grid min-h-0 flex-1 gap-3 overflow-hidden p-3
-          md:grid-cols-[1fr_232px] md:gap-4 md:p-4
+          grid min-h-0 w-full flex-1 gap-3 overflow-hidden p-3
+          md:grid-cols-[minmax(0,1fr)_320px] md:gap-4 md:p-4
         "
       >
         <QuestionPanel
           question={question}
+          currentIndex={currentIndex}
+          questionCount={session.paper.questions.length}
+        />
+
+        <SolveControlPanel
+          session={session}
+          question={question}
           answer={answer}
           answerText={answerText}
           currentIndex={currentIndex}
-          questionCount={session.paper.questions.length}
+          answeredIds={answeredIds}
           disabled={!!session.submittedAt}
           message={message}
           onAnswerTextChange={setAnswerText}
           onSaveAnswer={saveAnswer}
-        />
-
-        <SolveNavigation
-          session={session}
-          currentIndex={currentIndex}
-          answeredIds={answeredIds}
           onMoveTo={moveTo}
         />
       </div>
@@ -312,24 +324,12 @@ function SolveSessionHeader({
 
 function QuestionPanel({
   question,
-  answer,
-  answerText,
   currentIndex,
   questionCount,
-  disabled,
-  message,
-  onAnswerTextChange,
-  onSaveAnswer,
 }: {
   question: SolveQuestion;
-  answer?: Answer;
-  answerText: string;
   currentIndex: number;
   questionCount: number;
-  disabled: boolean;
-  message: string | null;
-  onAnswerTextChange: (value: string) => void;
-  onSaveAnswer: (payload: SaveAnswerPayload) => void;
 }) {
   return (
     <section
@@ -343,15 +343,6 @@ function QuestionPanel({
         questionCount={questionCount}
       />
       <QuestionImage question={question} />
-      <AnswerSection
-        question={question}
-        answer={answer}
-        answerText={answerText}
-        disabled={disabled}
-        message={message}
-        onAnswerTextChange={onAnswerTextChange}
-        onSaveAnswer={onSaveAnswer}
-      />
     </section>
   );
 }
@@ -390,12 +381,10 @@ function QuestionHeader({
         )}
       </div>
       <div className="flex items-center gap-3">
-        <QuestionNoteButton questionId={question.id} />
-        <QuestionReportButton
+        <QuestionActions
           questionId={question.id}
           questionRevisionId={question.questionRevisionId}
         />
-        <QuestionBookmarkButton questionId={question.id} />
         <span className="text-sm text-zinc-500">
           {currentIndex + 1} / {questionCount}
         </span>
@@ -406,7 +395,7 @@ function QuestionHeader({
 
 function QuestionImage({ question }: { question: SolveQuestion }) {
   return (
-    <div className="min-h-0 flex-1 bg-zinc-50 p-3">
+    <div className="min-h-0 flex-1 p-3">
       {question.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -445,8 +434,16 @@ function AnswerSection({
   onAnswerTextChange: (value: string) => void;
   onSaveAnswer: (payload: SaveAnswerPayload) => void;
 }) {
+  void message;
+
   return (
-    <div className="shrink-0 border-t px-4 py-3">
+    <section className="grid gap-3">
+      <div>
+        <h2 className="text-sm font-semibold">답안 입력</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          {question.type === 'MULTIPLE_CHOICE' ? '객관식' : '주관식'}
+        </p>
+      </div>
       {question.type === 'MULTIPLE_CHOICE' ? (
         <ChoiceAnswerInput
           choiceCount={question.choiceCount ?? 0}
@@ -464,8 +461,8 @@ function AnswerSection({
         />
       )}
 
-      <AnswerMeta answer={answer} message={message} />
-    </div>
+      <AnswerMeta answer={answer} />
+    </section>
   );
 }
 
@@ -488,7 +485,15 @@ function ChoiceAnswerInput({
           <Button
             key={choice}
             type="button"
-            variant={selectedChoice === choice ? 'default' : 'outline'}
+            variant="outline"
+            className={cn(
+              'aspect-square w-10 rounded-full p-0',
+              selectedChoice === choice &&
+                `
+                  bg-zinc-500 text-zinc-100
+                  hover:bg-zinc-600 hover:text-zinc-100
+                `,
+            )}
             disabled={disabled}
             onClick={() => onSelect(choice)}
           >
@@ -536,13 +541,7 @@ function WrittenAnswerInput({
   );
 }
 
-function AnswerMeta({
-  answer,
-  message,
-}: {
-  answer?: Answer;
-  message: string | null;
-}) {
+function AnswerMeta({ answer }: { answer?: Answer }) {
   return (
     <div
       className="
@@ -552,40 +551,63 @@ function AnswerMeta({
       {answer && (
         <span>누적 풀이시간 {formatDuration(answer.spentMilliseconds)}</span>
       )}
-      {message && <span>{message}</span>}
     </div>
   );
 }
 
-function SolveNavigation({
+function SolveControlPanel({
   session,
+  question,
+  answer,
+  answerText,
   currentIndex,
   answeredIds,
+  disabled,
+  message,
+  onAnswerTextChange,
+  onSaveAnswer,
   onMoveTo,
 }: {
   session: SolveSession;
+  question: SolveQuestion;
+  answer?: Answer;
+  answerText: string;
   currentIndex: number;
   answeredIds: Set<string>;
+  disabled: boolean;
+  message: string | null;
+  onAnswerTextChange: (value: string) => void;
+  onSaveAnswer: (payload: SaveAnswerPayload) => void;
   onMoveTo: (index: number) => void;
 }) {
   return (
     <aside
       className="
-        flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card p-4
+        flex min-h-0 flex-col gap-5 overflow-hidden rounded-lg border bg-card
+        p-4
       "
     >
-      <h2 className="text-sm font-semibold">문제 번호</h2>
-      <QuestionNumberGrid
+      <QuestionNavigationControls
         questions={session.paper.questions}
         currentIndex={currentIndex}
         answeredIds={answeredIds}
         onMoveTo={onMoveTo}
       />
+      <AnswerSection
+        question={question}
+        answer={answer}
+        answerText={answerText}
+        disabled={disabled}
+        message={message}
+        onAnswerTextChange={onAnswerTextChange}
+        onSaveAnswer={onSaveAnswer}
+      />
+      <ResultCheckPanel question={question} answer={answer} />
     </aside>
   );
 }
 
-function QuestionNumberGrid({
+function QuestionNavigationControls({
   questions,
   currentIndex,
   answeredIds,
@@ -596,24 +618,120 @@ function QuestionNumberGrid({
   answeredIds: Set<string>;
   onMoveTo: (index: number) => void;
 }) {
+  const canMovePrevious = currentIndex > 0;
+  const canMoveNext = currentIndex < questions.length - 1;
+
   return (
-    <div className="mt-3 grid shrink-0 grid-cols-5 gap-2">
-      {questions.map((item, index) => (
-        <button
-          key={item.id}
+    <section className="grid gap-2">
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <Button
           type="button"
-          className={cn(
-            'h-8 rounded-md border text-sm',
-            currentIndex === index && 'border-zinc-900 bg-zinc-900 text-white',
-            currentIndex !== index &&
-              answeredIds.has(item.id) &&
-              'border-blue-300 bg-blue-50 text-blue-700',
-          )}
-          onClick={() => onMoveTo(index)}
+          variant="outline"
+          size="sm"
+          disabled={!canMovePrevious}
+          onClick={() => onMoveTo(currentIndex - 1)}
         >
-          {item.number}
-        </button>
-      ))}
-    </div>
+          <ChevronLeft data-icon="inline-start" />
+          이전
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!canMoveNext}
+          onClick={() => onMoveTo(currentIndex + 1)}
+        >
+          다음
+          <ChevronRight data-icon="inline-end" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="outline" size="icon-sm">
+              <List />
+              <span className="sr-only">문항 목록</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="max-h-80 w-56">
+            {questions.map((question, index) => (
+              <DropdownMenuItem
+                key={question.id}
+                className={cn(
+                  'justify-between',
+                  currentIndex === index && 'bg-accent text-accent-foreground',
+                )}
+                onSelect={() => onMoveTo(index)}
+              >
+                <span>{question.number}번</span>
+                <span className="text-xs text-muted-foreground">
+                  {currentIndex === index
+                    ? '현재'
+                    : answeredIds.has(question.id)
+                      ? '응답'
+                      : ''}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </section>
   );
+}
+
+function ResultCheckPanel({
+  question,
+  answer,
+}: {
+  question: SolveQuestion;
+  answer?: Answer;
+}) {
+  const hasSubmittedAnswer =
+    !!answer && (answer.answerChoice !== null || !!answer.answerText);
+  const result = question.result;
+
+  if (!hasSubmittedAnswer) return null;
+
+  return (
+    <section className="border-t pt-4">
+      <span className="text-sm font-semibold">채점 확인</span>
+      <div
+        className={cn(
+          'mt-3 rounded-lg border p-3 text-sm',
+          result?.isCorrect === true &&
+            'border-emerald-200 bg-emerald-50 text-emerald-800',
+          result?.isCorrect === false &&
+            'border-red-200 bg-red-50 text-red-800',
+          result?.isCorrect == null && 'bg-zinc-50 text-zinc-600',
+        )}
+      >
+        <div className="flex items-center gap-2 font-semibold">
+          {result?.isCorrect === true && (
+            <>
+              <CheckCircle2 className="size-4" aria-hidden />
+              정답
+            </>
+          )}
+          {result?.isCorrect === false && (
+            <>
+              <XCircle className="size-4" aria-hidden />
+              오답
+            </>
+          )}
+          {result?.isCorrect == null && '확인 대기'}
+        </div>
+        {result && (
+          <p className="mt-2 text-xs">
+            정답 {formatCorrectAnswer(question.result)}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function formatCorrectAnswer(result: SolveQuestion['result']) {
+  if (!result) return '확인 전';
+  return result.answerChoice
+    ? `${result.answerChoice}번`
+    : (result.answerText ?? '등록된 정답 없음');
 }

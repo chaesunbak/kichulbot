@@ -25,14 +25,14 @@ export function RecentPapersSection({ logs }: RecentPapersSectionProps) {
       <CardHeader className="flex items-start justify-between gap-4">
         <CardTitle>최근 본 문제지</CardTitle>
         <CardAction>
-          <Button asChild variant="outline">
+          <Button asChild variant="link">
             <Link href="/recap" aria-label="풀이 기록으로 이동">
+              더보기
               <ChevronRight className="size-4" />
             </Link>
           </Button>
         </CardAction>
       </CardHeader>
-
       <CardContent>
         <ul
           className="
@@ -54,16 +54,16 @@ export function RecentPapersSection({ logs }: RecentPapersSectionProps) {
                     sm:max-w-36
                   "
                 />
-                <p
+                <span
                   className="
                     mt-2 line-clamp-2 text-sm font-semibold text-zinc-900
                   "
                 >
                   {paper.title}
-                </p>
-                <p className="mt-1 truncate text-xs text-zinc-500">
+                </span>
+                <span className="mt-1 truncate text-xs text-zinc-500">
                   {formatPaperSession(paper)} · {paper.questionCount}문항
-                </p>
+                </span>
               </Link>
             </li>
           ))}

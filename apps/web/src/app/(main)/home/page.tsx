@@ -1,11 +1,11 @@
 import { RecentPapersSection } from '@/features/home/components/recent-papers-section';
 import { getSolveSessionLogs } from '@/features/learning/api/server';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server';
+import { StreakSection } from '@/features/question-attempts/components/streak-section';
 import {
   getCurrentWeekRange,
   getRecentStreakRange,
-  StreakSection,
-} from '@/features/question-attempts/components/streak-section';
+} from '@/features/question-attempts/lib/streak-date';
 import { PageContainer } from '@/shared/components/page-container';
 
 export default async function HomePage() {

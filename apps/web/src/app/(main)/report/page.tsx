@@ -1,3 +1,6 @@
+import { redirect } from 'next/navigation';
+
+import { getCachedUser } from '@/features/auth/server';
 import { getSolveSessionLogs } from '@/features/learning/api/server';
 import { RecapTrendSection } from '@/features/learning/components/recap-trend-section';
 import {
@@ -11,6 +14,9 @@ import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function ReportPage() {
+  const user = await getCachedUser();
+  if (!user) redirect('/login?next=/report');
+
   const analysisRange = getRecentStreakRange(90);
   const [logs, questionAttempts] = await Promise.all([
     getSolveSessionLogs(),

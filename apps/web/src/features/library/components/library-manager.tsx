@@ -1,20 +1,20 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@kichulbot/ui/components/dropdown-menu';
+} from '@kichulbot/ui/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
-import { toast } from '@kichulbot/ui/components/sonner';
+} from '@kichulbot/ui/components/ui/select';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
 import {
   ChevronLeft,
   FolderPlus,

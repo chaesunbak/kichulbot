@@ -118,13 +118,19 @@ export async function createQuestionReport({
   questionRevisionId,
   category,
   content,
+  isAuthenticated = true,
 }: {
   questionId: string;
   questionRevisionId: string;
   category: QuestionReportCategory;
   content: string;
+  isAuthenticated?: boolean;
 }) {
-  await clientApi.post(`/api/question-reports/${questionId}`, {
+  const path = isAuthenticated
+    ? `/api/question-reports/${questionId}`
+    : `/api/public/question-reports/${questionId}`;
+
+  await clientApi.post(path, {
     questionRevisionId,
     category,
     content,

@@ -3,7 +3,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
+import { redirect } from 'next/navigation';
 
 import { ProfileForm } from '@/features/auth/components/profile-form';
 import { getCachedUser } from '@/features/auth/server';
@@ -12,7 +13,7 @@ import { PageTitle } from '@/shared/components/page-title';
 
 export default async function ProfilePage() {
   const user = await getCachedUser();
-  if (!user) return null;
+  if (!user) redirect('/login?next=/my/profile');
 
   return (
     <PageContainer>

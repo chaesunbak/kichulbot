@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,13 +8,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@kichulbot/ui/components/dialog';
+} from '@kichulbot/ui/components/ui/dialog';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@kichulbot/ui/components/native-select';
-import { toast } from '@kichulbot/ui/components/sonner';
-import { Textarea } from '@kichulbot/ui/components/textarea';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/ui/select';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
+import { Textarea } from '@kichulbot/ui/components/ui/textarea';
 import { Flag, Loader2 } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { useEffect, useState } from 'react';
@@ -35,9 +38,11 @@ const reportCategories = [
 export function QuestionReportButton({
   questionId,
   questionRevisionId,
+  isAuthenticated = true,
 }: {
   questionId: string;
   questionRevisionId: string;
+  isAuthenticated?: boolean;
 }) {
   const [isOpening, setIsOpening] = useState(false);
 
@@ -49,6 +54,7 @@ export function QuestionReportButton({
           isOpen={isOpen}
           questionId={questionId}
           questionRevisionId={questionRevisionId}
+          isAuthenticated={isAuthenticated}
           onClose={close}
           onExit={unmount}
         />
@@ -76,12 +82,14 @@ function QuestionReportDialog({
   isOpen,
   questionId,
   questionRevisionId,
+  isAuthenticated,
   onClose,
   onExit,
 }: {
   isOpen: boolean;
   questionId: string;
   questionRevisionId: string;
+  isAuthenticated: boolean;
   onClose: () => void;
   onExit: () => void;
 }) {
@@ -111,6 +119,7 @@ function QuestionReportDialog({
         questionRevisionId,
         category,
         content: trimmedContent,
+        isAuthenticated,
       });
       toast.success('문제 신고를 접수했습니다.');
       onClose();
@@ -138,19 +147,23 @@ function QuestionReportDialog({
         <div className="grid gap-4">
           <label className="grid gap-2 text-sm font-medium text-zinc-900">
             신고 분류
-            <NativeSelect
-              className="w-full"
+            <Select
               value={category}
-              onChange={(event) =>
-                setCategory(event.target.value as QuestionReportCategory)
+              onValueChange={(value) =>
+                setCategory(value as QuestionReportCategory)
               }
             >
-              {reportCategories.map((item) => (
-                <NativeSelectOption key={item.value} value={item.value}>
-                  {item.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {reportCategories.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
           <label className="grid gap-2 text-sm font-medium text-zinc-900">
             신고 내용

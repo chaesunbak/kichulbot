@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@kichulbot/ui/components/dialog';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/dialog';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import { type ReactNode, useEffect, useState } from 'react';
 
 type PromptDialogProps = {

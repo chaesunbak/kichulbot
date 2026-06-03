@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@kichulbot/ui/components/badge';
-import { Button } from '@kichulbot/ui/components/button';
+import { Badge } from '@kichulbot/ui/components/ui/badge';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { BookOpenCheck, CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -25,7 +25,15 @@ const filterLabels: Record<ResultFilter, string> = {
   CORRECT: '정답',
 };
 
-export function ResultSession({ session }: { session: SolveSession }) {
+export function ResultSession({
+  session,
+  showPersonalActions = true,
+  isAuthenticated = true,
+}: {
+  session: SolveSession;
+  showPersonalActions?: boolean;
+  isAuthenticated?: boolean;
+}) {
   const [currentId, setCurrentId] = useState(session.paper.questions[0]?.id);
   const [filter, setFilter] = useState<ResultFilter>('ALL');
   const answerByQuestionId = useMemo(
@@ -142,6 +150,8 @@ export function ResultSession({ session }: { session: SolveSession }) {
               <QuestionActions
                 questionId={selectedQuestion.id}
                 questionRevisionId={selectedQuestion.questionRevisionId}
+                showPersonalActions={showPersonalActions}
+                isAuthenticated={isAuthenticated}
               />
             </div>
           </div>
@@ -178,10 +188,12 @@ export function ResultSession({ session }: { session: SolveSession }) {
           </div>
         </section>
 
-        <aside className="
+        <aside
+          className="
           h-fit rounded-lg border bg-card p-4
           lg:sticky lg:top-24
-        ">
+        "
+        >
           <div
             className="
               flex items-center gap-2 text-sm font-semibold text-zinc-900
@@ -304,9 +316,7 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div
-      className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm"
-    >
+    <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
       <span className="font-semibold text-blue-900">해설</span>
       <span className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}

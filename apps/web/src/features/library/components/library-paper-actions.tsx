@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,15 +8,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@kichulbot/ui/components/dialog';
+} from '@kichulbot/ui/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
-import { toast } from '@kichulbot/ui/components/sonner';
+} from '@kichulbot/ui/components/ui/select';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { FolderInput, Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';

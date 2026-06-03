@@ -6,7 +6,7 @@ import type {
   SolveSessionLogPage,
   SolveSessionLogStatus,
 } from '@/features/learning/types';
-import { serverApi } from '@/shared/api/server';
+import { ApiError, serverApi } from '@/shared/api/server';
 
 export const getSolveSession = async (id: string): Promise<SolveSession> => {
   const token = await getToken();
@@ -53,19 +53,27 @@ export const getSolveSessionLogPage = async ({
     page: String(page),
     limit: String(limit),
   });
-  const res = await serverApi.get<{ data: SolveSessionLogPage }>(
-    `/me/solve-sessions?${query}`,
-    token,
-  );
-  return res.data;
+  const res = await serverApi
+    .get<{ data: SolveSessionLogPage }>(`/me/solve-sessions?${query}`, token)
+    .catch((error: unknown) => {
+      if (error instanceof ApiError && error.status === 401) return null;
+      throw error;
+    });
+  return res?.data ?? { logs: [], total: 0, page, limit, totalPages: 0 };
 };
 
 export const getTodayWrongQuestions =
   async (): Promise<DailyWrongQuestionSet | null> => {
     const token = await getToken();
     if (!token) return null;
-    const res = await serverApi.post<{
-      data: { questionSet: DailyWrongQuestionSet };
-    }>('/me/wrong-question-sets', {}, token);
+    const res = await serverApi
+      .post<{
+        data: { questionSet: DailyWrongQuestionSet };
+      }>('/me/wrong-question-sets', {}, token)
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 401) return null;
+        throw error;
+      });
+    if (!res) return null;
     return res.data.questionSet;
   };

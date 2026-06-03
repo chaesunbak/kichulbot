@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar } from '@kichulbot/ui/components/calendar';
+import { Calendar } from '@kichulbot/ui/components/ui/calendar';
 
 import { cn } from '@/shared/lib/utils';
 

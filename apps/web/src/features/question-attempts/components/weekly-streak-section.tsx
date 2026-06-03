@@ -3,7 +3,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 
 import { getCurrentWeek } from '@/features/question-attempts/lib/streak-date';
 import {

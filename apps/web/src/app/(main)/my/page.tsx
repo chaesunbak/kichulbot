@@ -1,13 +1,14 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardAction,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 import { ChevronRight, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
 import { PageContainer } from '@/shared/components/page-container';
@@ -15,7 +16,7 @@ import { PageTitle } from '@/shared/components/page-title';
 
 export default async function MyPage() {
   const user = await getCachedUser();
-  if (!user) return null;
+  if (!user) redirect('/login?next=/my');
 
   return (
     <PageContainer>

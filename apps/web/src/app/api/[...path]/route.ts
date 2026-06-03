@@ -8,6 +8,8 @@ type RouteContext = {
 
 const ALLOWED_ROUTES = [
   ['PATCH', /^\/me$/],
+  ['GET', /^\/me\/auth-connections$/],
+  ['POST', /^\/me\/auth-connections\/kakao$/],
   ['GET', /^\/me\/solve-sessions$/],
   ['POST', /^\/me\/solve-sessions$/],
   ['GET', /^\/me\/solve-sessions\/[^/]+$/],

@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
-import { toast } from '@kichulbot/ui/components/sonner';
+import { Button } from '@kichulbot/ui/components/ui/button';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';

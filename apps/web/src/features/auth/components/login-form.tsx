@@ -1,61 +1,75 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
-import { useRouter } from 'next/navigation';
+} from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
+import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { ApiError, loginApi } from '@/features/auth/api/client';
+import { ApiError, loginWithEmailApi } from '@/features/auth/api/client';
+import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { loginSchema } from '@/features/auth/schemas';
 import { useAuthStore } from '@/features/auth/store';
 import type { LoginFormValues } from '@/features/auth/types';
 
-export default function LoginForm() {
+export function LoginForm() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const searchParams = useSearchParams();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
+
     try {
-      const data = await loginApi(values.email, values.password);
+      const data = await loginWithEmailApi({
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+      });
       setAuth(data.user);
-      router.push('/home');
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        setServerError('이메일 또는 비밀번호가 올바르지 않습니다');
-      } else if (err instanceof ApiError) {
-        setServerError(err.message);
-      } else {
-        setServerError('로그인 중 오류가 발생했습니다');
-      }
+      router.push(normalizeNextPath(searchParams.get('next')));
+      router.refresh();
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : '로그인 중 오류가 발생했습니다.';
+      setServerError(message);
+      toast.error(message);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <FieldGroup className="gap-5">
+      <FieldGroup className="gap-4">
         <Field>
-          <FieldLabel htmlFor="email">이메일</FieldLabel>
+          <FieldLabel htmlFor="login-email">이메일</FieldLabel>
           <Input
-            id="email"
+            id="login-email"
             type="email"
-            placeholder="example@email.com"
             autoComplete="email"
+            placeholder="student@example.com"
             aria-invalid={!!errors.email}
             {...register('email')}
           />
@@ -63,11 +77,18 @@ export default function LoginForm() {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="password">비밀번호</FieldLabel>
+          <div className="flex items-center justify-between gap-3">
+            <FieldLabel htmlFor="login-password">비밀번호</FieldLabel>
+            <Link
+              href="/password-reset"
+              className="text-xs font-medium text-zinc-500 hover:text-zinc-950"
+            >
+              비밀번호를 잊으셨나요?
+            </Link>
+          </div>
           <Input
-            id="password"
+            id="login-password"
             type="password"
-            placeholder="비밀번호 입력"
             autoComplete="current-password"
             aria-invalid={!!errors.password}
             {...register('password')}
@@ -81,8 +102,9 @@ export default function LoginForm() {
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? '로그인 중...' : '로그인'}
+        <Button type="submit" size="lg" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+          이메일로 로그인
         </Button>
       </FieldGroup>
     </form>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 import { getCategories, getExams } from '@/features/exams/api/server';

@@ -1,14 +1,14 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
-import { Input } from '@kichulbot/ui/components/input';
+import { Button } from '@kichulbot/ui/components/ui/button';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
+} from '@kichulbot/ui/components/ui/select';
 import { Search, X } from 'lucide-react';
 import { parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useMemo, useState } from 'react';

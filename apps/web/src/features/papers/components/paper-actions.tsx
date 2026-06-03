@@ -1,9 +1,9 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
-import { toast } from '@kichulbot/ui/components/sonner';
+import { Button } from '@kichulbot/ui/components/ui/button';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { BookCheck, BookPlus, Loader2, Play } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
 import { useState } from 'react';
 
@@ -12,6 +12,7 @@ import {
   type SolveMode,
 } from '@/features/learning/api/client';
 import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
+import { createLocalSolveSession } from '@/features/learning/lib/local-solve-session';
 import { addExamPaperToLibrary } from '@/features/papers/api/client';
 
 const MIN_ADDING_DURATION_MS = 400;
@@ -19,17 +20,24 @@ const MIN_ADDING_DURATION_MS = 400;
 export function PaperActions({
   paperId,
   initialIsInLibrary = false,
+  isAuthenticated = false,
 }: {
   paperId: string;
   initialIsInLibrary?: boolean;
+  isAuthenticated?: boolean;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isInLibrary, setIsInLibrary] = useState(initialIsInLibrary);
   const [isAdding, setIsAdding] = useState(false);
 
   const [isStarting, setIsStarting] = useState(false);
 
   const addToLibrary = async (targetFolderId: string | null) => {
+    if (!isAuthenticated) {
+      router.push(`/login?next=${encodeURIComponent(pathname)}`);
+      return;
+    }
     setIsAdding(true);
     try {
       await Promise.all([
@@ -64,8 +72,14 @@ export function PaperActions({
   const start = async (mode: SolveMode) => {
     setIsStarting(true);
     try {
-      const session = await createSolveSession({ paperId, mode });
-      router.push(`/solve/${session.id}`);
+      if (isAuthenticated) {
+        const session = await createSolveSession({ paperId, mode });
+        router.push(`/solve/${session.id}`);
+        return;
+      }
+
+      const session = await createLocalSolveSession({ paperId, mode });
+      router.push(`/solve/local/${session.id}`);
     } catch {
       setIsStarting(false);
       toast.error('풀이를 시작하지 못했습니다.');

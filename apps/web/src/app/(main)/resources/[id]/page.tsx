@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { getCachedUser } from '@/features/auth/server';
 import { getSolveSessionLogs } from '@/features/learning/api/server';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import { getPaper, type Paper } from '@/features/papers/api/server';
@@ -21,7 +22,10 @@ export default async function PaperPage({
   } catch {
     notFound();
   }
-  const logs = await getSolveSessionLogs();
+  const [logs, user] = await Promise.all([
+    getSolveSessionLogs(),
+    getCachedUser(),
+  ]);
 
   return (
     <PageContainer>
@@ -43,6 +47,7 @@ export default async function PaperPage({
           <PaperActions
             paperId={paper.id}
             initialIsInLibrary={paper.isInLibrary}
+            isAuthenticated={!!user}
           />
         </div>
       </div>

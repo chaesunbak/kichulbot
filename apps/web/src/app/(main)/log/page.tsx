@@ -1,7 +1,9 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
+import { getCachedUser } from '@/features/auth/server';
 import { getSolveSessionLogPage } from '@/features/learning/api/server';
 import { SolveSessionLogList } from '@/features/learning/components/solve-session-log-list';
 import { PageContainer } from '@/shared/components/page-container';
@@ -18,6 +20,10 @@ interface LogPageProps {
 export default async function LogPage({ searchParams }: LogPageProps) {
   const params = await searchParams;
   const page = normalizePage(params?.page);
+  const user = await getCachedUser();
+  const nextPath = page > 1 ? `/log?page=${page}` : '/log';
+  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+
   const logPage = await getSolveSessionLogPage({
     status: 'completed',
     page,

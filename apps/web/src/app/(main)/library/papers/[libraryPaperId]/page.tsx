@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
+import { getCachedUser } from '@/features/auth/server';
 import { getSolveSessionLogs } from '@/features/learning/api/server';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import type { LibraryFolder } from '@/features/learning/types';
@@ -16,6 +17,13 @@ export default async function LibraryPaperPage({
   params: Promise<{ libraryPaperId: string }>;
 }) {
   const { libraryPaperId } = await params;
+  const user = await getCachedUser();
+  if (!user) {
+    redirect(
+      `/login?next=${encodeURIComponent(`/library/papers/${libraryPaperId}`)}`,
+    );
+  }
+
   const [library, logs] = await Promise.all([
     getLibrary(),
     getSolveSessionLogs(),

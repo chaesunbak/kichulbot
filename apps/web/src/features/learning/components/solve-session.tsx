@@ -1,14 +1,14 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@kichulbot/ui/components/dropdown-menu';
-import { toast } from '@kichulbot/ui/components/sonner';
-import { Textarea } from '@kichulbot/ui/components/textarea';
+} from '@kichulbot/ui/components/ui/dropdown-menu';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
+import { Textarea } from '@kichulbot/ui/components/ui/textarea';
 import {
   CheckCircle2,
   ChevronLeft,
@@ -30,6 +30,10 @@ import {
   formatDuration,
   formatSolveMode,
 } from '@/features/learning/lib/format';
+import {
+  saveLocalSolveSessionAnswer,
+  submitLocalSolveSession,
+} from '@/features/learning/lib/local-solve-session';
 import type {
   Answer,
   SolveQuestion,
@@ -60,6 +64,7 @@ export function SolveSession({
   const answer = session.answers.find(
     (answer) => answer.questionId === question?.id,
   );
+  const isLocalSession = session.id.startsWith('local_');
 
   const answeredIds = useMemo(
     () =>
@@ -101,11 +106,17 @@ export function SolveSession({
       spentMilliseconds?: number;
     },
   ) => {
-    const body = await saveSolveSessionAnswer({
-      sessionId: session.id,
-      questionId,
-      payload,
-    });
+    const body = isLocalSession
+      ? saveLocalSolveSessionAnswer({
+          sessionId: session.id,
+          questionId,
+          payload,
+        })
+      : await saveSolveSessionAnswer({
+          sessionId: session.id,
+          questionId,
+          payload,
+        });
     setSession((current) => ({
       ...current,
       paper: {
@@ -170,9 +181,17 @@ export function SolveSession({
     setMessage('시험을 종료하는 중...');
     try {
       await saveProgress(question.id, { spentMilliseconds: takeElapsed() });
-      await submitSolveSession(session.id);
+      if (isLocalSession) {
+        submitLocalSolveSession(session.id);
+      } else {
+        await submitSolveSession(session.id);
+      }
       setMessage('결과 페이지로 이동 중입니다.');
-      router.replace(`/results/${session.id}`);
+      router.replace(
+        isLocalSession
+          ? `/results/local/${session.id}`
+          : `/results/${session.id}`,
+      );
     } catch {
       setIsFinishing(false);
       showFailureMessage('시험을 종료하지 못했습니다.');
@@ -209,6 +228,7 @@ export function SolveSession({
           question={question}
           currentIndex={currentIndex}
           questionCount={session.paper.questions.length}
+          isAuthenticated={!isLocalSession}
         />
 
         <SolveControlPanel
@@ -326,10 +346,12 @@ function QuestionPanel({
   question,
   currentIndex,
   questionCount,
+  isAuthenticated,
 }: {
   question: SolveQuestion;
   currentIndex: number;
   questionCount: number;
+  isAuthenticated: boolean;
 }) {
   return (
     <section
@@ -341,6 +363,7 @@ function QuestionPanel({
         question={question}
         currentIndex={currentIndex}
         questionCount={questionCount}
+        isAuthenticated={isAuthenticated}
       />
       <QuestionImage question={question} />
     </section>
@@ -351,10 +374,12 @@ function QuestionHeader({
   question,
   currentIndex,
   questionCount,
+  isAuthenticated,
 }: {
   question: SolveQuestion;
   currentIndex: number;
   questionCount: number;
+  isAuthenticated: boolean;
 }) {
   return (
     <div
@@ -384,6 +409,7 @@ function QuestionHeader({
         <QuestionActions
           questionId={question.id}
           questionRevisionId={question.questionRevisionId}
+          isAuthenticated={isAuthenticated}
         />
         <span className="text-sm text-zinc-500">
           {currentIndex + 1} / {questionCount}
@@ -440,9 +466,6 @@ function AnswerSection({
     <section className="grid gap-3">
       <div>
         <h2 className="text-sm font-semibold">답안 입력</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          {question.type === 'MULTIPLE_CHOICE' ? '객관식' : '주관식'}
-        </p>
       </div>
       {question.type === 'MULTIPLE_CHOICE' ? (
         <ChoiceAnswerInput
@@ -491,7 +514,7 @@ function ChoiceAnswerInput({
               selectedChoice === choice &&
                 `
                   bg-zinc-500 text-zinc-100
-                  hover:bg-zinc-600 hover:text-zinc-100
+                  hover:bg-zinc-450 hover:text-zinc-100
                 `,
             )}
             disabled={disabled}

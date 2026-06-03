@@ -1,13 +1,15 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
+import { getCachedUser } from '@/features/auth/server';
 import {
   getSolveSessionLogPage,
   getTodayWrongQuestions,
@@ -18,6 +20,9 @@ import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function RecapPage() {
+  const user = await getCachedUser();
+  if (!user) redirect('/login?next=/recap');
+
   const [logPage, wrongQuestionSet] = await Promise.all([
     getSolveSessionLogPage({ status: 'completed', limit: 5 }),
     getTodayWrongQuestions(),

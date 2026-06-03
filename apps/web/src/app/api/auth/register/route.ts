@@ -20,14 +20,13 @@ export async function POST(request: NextRequest) {
     return authErrorResponse(400, 'Invalid request body');
   }
 
-  try {
-    const currentToken = request.cookies.get(COOKIE_NAME)?.value;
-    const endpoint = currentToken ? '/auth/convert' : '/auth/register';
+  const token = request.cookies.get(COOKIE_NAME)?.value;
 
+  try {
     const res = await serverApi.post<AuthResponse>(
-      endpoint,
+      token ? '/auth/convert/email' : '/auth/register',
       body,
-      currentToken,
+      token,
     );
     return authSuccessResponse(res.data.user, res.data.accessToken);
   } catch (err) {

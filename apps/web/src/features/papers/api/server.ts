@@ -1,6 +1,6 @@
 import { getToken } from '@/features/auth/server';
 import type { Paper } from '@/features/papers/types';
-import { serverApi } from '@/shared/api/server';
+import { ApiError, serverApi } from '@/shared/api/server';
 
 export type { Paper, Taxonomy } from '@/features/papers/types';
 
@@ -24,11 +24,21 @@ export const getPapers = async (
   filters: PaperSearchFilters = {},
 ): Promise<Paper[]> => {
   const token = await getToken();
-  if (!token) return [];
-  const res = await serverApi.get<{ data: { papers: Paper[] } }>(
-    `/exam-papers${toPaperQuery(filters)}`,
-    token,
-  );
+  const path = token ? '/exam-papers' : '/public/exam-papers';
+  const query = toPaperQuery(filters);
+  const res = await serverApi
+    .get<{ data: { papers: Paper[] } }>(
+      `${path}${query}`,
+      token ?? undefined,
+    )
+    .catch((error: unknown) => {
+      if (token && error instanceof ApiError && error.status === 401) {
+        return serverApi.get<{ data: { papers: Paper[] } }>(
+          `/public/exam-papers${query}`,
+        );
+      }
+      throw error;
+    });
   return res.data.papers;
 };
 
@@ -38,10 +48,16 @@ export const getPapersByExamId = async (examId: string): Promise<Paper[]> => {
 
 export const getPaper = async (id: string): Promise<Paper> => {
   const token = await getToken();
-  if (!token) throw new Error('인증 정보가 없습니다.');
-  const res = await serverApi.get<{ data: { paper: Paper } }>(
-    `/exam-papers/${id}`,
-    token,
-  );
+  const path = token ? '/exam-papers' : '/public/exam-papers';
+  const res = await serverApi
+    .get<{ data: { paper: Paper } }>(`${path}/${id}`, token ?? undefined)
+    .catch((error: unknown) => {
+      if (token && error instanceof ApiError && error.status === 401) {
+        return serverApi.get<{ data: { paper: Paper } }>(
+          `/public/exam-papers/${id}`,
+        );
+      }
+      throw error;
+    });
   return res.data.paper;
 };

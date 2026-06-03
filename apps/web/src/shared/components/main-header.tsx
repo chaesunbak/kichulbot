@@ -4,7 +4,7 @@ import type { AuthUser } from '@/features/auth/server';
 import { DesktopNavigation } from '@/shared/components/main-navigation';
 
 interface Props {
-  user: AuthUser;
+  user: AuthUser | null;
 }
 
 export default function MainHeader({ user }: Props) {
@@ -15,27 +15,39 @@ export default function MainHeader({ user }: Props) {
           mx-auto flex h-16 max-w-5xl items-center justify-between gap-6
         "
       >
-        <Link href="/home" className="shrink-0 text-lg font-bold text-zinc-900">
+        <Link href="/" className="shrink-0 text-lg font-bold text-zinc-900">
           기출봇
         </Link>
         <DesktopNavigation />
-        <Link
-          href="/my"
-          className="
-            flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-600
-            transition-colors
-            hover:text-zinc-900
-          "
-        >
-          <span
+        {user ? (
+          <Link
+            href="/my"
             className="
-              hidden
-              lg:inline
+              flex shrink-0 items-center gap-2 text-sm font-medium
+              text-zinc-600 transition-colors
+              hover:text-zinc-900
             "
           >
-            {user.nickname ?? user.email ?? '게스트'}
-          </span>
-        </Link>
+            <span
+              className="
+                hidden
+                lg:inline
+              "
+            >
+              {user.nickname ?? user.email ?? '내 계정'}
+            </span>
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="
+              shrink-0 text-sm font-medium text-zinc-600 transition-colors
+              hover:text-zinc-900
+            "
+          >
+            로그인
+          </Link>
+        )}
       </div>
     </header>
   );

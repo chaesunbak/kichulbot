@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,22 +8,45 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@kichulbot/ui/components/dialog';
-import { toast } from '@kichulbot/ui/components/sonner';
-import { Textarea } from '@kichulbot/ui/components/textarea';
+} from '@kichulbot/ui/components/ui/dialog';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
+import { Textarea } from '@kichulbot/ui/components/ui/textarea';
 import { Loader2, NotebookPen } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { overlay } from 'overlay-kit';
 import { useEffect, useState } from 'react';
 
+import { LoginRequiredDialog } from '@/features/learning/components/login-required-dialog';
 import {
   getQuestionNote,
   saveQuestionNote,
 } from '@/features/learning/api/client';
 
-export function QuestionNoteButton({ questionId }: { questionId: string }) {
+export function QuestionNoteButton({
+  questionId,
+  isAuthenticated = true,
+}: {
+  questionId: string;
+  isAuthenticated?: boolean;
+}) {
+  const pathname = usePathname();
   const [isOpening, setIsOpening] = useState(false);
 
   const openNote = async () => {
+    if (!isAuthenticated) {
+      await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+        <LoginRequiredDialog
+          isOpen={isOpen}
+          title="로그인이 필요합니다"
+          description="로그인하면 문항별 메모를 저장하고 다시 확인할 수 있습니다."
+          nextPath={pathname}
+          onClose={close}
+          onExit={unmount}
+        />
+      ));
+      return;
+    }
+
     setIsOpening(true);
     try {
       const note = await getQuestionNote(questionId);

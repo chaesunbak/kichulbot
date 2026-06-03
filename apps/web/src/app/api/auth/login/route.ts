@@ -1,5 +1,3 @@
-import type { NextRequest } from 'next/server';
-
 import { ApiError, serverApi } from '@/shared/api/server';
 import type { AuthResponse } from '@/shared/lib/route-helpers';
 import {
@@ -8,7 +6,7 @@ import {
   rejectCrossOriginRequest,
 } from '@/shared/lib/route-helpers';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   const originError = rejectCrossOriginRequest(request);
   if (originError) return originError;
 

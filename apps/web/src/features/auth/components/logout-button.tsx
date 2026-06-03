@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

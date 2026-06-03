@@ -18,7 +18,7 @@ export default function GuestPage() {
     anonymousLoginApi()
       .then((data) => {
         setAuth(data.user);
-        router.replace('/home');
+        router.replace('/');
       })
       .catch(() => router.replace('/login'));
   }, [router, setAuth]);

@@ -1,6 +1,6 @@
 import './globals.css';
 
-import { Toaster } from '@kichulbot/ui/components/sonner';
+import { Toaster } from '@kichulbot/ui/components/ui/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';

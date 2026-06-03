@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 
+import { getCachedUser } from '@/features/auth/server';
 import { getSolveSession } from '@/features/learning/api/server';
 import { ResultSession } from '@/features/learning/components/result-session';
 import type { SolveSession } from '@/features/learning/types';
@@ -10,6 +11,9 @@ export default async function ResultPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const user = await getCachedUser();
+  if (!user) redirect(`/login?next=${encodeURIComponent(`/results/${id}`)}`);
+
   let session: SolveSession;
   try {
     session = await getSolveSession(id);

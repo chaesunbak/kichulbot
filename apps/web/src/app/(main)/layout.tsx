@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation';
-
 import { getCachedUser } from '@/features/auth/server';
 import GlobalFooter from '@/shared/components/global-footer';
 import MainHeader from '@/shared/components/main-header';
@@ -11,7 +9,6 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   const user = await getCachedUser();
-  if (!user) redirect('/login');
 
   return (
     <div className="flex flex-1 flex-col">

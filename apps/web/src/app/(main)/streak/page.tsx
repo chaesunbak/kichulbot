@@ -1,6 +1,8 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
+import { getCachedUser } from '@/features/auth/server';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server';
 import { MonthlyStreakCalendar } from '@/features/question-attempts/components/monthly-streak-calendar';
 import { WeeklyStreakSection } from '@/features/question-attempts/components/weekly-streak-section';
@@ -23,6 +25,10 @@ interface StreakPageProps {
 export default async function StreakPage({ searchParams }: StreakPageProps) {
   const params = await searchParams;
   const month = normalizeMonth(params?.month);
+  const user = await getCachedUser();
+  const nextPath = params?.month ? `/streak?month=${month}` : '/streak';
+  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+
   const range = getMonthRange(month);
   const currentWeek = getCurrentWeekRange();
   const streakRange = getRecentStreakRange();

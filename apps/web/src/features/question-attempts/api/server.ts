@@ -1,6 +1,6 @@
 import { getToken } from '@/features/auth/server';
 import type { QuestionAttempt } from '@/features/question-attempts/types';
-import { serverApi } from '@/shared/api/server';
+import { ApiError, serverApi } from '@/shared/api/server';
 
 export const getQuestionAttempts = async (
   from: string,
@@ -14,9 +14,14 @@ export const getQuestionAttempts = async (
   if (options.includeTags) {
     params.set('includeTags', 'true');
   }
-  const res = await serverApi.get<{
-    data: { questionAttempts: QuestionAttempt[] };
-  }>(`/me/question-attempts?${params.toString()}`, token);
+  const res = await serverApi
+    .get<{
+      data: { questionAttempts: QuestionAttempt[] };
+    }>(`/me/question-attempts?${params.toString()}`, token)
+    .catch((error: unknown) => {
+      if (error instanceof ApiError && error.status === 401) return null;
+      throw error;
+    });
 
-  return res.data.questionAttempts;
+  return res?.data.questionAttempts ?? [];
 };

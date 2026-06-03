@@ -10,9 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@kichulbot/ui/components/alert-dialog';
-import { Button } from '@kichulbot/ui/components/button';
-import { toast } from '@kichulbot/ui/components/sonner';
+} from '@kichulbot/ui/components/ui/alert-dialog';
+import { Button } from '@kichulbot/ui/components/ui/button';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { MouseEvent } from 'react';
@@ -65,10 +65,7 @@ export function DeleteAccountButton() {
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>취소</AlertDialogCancel>
           <AlertDialogAction
-            className="
-              bg-destructive text-white
-              hover:bg-destructive/90
-            "
+            variant="destructive"
             disabled={isPending}
             onClick={handleDelete}
           >

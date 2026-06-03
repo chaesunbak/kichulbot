@@ -7,17 +7,32 @@ import { QuestionReportButton } from '@/features/learning/components/question-re
 export function QuestionActions({
   questionId,
   questionRevisionId,
+  showPersonalActions = true,
+  isAuthenticated = true,
 }: {
   questionId: string;
   questionRevisionId: string;
+  showPersonalActions?: boolean;
+  isAuthenticated?: boolean;
 }) {
   return (
     <>
-      <QuestionBookmarkButton questionId={questionId} />
-      <QuestionNoteButton questionId={questionId} />
+      {showPersonalActions && (
+        <>
+          <QuestionBookmarkButton
+            questionId={questionId}
+            isAuthenticated={isAuthenticated}
+          />
+          <QuestionNoteButton
+            questionId={questionId}
+            isAuthenticated={isAuthenticated}
+          />
+        </>
+      )}
       <QuestionReportButton
         questionId={questionId}
         questionRevisionId={questionRevisionId}
+        isAuthenticated={isAuthenticated}
       />
     </>
   );

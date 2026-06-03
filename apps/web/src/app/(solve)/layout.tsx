@@ -1,15 +1,8 @@
-import { redirect } from 'next/navigation';
-
-import { getCachedUser } from '@/features/auth/server';
-
-export default async function SolveLayout({
+export default function SolveLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCachedUser();
-  if (!user) redirect('/login');
-
   return (
     <div
       className="

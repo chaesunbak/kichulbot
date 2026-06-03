@@ -1,5 +1,10 @@
 import { redirect } from 'next/navigation';
 
-export default function LegacyLibraryPaperPage() {
+import { getCachedUser } from '@/features/auth/server';
+
+export default async function LegacyLibraryPaperPage() {
+  const user = await getCachedUser();
+  if (!user) redirect('/login?next=/library');
+
   redirect('/library');
 }

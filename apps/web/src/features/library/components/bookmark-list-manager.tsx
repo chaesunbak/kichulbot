@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { toast } from '@kichulbot/ui/components/sonner';
+} from '@kichulbot/ui/components/ui/card';
+import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Bookmark, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { overlay } from 'overlay-kit';

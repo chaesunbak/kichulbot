@@ -7,8 +7,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@kichulbot/ui/components/alert-dialog';
-import { Button } from '@kichulbot/ui/components/button';
+} from '@kichulbot/ui/components/ui/alert-dialog';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { type ReactNode, useEffect } from 'react';
 
 type ConfirmDialogProps = {

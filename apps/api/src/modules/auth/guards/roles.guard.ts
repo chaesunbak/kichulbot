@@ -4,7 +4,7 @@ import { UserRole } from '@prisma/client';
 import { Request } from 'express';
 
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { RequestUser } from '../types';
+import type { RequestUser } from '../types';
 
 type RequestWithUser = Request & {
   user?: RequestUser;

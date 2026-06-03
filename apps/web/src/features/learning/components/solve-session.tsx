@@ -188,7 +188,7 @@ export function SolveSession({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="mx-auto flex size-full max-w-7xl flex-col overflow-hidden">
       <SolveSessionHeader
         title={session.paper.title}
         mode={session.mode}

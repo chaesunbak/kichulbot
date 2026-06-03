@@ -58,6 +58,9 @@ type StoredDraft = NonNullable<SessionItem['draft']>;
 type StoredAttempt = SessionItem['attempts'][number];
 type StoredRevision = SessionItem['questionRevision'];
 type GradedAnswer = Pick<StoredAttempt, 'outcome'>;
+type PublicPaperSolveData = NonNullable<
+  Awaited<ReturnType<SolveSessionsRepository['findPublishedPaperSolveData']>>
+>;
 
 @Injectable()
 export class SolveSessionsService {
@@ -81,6 +84,19 @@ export class SolveSessionsService {
     );
     return StartSolveSessionResponseSchema.parse({
       session: this.toResponse(session),
+    });
+  }
+
+  async getPublicPaperSession(
+    paperId: string,
+    mode: AnswerMode,
+  ): Promise<GetSolveSessionResponse> {
+    const paper =
+      await this.solveSessionsRepository.findPublishedPaperSolveData(paperId);
+    if (!paper) throw new NotFoundException('문제지를 찾을 수 없습니다.');
+
+    return GetSolveSessionResponseSchema.parse({
+      session: this.toPublicPaperSessionResponse(paper, mode),
     });
   }
 
@@ -310,6 +326,52 @@ export class SolveSessionsService {
         id: paper.examSession.exam.id,
         name: paper.examSession.exam.name,
       },
+    };
+  }
+
+  private toPublicPaperSessionResponse(
+    paper: PublicPaperSolveData,
+    mode: AnswerMode,
+  ): SolveSessionResponse {
+    const now = new Date().toISOString();
+    return {
+      id: `public_${paper.id}`,
+      mode,
+      paper: {
+        id: paper.id,
+        title: paper.title,
+        year: paper.examSession.displayYear,
+        month: paper.examSession.month,
+        grade: paper.examSession.grade,
+        round: paper.examSession.round,
+        questionCount: paper.questionCount,
+        isInLibrary: false,
+        exam: {
+          id: paper.examSession.exam.id,
+          name: paper.examSession.exam.name,
+        },
+        questions: paper.questionSet.items.map((item) => ({
+          id: item.questionRevision.questionId,
+          questionRevisionId: item.questionRevisionId,
+          number: item.position,
+          type: item.questionRevision.type,
+          imageUrl: item.questionRevision.imageUrl,
+          choiceCount: item.questionRevision.choiceCount,
+          points: item.questionRevision.points,
+          recommendedTimeSeconds: item.questionRevision.recommendedTimeSeconds,
+          result: {
+            answerChoice: item.questionRevision.answerChoice,
+            answerText: item.questionRevision.answerText,
+            explanation: item.questionRevision.explanation,
+            isCorrect: null,
+          },
+        })),
+      },
+      answers: [],
+      result: null,
+      submittedAt: null,
+      createdAt: now,
+      updatedAt: now,
     };
   }
 

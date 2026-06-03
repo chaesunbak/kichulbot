@@ -1,10 +1,19 @@
 import {
-  RegisterRequestSchema,
   LoginRequestSchema,
-  ConvertAnonymousRequestSchema,
+  PasswordResetRequestSchema,
+  PasswordResetConfirmRequestSchema,
+  PasswordResetIssueResponseSchema,
+  PasswordResetConfirmResponseSchema,
+  RegisterRequestSchema,
+  EmailVerificationRequestSchema,
+  ConfirmEmailVerificationRequestSchema,
+  EmailVerificationIssueResponseSchema,
+  EmailVerificationConfirmResponseSchema,
   DeleteMeResponseSchema,
   AuthResponseSchema,
   MeResponseSchema,
+  AuthConnectionsResponseSchema,
+  KakaoOAuthProfileRequestSchema,
 } from './dto.js';
 
 export const authRoutes = {
@@ -14,22 +23,52 @@ export const authRoutes = {
     request: null,
     response: AuthResponseSchema,
   },
+  login: {
+    method: 'POST',
+    path: '/auth/login',
+    request: LoginRequestSchema,
+    response: AuthResponseSchema,
+  },
+  requestPasswordReset: {
+    method: 'POST',
+    path: '/auth/password-reset',
+    request: PasswordResetRequestSchema,
+    response: PasswordResetIssueResponseSchema,
+  },
+  confirmPasswordReset: {
+    method: 'POST',
+    path: '/auth/password-reset/confirm',
+    request: PasswordResetConfirmRequestSchema,
+    response: PasswordResetConfirmResponseSchema,
+  },
   register: {
     method: 'POST',
     path: '/auth/register',
     request: RegisterRequestSchema,
     response: AuthResponseSchema,
   },
-  convertAnonymous: {
+  requestEmailVerification: {
     method: 'POST',
-    path: '/auth/convert',
-    request: ConvertAnonymousRequestSchema,
+    path: '/auth/email-verifications',
+    request: EmailVerificationRequestSchema,
+    response: EmailVerificationIssueResponseSchema,
+  },
+  confirmEmailVerification: {
+    method: 'POST',
+    path: '/auth/email-verifications/confirm',
+    request: ConfirmEmailVerificationRequestSchema,
+    response: EmailVerificationConfirmResponseSchema,
+  },
+  convertAnonymousWithEmail: {
+    method: 'POST',
+    path: '/auth/convert/email',
+    request: RegisterRequestSchema,
     response: AuthResponseSchema,
   },
-  login: {
+  convertAnonymousWithKakao: {
     method: 'POST',
-    path: '/auth/login',
-    request: LoginRequestSchema,
+    path: '/auth/convert/kakao',
+    request: KakaoOAuthProfileRequestSchema,
     response: AuthResponseSchema,
   },
   me: {
@@ -37,6 +76,18 @@ export const authRoutes = {
     path: '/me',
     request: null,
     response: MeResponseSchema,
+  },
+  authConnections: {
+    method: 'GET',
+    path: '/me/auth-connections',
+    request: null,
+    response: AuthConnectionsResponseSchema,
+  },
+  linkKakao: {
+    method: 'POST',
+    path: '/me/auth-connections/kakao',
+    request: KakaoOAuthProfileRequestSchema,
+    response: AuthConnectionsResponseSchema,
   },
   deleteMe: {
     method: 'DELETE',

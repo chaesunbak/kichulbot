@@ -5,6 +5,9 @@ import {
   Get,
   Patch,
   Post,
+  Query,
+  Redirect,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,20 +22,32 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
 
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import {
+  AuthConnectionsResponseDto,
   AuthResponseDto,
-  ConvertAnonymousDto,
+  ConfirmEmailVerificationDto,
   DeleteMeResponseDto,
+  EmailVerificationConfirmResponseDto,
+  EmailVerificationDto,
+  EmailVerificationIssueResponseDto,
+  KakaoOAuthProfileDto,
   LoginDto,
   MeResponseDto,
+  PasswordResetConfirmDto,
+  PasswordResetConfirmResponseDto,
+  PasswordResetDto,
+  PasswordResetIssueResponseDto,
   RegisterDto,
   UpdateMeDto,
   UpdateMeResponseDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { KakaoAuthGuard, KakaoCallbackGuard } from './guards/kakao-auth.guard';
+import type { KakaoOAuthProfile } from './strategies/kakao.strategy';
 import { RequestUser } from './types';
 
 @ApiTags('auth')
@@ -51,43 +66,6 @@ export class AuthController {
     return this.authService.startAnonymous();
   }
 
-  @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @ApiOperation({ summary: '이메일 회원가입' })
-  @ApiCreatedResponse({
-    description: '이메일 계정을 생성하고 access token을 발급합니다.',
-    type: AuthResponseDto,
-  })
-  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
-  @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
-  }
-
-  @Post('convert')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '게스트 계정을 이메일 계정으로 전환' })
-  @ApiCreatedResponse({
-    description:
-      '게스트 계정을 이메일 계정으로 전환하고 새 access token을 발급합니다.',
-    type: AuthResponseDto,
-  })
-  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
-  @ApiUnauthorizedResponse({
-    description: '인증 정보가 없거나 유효하지 않습니다.',
-  })
-  @ApiForbiddenResponse({
-    description: '게스트 사용자가 아닌 계정은 전환할 수 없습니다.',
-  })
-  @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
-  convertAnonymous(
-    @CurrentUser() user: RequestUser,
-    @Body() dto: ConvertAnonymousDto,
-  ) {
-    return this.authService.convertAnonymous(user.id, dto);
-  }
-
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: '이메일 로그인' })
@@ -101,6 +79,128 @@ export class AuthController {
   })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('password-reset')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: '비밀번호 재설정 링크 발송' })
+  @ApiCreatedResponse({
+    description: '이메일 계정이면 비밀번호 재설정 링크를 발송합니다.',
+    type: PasswordResetIssueResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
+  requestPasswordReset(@Body() dto: PasswordResetDto) {
+    return this.authService.requestPasswordReset(dto);
+  }
+
+  @Post('password-reset/confirm')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: '비밀번호 재설정 완료' })
+  @ApiCreatedResponse({
+    description: '재설정 토큰을 확인하고 새 비밀번호로 변경합니다.',
+    type: PasswordResetConfirmResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: '비밀번호 재설정 링크가 유효하지 않습니다.',
+  })
+  confirmPasswordReset(@Body() dto: PasswordResetConfirmDto) {
+    return this.authService.confirmPasswordReset(dto);
+  }
+
+  @Post('register')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: '이메일 회원가입' })
+  @ApiCreatedResponse({
+    description:
+      '이메일 인증을 완료한 사용자를 생성하고 access token을 발급합니다.',
+    type: AuthResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
+  @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @Post('email-verifications')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: '이메일 인증번호 발송' })
+  @ApiCreatedResponse({
+    description: '회원가입 이메일로 인증번호를 발송합니다.',
+    type: EmailVerificationIssueResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
+  @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
+  requestEmailVerification(@Body() dto: EmailVerificationDto) {
+    return this.authService.requestEmailVerification(dto);
+  }
+
+  @Post('email-verifications/confirm')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: '이메일 인증번호 확인' })
+  @ApiCreatedResponse({
+    description: '인증번호가 맞으면 회원가입용 이메일 인증 토큰을 발급합니다.',
+    type: EmailVerificationConfirmResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '인증번호가 올바르지 않습니다.' })
+  confirmEmailVerification(@Body() dto: ConfirmEmailVerificationDto) {
+    return this.authService.confirmEmailVerification(dto);
+  }
+
+  @Get('kakao')
+  @UseGuards(KakaoAuthGuard)
+  @ApiOperation({ summary: '카카오 OAuth 로그인 시작' })
+  startKakao(@Query('mode') _mode?: 'login' | 'convert' | 'link'): undefined {
+    return undefined;
+  }
+
+  @Get('kakao/callback')
+  @UseGuards(KakaoCallbackGuard)
+  @Redirect()
+  @ApiOperation({ summary: '카카오 OAuth 콜백' })
+  async kakaoCallback(@Req() request: Request) {
+    const state = String(request.query.state ?? '');
+    const url = await this.authService.handleKakaoCallback(
+      (request as Request & { user: KakaoOAuthProfile }).user,
+      state,
+    );
+    return { url };
+  }
+
+  @Post('convert/kakao')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '게스트 계정을 카카오 계정으로 전환' })
+  @ApiCreatedResponse({
+    description:
+      '게스트 계정을 카카오 계정으로 전환하고 새 access token을 발급합니다.',
+    type: AuthResponseDto,
+  })
+  convertAnonymousWithKakao(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: KakaoOAuthProfileDto,
+  ) {
+    return this.authService.convertAnonymousWithKakao(user.id, dto);
+  }
+
+  @Post('convert/email')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '게스트 계정을 이메일 계정으로 전환' })
+  @ApiCreatedResponse({
+    description:
+      '게스트 계정을 이메일 계정으로 전환하고 새 access token을 발급합니다.',
+    type: AuthResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
+  @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
+  @ApiForbiddenResponse({
+    description: '게스트 사용자만 이메일 계정으로 전환할 수 있습니다.',
+  })
+  convertAnonymousWithEmail(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: RegisterDto,
+  ) {
+    return this.authService.convertAnonymousWithEmail(user.id, dto);
   }
 }
 
@@ -138,6 +238,33 @@ export class MeController {
   })
   updateMe(@CurrentUser() user: RequestUser, @Body() dto: UpdateMeDto) {
     return this.authService.updateMe(user.id, dto);
+  }
+
+  @Get('auth-connections')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '내 인증 연결 상태 조회' })
+  @ApiOkResponse({
+    description: '현재 계정에 연결된 OAuth provider 목록을 반환합니다.',
+    type: AuthConnectionsResponseDto,
+  })
+  authConnections(@CurrentUser() user: RequestUser) {
+    return this.authService.listAuthConnections(user.id);
+  }
+
+  @Post('auth-connections/kakao')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '내 계정에 카카오 계정 연결' })
+  @ApiCreatedResponse({
+    description: '카카오 계정을 현재 사용자에게 연결합니다.',
+    type: AuthConnectionsResponseDto,
+  })
+  linkKakao(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: KakaoOAuthProfileDto,
+  ) {
+    return this.authService.linkKakao(user.id, dto);
   }
 
   @Delete()

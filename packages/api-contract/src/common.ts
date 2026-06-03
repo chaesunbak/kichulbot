@@ -5,8 +5,11 @@ export const IsoDateStringSchema = z.iso.datetime();
 export const UserRoleSchema = z.enum(['USER', 'ADMIN']);
 export type UserRole = z.infer<typeof UserRoleSchema>;
 
-export const UserAuthTypeSchema = z.enum(['ANONYMOUS', 'EMAIL']);
+export const UserAuthTypeSchema = z.enum(['ANONYMOUS', 'EMAIL', 'OAUTH']);
 export type UserAuthType = z.infer<typeof UserAuthTypeSchema>;
+
+export const OAuthProviderSchema = z.enum(['KAKAO']);
+export type OAuthProvider = z.infer<typeof OAuthProviderSchema>;
 
 export const OfficialTagKindSchema = z.literal('OFFICIAL');
 export type OfficialTagKind = z.infer<typeof OfficialTagKindSchema>;

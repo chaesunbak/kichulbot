@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -20,6 +21,7 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
+import { AnswerMode } from '../../infrastructure/database/prisma-client';
 import { ListSolveSessionLogsDto } from './dto/list-solve-session-logs.dto';
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import { StartSolveSessionDto } from './dto/start-solve-session.dto';
@@ -78,5 +80,24 @@ export class SolveSessionsController {
   @ApiCreatedResponse({ description: '제출된 풀이 세션을 반환합니다.' })
   submit(@CurrentUser() user: RequestUser, @Param('id') id: string) {
     return this.solveSessionsService.submit(user.id, id);
+  }
+}
+
+@ApiTags('solve-sessions')
+@Controller('public/solve-sessions')
+export class PublicSolveSessionsController {
+  constructor(private readonly solveSessionsService: SolveSessionsService) {}
+
+  @Get('papers/:paperId')
+  @ApiOperation({ summary: '공개 문제지 풀이 데이터 조회' })
+  @ApiOkResponse({ description: '비로그인 풀이에 필요한 문항을 반환합니다.' })
+  getPaperSession(
+    @Param('paperId') paperId: string,
+    @Query('mode') mode: AnswerMode = AnswerMode.EXAM,
+  ) {
+    if (!Object.values(AnswerMode).includes(mode)) {
+      throw new BadRequestException('지원하지 않는 풀이 방식입니다.');
+    }
+    return this.solveSessionsService.getPublicPaperSession(paperId, mode);
   }
 }

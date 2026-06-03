@@ -24,6 +24,23 @@ export default () => ({
   auth: {
     jwtSecret: process.env.JWT_SECRET,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? DEFAULT_JWT_EXPIRES_IN,
+    kakao: {
+      clientId: process.env.KAKAO_CLIENT_ID,
+      clientSecret: process.env.KAKAO_CLIENT_SECRET,
+      callbackUrl:
+        process.env.KAKAO_CALLBACK_URL ??
+        'http://localhost:4000/api/auth/kakao/callback',
+    },
+    resend: {
+      apiKey: process.env.RESEND_API_KEY,
+      fromEmail: process.env.RESEND_FROM_EMAIL,
+    },
+    webRedirectUrl:
+      process.env.AUTH_WEB_REDIRECT_URL ??
+      'http://localhost:3000/oauth/callback',
+    passwordResetUrl:
+      process.env.AUTH_PASSWORD_RESET_URL ??
+      'http://localhost:3000/password-reset',
   },
   storage: {
     driver: process.env.STORAGE_DRIVER ?? DEFAULT_STORAGE_DRIVER,

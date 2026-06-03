@@ -15,6 +15,11 @@ enum UserRole {
 enum UserAuthType {
   ANONYMOUS
   EMAIL
+  OAUTH
+}
+
+enum OAuthProvider {
+  KAKAO
 }
 
 enum QuestionType {
@@ -71,6 +76,8 @@ model User {
   timezone                String                 @default("Asia/Seoul")
   authType                UserAuthType           @default(ANONYMOUS)
   role                    UserRole               @default(USER)
+  oauthAccounts           OAuthAccount[]
+  passwordResetTokens     PasswordResetToken[]
   libraryFolders          LibraryFolder[]
   libraryPapers           UserPaper[]
   solveSessions           SolveSession[]
@@ -82,6 +89,51 @@ model User {
   reviewedQuestionReports QuestionReport[]       @relation("QuestionReportReviewer")
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
+}
+
+model OAuthAccount {
+  id                String        @id @default(cuid())
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String
+  providerEmail     String?
+  providerNickname  String?
+  rawProfile        Json?
+  lastLoginAt       DateTime?
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@index([userId])
+}
+
+model EmailVerificationCode {
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  usedAt     DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([email, usedAt, expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, usedAt, expiresAt])
 }
 
 model Exam {

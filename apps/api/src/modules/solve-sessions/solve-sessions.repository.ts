@@ -28,6 +28,23 @@ export class SolveSessionsRepository {
     });
   }
 
+  findPublishedPaperSolveData(paperId: string) {
+    return this.db.paper.findFirst({
+      where: { id: paperId, isPublished: true },
+      include: {
+        examSession: { include: { exam: true } },
+        questionSet: {
+          include: {
+            items: {
+              orderBy: { position: 'asc' },
+              include: { questionRevision: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
   start(userId: string, paperId: string, mode: AnswerMode) {
     return this.db.$transaction(async (tx) => {
       const paper = await tx.paper.findUniqueOrThrow({

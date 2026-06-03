@@ -40,7 +40,7 @@ export class QuestionReportsRepository {
   }
 
   create(data: {
-    reporterUserId: string;
+    reporterUserId: string | null;
     questionId: string;
     questionRevisionId?: string | null;
     category: QuestionReportCategory;

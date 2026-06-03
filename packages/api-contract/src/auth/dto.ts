@@ -1,12 +1,5 @@
 import * as z from 'zod';
-import { UserResponseSchema } from './schema.js';
-
-export const RegisterRequestSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(72),
-  nickname: z.string().max(30).optional(),
-});
-export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
+import { AuthConnectionSchema, UserResponseSchema } from './schema.js';
 
 export const LoginRequestSchema = z.object({
   email: z.string().email(),
@@ -14,9 +7,54 @@ export const LoginRequestSchema = z.object({
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
-export const ConvertAnonymousRequestSchema = RegisterRequestSchema;
-export type ConvertAnonymousRequest = z.infer<
-  typeof ConvertAnonymousRequestSchema
+export const PasswordResetRequestSchema = z.object({
+  email: z.string().email(),
+});
+export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
+
+export const PasswordResetConfirmRequestSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8).max(72),
+});
+export type PasswordResetConfirmRequest = z.infer<
+  typeof PasswordResetConfirmRequestSchema
+>;
+
+export const PasswordResetIssueResponseSchema = z.object({
+  ok: z.literal(true),
+});
+export type PasswordResetIssueResponse = z.infer<
+  typeof PasswordResetIssueResponseSchema
+>;
+
+export const PasswordResetConfirmResponseSchema = z.object({
+  ok: z.literal(true),
+});
+export type PasswordResetConfirmResponse = z.infer<
+  typeof PasswordResetConfirmResponseSchema
+>;
+
+export const RegisterRequestSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8).max(72),
+  nickname: z.string().max(20).optional(),
+  emailVerificationToken: z.string().min(1),
+});
+export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
+
+export const EmailVerificationRequestSchema = z.object({
+  email: z.string().email(),
+});
+export type EmailVerificationRequest = z.infer<
+  typeof EmailVerificationRequestSchema
+>;
+
+export const ConfirmEmailVerificationRequestSchema = z.object({
+  email: z.string().email(),
+  code: z.string().regex(/^\d{6}$/),
+});
+export type ConfirmEmailVerificationRequest = z.infer<
+  typeof ConfirmEmailVerificationRequestSchema
 >;
 
 export const UpdateMeRequestSchema = z.object({
@@ -24,11 +62,35 @@ export const UpdateMeRequestSchema = z.object({
 });
 export type UpdateMeRequest = z.infer<typeof UpdateMeRequestSchema>;
 
+export const KakaoOAuthProfileRequestSchema = z.object({
+  providerAccountId: z.string().min(1),
+  providerEmail: z.string().email().nullable().optional(),
+  providerNickname: z.string().max(50).nullable().optional(),
+  rawProfile: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+export type KakaoOAuthProfileRequest = z.infer<
+  typeof KakaoOAuthProfileRequestSchema
+>;
+
 export const AuthResponseSchema = z.object({
   user: UserResponseSchema,
   accessToken: z.string().min(1),
 });
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+
+export const EmailVerificationIssueResponseSchema = z.object({
+  ok: z.literal(true),
+});
+export type EmailVerificationIssueResponse = z.infer<
+  typeof EmailVerificationIssueResponseSchema
+>;
+
+export const EmailVerificationConfirmResponseSchema = z.object({
+  emailVerificationToken: z.string().min(1),
+});
+export type EmailVerificationConfirmResponse = z.infer<
+  typeof EmailVerificationConfirmResponseSchema
+>;
 
 export const MeResponseSchema = z.object({
   user: UserResponseSchema,
@@ -42,3 +104,10 @@ export const DeleteMeResponseSchema = z.object({
   id: z.string(),
 });
 export type DeleteMeResponse = z.infer<typeof DeleteMeResponseSchema>;
+
+export const AuthConnectionsResponseSchema = z.object({
+  connections: z.array(AuthConnectionSchema),
+});
+export type AuthConnectionsResponse = z.infer<
+  typeof AuthConnectionsResponseSchema
+>;

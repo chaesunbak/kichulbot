@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
-import { SolveSessionsController } from './solve-sessions.controller';
+import {
+  PublicSolveSessionsController,
+  SolveSessionsController,
+} from './solve-sessions.controller';
 import { SolveSessionsRepository } from './solve-sessions.repository';
 import { SolveSessionsService } from './solve-sessions.service';
 
 @Module({
   imports: [AuthModule],
-  controllers: [SolveSessionsController],
+  controllers: [SolveSessionsController, PublicSolveSessionsController],
   providers: [SolveSessionsService, SolveSessionsRepository],
   exports: [SolveSessionsService],
 })

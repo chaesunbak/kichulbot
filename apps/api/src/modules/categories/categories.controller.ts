@@ -74,3 +74,16 @@ export class CategoriesController {
     return this.categoriesService.deleteCategory(id);
   }
 }
+
+@ApiTags('categories')
+@Controller('public/categories')
+export class PublicCategoriesController {
+  constructor(private readonly categoriesService: CategoriesService) {}
+
+  @Get()
+  @ApiOperation({ summary: '공개 분류 목록 조회' })
+  @ApiOkResponse({ description: '분류 목록을 반환합니다.' })
+  listCategories() {
+    return this.categoriesService.listCategories(UserRole.USER);
+  }
+}

@@ -78,3 +78,21 @@ export class QuestionReportsController {
     return this.questionReportsService.updateAdmin(reportId, user.id, dto);
   }
 }
+
+@ApiTags('question-reports')
+@Controller('public/question-reports')
+export class PublicQuestionReportsController {
+  constructor(
+    private readonly questionReportsService: QuestionReportsService,
+  ) {}
+
+  @Post(':questionId')
+  @ApiOperation({ summary: '비로그인 문항 신고 생성' })
+  @ApiCreatedResponse({ description: '문항 신고를 생성합니다.' })
+  createQuestionReport(
+    @Param('questionId') questionId: string,
+    @Body() dto: CreateQuestionReportDto,
+  ) {
+    return this.questionReportsService.create(null, questionId, dto);
+  }
+}

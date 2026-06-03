@@ -72,3 +72,16 @@ export class ExamsController {
     return this.examsService.deleteExam(id);
   }
 }
+
+@ApiTags('exams')
+@Controller('public/exams')
+export class PublicExamsController {
+  constructor(private readonly examsService: ExamsService) {}
+
+  @Get()
+  @ApiOperation({ summary: '공개 시험 목록 조회' })
+  @ApiOkResponse({ description: '시험 목록을 반환합니다.' })
+  listExams() {
+    return this.examsService.listExams(UserRole.USER);
+  }
+}

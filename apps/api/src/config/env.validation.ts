@@ -1,4 +1,9 @@
-const REQUIRED_ENV_KEYS = ['DATABASE_URL', 'JWT_SECRET'] as const;
+const REQUIRED_ENV_KEYS = [
+  'DATABASE_URL',
+  'JWT_SECRET',
+  'RESEND_API_KEY',
+  'RESEND_FROM_EMAIL',
+] as const;
 
 function assertPresent(config: Record<string, unknown>, key: string) {
   const value = config[key];

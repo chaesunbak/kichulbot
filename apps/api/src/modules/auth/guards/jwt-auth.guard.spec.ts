@@ -20,6 +20,7 @@ const requestUser = {
   email: null,
   nickname: null,
   authType: UserAuthType.ANONYMOUS,
+  linkedProviders: [],
   role: UserRole.USER,
   createdAt: '2026-05-28T00:00:00.000Z',
   updatedAt: '2026-05-28T00:00:00.000Z',

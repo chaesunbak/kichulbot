@@ -27,7 +27,7 @@ export class QuestionReportsService {
   ) {}
 
   async create(
-    reporterUserId: string,
+    reporterUserId: string | null,
     questionId: string,
     dto: CreateQuestionReportDto,
   ): Promise<QuestionReportMutationResponse> {

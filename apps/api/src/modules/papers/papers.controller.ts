@@ -121,3 +121,31 @@ export class PapersController {
     return this.papersService.deletePaper(id);
   }
 }
+
+@ApiTags('exam-papers')
+@Controller('public/exam-papers')
+export class PublicPapersController {
+  constructor(private readonly papersService: PapersService) {}
+
+  @Get()
+  @ApiOperation({ summary: '공개 문제지 목록 조회' })
+  @ApiOkResponse({ description: '공개된 문제지 목록을 반환합니다.' })
+  listPapers(
+    @Query('examId') examId?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('q') q?: string,
+  ) {
+    return this.papersService.listPapers(UserRole.USER, undefined, {
+      examId,
+      categoryId,
+      q,
+    });
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: '공개 문제지 상세 조회' })
+  @ApiOkResponse({ description: '공개된 문제지 상세를 반환합니다.' })
+  getPaper(@Param('id') id: string) {
+    return this.papersService.getPaper(id, UserRole.USER);
+  }
+}

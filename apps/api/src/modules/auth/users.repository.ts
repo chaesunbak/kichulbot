@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  OAuthProvider,
   Prisma,
   QuestionSetKind,
   UserAuthType,
@@ -24,10 +25,41 @@ export class UsersRepository {
     });
   }
 
+  createOAuthUser(data: {
+    provider: OAuthProvider;
+    providerAccountId: string;
+    providerEmail?: string | null;
+    providerNickname?: string | null;
+    rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
+  }) {
+    return this.db.user.create({
+      data: {
+        email: data.providerEmail,
+        nickname: data.providerNickname,
+        authType: UserAuthType.OAUTH,
+        role: UserRole.USER,
+        questionSets: {
+          create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
+        },
+        oauthAccounts: {
+          create: {
+            provider: data.provider,
+            providerAccountId: data.providerAccountId,
+            providerEmail: data.providerEmail,
+            providerNickname: data.providerNickname,
+            rawProfile: data.rawProfile,
+            lastLoginAt: new Date(),
+          },
+        },
+      },
+      include: { oauthAccounts: true },
+    });
+  }
+
   createEmailUser(data: {
     email: string;
     passwordHash: string;
-    nickname?: string;
+    nickname?: string | null;
   }) {
     return this.db.user.create({
       data: {
@@ -40,18 +72,44 @@ export class UsersRepository {
           create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
         },
       },
+      include: { oauthAccounts: true },
     });
   }
 
   findByEmail(email: string) {
     return this.db.user.findUnique({
       where: { email },
+      include: { oauthAccounts: true },
     });
   }
 
   findById(id: string) {
     return this.db.user.findUnique({
       where: { id },
+      include: { oauthAccounts: true },
+    });
+  }
+
+  findByOAuthAccount(provider: OAuthProvider, providerAccountId: string) {
+    return this.db.oAuthAccount.findUnique({
+      where: {
+        provider_providerAccountId: {
+          provider,
+          providerAccountId,
+        },
+      },
+      include: {
+        user: {
+          include: { oauthAccounts: true },
+        },
+      },
+    });
+  }
+
+  listAuthConnections(userId: string) {
+    return this.db.oAuthAccount.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
     });
   }
 
@@ -76,12 +134,84 @@ export class UsersRepository {
     });
   }
 
+  updatePassword(userId: string, passwordHash: string) {
+    return this.db.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+      include: { oauthAccounts: true },
+    });
+  }
+
+  upsertOAuthAccount(data: {
+    userId: string;
+    provider: OAuthProvider;
+    providerAccountId: string;
+    providerEmail?: string | null;
+    providerNickname?: string | null;
+    rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
+  }) {
+    return this.db.oAuthAccount.upsert({
+      where: {
+        provider_providerAccountId: {
+          provider: data.provider,
+          providerAccountId: data.providerAccountId,
+        },
+      },
+      create: {
+        userId: data.userId,
+        provider: data.provider,
+        providerAccountId: data.providerAccountId,
+        providerEmail: data.providerEmail,
+        providerNickname: data.providerNickname,
+        rawProfile: data.rawProfile,
+        lastLoginAt: new Date(),
+      },
+      update: {
+        providerEmail: data.providerEmail,
+        providerNickname: data.providerNickname,
+        rawProfile: data.rawProfile,
+        lastLoginAt: new Date(),
+      },
+    });
+  }
+
+  convertAnonymousUserWithOAuth(
+    userId: string,
+    data: {
+      provider: OAuthProvider;
+      providerAccountId: string;
+      providerEmail?: string | null;
+      providerNickname?: string | null;
+      rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
+    },
+  ) {
+    return this.db.user.update({
+      where: { id: userId },
+      data: {
+        authType: UserAuthType.OAUTH,
+        email: data.providerEmail,
+        nickname: data.providerNickname,
+        oauthAccounts: {
+          create: {
+            provider: data.provider,
+            providerAccountId: data.providerAccountId,
+            providerEmail: data.providerEmail,
+            providerNickname: data.providerNickname,
+            rawProfile: data.rawProfile,
+            lastLoginAt: new Date(),
+          },
+        },
+      },
+      include: { oauthAccounts: true },
+    });
+  }
+
   convertAnonymousUser(
     userId: string,
     data: {
       email: string;
       passwordHash: string;
-      nickname?: string;
+      nickname?: string | null;
     },
   ) {
     return this.db.user.update({
@@ -92,6 +222,103 @@ export class UsersRepository {
         nickname: data.nickname,
         authType: UserAuthType.EMAIL,
       },
+      include: { oauthAccounts: true },
+    });
+  }
+
+  expireEmailVerificationCodes(email: string) {
+    return this.db.emailVerificationCode.updateMany({
+      where: { email, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+  }
+
+  createEmailVerificationCode(data: {
+    email: string;
+    codeHash: string;
+    expiresAt: Date;
+  }) {
+    return this.db.emailVerificationCode.create({ data });
+  }
+
+  findLatestUsableEmailVerificationCode(email: string, now = new Date()) {
+    return this.db.emailVerificationCode.findFirst({
+      where: {
+        email,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findEmailVerificationCodeById(id: string, email: string, now = new Date()) {
+    return this.db.emailVerificationCode.findFirst({
+      where: {
+        id,
+        email,
+        usedAt: null,
+        verifiedAt: { not: null },
+        expiresAt: { gt: now },
+      },
+    });
+  }
+
+  incrementEmailVerificationAttempts(id: string) {
+    return this.db.emailVerificationCode.update({
+      where: { id },
+      data: { attempts: { increment: 1 } },
+    });
+  }
+
+  markEmailVerificationCodeVerified(id: string) {
+    return this.db.emailVerificationCode.update({
+      where: { id },
+      data: { verifiedAt: new Date() },
+    });
+  }
+
+  markEmailVerificationCodeUsed(id: string) {
+    return this.db.emailVerificationCode.update({
+      where: { id },
+      data: { usedAt: new Date() },
+    });
+  }
+
+  expirePasswordResetTokens(userId: string) {
+    return this.db.passwordResetToken.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+  }
+
+  createPasswordResetToken(data: {
+    userId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }) {
+    return this.db.passwordResetToken.create({ data });
+  }
+
+  findUsablePasswordResetToken(tokenHash: string, now = new Date()) {
+    return this.db.passwordResetToken.findFirst({
+      where: {
+        tokenHash,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
+      include: {
+        user: {
+          include: { oauthAccounts: true },
+        },
+      },
+    });
+  }
+
+  markPasswordResetTokenUsed(id: string) {
+    return this.db.passwordResetToken.update({
+      where: { id },
+      data: { usedAt: new Date() },
     });
   }
 

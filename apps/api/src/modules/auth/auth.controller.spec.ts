@@ -29,7 +29,7 @@ describe('AuthController', () => {
     controller = new AuthController(authService);
   });
 
-  it('delegates anonymous start to AuthService', async () => {
+  it('익명 시작 요청을 인증 서비스에 위임한다', async () => {
     authService.startAnonymous.mockResolvedValue({
       user: serializedUser,
       accessToken: 'token',
@@ -41,7 +41,7 @@ describe('AuthController', () => {
     });
   });
 
-  it('passes current user id to convertAnonymous', async () => {
+  it('현재 사용자 식별자를 익명 계정 전환 메서드에 전달한다', async () => {
     authService.convertAnonymous.mockResolvedValue({
       user: serializedUser,
       accessToken: 'token',
@@ -82,7 +82,7 @@ describe('MeController', () => {
     controller = new MeController(authService);
   });
 
-  it('passes current user id to updateMe', async () => {
+  it('현재 사용자 식별자를 내 정보 수정 메서드에 전달한다', async () => {
     authService.updateMe.mockResolvedValue({
       user: { ...serializedUser, nickname: '새 닉네임' },
     });

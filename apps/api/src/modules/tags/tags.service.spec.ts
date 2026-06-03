@@ -25,7 +25,7 @@ describe('TagsService', () => {
     service = new TagsService(repository);
   });
 
-  it('returns only public fields for the regular tag list', async () => {
+  it('일반 태그 목록에서는 공개 필드만 반환한다', async () => {
     repository.findManyAvailable.mockResolvedValue([makeTag()]);
 
     const response = await service.listTags(UserRole.USER, 'exam_1');
@@ -38,7 +38,7 @@ describe('TagsService', () => {
     });
   });
 
-  it('returns exam scopes and timestamps for the admin list', async () => {
+  it('관리자 태그 목록에서는 시험 범위와 타임스탬프를 반환한다', async () => {
     repository.findMany.mockResolvedValue([makeTag()]);
 
     const response = await service.listAdminTags();
@@ -50,7 +50,7 @@ describe('TagsService', () => {
     });
   });
 
-  it('returns question counts for an admin filtered tag list', async () => {
+  it('관리자 필터 태그 목록에서는 문항 수를 함께 반환한다', async () => {
     repository.findManyAvailable.mockResolvedValue([makeTag()]);
 
     const response = await service.listTags(UserRole.ADMIN, 'exam_1');
@@ -63,7 +63,7 @@ describe('TagsService', () => {
     });
   });
 
-  it('deletes an unused official tag', async () => {
+  it('사용되지 않은 공식 태그를 삭제한다', async () => {
     repository.deleteIfUnused.mockResolvedValue({
       tag: makeTag(),
       questionCount: 0,
@@ -74,7 +74,7 @@ describe('TagsService', () => {
     });
   });
 
-  it('rejects deleting a tag attached to questions', async () => {
+  it('문항에 연결된 태그 삭제를 거부한다', async () => {
     repository.deleteIfUnused.mockResolvedValue({
       tag: makeTag(),
       questionCount: 1,
@@ -85,7 +85,7 @@ describe('TagsService', () => {
     );
   });
 
-  it('rejects a newly assigned out-of-scope tag', async () => {
+  it('범위를 벗어난 새 태그 할당을 거부한다', async () => {
     repository.countAssignableByIds.mockResolvedValue(0);
 
     await expect(
@@ -93,7 +93,7 @@ describe('TagsService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('keeps an existing out-of-scope tag without requiring reassignment', async () => {
+  it('기존에 연결된 범위 밖 태그는 재할당 없이 유지한다', async () => {
     await service.assertTagsAssignable(['tag_1'], 'exam_1', ['tag_1']);
 
     expect(repository.countAssignableByIds).not.toHaveBeenCalled();

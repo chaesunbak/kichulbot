@@ -38,7 +38,7 @@ describe('QuestionsService', () => {
     service = new QuestionsService(repository, storageService, tagsService);
   });
 
-  it('rejects creating a question number beyond the paper size', async () => {
+  it('시험지 문항 수를 초과한 번호로 문항 생성을 거부한다', async () => {
     repository.findPaper.mockResolvedValue({
       id: 'paper_1',
       questionCount: 20,
@@ -58,7 +58,7 @@ describe('QuestionsService', () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
-  it('rejects moving a question number beyond the paper size', async () => {
+  it('시험지 문항 수를 초과한 번호로 문항 이동을 거부한다', async () => {
     repository.findById.mockResolvedValue({
       id: 'question_1',
       paperId: 'paper_1',
@@ -80,7 +80,7 @@ describe('QuestionsService', () => {
     expect(repository.update).not.toHaveBeenCalled();
   });
 
-  it('rejects creating a written question without an answer text', async () => {
+  it('서술형 문항에 정답 텍스트가 없으면 생성을 거부한다', async () => {
     repository.findPaper.mockResolvedValue({
       id: 'paper_1',
       questionCount: 20,
@@ -99,7 +99,7 @@ describe('QuestionsService', () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
-  it('clears multiple-choice fields when changing a question to written', async () => {
+  it('문항을 서술형으로 바꾸면 객관식 필드를 비운다', async () => {
     repository.findById.mockResolvedValue({
       id: 'question_1',
       paperId: 'paper_1',
@@ -146,7 +146,7 @@ describe('QuestionsService', () => {
     );
   });
 
-  it('deletes a question and its stored image', async () => {
+  it('문항과 저장된 이미지를 함께 삭제한다', async () => {
     repository.findById.mockResolvedValue({
       id: 'question_1',
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',

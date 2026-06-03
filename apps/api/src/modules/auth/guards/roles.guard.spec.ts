@@ -17,7 +17,7 @@ function contextWithUser(role?: UserRole): ExecutionContext {
 }
 
 describe('RolesGuard', () => {
-  it('allows requests when no role metadata is required', () => {
+  it('역할 메타데이터가 없으면 요청을 허용한다', () => {
     const guard = new RolesGuard({
       getAllAndOverride: jest.fn().mockReturnValue(undefined),
     } as unknown as Reflector);
@@ -25,7 +25,7 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(contextWithUser())).toBe(true);
   });
 
-  it('allows users with a required role', () => {
+  it('요구된 역할을 가진 사용자는 허용한다', () => {
     const guard = new RolesGuard({
       getAllAndOverride: jest.fn().mockReturnValue([UserRole.ADMIN]),
     } as unknown as Reflector);
@@ -33,7 +33,7 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(contextWithUser(UserRole.ADMIN))).toBe(true);
   });
 
-  it('blocks users without a required role', () => {
+  it('요구된 역할이 없는 사용자는 차단한다', () => {
     const guard = new RolesGuard({
       getAllAndOverride: jest.fn().mockReturnValue([UserRole.ADMIN]),
     } as unknown as Reflector);

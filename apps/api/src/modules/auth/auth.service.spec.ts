@@ -62,7 +62,7 @@ describe('AuthService', () => {
     );
   });
 
-  it('creates an anonymous user and returns an access token', async () => {
+  it('익명 사용자를 만들고 액세스 토큰을 반환한다', async () => {
     usersRepository.createAnonymousUser.mockResolvedValue(user());
 
     await expect(service.startAnonymous()).resolves.toMatchObject({
@@ -86,7 +86,7 @@ describe('AuthService', () => {
     );
   });
 
-  it('registers a normalized email user', async () => {
+  it('정규화된 이메일로 사용자를 회원가입시킨다', async () => {
     usersRepository.findByEmail.mockResolvedValue(null);
     usersRepository.createEmailUser.mockResolvedValue(
       user({
@@ -116,7 +116,7 @@ describe('AuthService', () => {
     );
   });
 
-  it('rejects duplicate email registration', async () => {
+  it('중복 이메일 회원가입을 거부한다', async () => {
     usersRepository.findByEmail.mockResolvedValue(
       user({ email: 'student@example.com' }),
     );
@@ -129,7 +129,7 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it('converts an anonymous user into an email user', async () => {
+  it('익명 사용자를 이메일 사용자로 전환한다', async () => {
     usersRepository.findById.mockResolvedValue(user());
     usersRepository.findByEmail.mockResolvedValue(null);
     usersRepository.convertAnonymousUser.mockResolvedValue(
@@ -155,7 +155,7 @@ describe('AuthService', () => {
     );
   });
 
-  it('rejects converting a non-anonymous user', async () => {
+  it('익명 사용자가 아닌 계정의 전환을 거부한다', async () => {
     usersRepository.findById.mockResolvedValue(
       user({ authType: UserAuthType.EMAIL }),
     );
@@ -168,7 +168,7 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('logs in with a valid password', async () => {
+  it('유효한 비밀번호로 로그인한다', async () => {
     const passwordHash = await bcrypt.hash('password123', 4);
     usersRepository.findByEmail.mockResolvedValue(
       user({
@@ -191,7 +191,7 @@ describe('AuthService', () => {
     });
   });
 
-  it('rejects login with an invalid password', async () => {
+  it('유효하지 않은 비밀번호 로그인은 거부한다', async () => {
     const passwordHash = await bcrypt.hash('password123', 4);
     usersRepository.findByEmail.mockResolvedValue(
       user({
@@ -209,7 +209,7 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('validates a JWT payload against the current user row', async () => {
+  it('JWT 정보를 현재 사용자 레코드와 대조해 검증한다', async () => {
     usersRepository.findById.mockResolvedValue(user({ email: 'a@b.com' }));
 
     await expect(
@@ -224,7 +224,7 @@ describe('AuthService', () => {
     });
   });
 
-  it('deletes the current user account', async () => {
+  it('현재 사용자 계정을 삭제한다', async () => {
     usersRepository.findById.mockResolvedValue(user());
     usersRepository.deleteById.mockResolvedValue({ id: 'user_1' });
 
@@ -234,7 +234,7 @@ describe('AuthService', () => {
     expect(usersRepository.deleteById).toHaveBeenCalledWith('user_1');
   });
 
-  it('rejects account deletion with an invalid user id', async () => {
+  it('유효하지 않은 사용자 식별자의 계정 삭제를 거부한다', async () => {
     usersRepository.findById.mockResolvedValue(null);
 
     await expect(service.deleteMe('missing_user')).rejects.toBeInstanceOf(
@@ -243,7 +243,7 @@ describe('AuthService', () => {
     expect(usersRepository.deleteById).not.toHaveBeenCalled();
   });
 
-  it('updates the current user nickname', async () => {
+  it('현재 사용자 닉네임을 수정한다', async () => {
     usersRepository.findById.mockResolvedValue(user());
     usersRepository.updateProfile.mockResolvedValue(
       user({ nickname: '새 닉네임' }),

@@ -118,7 +118,7 @@ describe('PapersService', () => {
     );
   });
 
-  it('returns only published papers for normal users without admin fields', async () => {
+  it('일반 사용자에게는 관리자 필드 없이 공개된 시험지만 반환한다', async () => {
     repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
 
     const response = await service.listPapers(UserRole.USER);
@@ -136,7 +136,7 @@ describe('PapersService', () => {
     expect(response.papers[0]).not.toHaveProperty('createdAt');
   });
 
-  it('returns all papers for admins with admin fields', async () => {
+  it('관리자에게는 관리자 필드를 포함한 전체 시험지를 반환한다', async () => {
     repository.findMany.mockResolvedValue([paper()]);
 
     const response = await service.listPapers(UserRole.ADMIN);
@@ -151,7 +151,7 @@ describe('PapersService', () => {
     });
   });
 
-  it('marks papers already added to the current user library', async () => {
+  it('현재 사용자 서재에 이미 담긴 시험지를 표시한다', async () => {
     repository.findMany.mockResolvedValue([
       paper({
         users: [
@@ -176,7 +176,7 @@ describe('PapersService', () => {
     expect(response.papers[0]).toMatchObject({ isInLibrary: true });
   });
 
-  it('filters papers by exam id when provided', async () => {
+  it('시험 식별자가 주어지면 해당 시험 기준으로 시험지를 필터링한다', async () => {
     repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
 
     await service.listPapers(UserRole.USER, undefined, { examId: 'exam_1' });
@@ -190,7 +190,7 @@ describe('PapersService', () => {
     );
   });
 
-  it('rejects creating a paper when the exam id is invalid', async () => {
+  it('유효하지 않은 시험 식별자로 시험지 생성을 거부한다', async () => {
     examsService.findById.mockResolvedValue(null);
 
     await expect(
@@ -205,7 +205,7 @@ describe('PapersService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('creates a paper after checking the exam id', async () => {
+  it('시험 식별자를 확인한 뒤 시험지를 생성한다', async () => {
     examsService.findById.mockResolvedValue(examWithCategories);
     repository.create.mockResolvedValue(paper({ isPublished: true }));
 
@@ -232,7 +232,7 @@ describe('PapersService', () => {
     expect(response.paper).toMatchObject({ isPublished: true });
   });
 
-  it('requires grade when the selected exam uses grade classification', async () => {
+  it('선택한 시험이 학년 분류를 쓰면 학년 입력을 필수로 요구한다', async () => {
     examsService.findById.mockResolvedValue({
       ...examWithCategories,
       usesGrade: true,
@@ -251,7 +251,7 @@ describe('PapersService', () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
-  it('hides unpublished paper details from normal users', async () => {
+  it('일반 사용자에게는 비공개 시험지 상세를 숨긴다', async () => {
     repository.findById.mockResolvedValue(null);
 
     await expect(
@@ -262,7 +262,7 @@ describe('PapersService', () => {
     });
   });
 
-  it('updates the published state for admins', async () => {
+  it('관리자는 공개 상태를 수정할 수 있다', async () => {
     repository.findById.mockResolvedValue(paper() as never);
     repository.update.mockResolvedValue(paper({ isPublished: true }));
 
@@ -276,7 +276,7 @@ describe('PapersService', () => {
     expect(response.paper).toMatchObject({ id: 'paper_1', isPublished: true });
   });
 
-  it('deletes a paper and its stored question images', async () => {
+  it('시험지와 저장된 문항 이미지를 함께 삭제한다', async () => {
     repository.findById.mockResolvedValue({
       ...paper(),
       questions: [

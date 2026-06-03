@@ -84,7 +84,7 @@ describe('LibraryService', () => {
     service = new LibraryService(repository);
   });
 
-  it('queries library data with the current user id', async () => {
+  it('현재 사용자 식별자로 서재 데이터를 조회한다', async () => {
     repository.findLibrary.mockResolvedValue([[], []]);
 
     await service.getLibrary('user_2');
@@ -92,7 +92,7 @@ describe('LibraryService', () => {
     expect(repository.findLibrary).toHaveBeenCalledWith('user_2');
   });
 
-  it('adds a paper to a selected folder and returns the saved record id', async () => {
+  it('선택한 폴더에 시험지를 추가하고 저장된 레코드 식별자를 반환한다', async () => {
     repository.findPaper.mockResolvedValue(paper);
     repository.findFolder.mockResolvedValue(folder);
     repository.findExistingLibraryPaper.mockResolvedValue(null);
@@ -111,7 +111,7 @@ describe('LibraryService', () => {
     );
   });
 
-  it('reuses an existing record for the same paper in the same folder', async () => {
+  it('같은 폴더의 동일 시험지는 기존 레코드를 재사용한다', async () => {
     repository.findPaper.mockResolvedValue(paper);
     repository.findFolder.mockResolvedValue(folder);
     repository.findExistingLibraryPaper.mockResolvedValue(libraryPaper);
@@ -121,7 +121,7 @@ describe('LibraryService', () => {
     expect(repository.createLibraryPaper).not.toHaveBeenCalled();
   });
 
-  it('blocks deleting non-empty folders', async () => {
+  it('비어 있지 않은 폴더 삭제를 막는다', async () => {
     repository.findFolder.mockResolvedValue(folder);
     repository.countFolderChildren.mockResolvedValue(1);
     repository.countFolderPapers.mockResolvedValue(0);
@@ -132,7 +132,7 @@ describe('LibraryService', () => {
     expect(repository.deleteFolder).not.toHaveBeenCalled();
   });
 
-  it('moves a saved paper to another folder', async () => {
+  it('저장된 시험지를 다른 폴더로 이동한다', async () => {
     repository.findLibraryPaper.mockResolvedValue(libraryPaper);
     repository.findFolder.mockResolvedValue(folder);
     repository.findExistingLibraryPaper.mockResolvedValue(null);

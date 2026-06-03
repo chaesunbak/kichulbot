@@ -115,7 +115,7 @@ describe('BookmarksService', () => {
     service = new BookmarksService(repository, solveSessionsService);
   });
 
-  it('uses an idempotent repository operation when the same question is added again', async () => {
+  it('같은 문항을 다시 추가해도 멱등적으로 저장 동작을 수행한다', async () => {
     repository.findBookmarkList.mockResolvedValue(bookmarkList);
     repository.findQuestion.mockResolvedValue(question);
     repository.addQuestion.mockResolvedValue(questionSetItem);
@@ -135,7 +135,7 @@ describe('BookmarksService', () => {
     );
   });
 
-  it('checks list ownership before removing a question', async () => {
+  it('문항을 삭제하기 전에 북마크 목록 소유권을 확인한다', async () => {
     repository.findBookmarkList.mockResolvedValue(bookmarkList);
     repository.findBookmarkedQuestion.mockResolvedValue({
       questionSetId: bookmarkList.id,
@@ -166,7 +166,7 @@ describe('BookmarksService', () => {
     );
   });
 
-  it('does not start an empty bookmark list', async () => {
+  it('비어 있는 북마크 목록으로는 풀이를 시작하지 않는다', async () => {
     repository.findBookmarkList.mockResolvedValue(bookmarkList);
 
     await expect(

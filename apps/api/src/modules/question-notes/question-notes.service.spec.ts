@@ -30,7 +30,7 @@ describe('QuestionNotesService', () => {
     service = new QuestionNotesService(repository);
   });
 
-  it('returns the note stored for the user and question', async () => {
+  it('사용자와 문항에 저장된 노트를 반환한다', async () => {
     repository.findNote.mockResolvedValue(note);
 
     await expect(service.get('user_1', 'question_1')).resolves.toMatchObject({
@@ -42,7 +42,7 @@ describe('QuestionNotesService', () => {
     expect(repository.findNote).toHaveBeenCalledWith('user_1', 'question_1');
   });
 
-  it('upserts one note per user and question', async () => {
+  it('사용자와 문항별로 노트 하나만 저장되도록 갱신 또는 생성한다', async () => {
     repository.upsertNote.mockResolvedValue({
       ...note,
       content: '오답 원인: 시대 순서 착각',
@@ -57,7 +57,7 @@ describe('QuestionNotesService', () => {
     );
   });
 
-  it('deletes the note when saved content is blank', async () => {
+  it('저장 내용이 비어 있으면 노트를 삭제한다', async () => {
     repository.deleteNote.mockResolvedValue({ count: 1 });
 
     await expect(service.save('user_1', 'question_1', '   ')).resolves.toEqual({
@@ -67,7 +67,7 @@ describe('QuestionNotesService', () => {
     expect(repository.upsertNote).not.toHaveBeenCalled();
   });
 
-  it('rejects notes for unavailable questions', async () => {
+  it('이용할 수 없는 문항의 노트 조회를 거부한다', async () => {
     repository.findPublishedQuestion.mockResolvedValue(null);
 
     await expect(service.get('user_1', 'question_1')).rejects.toBeInstanceOf(

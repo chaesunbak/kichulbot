@@ -125,7 +125,7 @@ describe('ReviewService', () => {
     service = new ReviewService(repository, solveSessionsService);
   });
 
-  it('returns omitted questions from the stable daily wrong set', async () => {
+  it('고정된 오늘의 오답 세트에서 누락 문항을 반환한다', async () => {
     repository.findByStudyDate.mockResolvedValue(questionSet as never);
 
     const response = await service.getByStudyDate('user_1', '2026-06-01');
@@ -141,7 +141,7 @@ describe('ReviewService', () => {
     );
   });
 
-  it('generates a wrong question set for the requested study date', async () => {
+  it('요청한 학습일 기준으로 오답 세트를 생성한다', async () => {
     repository.regenerate.mockResolvedValue(questionSet as never);
 
     const response = await service.generate('user_1', '2026-06-01');
@@ -153,7 +153,7 @@ describe('ReviewService', () => {
     );
   });
 
-  it('starts a one-by-one snapshot session by default', async () => {
+  it('기본값으로 한 문제씩 스냅샷 세션을 시작한다', async () => {
     repository.findOwnedDailyWrongQuestionSet.mockResolvedValue(
       questionSet as never,
     );
@@ -170,7 +170,7 @@ describe('ReviewService', () => {
     );
   });
 
-  it('rejects starting a review when there are no wrong questions', async () => {
+  it('오답 문항이 없으면 리뷰 시작을 거부한다', async () => {
     repository.findOwnedDailyWrongQuestionSet.mockResolvedValue({
       ...questionSet,
       items: [],

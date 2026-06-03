@@ -148,7 +148,7 @@ describe('SolveSessionsService', () => {
     service = new SolveSessionsService(repository);
   });
 
-  it('restores the existing session returned by the repository', async () => {
+  it('저장소가 반환한 기존 세션을 그대로 복원한다', async () => {
     repository.findPublishedPaper.mockResolvedValue(paper);
     repository.start.mockResolvedValue(session);
 
@@ -162,7 +162,7 @@ describe('SolveSessionsService', () => {
     expect(response.session.id).toBe(session.id);
   });
 
-  it('rejects access to a session owned by another user', async () => {
+  it('다른 사용자의 세션 접근을 거부한다', async () => {
     repository.findById.mockResolvedValue(session);
 
     await expect(service.get('user_2', session.id)).rejects.toBeInstanceOf(
@@ -170,7 +170,7 @@ describe('SolveSessionsService', () => {
     );
   });
 
-  it('saves a selected choice without exposing the correct answer', async () => {
+  it('정답을 노출하지 않고 선택한 답안을 저장한다', async () => {
     repository.findById.mockResolvedValue(session);
     repository.saveAnswer.mockResolvedValue({
       draft: { ...correctDraft, answerChoice: 2, spentMilliseconds: 1200 },
@@ -196,7 +196,7 @@ describe('SolveSessionsService', () => {
     ).not.toHaveProperty('answerChoice');
   });
 
-  it('reveals the immutable revision answer after a one-by-one attempt', async () => {
+  it('한 문제씩 풀이에서는 제출 후 스냅샷 정답을 공개한다', async () => {
     repository.findById.mockResolvedValue({
       ...session,
       mode: AnswerMode.ONE_BY_ONE,
@@ -220,7 +220,7 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('rejects a save when the session is submitted concurrently', async () => {
+  it('세션이 동시에 제출되면 답안 저장을 거부한다', async () => {
     repository.findById.mockResolvedValue(session);
     repository.saveAnswer.mockRejectedValue(new SubmittedSolveSessionError());
 
@@ -231,7 +231,7 @@ describe('SolveSessionsService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('returns the confirmed score from the latest submitted attempt', async () => {
+  it('가장 최근 제출 시도의 확정 점수를 반환한다', async () => {
     repository.findById.mockResolvedValue(session);
     repository.submit.mockResolvedValue({
       ...session,
@@ -256,7 +256,7 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('returns paginated solve logs', async () => {
+  it('페이징된 풀이 기록을 반환한다', async () => {
     repository.findLogs.mockResolvedValue({ sessions: [session], total: 1 });
 
     const response = await service.listLogs('user_1', {
@@ -278,7 +278,7 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('grades daily wrong review answers without a persisted attempt', async () => {
+  it('저장된 시도 없이도 오늘의 오답 리뷰 답안을 채점한다', async () => {
     repository.findById.mockResolvedValue({
       ...session,
       mode: AnswerMode.ONE_BY_ONE,
@@ -311,7 +311,7 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('counts an omitted submitted attempt as wrong but unanswered', async () => {
+  it('누락된 제출 시도는 오답이면서 미응답으로 집계한다', async () => {
     repository.findById.mockResolvedValue(session);
     repository.submit.mockResolvedValue({
       ...session,
@@ -330,7 +330,7 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('calculates submitted daily wrong review results from drafts', async () => {
+  it('오늘의 오답 리뷰 제출 결과를 드래프트 기준으로 계산한다', async () => {
     repository.findById.mockResolvedValue({
       ...session,
       paper: null,
@@ -369,7 +369,7 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('lists only the current user logs', async () => {
+  it('현재 사용자 풀이 기록만 조회한다', async () => {
     repository.findLogs.mockResolvedValue({ sessions: [], total: 0 });
 
     await service.listLogs('user_1');

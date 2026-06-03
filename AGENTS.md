@@ -75,9 +75,19 @@ pnpm turbo run build --filter=@kichulbot/api
 pnpm turbo run typecheck --filter=@kichulbot/api
 ```
 
-## Build
+## Styleing
 
-Run frontend builds outside the sandbox because `next/font` fetches Google Fonts.
+Don't
+
+```
+className="border boder-slate-200"
+```
+
+Do
+
+```
+className="border"
+```
 
 ## Language
 

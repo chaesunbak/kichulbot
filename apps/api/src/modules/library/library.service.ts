@@ -20,7 +20,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Exam, ExamSession, LibraryFolder, Paper } from '../../infrastructure/database/prisma-client';
+import {
+  Exam,
+  ExamSession,
+  LibraryFolder,
+  Paper,
+} from '../../infrastructure/database/prisma-client';
 
 import { LibraryRepository } from './library.repository';
 

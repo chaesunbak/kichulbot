@@ -1,6 +1,9 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UserAuthType, UserRole } from '../../../infrastructure/database/prisma-client';
+import {
+  UserAuthType,
+  UserRole,
+} from '../../../infrastructure/database/prisma-client';
 
 import type { AuthService } from '../auth.service';
 import { JwtStrategy } from './jwt.strategy';

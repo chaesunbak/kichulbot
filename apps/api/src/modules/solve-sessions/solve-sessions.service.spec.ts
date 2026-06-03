@@ -1,5 +1,10 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import type { Exam, ExamSession, Paper, Question } from '../../infrastructure/database/prisma-client';
+import type {
+  Exam,
+  ExamSession,
+  Paper,
+  Question,
+} from '../../infrastructure/database/prisma-client';
 import {
   AnswerMode,
   AttemptOutcome,

@@ -1,4 +1,7 @@
-import type { UserAuthType, UserRole } from '../../infrastructure/database/prisma-client';
+import type {
+  UserAuthType,
+  UserRole,
+} from '../../infrastructure/database/prisma-client';
 
 export type JwtUser = {
   sub: string;

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, QuestionSetKind } from '../../infrastructure/database/prisma-client';
+import {
+  Prisma,
+  QuestionSetKind,
+} from '../../infrastructure/database/prisma-client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
 

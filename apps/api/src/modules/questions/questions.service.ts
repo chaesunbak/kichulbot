@@ -12,7 +12,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, QuestionType } from '../../infrastructure/database/prisma-client';
+import {
+  Prisma,
+  QuestionType,
+} from '../../infrastructure/database/prisma-client';
 
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';

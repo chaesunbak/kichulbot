@@ -25,7 +25,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Tag, TagGroup, UserRole } from '../../infrastructure/database/prisma-client';
+import {
+  Tag,
+  TagGroup,
+  UserRole,
+} from '../../infrastructure/database/prisma-client';
 
 import { TagsRepository } from './tags.repository';
 

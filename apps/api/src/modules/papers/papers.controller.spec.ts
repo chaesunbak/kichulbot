@@ -1,4 +1,7 @@
-import { UserAuthType, UserRole } from '../../infrastructure/database/prisma-client';
+import {
+  UserAuthType,
+  UserRole,
+} from '../../infrastructure/database/prisma-client';
 
 import type { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import type { RequestUser } from '../auth/types';

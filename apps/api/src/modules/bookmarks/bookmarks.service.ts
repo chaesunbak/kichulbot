@@ -19,7 +19,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AnswerMode, Prisma } from '../../infrastructure/database/prisma-client';
+import {
+  AnswerMode,
+  Prisma,
+} from '../../infrastructure/database/prisma-client';
 
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { BookmarksRepository } from './bookmarks.repository';

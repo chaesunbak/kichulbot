@@ -1,6 +1,9 @@
 import { ListAdminQuestionReportsQuery } from '@kichulbot/api-contract/question-reports';
 import { ApiProperty } from '@nestjs/swagger';
-import { QuestionReportCategory, QuestionReportStatus } from '../../../infrastructure/database/prisma-client';
+import {
+  QuestionReportCategory,
+  QuestionReportStatus,
+} from '../../../infrastructure/database/prisma-client';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 import { PaginationDto } from '../../../common/dto/pagination.dto';

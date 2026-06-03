@@ -11,7 +11,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AnswerMode, AttemptOutcome, Prisma } from '@prisma/client';
+import { AnswerMode, AttemptOutcome, Prisma } from '../../infrastructure/database/prisma-client';
 
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';

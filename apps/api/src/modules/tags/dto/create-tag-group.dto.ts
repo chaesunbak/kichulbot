@@ -1,6 +1,6 @@
 import { CreateTagGroupRequest } from '@kichulbot/api-contract/tags';
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { TagSelectionMode } from '@prisma/client';
+import { TagSelectionMode } from '../../../infrastructure/database/prisma-client';
 import {
   Allow,
   IsBoolean,

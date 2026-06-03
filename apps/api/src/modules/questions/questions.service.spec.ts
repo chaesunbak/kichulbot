@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { QuestionType } from '@prisma/client';
+import { QuestionType } from '../../infrastructure/database/prisma-client';
 
 import type { StorageService } from '../../infrastructure/storage/storage.service';
 import type { TagsService } from '../tags/tags.service';

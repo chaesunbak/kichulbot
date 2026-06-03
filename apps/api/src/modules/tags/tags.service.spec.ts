@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import type { TagsRepository } from './tags.repository';
 import { TagsService } from './tags.service';

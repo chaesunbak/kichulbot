@@ -7,8 +7,8 @@ import type {
   Paper,
   Question,
   UserPaper,
-} from '@prisma/client';
-import { UserRole } from '@prisma/client';
+} from '../../infrastructure/database/prisma-client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import type { StorageService } from '../../infrastructure/storage/storage.service';
 import type { ExamsService } from '../exams/exams.service';
@@ -185,6 +185,47 @@ describe('PapersService', () => {
       {
         isPublished: true,
         examSession: { examId: 'exam_1' },
+      },
+      undefined,
+    );
+  });
+
+  it('분류 식별자가 주어지면 해당 분류의 시험지로 필터링한다', async () => {
+    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+
+    await service.listPapers(UserRole.USER, undefined, {
+      categoryId: 'category_1',
+    });
+
+    expect(repository.findMany).toHaveBeenCalledWith(
+      {
+        isPublished: true,
+        examSession: {
+          exam: {
+            categories: { some: { categoryId: 'category_1' } },
+          },
+        },
+      },
+      undefined,
+    );
+  });
+
+  it('검색어가 주어지면 시험지 제목과 시험 이름으로 검색한다', async () => {
+    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+
+    await service.listPapers(UserRole.USER, undefined, { q: '한국사' });
+
+    expect(repository.findMany).toHaveBeenCalledWith(
+      {
+        isPublished: true,
+        OR: [
+          { title: { contains: '한국사', mode: 'insensitive' } },
+          {
+            examSession: {
+              exam: { name: { contains: '한국사', mode: 'insensitive' } },
+            },
+          },
+        ],
       },
       undefined,
     );

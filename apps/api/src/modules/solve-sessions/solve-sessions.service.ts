@@ -28,7 +28,7 @@ import {
   Prisma,
   QuestionSetKind,
   QuestionType,
-} from '@prisma/client';
+} from '../../infrastructure/database/prisma-client';
 
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import {

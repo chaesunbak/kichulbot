@@ -23,7 +23,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import {
   IMAGE_FILE_PIPE,
@@ -33,6 +33,7 @@ import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
@@ -43,7 +44,7 @@ import { PapersService } from './papers.service';
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('exam-papers')
 export class PapersController {
   constructor(private readonly papersService: PapersService) {}
@@ -58,8 +59,14 @@ export class PapersController {
   listPapers(
     @CurrentUser() user: RequestUser,
     @Query('examId') examId?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('q') q?: string,
   ) {
-    return this.papersService.listPapers(user.role, user.id, { examId });
+    return this.papersService.listPapers(user.role, user.id, {
+      examId,
+      categoryId,
+      q,
+    });
   }
 
   @Post()

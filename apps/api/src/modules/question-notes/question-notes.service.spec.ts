@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import type { QuestionNote } from '@prisma/client';
+import type { QuestionNote } from '../../infrastructure/database/prisma-client';
 
 import type { QuestionNotesRepository } from './question-notes.repository';
 import { QuestionNotesService } from './question-notes.service';

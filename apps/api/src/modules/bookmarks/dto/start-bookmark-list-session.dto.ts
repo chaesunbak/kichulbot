@@ -1,4 +1,4 @@
-import { AnswerMode } from '@prisma/client';
+import { AnswerMode } from '../../../infrastructure/database/prisma-client';
 import { IsEnum } from 'class-validator';
 
 export class StartBookmarkListSessionDto {

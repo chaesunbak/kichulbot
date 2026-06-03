@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AttemptOutcome, Prisma, QuestionSetKind } from '@prisma/client';
+import { AttemptOutcome, Prisma, QuestionSetKind } from '../../infrastructure/database/prisma-client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
 

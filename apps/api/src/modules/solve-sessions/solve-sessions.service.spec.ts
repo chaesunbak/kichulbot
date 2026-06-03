@@ -1,11 +1,11 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import type { Exam, ExamSession, Paper, Question } from '@prisma/client';
+import type { Exam, ExamSession, Paper, Question } from '../../infrastructure/database/prisma-client';
 import {
   AnswerMode,
   AttemptOutcome,
   QuestionSetKind,
   QuestionType,
-} from '@prisma/client';
+} from '../../infrastructure/database/prisma-client';
 
 import type { SolveSessionsRepository } from './solve-sessions.repository';
 import { SubmittedSolveSessionError } from './solve-sessions.repository';

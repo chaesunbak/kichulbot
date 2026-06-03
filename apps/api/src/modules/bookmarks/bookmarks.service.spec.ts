@@ -4,8 +4,8 @@ import type {
   Paper,
   Question,
   QuestionSet,
-} from '@prisma/client';
-import { QuestionSetKind } from '@prisma/client';
+} from '../../infrastructure/database/prisma-client';
+import { QuestionSetKind } from '../../infrastructure/database/prisma-client';
 
 import type { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import type { BookmarksRepository } from './bookmarks.repository';

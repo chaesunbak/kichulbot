@@ -4,7 +4,7 @@ import {
   Question,
   QuestionRevision,
   QuestionSetKind,
-} from '@prisma/client';
+} from '../../infrastructure/database/prisma-client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
 

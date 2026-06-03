@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { AnswerMode, AttemptOutcome, QuestionSetKind } from '@prisma/client';
+import { AnswerMode, AttemptOutcome, QuestionSetKind } from '../../infrastructure/database/prisma-client';
 
 import type { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import type { ReviewRepository } from './review.repository';

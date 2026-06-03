@@ -1,4 +1,4 @@
-import { UserAuthType, UserRole } from '@prisma/client';
+import { UserAuthType, UserRole } from '../../infrastructure/database/prisma-client';
 
 import type { RequestUser } from '../auth/types';
 import { LibraryController } from './library.controller';

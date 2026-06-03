@@ -28,7 +28,7 @@ import {
   Prisma,
   Question,
   UserRole,
-} from '@prisma/client';
+} from '../../infrastructure/database/prisma-client';
 
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
@@ -145,13 +145,40 @@ export class PapersService {
   async listPapers(
     role: UserRole,
     userId?: string,
-    filters?: { examId?: string },
+    filters?: { examId?: string; categoryId?: string; q?: string },
   ): Promise<ListPapersResponse> {
     const examId = filters?.examId?.trim();
+    const categoryId = filters?.categoryId?.trim();
+    const q = filters?.q?.trim();
     const papers = await this.papersRepository.findMany(
       {
         ...(role === UserRole.ADMIN ? {} : { isPublished: true }),
-        ...(examId ? { examSession: { examId } } : {}),
+        ...(examId || categoryId
+          ? {
+              examSession: {
+                ...(examId ? { examId } : {}),
+                ...(categoryId
+                  ? {
+                      exam: {
+                        categories: { some: { categoryId } },
+                      },
+                    }
+                  : {}),
+              },
+            }
+          : {}),
+        ...(q
+          ? {
+              OR: [
+                { title: { contains: q, mode: 'insensitive' } },
+                {
+                  examSession: {
+                    exam: { name: { contains: q, mode: 'insensitive' } },
+                  },
+                },
+              ],
+            }
+          : {}),
       },
       userId,
     );

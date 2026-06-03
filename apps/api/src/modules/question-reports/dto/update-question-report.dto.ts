@@ -1,6 +1,6 @@
 import { UpdateQuestionReportRequest } from '@kichulbot/api-contract/question-reports';
 import { ApiProperty } from '@nestjs/swagger';
-import { QuestionReportStatus } from '@prisma/client';
+import { QuestionReportStatus } from '../../../infrastructure/database/prisma-client';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateQuestionReportDto implements UpdateQuestionReportRequest {

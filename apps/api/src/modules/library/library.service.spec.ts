@@ -1,5 +1,5 @@
 import { ConflictException } from '@nestjs/common';
-import type { Exam, ExamSession, LibraryFolder, Paper } from '@prisma/client';
+import type { Exam, ExamSession, LibraryFolder, Paper } from '../../infrastructure/database/prisma-client';
 
 import type { LibraryRepository } from './library.repository';
 import { LibraryService } from './library.service';

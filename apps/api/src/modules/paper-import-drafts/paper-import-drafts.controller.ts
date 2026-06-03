@@ -16,7 +16,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import {
   PDF_FILES_PIPE,
@@ -25,6 +25,7 @@ import {
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { PaperImportDraftsService } from './paper-import-drafts.service';
 
 @ApiTags('paper-import-drafts')
@@ -33,7 +34,7 @@ import { PaperImportDraftsService } from './paper-import-drafts.service';
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
 @Controller('paper-import-drafts')
 export class PaperImportDraftsController {

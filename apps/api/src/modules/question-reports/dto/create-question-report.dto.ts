@@ -1,6 +1,6 @@
 import { CreateQuestionReportRequest } from '@kichulbot/api-contract/question-reports';
 import { ApiProperty } from '@nestjs/swagger';
-import { QuestionReportCategory } from '@prisma/client';
+import { QuestionReportCategory } from '../../../infrastructure/database/prisma-client';
 import {
   IsEnum,
   IsOptional,

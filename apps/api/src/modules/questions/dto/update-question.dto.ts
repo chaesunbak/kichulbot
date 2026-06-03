@@ -1,6 +1,6 @@
 import { UpdateQuestionRequest } from '@kichulbot/api-contract/questions';
 import { ApiProperty } from '@nestjs/swagger';
-import { QuestionType } from '@prisma/client';
+import { QuestionType } from '../../../infrastructure/database/prisma-client';
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,

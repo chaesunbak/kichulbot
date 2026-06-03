@@ -17,11 +17,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreateQuestionReportDto } from './dto/create-question-report.dto';
 import { ListQuestionReportsDto } from './dto/list-question-reports.dto';
@@ -33,7 +34,7 @@ import { QuestionReportsService } from './question-reports.service';
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller()
 export class QuestionReportsController {
   constructor(

@@ -1,5 +1,5 @@
-import { Button } from '@kichulbot/ui/components/button';
-import { Switch } from '@kichulbot/ui/components/switch';
+import { Button } from '@kichulbot/ui/components/ui/button';
+import { Switch } from '@kichulbot/ui/components/ui/switch';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { Link } from 'react-router';
 

@@ -1,4 +1,4 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { useIsFetching, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { BookOpen, ClipboardList, FolderTree, Tags } from 'lucide-react';

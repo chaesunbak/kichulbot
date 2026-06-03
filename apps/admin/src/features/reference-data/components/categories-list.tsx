@@ -1,11 +1,11 @@
 import { type AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@kichulbot/ui/components/table';
+} from '@kichulbot/ui/components/ui/table';
 import { FolderTree, Pencil, Trash2 } from 'lucide-react';
 
 export interface CategoriesListProps {

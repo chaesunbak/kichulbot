@@ -1,13 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { Field, FieldError, FieldLabel } from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/card';
+import { Field, FieldError, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';

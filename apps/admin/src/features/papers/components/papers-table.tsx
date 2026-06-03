@@ -1,6 +1,6 @@
 import type { AdminPaperResponse } from '@kichulbot/api-contract/papers';
-import { Badge } from '@kichulbot/ui/components/badge';
-import { Button } from '@kichulbot/ui/components/button';
+import { Badge } from '@kichulbot/ui/components/ui/badge';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@kichulbot/ui/components/table';
+} from '@kichulbot/ui/components/ui/table';
 import { Link } from 'react-router';
 
 export function PapersTable({ papers }: { papers: AdminPaperResponse[] }) {

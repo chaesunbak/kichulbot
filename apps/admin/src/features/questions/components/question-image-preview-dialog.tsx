@@ -1,4 +1,4 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@kichulbot/ui/components/dialog';
+} from '@kichulbot/ui/components/ui/dialog';
 import { Expand } from 'lucide-react';
 
 interface QuestionImagePreviewDialogProps {

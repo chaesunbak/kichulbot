@@ -1,4 +1,4 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';

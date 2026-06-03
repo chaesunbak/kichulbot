@@ -1,12 +1,12 @@
-import { Field, FieldGroup, FieldLabel } from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+import { Field, FieldGroup, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
+} from '@kichulbot/ui/components/ui/select';
 
 import type { Exam } from '@/shared/types';
 

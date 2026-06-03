@@ -1,14 +1,14 @@
 import { type AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { Field, FieldLabel } from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/card';
+import { Field, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import { Plus } from 'lucide-react';
 import * as React from 'react';
 

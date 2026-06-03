@@ -1,4 +1,4 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { Home, SearchX } from 'lucide-react';
 import { Link } from 'react-router';
 

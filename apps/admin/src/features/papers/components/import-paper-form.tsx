@@ -1,12 +1,12 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { FileText, Sparkles } from 'lucide-react';
+} from '@kichulbot/ui/components/ui/card';
+import { FileText, Sparkles, Loader2 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -79,6 +79,11 @@ export function ImportPaperForm({
     },
   });
 
+  const disabled =
+    draftMutation.isPending || createMutation.isPending || !selectedExam;
+
+  const loading = draftMutation.isPending || createMutation.isPending;
+
   return (
     <Card>
       <CardHeader>
@@ -86,9 +91,6 @@ export function ImportPaperForm({
           <Sparkles className="size-4" />
           PDF로 문제지 생성
         </CardTitle>
-        <CardDescription>
-          PDF 추출 결과로 비공개 문제지를 만들고 상세 화면에서 검토합니다.
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <ImportPaperFields
@@ -103,9 +105,7 @@ export function ImportPaperForm({
         <Button
           className="w-full"
           type="button"
-          disabled={
-            draftMutation.isPending || createMutation.isPending || !selectedExam
-          }
+          disabled={disabled}
           onClick={() =>
             draftMutation.mutate({
               questionPdf,
@@ -115,7 +115,11 @@ export function ImportPaperForm({
             })
           }
         >
-          <FileText className="size-4" />
+          {loading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <FileText className="size-4" />
+          )}
           PDF 추출 후 비공개 문제지 생성
         </Button>
 
@@ -131,11 +135,6 @@ export function ImportPaperForm({
             ))}
           </div>
         )}
-
-        <p className="text-xs text-muted-foreground">
-          생성된 문제지는 비공개 상태로 열리며, 상세 화면에서 문항을 검토하고
-          수정할 수 있습니다.
-        </p>
       </CardContent>
     </Card>
   );

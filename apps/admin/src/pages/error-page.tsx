@@ -1,4 +1,4 @@
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import { AlertTriangle, Home, RotateCcw } from 'lucide-react';
 
 interface ErrorPageProps {

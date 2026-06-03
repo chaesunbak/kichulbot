@@ -2,24 +2,24 @@ import type {
   AdminTagGroupResponse,
   TagSelectionMode,
 } from '@kichulbot/api-contract/tags';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { Field, FieldLabel } from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/card';
+import { Field, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
-import { Switch } from '@kichulbot/ui/components/switch';
+} from '@kichulbot/ui/components/ui/select';
+import { Switch } from '@kichulbot/ui/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@kichulbot/ui/components/table';
+} from '@kichulbot/ui/components/ui/table';
 import { Layers3, Pencil, Plus, Trash2 } from 'lucide-react';
 import * as React from 'react';
 

@@ -2,8 +2,8 @@ import {
   Field,
   FieldDescription,
   FieldLabel,
-} from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import { Upload } from 'lucide-react';
 import type * as React from 'react';
 

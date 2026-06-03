@@ -1,27 +1,27 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
+} from '@kichulbot/ui/components/ui/select';
 import { Plus } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 

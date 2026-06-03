@@ -4,14 +4,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { Separator } from '@kichulbot/ui/components/separator';
+} from '@kichulbot/ui/components/ui/card';
+import { Separator } from '@kichulbot/ui/components/ui/separator';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@kichulbot/ui/components/tabs';
+} from '@kichulbot/ui/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
 

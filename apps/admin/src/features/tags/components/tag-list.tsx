@@ -1,12 +1,12 @@
 import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@kichulbot/ui/components/table';
+} from '@kichulbot/ui/components/ui/table';
 import { Pencil, Tags, Trash2 } from 'lucide-react';
 
 import { type Taxonomy } from '@/shared/types';

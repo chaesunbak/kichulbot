@@ -1,12 +1,12 @@
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import { Badge } from '@kichulbot/ui/components/badge';
+import { Badge } from '@kichulbot/ui/components/ui/badge';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
+} from '@kichulbot/ui/components/ui/card';
 import { ImageIcon, Pencil } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';

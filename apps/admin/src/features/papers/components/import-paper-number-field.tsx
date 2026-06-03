@@ -1,5 +1,5 @@
-import { Field, FieldLabel } from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+import { Field, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 
 export function ImportPaperNumberField({
   label,

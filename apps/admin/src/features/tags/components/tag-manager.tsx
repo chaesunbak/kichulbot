@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
+} from '@kichulbot/ui/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
 import * as React from 'react';
 

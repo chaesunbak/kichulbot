@@ -1,31 +1,31 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import { Button } from '@kichulbot/ui/components/button';
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@kichulbot/ui/components/card';
-import { Checkbox } from '@kichulbot/ui/components/checkbox';
+} from '@kichulbot/ui/components/ui/card';
+import { Checkbox } from '@kichulbot/ui/components/ui/checkbox';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@kichulbot/ui/components/field';
-import { Input } from '@kichulbot/ui/components/input';
+} from '@kichulbot/ui/components/ui/field';
+import { Input } from '@kichulbot/ui/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@kichulbot/ui/components/select';
-import { Separator } from '@kichulbot/ui/components/separator';
-import { Textarea } from '@kichulbot/ui/components/textarea';
+} from '@kichulbot/ui/components/ui/select';
+import { Separator } from '@kichulbot/ui/components/ui/separator';
+import { Textarea } from '@kichulbot/ui/components/ui/textarea';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,

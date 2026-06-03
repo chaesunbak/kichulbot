@@ -34,40 +34,44 @@ export function RecentPapersSection({ logs }: RecentPapersSectionProps) {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <ul
-          className="
-            grid grid-cols-2 gap-x-3 gap-y-6
-            sm:grid-cols-4 sm:gap-x-5
-          "
-        >
-          {recentPapers.map((paper) => (
-            <li key={paper.id} className="min-w-0">
-              <Link
-                href={`/resources/${paper.id}`}
-                className="block"
-                aria-label={`${paper.title} 자세히 보기`}
-              >
-                <PaperCover
-                  paper={paper}
-                  className="
-                    max-w-32
-                    sm:max-w-36
-                  "
-                />
-                <span
-                  className="
-                    mt-2 line-clamp-2 text-sm font-semibold text-zinc-900
-                  "
+        {recentPapers.length === 0 ? (
+          <p className="text-sm text-zinc-500">최근 본 문제지가 없습니다.</p>
+        ) : (
+          <ul
+            className="
+              grid grid-cols-2 gap-x-3 gap-y-6
+              sm:grid-cols-4 sm:gap-x-5
+            "
+          >
+            {recentPapers.map((paper) => (
+              <li key={paper.id} className="min-w-0">
+                <Link
+                  href={`/resources/${paper.id}`}
+                  className="flex flex-col gap-2"
+                  aria-label={`${paper.title} 자세히 보기`}
                 >
-                  {paper.title}
-                </span>
-                <span className="mt-1 truncate text-xs text-zinc-500">
-                  {formatPaperSession(paper)} · {paper.questionCount}문항
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <PaperCover
+                    paper={paper}
+                    className="
+                      max-w-32
+                      sm:max-w-36
+                    "
+                  />
+                  <span
+                    className="
+                      line-clamp-2 text-sm font-semibold text-zinc-900
+                    "
+                  >
+                    {paper.title}
+                  </span>
+                  <span className="truncate text-xs text-zinc-500">
+                    {formatPaperSession(paper)} · {paper.questionCount}문항
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );

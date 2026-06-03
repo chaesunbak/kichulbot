@@ -1,4 +1,3 @@
-import { Badge } from '@kichulbot/ui/components/badge';
 import { Button } from '@kichulbot/ui/components/button';
 import {
   Card,
@@ -6,14 +5,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/card';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Flame } from 'lucide-react';
 import Link from 'next/link';
 
 import { getCurrentWeek } from '@/features/question-attempts/lib/streak-date';
 import {
   getCurrentStreakDays,
   getSolvedDates,
-  getWeeklySolvedDayCount,
 } from '@/features/question-attempts/lib/streak-summary';
 import type { QuestionAttempt } from '@/features/question-attempts/types';
 
@@ -24,7 +22,6 @@ interface StreakSectionProps {
 export function StreakSection({ questionAttempts }: StreakSectionProps) {
   const currentWeek = getCurrentWeek();
   const solvedDates = getSolvedDates(questionAttempts);
-  const solvedDayCount = getWeeklySolvedDayCount(currentWeek.week, solvedDates);
   const currentStreakDays = getCurrentStreakDays(
     currentWeek.today,
     solvedDates,
@@ -33,11 +30,11 @@ export function StreakSection({ questionAttempts }: StreakSectionProps) {
   return (
     <Card>
       <CardHeader className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <CardTitle>이번 주 {solvedDayCount}일 풀이했어요</CardTitle>
-          <Badge variant="secondary" className="flex items-center gap-2">
-            🔥{currentStreakDays}
-          </Badge>
+        <div className="flex flex-col gap-2">
+          <CardTitle className="flex items-center gap-1">
+            <Flame className="inline-block size-4 text-orange-500 fill-orange-500" />{' '}
+            연속 {currentStreakDays}일째 공부 중
+          </CardTitle>
         </div>
         <CardAction>
           <Button asChild variant="link">

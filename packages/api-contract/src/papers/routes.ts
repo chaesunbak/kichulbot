@@ -3,6 +3,7 @@ import {
   CreatePaperResponseSchema,
   DeletePaperResponseSchema,
   ListPapersResponseSchema,
+  ListPapersQuerySchema,
   GetPaperResponseSchema,
   PaperImportDraftResponseSchema,
   UpdatePaperRequestSchema,
@@ -13,7 +14,7 @@ export const papersRoutes = {
   listPapers: {
     method: 'GET',
     path: '/exam-papers',
-    request: null,
+    request: ListPapersQuerySchema,
     response: ListPapersResponseSchema,
   },
   createPaper: {

@@ -3,6 +3,8 @@ export interface ExamCategory {
   name: string;
 }
 
+export type Category = ExamCategory;
+
 export interface Exam {
   id: string;
   name: string;

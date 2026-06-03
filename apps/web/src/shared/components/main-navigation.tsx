@@ -37,7 +37,7 @@ export function DesktopNavigation() {
   return (
     <nav
       className="
-        hidden items-center gap-1
+        flex items-center gap-1
         md:flex
       "
       aria-label="주 메뉴"

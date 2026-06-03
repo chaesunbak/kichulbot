@@ -12,13 +12,6 @@ export function getSolvedDates(questionAttempts: QuestionAttempt[]) {
   );
 }
 
-export function getWeeklySolvedDayCount(
-  week: WeekDay[],
-  solvedDates: Set<string>,
-) {
-  return week.filter(({ date }) => solvedDates.has(date)).length;
-}
-
 export function getCurrentStreakDays(today: string, solvedDates: Set<string>) {
   let streak = 0;
   const cursor = new Date(`${today}T00:00:00.000Z`);

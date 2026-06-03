@@ -95,6 +95,13 @@ export const DeletePaperResponseSchema = z.object({
 });
 export type DeletePaperResponse = z.infer<typeof DeletePaperResponseSchema>;
 
+export const ListPapersQuerySchema = z.object({
+  examId: z.string().trim().min(1).optional(),
+  categoryId: z.string().trim().min(1).optional(),
+  q: z.string().trim().min(1).optional(),
+});
+export type ListPapersQuery = z.infer<typeof ListPapersQuerySchema>;
+
 export const ListPapersResponseSchema = z.object({
   papers: z.array(z.union([AdminPaperResponseSchema, PaperResponseSchema])),
 });

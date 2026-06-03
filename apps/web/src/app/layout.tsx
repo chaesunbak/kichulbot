@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@kichulbot/ui/components/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { OverlayProvider } from 'overlay-kit';
 
 import { cn } from '@/shared/lib/utils';
@@ -36,7 +37,9 @@ export default function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col">
-        <OverlayProvider>{children}</OverlayProvider>
+        <NuqsAdapter>
+          <OverlayProvider>{children}</OverlayProvider>
+        </NuqsAdapter>
         <Toaster position="bottom-right" />
       </body>
     </html>

@@ -29,7 +29,6 @@ import { UploadedImageFile } from '../../infrastructure/storage/storage.service'
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
@@ -64,7 +63,6 @@ export class PapersController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(FilesInterceptor('images', 100, BULK_IMAGE_UPLOAD_OPTIONS))
   @ApiConsumes('application/json', 'multipart/form-data')
@@ -101,7 +99,6 @@ export class PapersController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '문제지 공개 상태 변경' })
   @ApiOkResponse({ description: '문제지 공개 상태를 변경합니다.' })
@@ -110,7 +107,6 @@ export class PapersController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '문제지 삭제' })
   @ApiOkResponse({ description: '문제지를 삭제합니다.' })

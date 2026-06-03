@@ -26,7 +26,6 @@ import { UserRole } from '@prisma/client';
 import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsService } from './questions.service';
@@ -41,7 +40,7 @@ const IMAGE_UPLOAD_OPTIONS = {
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 @Roles(UserRole.ADMIN)
 @Controller('questions')
 export class QuestionsController {

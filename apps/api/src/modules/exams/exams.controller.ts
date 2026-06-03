@@ -22,7 +22,6 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -46,7 +45,6 @@ export class ExamsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '시험 생성' })
   @ApiCreatedResponse({ description: '시험을 생성합니다.' })
@@ -56,7 +54,6 @@ export class ExamsController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '시험 수정' })
   @ApiOkResponse({ description: '시험을 수정합니다.' })
@@ -66,7 +63,6 @@ export class ExamsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '시험 삭제' })
   @ApiOkResponse({ description: '연결된 문제지가 없는 시험을 삭제합니다.' })

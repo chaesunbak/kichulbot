@@ -22,7 +22,6 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreateQuestionReportDto } from './dto/create-question-report.dto';
 import { ListQuestionReportsDto } from './dto/list-question-reports.dto';
@@ -53,7 +52,6 @@ export class QuestionReportsController {
   }
 
   @Get('admin/question-reports')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '관리자 문항 신고 목록 조회' })
   @ApiOkResponse({ description: '문항 신고 목록을 조회합니다.' })
@@ -65,7 +63,6 @@ export class QuestionReportsController {
   }
 
   @Patch('admin/question-reports/:reportId')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '관리자 문항 신고 처리' })
   @ApiOkResponse({ description: '문항 신고 처리 상태를 변경합니다.' })

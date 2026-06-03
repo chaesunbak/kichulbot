@@ -22,7 +22,6 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -46,7 +45,6 @@ export class CategoriesController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '분류 생성' })
   @ApiCreatedResponse({ description: '분류를 생성합니다.' })
@@ -56,7 +54,6 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '분류 수정' })
   @ApiOkResponse({ description: '분류를 수정합니다.' })
@@ -66,7 +63,6 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '분류 삭제' })
   @ApiOkResponse({

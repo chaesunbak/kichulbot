@@ -23,7 +23,6 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
 import { CreateOfficialTagDto } from './dto/create-official-tag.dto';
 import { CreateTagGroupDto } from './dto/create-tag-group.dto';
@@ -52,7 +51,6 @@ export class TagsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '태그 생성' })
   @ApiCreatedResponse({ description: '태그를 생성합니다.' })
@@ -62,7 +60,6 @@ export class TagsController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '태그 수정' })
   @ApiOkResponse({ description: '태그를 수정합니다.' })
@@ -72,7 +69,6 @@ export class TagsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '태그 삭제' })
   @ApiOkResponse({
@@ -89,7 +85,7 @@ export class TagsController {
 @ApiUnauthorizedResponse({
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 @Roles(UserRole.ADMIN)
 @Controller('tag-groups')
 export class TagGroupsController {

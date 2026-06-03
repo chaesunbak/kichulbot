@@ -7,6 +7,7 @@ coverage
 .env
 .env.local
 .venv/
+__pycache__/
 
 # 로컬 스토리지 드라이버 업로드 파일
 uploads

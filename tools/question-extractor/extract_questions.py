@@ -85,6 +85,8 @@ KOREAN_HISTORY_ROW_THRESHOLD = 246
 KOREAN_HISTORY_ROW_MIN_RATIO = 0.012
 KOREAN_HISTORY_MIN_SEGMENT_HEIGHT = 18
 KOREAN_HISTORY_MERGE_GAP = 34
+KOREAN_HISTORY_EXPECTED_QUESTIONS = 50
+KOREAN_HISTORY_FALLBACK_MERGE_GAPS = (28, 24, 20, 16)
 
 
 @dataclass(frozen=True)
@@ -383,7 +385,7 @@ def is_korean_history_content_pixel(pixel):
     )
 
 
-def detect_korean_history_segments(pil, page_index, scale):
+def detect_korean_history_segments(pil, page_index, scale, merge_gap_pt=KOREAN_HISTORY_MERGE_GAP):
     """이미지 기반 한능검 PDF에서 좌/우 단의 문항 덩어리를 검출한다."""
     page_width = pil.width / scale
     body_top = korean_history_body_top(page_index)
@@ -408,7 +410,7 @@ def detect_korean_history_segments(pil, page_index, scale):
                 content_rows.append(y)
 
         groups = []
-        merge_gap = round(KOREAN_HISTORY_MERGE_GAP * scale)
+        merge_gap = round(merge_gap_pt * scale)
         for y in content_rows:
             if not groups or y - groups[-1][1] > merge_gap:
                 groups.append([y, y])
@@ -428,6 +430,37 @@ def detect_korean_history_segments(pil, page_index, scale):
             })
 
     return sorted(segments, key=lambda s: (0 if s["column"] == "L" else 1, s["y0"]))
+
+
+def detect_korean_history_page_segments(rendered_pages, scale):
+    """기본 병합 간격으로 부족하면 더 촘촘한 간격을 적용해 50문항을 맞춘다."""
+    page_segments = [
+        detect_korean_history_segments(pil, pi, scale)
+        for pi, pil in enumerate(rendered_pages)
+    ]
+    total = sum(len(segments) for segments in page_segments)
+    if total >= KOREAN_HISTORY_EXPECTED_QUESTIONS:
+        return page_segments, KOREAN_HISTORY_MERGE_GAP
+
+    best_segments = page_segments
+    best_gap = KOREAN_HISTORY_MERGE_GAP
+    best_distance = abs(KOREAN_HISTORY_EXPECTED_QUESTIONS - total)
+
+    for merge_gap in KOREAN_HISTORY_FALLBACK_MERGE_GAPS:
+        candidate = [
+            detect_korean_history_segments(pil, pi, scale, merge_gap_pt=merge_gap)
+            for pi, pil in enumerate(rendered_pages)
+        ]
+        candidate_total = sum(len(segments) for segments in candidate)
+        distance = abs(KOREAN_HISTORY_EXPECTED_QUESTIONS - candidate_total)
+        if distance < best_distance:
+            best_segments = candidate
+            best_gap = merge_gap
+            best_distance = distance
+        if candidate_total == KOREAN_HISTORY_EXPECTED_QUESTIONS:
+            return candidate, merge_gap
+
+    return best_segments, best_gap
 
 
 def crop_has_color(crop):
@@ -465,9 +498,14 @@ def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
         }
         question_number = 1
 
-        for pi in range(len(render_doc)):
-            pil = render_doc[pi].render(scale=scale).to_pil().convert("RGB")
-            segments = detect_korean_history_segments(pil, pi, scale)
+        rendered_pages = [
+            render_doc[pi].render(scale=scale).to_pil().convert("RGB")
+            for pi in range(len(render_doc))
+        ]
+        page_segments, merge_gap = detect_korean_history_page_segments(rendered_pages, scale)
+
+        for pi, pil in enumerate(rendered_pages):
+            segments = page_segments[pi]
             for segment in segments:
                 box = (
                     segment["x0"],
@@ -510,6 +548,7 @@ def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
         print("  한능검 이미지 기반 레이아웃: " + ", ".join(
             f"{page}p={count}개" for page, count in sorted(page_counts.items())
         ))
+        print(f"  문항 병합 간격={merge_gap}pt")
         print(f"  이미지 형식={image_options.image_format}, DPI={dpi}")
         print(f"  manifest: {Path(out_dir) / 'manifest.json'}")
         return manifest

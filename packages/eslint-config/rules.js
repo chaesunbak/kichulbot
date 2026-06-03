@@ -2,7 +2,7 @@ import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 const BUTTON_IMPORT_SOURCES = new Set([
-  '@kichulbot/ui/components/button',
+  '@kichulbot/ui/components/ui/button',
   './button',
 ]);
 

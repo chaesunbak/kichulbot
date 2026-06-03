@@ -6,7 +6,7 @@
     "db:up": "docker compose up --wait -d postgres",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up --wait -d postgres",
-    "db:sync": "pnpm --filter @kichulbot/api prisma:push",
+    "db:sync": "pnpm --filter @kichulbot/api prisma:sync",
     "dev": "pnpm db:up && pnpm db:sync && turbo run dev --filter=@kichulbot/api --filter=@kichulbot/web --filter=@kichulbot/admin",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",

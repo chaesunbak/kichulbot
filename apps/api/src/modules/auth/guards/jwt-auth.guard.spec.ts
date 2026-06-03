@@ -1,16 +1,19 @@
 import { Controller, Get, INestApplication, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test } from '@nestjs/testing';
-import { UserAuthType, UserRole } from '@prisma/client';
+import { UserAuthType, UserRole } from '../../../infrastructure/database/prisma-client';
 import * as request from 'supertest';
 
 import { AuthService } from '../auth.service';
 import { CurrentUser } from '../decorators/current-user.decorator';
+import { Roles } from '../decorators/roles.decorator';
 import { JwtStrategy } from '../strategies/jwt.strategy';
 import type { RequestUser } from '../types';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { RolesGuard } from './roles.guard';
 
 const requestUser = {
   id: 'user_1',
@@ -27,6 +30,13 @@ class ProtectedController {
   @Get()
   @UseGuards(JwtAuthGuard)
   getProtected(@CurrentUser() user: RequestUser) {
+    return { user };
+  }
+
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getAdmin(@CurrentUser() user: RequestUser) {
     return { user };
   }
 }
@@ -52,6 +62,8 @@ describe('JwtAuthGuard', () => {
       providers: [
         JwtStrategy,
         JwtAuthGuard,
+        RolesGuard,
+        Reflector,
         {
           provide: AuthService,
           useValue: authService,
@@ -125,5 +137,41 @@ describe('JwtAuthGuard', () => {
       authType: UserAuthType.ANONYMOUS,
       iat: expect.any(Number),
     });
+  });
+
+  it('관리자 역할이면 역할 기반 엔드포인트 접근을 허용한다', async () => {
+    authService.validateJwtPayload.mockResolvedValueOnce({
+      ...requestUser,
+      role: UserRole.ADMIN,
+    });
+    const token = await jwtService.signAsync({
+      sub: 'user_1',
+      role: UserRole.ADMIN,
+      authType: UserAuthType.ANONYMOUS,
+    });
+
+    await request(app.getHttpServer())
+      .get('/protected/admin')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect({
+        user: {
+          ...requestUser,
+          role: UserRole.ADMIN,
+        },
+      });
+  });
+
+  it('일반 사용자 역할이면 역할 기반 엔드포인트 접근을 차단한다', async () => {
+    const token = await jwtService.signAsync({
+      sub: 'user_1',
+      role: UserRole.USER,
+      authType: UserAuthType.ANONYMOUS,
+    });
+
+    await request(app.getHttpServer())
+      .get('/protected/admin')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(403);
   });
 });

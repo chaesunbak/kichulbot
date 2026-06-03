@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserAuthType } from '@prisma/client';
+import { User, UserAuthType } from '../../infrastructure/database/prisma-client';
 import * as bcrypt from 'bcryptjs';
 
 import { serializeUser } from './auth.serializer';

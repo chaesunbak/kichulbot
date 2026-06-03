@@ -10,7 +10,7 @@ import {
   UserResponse,
 } from '@kichulbot/api-contract/auth';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserAuthType, UserRole } from '@prisma/client';
+import { UserAuthType, UserRole } from '../../../infrastructure/database/prisma-client';
 import {
   IsEmail,
   IsOptional,

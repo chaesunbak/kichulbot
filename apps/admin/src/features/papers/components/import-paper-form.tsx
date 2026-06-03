@@ -2,11 +2,10 @@ import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import { FileText, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, Loader2, Sparkles } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 

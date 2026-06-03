@@ -21,7 +21,8 @@ function PasswordInput({
     hasInputValue(defaultValue),
   );
   const Icon = isVisible ? EyeOff : Eye;
-  const hasValue = value === undefined ? hasUncontrolledValue : hasInputValue(value);
+  const hasValue =
+    value === undefined ? hasUncontrolledValue : hasInputValue(value);
 
   React.useEffect(() => {
     if (!hasValue) {
@@ -65,7 +66,9 @@ function PasswordInput({
 }
 
 function hasInputValue(
-  value: React.ComponentProps<'input'>['value'] | React.ComponentProps<'input'>['defaultValue'],
+  value:
+    | React.ComponentProps<'input'>['value']
+    | React.ComponentProps<'input'>['defaultValue'],
 ) {
   if (Array.isArray(value)) {
     return value.length > 0;

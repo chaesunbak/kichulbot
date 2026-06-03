@@ -24,9 +24,9 @@ export function FolderCard({ folder, count, onOpen }: FolderCardProps) {
             md:h-24 md:w-32
           "
         >
-          <span
-            className="absolute top-2 left-0.5 h-5 w-10 rounded-t-lg bg-sky-300"
-          />
+          <span className="
+            absolute top-2 left-0.5 h-5 w-10 rounded-t-lg bg-sky-300
+          " />
           <span
             className="
               relative h-16 w-24 rounded-lg bg-sky-200

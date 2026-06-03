@@ -27,10 +27,7 @@ export const getPapers = async (
   const path = token ? '/exam-papers' : '/public/exam-papers';
   const query = toPaperQuery(filters);
   const res = await serverApi
-    .get<{ data: { papers: Paper[] } }>(
-      `${path}${query}`,
-      token ?? undefined,
-    )
+    .get<{ data: { papers: Paper[] } }>(`${path}${query}`, token ?? undefined)
     .catch((error: unknown) => {
       if (token && error instanceof ApiError && error.status === 401) {
         return serverApi.get<{ data: { papers: Paper[] } }>(

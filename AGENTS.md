@@ -78,3 +78,7 @@ pnpm turbo run typecheck --filter=@kichulbot/api
 ## Build
 
 Run frontend builds outside the sandbox because `next/font` fetches Google Fonts.
+
+## Writing Test
+
+테스트 케이스는 한글로 작성할 것.

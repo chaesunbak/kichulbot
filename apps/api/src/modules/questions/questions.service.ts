@@ -15,7 +15,7 @@ import {
 import { Prisma, QuestionType } from '@prisma/client';
 
 import { StorageService } from '../../infrastructure/storage/storage.service';
-import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { TagsService } from '../tags/tags.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -41,7 +41,7 @@ export class QuestionsService {
 
   async createQuestion(
     dto: CreateQuestionDto,
-    file?: UploadedImageFile,
+    file?: UploadedMemoryFile,
   ): Promise<QuestionMutationResponse> {
     if (!file) {
       throw new BadRequestException('문제 이미지를 업로드해주세요.');
@@ -101,7 +101,7 @@ export class QuestionsService {
   async updateQuestion(
     id: string,
     dto: UpdateQuestionDto,
-    file?: UploadedImageFile,
+    file?: UploadedMemoryFile,
   ): Promise<QuestionMutationResponse> {
     const existing = await this.questionsRepository.findById(id);
     if (!existing) {

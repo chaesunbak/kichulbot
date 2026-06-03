@@ -1,8 +1,9 @@
 /**
- * 업로드된 이미지 파일의 최소 형태.
- * multer(memory storage)가 제공하는 필드만 사용하므로 @types/multer 의존 없이 정의한다.
+ * 업로드된 파일의 최소 형태.
+ * multer memory storage가 제공하는 필드만 사용하므로 @types/multer 의존 없이 정의한다.
  */
-export interface UploadedImageFile {
+export interface UploadedMemoryFile {
+  fieldname?: string;
   originalname: string;
   mimetype: string;
   size: number;
@@ -22,7 +23,7 @@ export interface StoredObject {
  */
 export abstract class StorageService {
   abstract uploadQuestionImage(
-    file: UploadedImageFile,
+    file: UploadedMemoryFile,
     questionId: string,
   ): Promise<StoredObject>;
 

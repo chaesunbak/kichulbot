@@ -18,6 +18,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -40,6 +41,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('anonymous')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOperation({ summary: '게스트 사용자 시작' })
   @ApiCreatedResponse({
     description: '게스트 사용자를 생성하고 access token을 발급합니다.',
@@ -50,6 +52,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: '이메일 회원가입' })
   @ApiCreatedResponse({
     description: '이메일 계정을 생성하고 access token을 발급합니다.',
@@ -86,6 +89,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: '이메일 로그인' })
   @ApiCreatedResponse({
     description: '로그인에 성공하면 사용자 정보와 access token을 반환합니다.',

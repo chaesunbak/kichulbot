@@ -15,7 +15,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 
 const DEFAULT_LAYOUT = 'korean-history';
 const DEFAULT_VARIANT = 'odd';
@@ -25,8 +25,8 @@ const DEFAULT_QUALITY = 82;
 const SCRIPT_TIMEOUT_MS = 120_000;
 
 type CreateDraftInput = {
-  questionPdf?: UploadedImageFile;
-  answerPdf?: UploadedImageFile;
+  questionPdf?: UploadedMemoryFile;
+  answerPdf?: UploadedMemoryFile;
   options: Record<string, string | undefined>;
 };
 
@@ -138,7 +138,7 @@ export class PaperImportDraftsService {
     };
   }
 
-  private assertPdf(file: UploadedImageFile, label: string) {
+  private assertPdf(file: UploadedMemoryFile, label: string) {
     if (
       file.mimetype !== 'application/pdf' &&
       extname(file.originalname).toLowerCase() !== '.pdf'

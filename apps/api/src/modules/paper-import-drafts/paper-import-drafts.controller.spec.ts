@@ -1,20 +1,22 @@
-import type { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import type { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { PaperImportDraftsController } from './paper-import-drafts.controller';
 import type { PaperImportDraftsService } from './paper-import-drafts.service';
 
 const questionPdf = {
+  fieldname: 'questionPdf',
   originalname: 'questions.pdf',
   mimetype: 'application/pdf',
   size: 1024,
   buffer: Buffer.from('question-pdf'),
-} satisfies UploadedImageFile;
+} satisfies UploadedMemoryFile;
 
 const answerPdf = {
+  fieldname: 'answerPdf',
   originalname: 'answers.pdf',
   mimetype: 'application/pdf',
   size: 1024,
   buffer: Buffer.from('answer-pdf'),
-} satisfies UploadedImageFile;
+} satisfies UploadedMemoryFile;
 
 describe('PaperImportDraftsController', () => {
   let controller: PaperImportDraftsController;
@@ -34,13 +36,10 @@ describe('PaperImportDraftsController', () => {
       warnings: [],
     } as never);
 
-    await controller.createDraft(
-      {
-        questionPdf: [questionPdf, { ...questionPdf, originalname: 'extra.pdf' }],
-        answerPdf: [answerPdf],
-      },
-      { layout: 'korean-history', variant: 'odd' },
-    );
+    await controller.createDraft([questionPdf, answerPdf], {
+      layout: 'korean-history',
+      variant: 'odd',
+    });
 
     expect(paperImportDraftsService.createDraft).toHaveBeenCalledWith({
       questionPdf,
@@ -55,7 +54,7 @@ describe('PaperImportDraftsController', () => {
       warnings: [],
     } as never);
 
-    await controller.createDraft({}, {});
+    await controller.createDraft([], {});
 
     expect(paperImportDraftsService.createDraft).toHaveBeenCalledWith({
       questionPdf: undefined,

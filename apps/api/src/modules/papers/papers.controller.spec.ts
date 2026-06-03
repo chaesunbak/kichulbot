@@ -1,6 +1,6 @@
 import { UserAuthType, UserRole } from '@prisma/client';
 
-import type { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import type { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import type { RequestUser } from '../auth/types';
 import { PapersController } from './papers.controller';
 import type { PapersService } from './papers.service';
@@ -24,7 +24,7 @@ const imageFile = {
   mimetype: 'image/png',
   size: 1024,
   buffer: Buffer.from('image'),
-} satisfies UploadedImageFile;
+} satisfies UploadedMemoryFile;
 
 describe('PapersController', () => {
   let controller: PapersController;

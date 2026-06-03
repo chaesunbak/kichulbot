@@ -31,7 +31,7 @@ import {
 } from '@prisma/client';
 
 import { StorageService } from '../../infrastructure/storage/storage.service';
-import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
 import { QuestionsService } from '../questions/questions.service';
 import { CreatePaperDto } from './dto/create-paper.dto';
@@ -92,7 +92,7 @@ export class PapersService {
 
   async createPaperWithQuestions(
     payload: string,
-    files: UploadedImageFile[],
+    files: UploadedMemoryFile[],
     role: UserRole,
   ): Promise<CreatePaperResponse> {
     const input = this.parseCreatePaperWithQuestionsRequest(payload);
@@ -336,8 +336,8 @@ export class PapersService {
     }
   }
 
-  private toImageMap(files: UploadedImageFile[]) {
-    const map = new Map<string, UploadedImageFile>();
+  private toImageMap(files: UploadedMemoryFile[]) {
+    const map = new Map<string, UploadedMemoryFile>();
     for (const file of files) {
       map.set(file.originalname, file);
     }

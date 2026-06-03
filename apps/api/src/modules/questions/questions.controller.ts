@@ -23,16 +23,16 @@ import {
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
-import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import {
+  IMAGE_FILE_PIPE,
+  IMAGE_UPLOAD_OPTIONS,
+} from '../../common/upload/upload-options';
+import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsService } from './questions.service';
-
-const IMAGE_UPLOAD_OPTIONS = {
-  limits: { fileSize: 5 * 1024 * 1024 },
-};
 
 @ApiTags('questions')
 @ApiBearerAuth()
@@ -54,7 +54,7 @@ export class QuestionsController {
   @ApiCreatedResponse({ description: '문제를 생성합니다.' })
   createQuestion(
     @Body() dto: CreateQuestionDto,
-    @UploadedFile() file?: UploadedImageFile,
+    @UploadedFile(IMAGE_FILE_PIPE) file?: UploadedMemoryFile,
   ) {
     return this.questionsService.createQuestion(dto, file);
   }
@@ -68,7 +68,7 @@ export class QuestionsController {
   updateQuestion(
     @Param('id') id: string,
     @Body() dto: UpdateQuestionDto,
-    @UploadedFile() file?: UploadedImageFile,
+    @UploadedFile(IMAGE_FILE_PIPE) file?: UploadedMemoryFile,
   ) {
     return this.questionsService.updateQuestion(id, dto, file);
   }

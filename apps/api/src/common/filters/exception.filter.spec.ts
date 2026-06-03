@@ -1,8 +1,9 @@
+import type { ArgumentsHost } from '@nestjs/common';
 import {
-  ArgumentsHost,
   BadRequestException,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
@@ -72,13 +73,17 @@ describe('ExceptionFilter', () => {
   });
 
   it('HTTP 예외가 아닌 오류는 500 응답으로 처리하고 로그를 남긴다', () => {
-    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    const loggerError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation();
     const { host, json, status } = createHost('/papers');
     const exception = new Error('database unavailable');
 
     filter.catch(exception, host);
 
-    expect(consoleError).toHaveBeenCalledWith(exception);
+    expect(loggerError).toHaveBeenCalledWith(
+      expect.stringContaining(exception.message),
+    );
     expect(status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
     expect(json).toHaveBeenCalledWith({
       success: false,
@@ -90,6 +95,6 @@ describe('ExceptionFilter', () => {
       },
     });
 
-    consoleError.mockRestore();
+    loggerError.mockRestore();
   });
 });

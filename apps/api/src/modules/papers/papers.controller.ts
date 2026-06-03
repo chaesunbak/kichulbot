@@ -25,7 +25,11 @@ import {
 } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 
-import { UploadedImageFile } from '../../infrastructure/storage/storage.service';
+import {
+  IMAGE_FILE_PIPE,
+  IMAGE_UPLOAD_OPTIONS,
+} from '../../common/upload/upload-options';
+import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,10 +37,6 @@ import { RequestUser } from '../auth/types';
 import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersService } from './papers.service';
-
-const BULK_IMAGE_UPLOAD_OPTIONS = {
-  limits: { fileSize: 5 * 1024 * 1024 },
-};
 
 @ApiTags('exam-papers')
 @ApiBearerAuth()
@@ -64,7 +64,7 @@ export class PapersController {
 
   @Post()
   @Roles(UserRole.ADMIN)
-  @UseInterceptors(FilesInterceptor('images', 100, BULK_IMAGE_UPLOAD_OPTIONS))
+  @UseInterceptors(FilesInterceptor('images', 100, IMAGE_UPLOAD_OPTIONS))
   @ApiConsumes('application/json', 'multipart/form-data')
   @ApiBody({ type: CreatePaperDto })
   @ApiOperation({ summary: '문제지 생성' })
@@ -75,7 +75,7 @@ export class PapersController {
   createPaper(
     @CurrentUser() user: RequestUser,
     @Body() body: CreatePaperDto & { payload?: string },
-    @UploadedFiles() images: UploadedImageFile[] = [],
+    @UploadedFiles(IMAGE_FILE_PIPE) images: UploadedMemoryFile[] = [],
   ) {
     if (body.payload) {
       return this.papersService.createPaperWithQuestions(

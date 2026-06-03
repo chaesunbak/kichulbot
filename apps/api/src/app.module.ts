@@ -1,5 +1,11 @@
+import { randomUUID } from 'node:crypto';
+import { IncomingMessage, ServerResponse } from 'node:http';
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { LoggerModule } from 'nestjs-pino';
 
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
@@ -20,6 +26,19 @@ import { ReviewModule } from './modules/review/review.module';
 import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
 import { TagsModule } from './modules/tags/tags.module';
 
+function getRequestId(
+  request: IncomingMessage,
+  response: ServerResponse<IncomingMessage>,
+) {
+  const header = request.headers['x-request-id'];
+  const requestId = Array.isArray(header) ? header[0] : header;
+  const id = requestId?.trim() || randomUUID();
+
+  response.setHeader('X-Request-Id', id);
+
+  return id;
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,6 +53,40 @@ import { TagsModule } from './modules/tags/tags.module';
       load: [configuration],
       validate: validateEnvironment,
     }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        transport:
+          process.env.NODE_ENV === 'production'
+            ? undefined
+            : {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  translateTime: 'SYS:standard',
+                },
+              },
+        autoLogging: {
+          ignore: (request) =>
+            request.url === '/api/health' || request.url === '/health',
+        },
+        genReqId: getRequestId,
+        redact: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          'req.body.password',
+          'req.body.accessToken',
+          'req.body.refreshToken',
+        ],
+      },
+    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 120,
+      },
+    ]),
     DatabaseModule,
     AuthModule,
     SolveSessionsModule,
@@ -51,5 +104,11 @@ import { TagsModule } from './modules/tags/tags.module';
     LibraryModule,
   ],
   controllers: [HealthController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   StorageService,
   StoredObject,
-  UploadedImageFile,
+  UploadedMemoryFile,
 } from './storage.service';
 
 const MIME_TO_EXTENSION: Record<string, string> = {
@@ -36,7 +36,7 @@ export class LocalStorageService extends StorageService {
   }
 
   async uploadQuestionImage(
-    file: UploadedImageFile,
+    file: UploadedMemoryFile,
     questionId: string,
   ): Promise<StoredObject> {
     const extension = this.resolveExtension(file);
@@ -70,7 +70,7 @@ export class LocalStorageService extends StorageService {
     }
   }
 
-  private resolveExtension(file: UploadedImageFile): string {
+  private resolveExtension(file: UploadedMemoryFile): string {
     const extension = MIME_TO_EXTENSION[file.mimetype];
     if (!extension) {
       throw new BadRequestException(

@@ -16,11 +16,11 @@ import { usePathname } from 'next/navigation';
 import { overlay } from 'overlay-kit';
 import { useEffect, useState } from 'react';
 
-import { LoginRequiredDialog } from '@/features/learning/components/login-required-dialog';
 import {
   getQuestionNote,
   saveQuestionNote,
 } from '@/features/learning/api/client';
+import { LoginRequiredDialog } from '@/features/learning/components/login-required-dialog';
 
 export function QuestionNoteButton({
   questionId,

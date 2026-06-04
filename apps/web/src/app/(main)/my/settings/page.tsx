@@ -6,8 +6,8 @@ import {
 } from '@kichulbot/ui/components/ui/card';
 import { redirect } from 'next/navigation';
 
-import { KakaoAuthButton } from '@/features/auth/components/kakao-auth-button';
 import { DeleteAccountButton } from '@/features/auth/components/delete-account-button';
+import { KakaoAuthButton } from '@/features/auth/components/kakao-auth-button';
 import { LogoutButton } from '@/features/auth/components/logout-button';
 import { getKakaoAuthStartPath } from '@/features/auth/lib/kakao-auth';
 import { getCachedUser } from '@/features/auth/server';

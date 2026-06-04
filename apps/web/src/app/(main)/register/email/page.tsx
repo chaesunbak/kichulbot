@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { EmailRegisterForm } from '@/features/auth/components/email-register-form';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
@@ -21,11 +21,9 @@ export default async function EmailRegisterPage({
   if (user) redirect(nextPath);
 
   return (
-    <PageContainer
-      className="
-        min-h-[calc(100svh-16rem)] items-center justify-center
-      "
-    >
+    <PageContainer className="
+      min-h-[calc(100svh-16rem)] items-center justify-center
+    ">
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-8">
           <div className="text-center">
@@ -40,7 +38,10 @@ export default async function EmailRegisterPage({
             이미 계정이 있으신가요?{' '}
             <Link
               href={`/login?next=${encodeURIComponent(nextPath)}`}
-              className="text-blue-500 hover:underline"
+              className="
+                text-blue-500
+                hover:underline
+              "
             >
               로그인하기
             </Link>

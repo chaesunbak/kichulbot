@@ -2,18 +2,21 @@
 
 import { Button } from '@kichulbot/ui/components/ui/button';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import { ResultSession } from '@/features/learning/components/result-session';
-import { getLocalSolveSession } from '@/features/learning/lib/local-solve-session';
-import type { SolveSession } from '@/features/learning/types';
+import {
+  getLocalSolveSessionSnapshot,
+  parseLocalSolveSessionSnapshot,
+} from '@/features/learning/lib/local-solve-session';
 
 export function LocalResultSessionLoader({ id }: { id: string }) {
-  const [session, setSession] = useState<SolveSession | null | undefined>();
-
-  useEffect(() => {
-    setSession(getLocalSolveSession(id));
-  }, [id]);
+  const sessionSnapshot = useSyncExternalStore(
+    () => () => {},
+    () => getLocalSolveSessionSnapshot(id),
+    () => undefined,
+  );
+  const session = parseLocalSolveSessionSnapshot(sessionSnapshot);
 
   if (session === undefined) {
     return (

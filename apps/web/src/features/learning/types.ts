@@ -1,153 +1,41 @@
-import type { Paper } from '@/features/papers/types';
+import type {
+  BookmarkedQuestionResponse,
+  BookmarkListResponse,
+  BookmarkListSummaryResponse,
+} from '@kichulbot/api-contract/bookmarks';
+import type { LibraryResponse } from '@kichulbot/api-contract/library';
+import type { QuestionNoteResponse } from '@kichulbot/api-contract/question-notes';
+import type { QuestionReportCategory } from '@kichulbot/api-contract/question-reports';
+import type { DailyWrongQuestionSetResponse } from '@kichulbot/api-contract/review';
+import type {
+  AnswerResponse,
+  ListSolveSessionLogsResponse,
+  QuestionResultResponse,
+  SolveQuestionResponse,
+  SolveSessionLogResponse,
+  SolveSessionLogStatus,
+  SolveSessionResponse,
+  SolveSessionResultResponse,
+} from '@kichulbot/api-contract/solve-sessions';
 
-export interface LibraryPaper {
-  id: string;
-  folderId: string | null;
-  paper: Paper;
-  createdAt: string;
-  updatedAt: string;
-}
+export type Library = LibraryResponse;
+export type LibraryFolder = LibraryResponse['folders'][number];
+export type LibraryPaper = LibraryResponse['papers'][number];
 
-export interface LibraryFolder {
-  id: string;
-  name: string;
-  parentId: string | null;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export type BookmarkListSummary = BookmarkListSummaryResponse;
+export type BookmarkedQuestion = BookmarkedQuestionResponse;
+export type BookmarkList = BookmarkListResponse;
 
-export interface Library {
-  folders: LibraryFolder[];
-  papers: LibraryPaper[];
-}
+export type QuestionNote = QuestionNoteResponse;
+export type { QuestionReportCategory };
 
-export interface BookmarkListSummary {
-  id: string;
-  name: string;
-  questionCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export type SolveQuestion = SolveQuestionResponse;
+export type QuestionResult = QuestionResultResponse;
+export type Answer = AnswerResponse;
+export type SolveSessionResult = SolveSessionResultResponse;
+export type SolveSession = SolveSessionResponse;
+export type SolveSessionLog = SolveSessionLogResponse;
+export type { SolveSessionLogStatus };
+export type SolveSessionLogPage = ListSolveSessionLogsResponse;
 
-export interface BookmarkedQuestion {
-  id: string;
-  number: number;
-  imageUrl: string;
-  paper: {
-    id: string;
-    title: string;
-    year: number;
-    examName: string;
-  };
-  createdAt: string;
-}
-
-export interface BookmarkList extends BookmarkListSummary {
-  questions: BookmarkedQuestion[];
-}
-
-export interface QuestionNote {
-  questionId: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type QuestionReportCategory =
-  | 'QUESTION_ERROR'
-  | 'IMAGE_ERROR'
-  | 'CHOICE_ERROR'
-  | 'ANSWER_ERROR'
-  | 'EXPLANATION_ERROR'
-  | 'CATEGORY_ERROR'
-  | 'OTHER';
-
-export interface SolveQuestion {
-  id: string;
-  questionRevisionId: string;
-  number: number;
-  type: 'MULTIPLE_CHOICE' | 'WRITTEN';
-  imageUrl: string;
-  choiceCount: number | null;
-  points: number;
-  recommendedTimeSeconds: number | null;
-  result: QuestionResult | null;
-}
-
-export interface QuestionResult {
-  answerChoice: number | null;
-  answerText: string | null;
-  explanation: string | null;
-  isCorrect: boolean | null;
-}
-
-export interface Answer {
-  questionId: string;
-  answerChoice: number | null;
-  answerText: string | null;
-  isCorrect: boolean | null;
-  spentMilliseconds: number;
-  updatedAt: string;
-}
-
-export interface SolveSessionResult {
-  score: number;
-  totalCount: number;
-  answeredCount: number;
-  correctCount: number;
-  wrongCount: number;
-  totalSpentMilliseconds: number;
-}
-
-export interface SolveSession {
-  id: string;
-  mode: 'ONE_BY_ONE' | 'EXAM';
-  paper: Paper & { questions: SolveQuestion[] };
-  answers: Answer[];
-  result: SolveSessionResult | null;
-  submittedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SolveSessionLog {
-  id: string;
-  mode: 'ONE_BY_ONE' | 'EXAM';
-  paper: Paper;
-  result: SolveSessionResult | null;
-  submittedAt: string | null;
-  totalSpentMilliseconds: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type SolveSessionLogStatus = 'all' | 'completed' | 'in_progress';
-
-export interface SolveSessionLogPage {
-  logs: SolveSessionLog[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface DailyWrongQuestionSet {
-  id: string;
-  title: string;
-  studyDate: string;
-  questionCount: number;
-  questions: {
-    id: string;
-    number: number;
-    imageUrl: string;
-    sourceOutcome: 'INCORRECT' | 'OMITTED';
-    paper: {
-      id: string;
-      title: string;
-      year: number;
-      examName: string;
-    };
-  }[];
-  generatedAt: string;
-}
+export type DailyWrongQuestionSet = DailyWrongQuestionSetResponse;

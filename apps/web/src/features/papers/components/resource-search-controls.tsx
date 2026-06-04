@@ -11,8 +11,8 @@ import {
 } from '@kichulbot/ui/components/ui/select';
 import { Search, X } from 'lucide-react';
 import { parseAsString, useQueryStates } from 'nuqs';
-import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SyntheticEvent } from 'react';
+import { useMemo, useRef } from 'react';
 
 import type { Category, Exam } from '@/features/exams/types';
 
@@ -37,11 +37,7 @@ export function ResourceSearchControls({
     history: 'push',
     shallow: false,
   });
-  const [draftQuery, setDraftQuery] = useState(filters.q);
-
-  useEffect(() => {
-    setDraftQuery(filters.q);
-  }, [filters.q]);
+  const queryInputRef = useRef<HTMLInputElement>(null);
 
   const visibleExams = useMemo(() => {
     if (!filters.categoryId) return exams;
@@ -50,9 +46,12 @@ export function ResourceSearchControls({
     );
   }, [exams, filters.categoryId]);
 
-  function submitSearch(event: FormEvent<HTMLFormElement>) {
+  function submitSearch(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
-    void setFilters({ q: draftQuery.trim() || null });
+    const formData = new FormData(event.currentTarget);
+    const query = formData.get('q');
+
+    void setFilters({ q: query?.toString().trim() || null });
   }
 
   function updateCategory(categoryId: string) {
@@ -67,7 +66,10 @@ export function ResourceSearchControls({
   }
 
   function clearFilters() {
-    setDraftQuery('');
+    if (queryInputRef.current) {
+      queryInputRef.current.value = '';
+    }
+
     void setFilters({ q: null, categoryId: null, examId: null });
   }
 
@@ -80,11 +82,13 @@ export function ResourceSearchControls({
     >
       <form onSubmit={submitSearch} className="flex min-w-0 gap-2">
         <Input
+          ref={queryInputRef}
+          key={filters.q}
+          name="q"
           type="search"
-          value={draftQuery}
-          onChange={(event) => setDraftQuery(event.target.value)}
+          defaultValue={filters.q}
           placeholder="시험지명 또는 시험명 검색"
-          className="h-10 "
+          className="h-10"
         />
         <Button type="submit" size="icon" aria-label="검색">
           <Search className="size-4" />
@@ -103,7 +107,13 @@ export function ResourceSearchControls({
             updateCategory(value === ALL_OPTION_VALUE ? '' : value)
           }
         >
-          <SelectTrigger aria-label="분류 선택" className="h-10  sm:w-36">
+          <SelectTrigger
+            aria-label="분류 선택"
+            className="
+              h-10
+              sm:w-36
+            "
+          >
             <SelectValue placeholder="전체 분류" />
           </SelectTrigger>
           <SelectContent>
@@ -122,7 +132,13 @@ export function ResourceSearchControls({
             updateExam(value === ALL_OPTION_VALUE ? '' : value)
           }
         >
-          <SelectTrigger aria-label="시험 선택" className="h-10 sm:w-40">
+          <SelectTrigger
+            aria-label="시험 선택"
+            className="
+              h-10
+              sm:w-40
+            "
+          >
             <SelectValue placeholder="전체 시험" />
           </SelectTrigger>
           <SelectContent>

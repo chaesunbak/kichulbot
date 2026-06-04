@@ -57,11 +57,9 @@ export function RecentPapersSection({ logs }: RecentPapersSectionProps) {
                       sm:max-w-36
                     "
                   />
-                  <span
-                    className="
-                      line-clamp-2 text-sm font-semibold text-zinc-900
-                    "
-                  >
+                  <span className="
+                    line-clamp-2 text-sm font-semibold text-zinc-900
+                  ">
                     {paper.title}
                   </span>
                   <span className="truncate text-xs text-zinc-500">

@@ -29,7 +29,10 @@ export function PaperGrid({ papers }: PaperGridProps) {
         <li key={paper.id} className="min-w-0">
           <Link
             href={`/resources/${paper.id}`}
-            className="group block rounded-lg p-2 transition hover:bg-zinc-50"
+            className="
+              group block rounded-lg p-2 transition
+              hover:bg-zinc-50
+            "
             aria-label={`${paper.title} 자세히 보기`}
           >
             <PaperCover paper={paper} />

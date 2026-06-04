@@ -1,9 +1,9 @@
-import { clientApi } from '@/shared/api/client';
 import type {
   Answer,
   QuestionResult,
   SolveSession,
 } from '@/features/learning/types';
+import { clientApi } from '@/shared/api/client';
 
 const STORAGE_PREFIX = 'kichulbot:local-solve-session:';
 type SolveMode = SolveSession['mode'];
@@ -59,6 +59,19 @@ export async function createLocalSolveSession({
 
 export function getLocalSolveSession(id: string) {
   return readLocalRecord(id)?.session ?? null;
+}
+
+export function getLocalSolveSessionSnapshot(id: string) {
+  return readLocalRecordValue(id);
+}
+
+export function parseLocalSolveSessionSnapshot(
+  snapshot: string | null | undefined,
+) {
+  if (snapshot === undefined) return undefined;
+  if (!snapshot) return null;
+
+  return (JSON.parse(snapshot) as LocalSolveSessionRecord).session;
 }
 
 export function saveLocalSolveSessionAnswer({
@@ -227,9 +240,14 @@ function readRequiredLocalRecord(id: string) {
 }
 
 function readLocalRecord(id: string): LocalSolveSessionRecord | null {
-  const value = window.localStorage.getItem(`${STORAGE_PREFIX}${id}`);
+  const value = readLocalRecordValue(id);
   if (!value) return null;
+
   return JSON.parse(value) as LocalSolveSessionRecord;
+}
+
+function readLocalRecordValue(id: string) {
+  return window.localStorage.getItem(`${STORAGE_PREFIX}${id}`);
 }
 
 function writeLocalRecord(record: LocalSolveSessionRecord) {

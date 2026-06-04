@@ -1,8 +1,3 @@
-import Link from 'next/link';
-
-import { Button } from '@kichulbot/ui/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-
 import { getCategories, getExams } from '@/features/exams/api/server';
 import { getPapers } from '@/features/papers/api/server';
 import { PaperGrid } from '@/features/papers/components/paper-grid';

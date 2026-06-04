@@ -9,10 +9,12 @@ interface Props {
 
 export default function MainHeader({ user }: Props) {
   return (
-    <header className="
-      sticky top-0 z-40 hidden bg-card/75 px-4 backdrop-blur-sm
-      md:block
-    ">
+    <header
+      className="
+        sticky top-0 z-40 hidden bg-card/75 px-4 backdrop-blur-sm
+        md:block
+      "
+    >
       <div
         className="
           mx-auto flex h-16 max-w-5xl items-center justify-between gap-6

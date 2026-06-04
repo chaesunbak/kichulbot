@@ -5,6 +5,7 @@ export const WrongQuestionResponseSchema = z.object({
   id: z.string(),
   number: z.number().int(),
   imageUrl: z.string().url(),
+  imageCacheKey: z.string().min(1),
   sourceOutcome: z.enum(['INCORRECT', 'OMITTED']),
   paper: z.object({
     id: z.string(),

@@ -5,6 +5,7 @@ export const BookmarkedQuestionResponseSchema = z.object({
   id: z.string(),
   number: z.number().int(),
   imageUrl: z.string().url(),
+  imageCacheKey: z.string().min(1),
   paper: z.object({
     id: z.string(),
     title: z.string(),

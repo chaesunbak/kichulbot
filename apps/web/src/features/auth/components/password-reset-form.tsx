@@ -1,6 +1,7 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { PasswordInput } from '@kichulbot/ui/components/password-input';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
@@ -9,7 +10,6 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import { PasswordInput } from '@kichulbot/ui/components/ui/password-input';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -51,7 +51,7 @@ function PasswordResetRequestForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<PasswordResetRequestFormValues>({
-    resolver: zodResolver(passwordResetRequestSchema),
+    resolver: standardSchemaResolver(passwordResetRequestSchema),
     defaultValues: {
       email: '',
     },
@@ -125,7 +125,7 @@ function PasswordResetConfirmForm({ token }: { token: string }) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<PasswordResetConfirmFormValues>({
-    resolver: zodResolver(passwordResetConfirmSchema),
+    resolver: standardSchemaResolver(passwordResetConfirmSchema),
     defaultValues: {
       token,
       password: '',

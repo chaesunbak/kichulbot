@@ -1,6 +1,7 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { PasswordInput } from '@kichulbot/ui/components/password-input';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
@@ -9,7 +10,6 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import { PasswordInput } from '@kichulbot/ui/components/ui/password-input';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { generateRandomNickname } from '@kichulbot/utils';
 import { Check, Dices, Loader2, Mail } from 'lucide-react';
@@ -46,7 +46,7 @@ export function EmailRegisterForm() {
     control,
     formState: { errors, isSubmitting },
   } = useForm<EmailRegisterFormValues>({
-    resolver: zodResolver(emailRegisterSchema),
+    resolver: standardSchemaResolver(emailRegisterSchema),
     mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {

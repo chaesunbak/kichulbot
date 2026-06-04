@@ -1,6 +1,6 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
@@ -31,7 +31,7 @@ export function ProfileForm({ email, nickname }: ProfileFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<UpdateProfileFormValues>({
-    resolver: zodResolver(updateProfileSchema),
+    resolver: standardSchemaResolver(updateProfileSchema),
     defaultValues: {
       nickname,
     },
@@ -63,7 +63,7 @@ export function ProfileForm({ email, nickname }: ProfileFormProps) {
           <Input
             id="email"
             type="text"
-            defaultValue={email ?? '이메일 미제공'}
+            defaultValue={email ?? '등록된 이메일이 없습니다.'}
             disabled
           />
         </Field>

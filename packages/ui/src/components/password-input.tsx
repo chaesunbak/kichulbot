@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
-import { cn } from '../../lib/utils';
-import { Button } from './button';
-import { Input } from './input';
+import { cn } from '../lib/utils';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 function PasswordInput({
   className,
@@ -18,11 +18,11 @@ function PasswordInput({
 }: React.ComponentProps<'input'>) {
   const [isVisible, setIsVisible] = React.useState(false);
   const [hasUncontrolledValue, setHasUncontrolledValue] = React.useState(() =>
-    hasInputValue(defaultValue),
+    hasPasswordInputValue(defaultValue),
   );
   const Icon = isVisible ? EyeOff : Eye;
   const hasValue =
-    value === undefined ? hasUncontrolledValue : hasInputValue(value);
+    value === undefined ? hasUncontrolledValue : hasPasswordInputValue(value);
 
   React.useEffect(() => {
     if (!hasValue) {
@@ -40,7 +40,7 @@ function PasswordInput({
         defaultValue={defaultValue}
         onChange={(event) => {
           if (value === undefined) {
-            setHasUncontrolledValue(hasInputValue(event.target.value));
+            setHasUncontrolledValue(hasPasswordInputValue(event.target.value));
           }
 
           onChange?.(event);
@@ -65,7 +65,7 @@ function PasswordInput({
   );
 }
 
-function hasInputValue(
+function hasPasswordInputValue(
   value:
     | React.ComponentProps<'input'>['value']
     | React.ComponentProps<'input'>['defaultValue'],

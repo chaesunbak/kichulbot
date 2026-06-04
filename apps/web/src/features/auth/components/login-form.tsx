@@ -1,6 +1,7 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { PasswordInput } from '@kichulbot/ui/components/password-input';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
@@ -9,7 +10,6 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import { PasswordInput } from '@kichulbot/ui/components/ui/password-input';
 import { Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -29,7 +29,7 @@ export function LoginForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: standardSchemaResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',

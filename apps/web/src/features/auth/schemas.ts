@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import { z } from 'zod/v4';
 
 export const updateProfileSchema = z.object({
   nickname: z

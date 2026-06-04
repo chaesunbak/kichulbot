@@ -12,6 +12,7 @@ const config: Config = {
       '<rootDir>/../../packages/api-contract/src/$1/index.ts',
     '^@kichulbot/api-contract$':
       '<rootDir>/../../packages/api-contract/src/index.ts',
+    '^@kichulbot/utils$': '<rootDir>/../../packages/utils/src/index.ts',
     '^(\\.{1,2}/.+)\\.js$': '$1',
   },
   collectCoverageFrom: ['src/**/*.ts', '!src/main.ts'],

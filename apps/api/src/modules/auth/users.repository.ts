@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import {
   OAuthProvider,
   Prisma,
@@ -7,35 +9,22 @@ import {
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 
-import { DatabaseService } from '../../infrastructure/database/database.service';
-
 @Injectable()
 export class UsersRepository {
   constructor(private readonly db: DatabaseService) {}
-
-  createAnonymousUser() {
-    return this.db.user.create({
-      data: {
-        authType: UserAuthType.ANONYMOUS,
-        role: UserRole.USER,
-        questionSets: {
-          create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
-        },
-      },
-    });
-  }
 
   createOAuthUser(data: {
     provider: OAuthProvider;
     providerAccountId: string;
     providerEmail?: string | null;
+    nickname: string;
     providerNickname?: string | null;
     rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
   }) {
     return this.db.user.create({
       data: {
         email: data.providerEmail,
-        nickname: data.providerNickname,
+        nickname: data.nickname,
         authType: UserAuthType.OAUTH,
         role: UserRole.USER,
         questionSets: {
@@ -172,57 +161,6 @@ export class UsersRepository {
         rawProfile: data.rawProfile,
         lastLoginAt: new Date(),
       },
-    });
-  }
-
-  convertAnonymousUserWithOAuth(
-    userId: string,
-    data: {
-      provider: OAuthProvider;
-      providerAccountId: string;
-      providerEmail?: string | null;
-      providerNickname?: string | null;
-      rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
-    },
-  ) {
-    return this.db.user.update({
-      where: { id: userId },
-      data: {
-        authType: UserAuthType.OAUTH,
-        email: data.providerEmail,
-        nickname: data.providerNickname,
-        oauthAccounts: {
-          create: {
-            provider: data.provider,
-            providerAccountId: data.providerAccountId,
-            providerEmail: data.providerEmail,
-            providerNickname: data.providerNickname,
-            rawProfile: data.rawProfile,
-            lastLoginAt: new Date(),
-          },
-        },
-      },
-      include: { oauthAccounts: true },
-    });
-  }
-
-  convertAnonymousUser(
-    userId: string,
-    data: {
-      email: string;
-      passwordHash: string;
-      nickname?: string | null;
-    },
-  ) {
-    return this.db.user.update({
-      where: { id: userId },
-      data: {
-        email: data.email,
-        passwordHash: data.passwordHash,
-        nickname: data.nickname,
-        authType: UserAuthType.EMAIL,
-      },
-      include: { oauthAccounts: true },
     });
   }
 

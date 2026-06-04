@@ -15,7 +15,6 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -54,17 +53,6 @@ import { RequestUser } from './types';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Post('anonymous')
-  @Throttle({ default: { limit: 20, ttl: 60_000 } })
-  @ApiOperation({ summary: '게스트 사용자 시작' })
-  @ApiCreatedResponse({
-    description: '게스트 사용자를 생성하고 access token을 발급합니다.',
-    type: AuthResponseDto,
-  })
-  startAnonymous() {
-    return this.authService.startAnonymous();
-  }
 
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -149,7 +137,7 @@ export class AuthController {
   @Get('kakao')
   @UseGuards(KakaoAuthGuard)
   @ApiOperation({ summary: '카카오 OAuth 로그인 시작' })
-  startKakao(@Query('mode') _mode?: 'login' | 'convert' | 'link'): undefined {
+  startKakao(@Query('mode') _mode?: 'login' | 'link'): undefined {
     return undefined;
   }
 
@@ -166,42 +154,6 @@ export class AuthController {
     return { url };
   }
 
-  @Post('convert/kakao')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '게스트 계정을 카카오 계정으로 전환' })
-  @ApiCreatedResponse({
-    description:
-      '게스트 계정을 카카오 계정으로 전환하고 새 access token을 발급합니다.',
-    type: AuthResponseDto,
-  })
-  convertAnonymousWithKakao(
-    @CurrentUser() user: RequestUser,
-    @Body() dto: KakaoOAuthProfileDto,
-  ) {
-    return this.authService.convertAnonymousWithKakao(user.id, dto);
-  }
-
-  @Post('convert/email')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '게스트 계정을 이메일 계정으로 전환' })
-  @ApiCreatedResponse({
-    description:
-      '게스트 계정을 이메일 계정으로 전환하고 새 access token을 발급합니다.',
-    type: AuthResponseDto,
-  })
-  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
-  @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
-  @ApiForbiddenResponse({
-    description: '게스트 사용자만 이메일 계정으로 전환할 수 있습니다.',
-  })
-  convertAnonymousWithEmail(
-    @CurrentUser() user: RequestUser,
-    @Body() dto: RegisterDto,
-  ) {
-    return this.authService.convertAnonymousWithEmail(user.id, dto);
-  }
 }
 
 @ApiTags('me')

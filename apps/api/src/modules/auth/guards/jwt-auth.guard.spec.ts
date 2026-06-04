@@ -20,9 +20,9 @@ import { RolesGuard } from './roles.guard';
 
 const requestUser = {
   id: 'user_1',
-  email: null,
+  email: 'student.com',
   nickname: null,
-  authType: UserAuthType.ANONYMOUS,
+  authType: UserAuthType.EMAIL,
   linkedProviders: [],
   role: UserRole.USER,
   createdAt: '2026-05-28T00:00:00.000Z',
@@ -107,7 +107,7 @@ describe('JwtAuthGuard', () => {
       {
         sub: 'user_1',
         role: UserRole.USER,
-        authType: UserAuthType.ANONYMOUS,
+        authType: UserAuthType.EMAIL,
       },
       {
         secret: 'wrong-secret',
@@ -125,7 +125,7 @@ describe('JwtAuthGuard', () => {
     const token = await jwtService.signAsync({
       sub: 'user_1',
       role: UserRole.USER,
-      authType: UserAuthType.ANONYMOUS,
+      authType: UserAuthType.EMAIL,
     });
 
     await request(app.getHttpServer())
@@ -138,7 +138,7 @@ describe('JwtAuthGuard', () => {
     expect(authService.validateJwtPayload).toHaveBeenCalledWith({
       sub: 'user_1',
       role: UserRole.USER,
-      authType: UserAuthType.ANONYMOUS,
+      authType: UserAuthType.EMAIL,
       iat: expect.any(Number),
     });
   });
@@ -151,7 +151,7 @@ describe('JwtAuthGuard', () => {
     const token = await jwtService.signAsync({
       sub: 'user_1',
       role: UserRole.ADMIN,
-      authType: UserAuthType.ANONYMOUS,
+      authType: UserAuthType.EMAIL,
     });
 
     await request(app.getHttpServer())
@@ -170,7 +170,7 @@ describe('JwtAuthGuard', () => {
     const token = await jwtService.signAsync({
       sub: 'user_1',
       role: UserRole.USER,
-      authType: UserAuthType.ANONYMOUS,
+      authType: UserAuthType.EMAIL,
     });
 
     await request(app.getHttpServer())

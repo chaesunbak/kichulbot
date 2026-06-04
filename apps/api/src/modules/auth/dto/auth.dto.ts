@@ -208,7 +208,7 @@ export class UserResponseDto implements UserResponse {
   @ApiProperty({
     nullable: true,
     example: 'user@example.com',
-    description: '게스트 사용자는 이메일이 없을 수 있습니다.',
+    description: 'OAuth 계정은 이메일 제공 동의 여부에 따라 없을 수 있습니다.',
   })
   email: string | null;
 

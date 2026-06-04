@@ -18,27 +18,26 @@ import {
   UpdateMeResponse,
   UpdateMeResponseSchema,
 } from '@kichulbot/api-contract/auth';
+import { generateRandomNickname } from '@kichulbot/utils';
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes, randomInt } from 'crypto';
+
 import {
   OAuthProvider,
   Prisma,
   User,
   UserAuthType,
 } from '../../infrastructure/database/prisma-client';
-import * as bcrypt from 'bcryptjs';
-
-import { AuthMailerService } from './auth-mailer.service';
 import { serializeUser } from './auth.serializer';
+import { AuthMailerService } from './auth-mailer.service';
 import {
   ConfirmEmailVerificationDto,
   EmailVerificationDto,
@@ -49,7 +48,6 @@ import {
   RegisterDto,
   UpdateMeDto,
 } from './dto/auth.dto';
-import type { KakaoOAuthProfile } from './strategies/kakao.strategy';
 import { JwtUser } from './types';
 import { UsersRepository } from './users.repository';
 
@@ -61,11 +59,6 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly authMailerService: AuthMailerService,
   ) {}
-
-  async startAnonymous() {
-    const user = await this.usersRepository.createAnonymousUser();
-    return this.toAuthResponse(user);
-  }
 
   async login(dto: LoginDto) {
     const user = await this.usersRepository.findByEmail(
@@ -154,7 +147,9 @@ export class AuthService {
         await this.usersRepository.createEmailUser({
           email,
           passwordHash: await this.hashPassword(dto.password),
-          nickname: this.normalizeOptionalNickname(dto.nickname),
+          nickname:
+            this.normalizeOptionalNickname(dto.nickname) ??
+            generateRandomNickname(),
         }),
       );
     } catch (error) {
@@ -220,17 +215,6 @@ export class AuthService {
 
   async handleKakaoCallback(profile: KakaoOAuthProfileDto, state: string) {
     const payload = await this.verifyOAuthState(state);
-    if (payload.mode === 'convert') {
-      if (!payload.userId) {
-        throw new UnauthorizedException('게스트 전환 인증 정보가 필요합니다.');
-      }
-      const response = await this.convertAnonymousWithKakao(
-        payload.userId,
-        profile,
-      );
-      return this.redirectUrl('login', response.accessToken);
-    }
-
     if (payload.mode === 'link') {
       if (!payload.userId) {
         throw new UnauthorizedException('계정 연결 인증 정보가 필요합니다.');
@@ -268,78 +252,13 @@ export class AuthService {
     }
 
     try {
-      const user = await this.usersRepository.createOAuthUser(
-        this.toOAuthProfileData(profile),
-      );
+      const user = await this.usersRepository.createOAuthUser({
+        ...this.toOAuthProfileData(profile),
+        nickname: generateRandomNickname(),
+      });
       return this.toAuthResponse(user);
     } catch (error) {
       this.handlePotentialDuplicateOAuth(error);
-      this.handlePotentialDuplicateEmail(error);
-      throw error;
-    }
-  }
-
-  async convertAnonymousWithKakao(
-    userId: string,
-    profile: KakaoOAuthProfileDto,
-  ) {
-    const currentUser = await this.usersRepository.findById(userId);
-    if (!currentUser) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
-    }
-
-    if (currentUser.authType !== UserAuthType.ANONYMOUS) {
-      throw new ForbiddenException(
-        '게스트 사용자만 카카오 계정으로 전환할 수 있습니다.',
-      );
-    }
-
-    await this.assertOAuthAccountAvailable(profile, userId);
-    if (profile.providerEmail) {
-      await this.assertEmailAvailable(
-        this.normalizeEmail(profile.providerEmail),
-      );
-    }
-
-    try {
-      return this.toAuthResponse(
-        await this.usersRepository.convertAnonymousUserWithOAuth(
-          userId,
-          this.toOAuthAccountData(userId, profile),
-        ),
-      );
-    } catch (error) {
-      this.handlePotentialDuplicateOAuth(error);
-      this.handlePotentialDuplicateEmail(error);
-      throw error;
-    }
-  }
-
-  async convertAnonymousWithEmail(userId: string, dto: RegisterDto) {
-    const currentUser = await this.usersRepository.findById(userId);
-    if (!currentUser) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
-    }
-
-    if (currentUser.authType !== UserAuthType.ANONYMOUS) {
-      throw new ForbiddenException(
-        '게스트 사용자만 이메일 계정으로 전환할 수 있습니다.',
-      );
-    }
-
-    const email = this.normalizeEmail(dto.email);
-    await this.assertEmailAvailable(email);
-    await this.consumeEmailVerificationToken(email, dto.emailVerificationToken);
-
-    try {
-      return this.toAuthResponse(
-        await this.usersRepository.convertAnonymousUser(userId, {
-          email,
-          passwordHash: await this.hashPassword(dto.password),
-          nickname: this.normalizeOptionalNickname(dto.nickname),
-        }),
-      );
-    } catch (error) {
       this.handlePotentialDuplicateEmail(error);
       throw error;
     }
@@ -449,7 +368,7 @@ export class AuthService {
   private async verifyOAuthState(state: string) {
     try {
       const payload = await this.jwtService.verifyAsync<{
-        mode: 'login' | 'convert' | 'link';
+        mode: 'login' | 'link';
         userId?: string;
       }>(state, {
         secret: this.configService.getOrThrow<string>('auth.jwtSecret'),

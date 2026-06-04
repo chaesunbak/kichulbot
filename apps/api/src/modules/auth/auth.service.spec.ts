@@ -1,16 +1,16 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
+
 import type { User } from '../../infrastructure/database/prisma-client';
 import {
   OAuthProvider,
   UserAuthType,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
-import * as bcrypt from 'bcryptjs';
-
-import type { AuthMailerService } from './auth-mailer.service';
 import { AuthService } from './auth.service';
+import type { AuthMailerService } from './auth-mailer.service';
 import type { UsersRepository } from './users.repository';
 
 const now = new Date('2026-05-28T00:00:00.000Z');
@@ -19,11 +19,11 @@ type TestUser = User & { oauthAccounts: [] };
 function user(overrides: Partial<TestUser> = {}): TestUser {
   return {
     id: 'user_1',
-    email: null,
+    email: 'student@example.com',
     passwordHash: null,
     nickname: null,
     timezone: 'Asia/Seoul',
-    authType: UserAuthType.ANONYMOUS,
+    authType: UserAuthType.EMAIL,
     role: UserRole.USER,
     createdAt: now,
     updatedAt: now,
@@ -40,7 +40,6 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     usersRepository = {
-      createAnonymousUser: jest.fn(),
       createOAuthUser: jest.fn(),
       createEmailUser: jest.fn(),
       findByEmail: jest.fn(),
@@ -51,8 +50,6 @@ describe('AuthService', () => {
       updateProfile: jest.fn(),
       updatePassword: jest.fn(),
       upsertOAuthAccount: jest.fn(),
-      convertAnonymousUserWithOAuth: jest.fn(),
-      convertAnonymousUser: jest.fn(),
       expireEmailVerificationCodes: jest.fn(),
       createEmailVerificationCode: jest.fn(),
       findLatestUsableEmailVerificationCode: jest.fn(),
@@ -89,19 +86,6 @@ describe('AuthService', () => {
       }),
       authMailerService,
     );
-  });
-
-  it('익명 사용자를 만들고 액세스 토큰을 반환한다', async () => {
-    usersRepository.createAnonymousUser.mockResolvedValue(user());
-
-    await expect(service.startAnonymous()).resolves.toMatchObject({
-      user: {
-        id: 'user_1',
-        authType: UserAuthType.ANONYMOUS,
-        role: UserRole.USER,
-      },
-      accessToken: 'access-token',
-    });
   });
 
   it('이메일 계정으로 로그인할 수 있다', async () => {
@@ -176,34 +160,10 @@ describe('AuthService', () => {
         provider: OAuthProvider.KAKAO,
         providerAccountId: '12345',
         providerEmail: 'student@example.com',
-      }),
-    );
-  });
-
-  it('익명 사용자를 카카오 계정으로 전환한다', async () => {
-    usersRepository.findById.mockResolvedValue(user());
-    usersRepository.findByOAuthAccount.mockResolvedValue(null);
-    usersRepository.findByEmail.mockResolvedValue(null);
-    usersRepository.convertAnonymousUserWithOAuth.mockResolvedValue(
-      user({
-        email: 'student@example.com',
-        authType: UserAuthType.OAUTH,
-      }),
-    );
-
-    await expect(
-      service.convertAnonymousWithKakao('user_1', {
-        providerAccountId: '12345',
-        providerEmail: 'student@example.com',
+        nickname: expect.any(String),
         providerNickname: '학생',
-        rawProfile: null,
       }),
-    ).resolves.toMatchObject({
-      user: {
-        authType: UserAuthType.OAUTH,
-        email: 'student@example.com',
-      },
-    });
+    );
   });
 
   it('이메일 인증번호를 메일로 발송한다', async () => {

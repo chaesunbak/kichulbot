@@ -8,9 +8,9 @@ import type { AuthService } from './auth.service';
 
 const serializedUser = {
   id: 'user_1',
-  email: null,
+  email: 'student@example.com',
   nickname: null,
-  authType: UserAuthType.ANONYMOUS,
+  authType: UserAuthType.EMAIL,
   linkedProviders: [],
   role: UserRole.USER,
   createdAt: '2026-05-28T00:00:00.000Z',
@@ -23,9 +23,6 @@ describe('AuthController', () => {
 
   beforeEach(() => {
     authService = {
-      startAnonymous: jest.fn(),
-      convertAnonymousWithKakao: jest.fn(),
-      convertAnonymousWithEmail: jest.fn(),
       register: jest.fn(),
       requestEmailVerification: jest.fn(),
       confirmEmailVerification: jest.fn(),
@@ -37,49 +34,6 @@ describe('AuthController', () => {
     } as unknown as jest.Mocked<AuthService>;
 
     controller = new AuthController(authService);
-  });
-
-  it('익명 시작 요청을 인증 서비스에 위임한다', async () => {
-    authService.startAnonymous.mockResolvedValue({
-      user: serializedUser,
-      accessToken: 'token',
-    });
-
-    await expect(controller.startAnonymous()).resolves.toEqual({
-      user: serializedUser,
-      accessToken: 'token',
-    });
-  });
-
-  it('현재 사용자 식별자를 카카오 전환 메서드에 전달한다', async () => {
-    authService.convertAnonymousWithKakao.mockResolvedValue({
-      user: serializedUser,
-      accessToken: 'token',
-    });
-
-    await controller.convertAnonymousWithKakao(
-      {
-        id: 'user_1',
-        email: null,
-        nickname: null,
-        authType: UserAuthType.ANONYMOUS,
-        role: UserRole.USER,
-      },
-      {
-        providerAccountId: '12345',
-        providerEmail: 'student@example.com',
-        providerNickname: '학생',
-      },
-    );
-
-    expect(authService.convertAnonymousWithKakao).toHaveBeenCalledWith(
-      'user_1',
-      {
-        providerAccountId: '12345',
-        providerEmail: 'student@example.com',
-        providerNickname: '학생',
-      },
-    );
   });
 
   it('이메일 회원가입 요청을 인증 서비스에 위임한다', async () => {
@@ -98,36 +52,6 @@ describe('AuthController', () => {
     await controller.register(dto);
 
     expect(authService.register).toHaveBeenCalledWith(dto);
-  });
-
-  it('현재 사용자 식별자를 이메일 전환 메서드에 전달한다', async () => {
-    authService.convertAnonymousWithEmail.mockResolvedValue({
-      user: { ...serializedUser, email: 'student@example.com' },
-      accessToken: 'token',
-    });
-
-    const dto = {
-      email: 'student@example.com',
-      password: 'password123',
-      nickname: '학생',
-      emailVerificationToken: 'email-token',
-    };
-
-    await controller.convertAnonymousWithEmail(
-      {
-        id: 'user_1',
-        email: null,
-        nickname: null,
-        authType: UserAuthType.ANONYMOUS,
-        role: UserRole.USER,
-      },
-      dto,
-    );
-
-    expect(authService.convertAnonymousWithEmail).toHaveBeenCalledWith(
-      'user_1',
-      dto,
-    );
   });
 
   it('인증번호 발송 요청을 인증 서비스에 위임한다', async () => {
@@ -209,9 +133,9 @@ describe('MeController', () => {
     await controller.updateMe(
       {
         id: 'user_1',
-        email: null,
+        email: 'student@example.com',
         nickname: null,
-        authType: UserAuthType.ANONYMOUS,
+        authType: UserAuthType.EMAIL,
         role: UserRole.USER,
       },
       { nickname: '새 닉네임' },

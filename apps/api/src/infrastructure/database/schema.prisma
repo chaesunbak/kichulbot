@@ -13,7 +13,6 @@ enum UserRole {
 }
 
 enum UserAuthType {
-  ANONYMOUS
   EMAIL
   OAUTH
 }
@@ -74,7 +73,7 @@ model User {
   passwordHash            String?
   nickname                String?
   timezone                String                 @default("Asia/Seoul")
-  authType                UserAuthType           @default(ANONYMOUS)
+  authType                UserAuthType           @default(EMAIL)
   role                    UserRole               @default(USER)
   oauthAccounts           OAuthAccount[]
   passwordResetTokens     PasswordResetToken[]

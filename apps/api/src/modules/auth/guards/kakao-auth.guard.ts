@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 
-type OAuthMode = 'login' | 'convert' | 'link';
+type OAuthMode = 'login' | 'link';
 
 @Injectable()
 export class KakaoAuthGuard extends AuthGuard('kakao') {
@@ -37,7 +37,7 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
 
   private getMode(request: Request): OAuthMode {
     const mode = request.query.mode;
-    return mode === 'convert' || mode === 'link' ? mode : 'login';
+    return mode === 'link' ? mode : 'login';
   }
 
   private getUserId(request: Request) {

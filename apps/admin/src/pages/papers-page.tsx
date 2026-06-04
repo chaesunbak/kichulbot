@@ -1,7 +1,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
@@ -40,9 +39,6 @@ export function PapersPage() {
             <BookOpen className="size-4" />
             문제지 목록
           </CardTitle>
-          <CardDescription>
-            등록된 문제지와 문항 등록 진행 상황을 확인합니다.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <PapersSummary papers={papers} />

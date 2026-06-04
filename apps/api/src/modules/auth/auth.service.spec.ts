@@ -81,6 +81,7 @@ describe('AuthService', () => {
         auth: {
           jwtSecret: 'test-secret',
           jwtExpiresIn: '1h',
+          webRedirectUrl: 'http://localhost:3000/oauth/callback',
           passwordResetUrl: 'http://localhost:3000/password-reset',
         },
       }),
@@ -163,6 +164,35 @@ describe('AuthService', () => {
         nickname: expect.any(String),
         providerNickname: '학생',
       }),
+    );
+  });
+
+  it('카카오 콜백은 state의 모바일 redirectUrl로 access token을 전달한다', async () => {
+    jwtService.verifyAsync.mockResolvedValue({
+      mode: 'login',
+      redirectUrl: 'kichulbot://oauth/callback',
+    });
+    usersRepository.findByOAuthAccount.mockResolvedValue(null);
+    usersRepository.findByEmail.mockResolvedValue(null);
+    usersRepository.createOAuthUser.mockResolvedValue(
+      user({
+        email: 'student@example.com',
+        authType: UserAuthType.OAUTH,
+      }),
+    );
+
+    await expect(
+      service.handleKakaoCallback(
+        {
+          providerAccountId: '12345',
+          providerEmail: 'student@example.com',
+          providerNickname: '학생',
+          rawProfile: null,
+        },
+        'oauth-state',
+      ),
+    ).resolves.toBe(
+      'kichulbot://oauth/callback?oauth=login&accessToken=access-token',
     );
   });
 

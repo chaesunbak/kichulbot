@@ -220,11 +220,11 @@ export class AuthService {
         throw new UnauthorizedException('계정 연결 인증 정보가 필요합니다.');
       }
       await this.linkKakao(payload.userId, profile);
-      return this.redirectUrl('connected');
+      return this.redirectUrl('connected', undefined, payload.redirectUrl);
     }
 
     const response = await this.loginWithKakao(profile);
-    return this.redirectUrl('login', response.accessToken);
+    return this.redirectUrl('login', response.accessToken, payload.redirectUrl);
   }
 
   async loginWithKakao(profile: KakaoOAuthProfileDto) {
@@ -370,6 +370,7 @@ export class AuthService {
       const payload = await this.jwtService.verifyAsync<{
         mode: 'login' | 'link';
         userId?: string;
+        redirectUrl?: string;
       }>(state, {
         secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
       });
@@ -379,10 +380,12 @@ export class AuthService {
     }
   }
 
-  private redirectUrl(status: string, accessToken?: string) {
-    const url = new URL(
-      this.configService.getOrThrow<string>('auth.webRedirectUrl'),
-    );
+  private redirectUrl(
+    status: string,
+    accessToken?: string,
+    redirectUrl = this.configService.getOrThrow<string>('auth.webRedirectUrl'),
+  ) {
+    const url = new URL(redirectUrl);
     url.searchParams.set('oauth', status);
     if (accessToken) {
       url.searchParams.set('accessToken', accessToken);

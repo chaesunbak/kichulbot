@@ -3,6 +3,7 @@ const DEFAULT_WEB_ORIGINS = ['http://localhost:3000', 'http://localhost:3001'];
 const DEFAULT_JWT_EXPIRES_IN = '7d';
 const DEFAULT_STORAGE_DRIVER = 'local';
 const DEFAULT_STORAGE_PUBLIC_BASE_URL = 'http://localhost:4000/uploads';
+const DEFAULT_MOBILE_OAUTH_REDIRECT_URLS = ['kichulbot://oauth/callback'];
 
 function parsePort(value: string | undefined) {
   const port = Number.parseInt(value ?? '', 10);
@@ -38,6 +39,9 @@ export default () => ({
     webRedirectUrl:
       process.env.AUTH_WEB_REDIRECT_URL ??
       'http://localhost:3000/oauth/callback',
+    mobileOAuthRedirectUrls:
+      parseCsv(process.env.AUTH_MOBILE_OAUTH_REDIRECT_URLS) ??
+      DEFAULT_MOBILE_OAUTH_REDIRECT_URLS,
     passwordResetUrl:
       process.env.AUTH_PASSWORD_RESET_URL ??
       'http://localhost:3000/password-reset',

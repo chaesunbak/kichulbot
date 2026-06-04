@@ -16,12 +16,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import {
   PDF_FILES_PIPE,
   PDF_UPLOAD_OPTIONS,
 } from '../../common/upload/upload-options';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

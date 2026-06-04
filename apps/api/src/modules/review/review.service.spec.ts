@@ -1,10 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
+
 import {
   AnswerMode,
   AttemptOutcome,
   QuestionSetKind,
 } from '../../infrastructure/database/prisma-client';
-
 import type { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import type { ReviewRepository } from './review.repository';
 import { ReviewService } from './review.service';
@@ -52,6 +52,7 @@ const questionSet = {
         revision: 1,
         type: 'MULTIPLE_CHOICE',
         imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+        imageHash: 'legacy_question_1',
         choiceCount: 5,
         answerChoice: 3,
         answerText: null,
@@ -64,6 +65,7 @@ const questionSet = {
           number: 1,
           type: 'MULTIPLE_CHOICE',
           imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+          imageHash: 'legacy_question_1',
           choiceCount: 5,
           answerChoice: 3,
           answerText: null,

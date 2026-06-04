@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+
 import type {
   Category,
   Exam,
@@ -9,7 +10,6 @@ import type {
   UserPaper,
 } from '../../infrastructure/database/prisma-client';
 import { UserRole } from '../../infrastructure/database/prisma-client';
-
 import type { StorageService } from '../../infrastructure/storage/storage.service';
 import type { ExamsService } from '../exams/exams.service';
 import type { QuestionsService } from '../questions/questions.service';

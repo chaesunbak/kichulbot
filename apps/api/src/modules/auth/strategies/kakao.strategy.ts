@@ -25,7 +25,11 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     refreshToken: string,
     profile: Profile,
   ): KakaoOAuthProfile {
-    const rawProfile = profile._json ?? null;
+    const rawProfileValue: unknown = profile._json;
+    const rawProfile = this.objectValue(
+      { rawProfile: rawProfileValue },
+      'rawProfile',
+    );
     const kakaoAccount = this.objectValue(rawProfile, 'kakao_account');
     const profileObject = this.objectValue(kakaoAccount, 'profile');
 

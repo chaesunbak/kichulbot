@@ -1,6 +1,5 @@
 import { CreateTagGroupRequest } from '@kichulbot/api-contract/tags';
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { TagSelectionMode } from '../../../infrastructure/database/prisma-client';
 import {
   Allow,
   IsBoolean,
@@ -11,6 +10,8 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+
+import { TagSelectionMode } from '../../../infrastructure/database/prisma-client';
 
 export class CreateTagGroupDto implements CreateTagGroupRequest {
   @ApiProperty({ example: 'clx0000000000000000000000' })

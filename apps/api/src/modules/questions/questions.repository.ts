@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import {
   Prisma,
   Question,
   QuestionRevision,
   QuestionSetKind,
 } from '../../infrastructure/database/prisma-client';
-
-import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
 export class QuestionsRepository {
@@ -148,6 +148,7 @@ export class QuestionsRepository {
   private hasRevisionChanges(question: Question, revision: QuestionRevision) {
     return (
       question.type !== revision.type ||
+      question.imageHash !== revision.imageHash ||
       question.imageUrl !== revision.imageUrl ||
       question.choiceCount !== revision.choiceCount ||
       question.answerChoice !== revision.answerChoice ||
@@ -176,6 +177,7 @@ export class QuestionsRepository {
       revision,
       type: question.type,
       imageUrl: question.imageUrl,
+      imageHash: question.imageHash,
       choiceCount: question.choiceCount,
       answerChoice: question.answerChoice,
       answerText: question.answerText,

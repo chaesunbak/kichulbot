@@ -13,6 +13,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import {
   Category,
   Exam,
@@ -20,7 +21,6 @@ import {
   Prisma,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
-
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamsRepository } from './exams.repository';

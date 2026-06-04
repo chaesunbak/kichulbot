@@ -1,6 +1,5 @@
 import { UpdateQuestionRequest } from '@kichulbot/api-contract/questions';
 import { ApiProperty } from '@nestjs/swagger';
-import { QuestionType } from '../../../infrastructure/database/prisma-client';
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
@@ -13,6 +12,7 @@ import {
   Min,
 } from 'class-validator';
 
+import { QuestionType } from '../../../infrastructure/database/prisma-client';
 import { toStringArray } from './transforms';
 
 export class UpdateQuestionDto implements UpdateQuestionRequest {

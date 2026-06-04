@@ -22,6 +22,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import {
   AnswerMode,
   AttemptOutcome,
@@ -29,7 +30,6 @@ import {
   QuestionSetKind,
   QuestionType,
 } from '../../infrastructure/database/prisma-client';
-
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import {
   SolveSessionsRepository,
@@ -254,6 +254,9 @@ export class SolveSessionsService {
             number: item.position,
             type: item.questionRevision.type,
             imageUrl: item.questionRevision.imageUrl,
+            imageCacheKey: this.toImageCacheKey(
+              item.questionRevision.imageHash,
+            ),
             choiceCount: item.questionRevision.choiceCount,
             points: item.questionRevision.points,
             recommendedTimeSeconds:
@@ -356,6 +359,7 @@ export class SolveSessionsService {
           number: item.position,
           type: item.questionRevision.type,
           imageUrl: item.questionRevision.imageUrl,
+          imageCacheKey: this.toImageCacheKey(item.questionRevision.imageHash),
           choiceCount: item.questionRevision.choiceCount,
           points: item.questionRevision.points,
           recommendedTimeSeconds: item.questionRevision.recommendedTimeSeconds,
@@ -395,6 +399,10 @@ export class SolveSessionsService {
       explanation: question.explanation,
       isCorrect: gradedAnswer?.outcome === AttemptOutcome.CORRECT,
     };
+  }
+
+  private toImageCacheKey(imageHash: string): string {
+    return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
   }
 
   private toAnswerResponse(

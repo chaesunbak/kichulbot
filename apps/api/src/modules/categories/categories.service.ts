@@ -9,11 +9,11 @@ import {
   TaxonomyResponse,
 } from '@kichulbot/api-contract/taxonomy';
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import {
   Category,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
-
 import { CategoriesRepository } from './categories.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';

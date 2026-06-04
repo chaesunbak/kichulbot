@@ -1,7 +1,7 @@
 import type { ExecutionContext } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
-import { UserRole } from '../../../infrastructure/database/prisma-client';
 
+import { UserRole } from '../../../infrastructure/database/prisma-client';
 import { RolesGuard } from './roles.guard';
 
 function contextWithUser(role?: UserRole): ExecutionContext {

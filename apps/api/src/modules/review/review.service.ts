@@ -11,12 +11,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import {
   AnswerMode,
   AttemptOutcome,
   Prisma,
 } from '../../infrastructure/database/prisma-client';
-
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';
 
@@ -162,6 +162,7 @@ export class ReviewService {
           id: question.id,
           number: question.number,
           imageUrl: item.questionRevision.imageUrl,
+          imageCacheKey: this.toImageCacheKey(item.questionRevision.imageHash),
           sourceOutcome: outcome,
           paper: {
             id: question.paper.id,
@@ -173,5 +174,9 @@ export class ReviewService {
       }),
       generatedAt: questionSet.generated.generatedAt.toISOString(),
     };
+  }
+
+  private toImageCacheKey(imageHash: string): string {
+    return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
   }
 }

@@ -239,6 +239,7 @@ model Question {
   number                 Int
   type                   QuestionType       @default(MULTIPLE_CHOICE)
   imageUrl               String
+  imageHash              String
   choiceCount            Int?
   answerChoice           Int?
   answerText             String?
@@ -263,6 +264,7 @@ model QuestionRevision {
   revision               Int
   type                   QuestionType       @default(MULTIPLE_CHOICE)
   imageUrl               String
+  imageHash              String
   choiceCount            Int?
   answerChoice           Int?
   answerText             String?

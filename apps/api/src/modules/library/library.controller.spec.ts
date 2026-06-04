@@ -2,7 +2,6 @@ import {
   UserAuthType,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
-
 import type { RequestUser } from '../auth/types';
 import { LibraryController } from './library.controller';
 import type { LibraryService } from './library.service';

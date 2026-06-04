@@ -21,6 +21,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import {
   Exam,
   ExamSession,
@@ -29,7 +30,6 @@ import {
   Question,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
-
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
@@ -280,6 +280,7 @@ export class PapersService {
         number: question.number,
         type: question.type,
         imageUrl: question.imageUrl,
+        imageCacheKey: this.toImageCacheKey(question.imageHash),
         choiceCount: question.choiceCount,
         answerChoice: question.answerChoice,
         answerText: question.answerText,
@@ -303,6 +304,10 @@ export class PapersService {
       id: entity.id,
       name: entity.name,
     };
+  }
+
+  private toImageCacheKey(imageHash: string): string {
+    return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
   }
 
   private assertSessionFields(

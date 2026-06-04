@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '../../infrastructure/database/prisma-client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import { Prisma } from '../../infrastructure/database/prisma-client';
 
 @Injectable()
 export class CategoriesRepository {

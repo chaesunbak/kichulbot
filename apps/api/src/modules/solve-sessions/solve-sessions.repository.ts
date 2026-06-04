@@ -1,5 +1,7 @@
 import type { SolveSessionLogStatus } from '@kichulbot/api-contract/solve-sessions';
 import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import {
   AnswerMode,
   AttemptOutcome,
@@ -7,8 +9,6 @@ import {
   QuestionRevision,
   QuestionSetKind,
 } from '../../infrastructure/database/prisma-client';
-
-import { DatabaseService } from '../../infrastructure/database/database.service';
 
 export class SubmittedSolveSessionError extends Error {}
 

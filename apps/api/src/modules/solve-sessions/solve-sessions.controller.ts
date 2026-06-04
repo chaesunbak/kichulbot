@@ -18,10 +18,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
+import { AnswerMode } from '../../infrastructure/database/prisma-client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
-import { AnswerMode } from '../../infrastructure/database/prisma-client';
 import { ListSolveSessionLogsDto } from './dto/list-solve-session-logs.dto';
 import { SaveAnswerDto } from './dto/save-answer.dto';
 import { StartSolveSessionDto } from './dto/start-solve-session.dto';

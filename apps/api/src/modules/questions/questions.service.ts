@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import {
   AdminQuestionResponse,
@@ -12,11 +12,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import {
   Prisma,
   QuestionType,
 } from '../../infrastructure/database/prisma-client';
-
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { TagsService } from '../tags/tags.service';
@@ -76,6 +76,7 @@ export class QuestionsService {
         id,
       );
       uploadedObjectKey = objectKey;
+      const imageHash = this.createImageHash(file);
 
       const created = await this.questionsRepository.create(
         {
@@ -87,6 +88,7 @@ export class QuestionsService {
           points: dto.points ?? 5,
           recommendedTimeSeconds: dto.recommendedTimeSeconds,
           imageUrl: url,
+          imageHash,
         },
         tagIds,
       );
@@ -154,6 +156,7 @@ export class QuestionsService {
     if (file) {
       const { url } = await this.storageService.uploadQuestionImage(file, id);
       data.imageUrl = url;
+      data.imageHash = this.createImageHash(file);
       await this.deleteStaleImage(existing.imageUrl, url);
     }
 
@@ -277,6 +280,14 @@ export class QuestionsService {
     return error;
   }
 
+  private createImageHash(file: UploadedMemoryFile): string {
+    return createHash('sha256').update(file.buffer).digest('hex');
+  }
+
+  private toImageCacheKey(imageHash: string): string {
+    return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
+  }
+
   private toMutationResponse(
     question: QuestionWithTags,
   ): QuestionMutationResponse {
@@ -292,6 +303,7 @@ export class QuestionsService {
       number: question.number,
       type: question.type,
       imageUrl: question.imageUrl,
+      imageCacheKey: this.toImageCacheKey(question.imageHash),
       choiceCount: question.choiceCount,
       answerChoice: question.answerChoice,
       answerText: question.answerText,

@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
+
 import type {
   Exam,
   ExamSession,
@@ -11,7 +12,6 @@ import {
   QuestionSetKind,
   QuestionType,
 } from '../../infrastructure/database/prisma-client';
-
 import type { SolveSessionsRepository } from './solve-sessions.repository';
 import { SubmittedSolveSessionError } from './solve-sessions.repository';
 import { SolveSessionsService } from './solve-sessions.service';
@@ -44,6 +44,7 @@ const question = {
   number: 1,
   type: QuestionType.MULTIPLE_CHOICE,
   imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+  imageHash: 'legacy_question_1',
   choiceCount: 5,
   answerChoice: 3,
   answerText: null,
@@ -72,6 +73,7 @@ const questionRevision = {
   revision: 1,
   type: question.type,
   imageUrl: question.imageUrl,
+  imageHash: question.imageHash,
   choiceCount: question.choiceCount,
   answerChoice: question.answerChoice,
   answerText: question.answerText,

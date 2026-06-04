@@ -18,12 +18,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<T | SuccessResponse<T>> {
-    const redirectMetadata = Reflect.getMetadata(
+    const hasRedirectMetadata = Reflect.hasMetadata(
       REDIRECT_METADATA,
       context.getHandler(),
     );
 
-    if (redirectMetadata) {
+    if (hasRedirectMetadata) {
       return next.handle();
     }
 

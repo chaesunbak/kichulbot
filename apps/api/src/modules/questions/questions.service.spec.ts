@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
-import { QuestionType } from '../../infrastructure/database/prisma-client';
 
+import { QuestionType } from '../../infrastructure/database/prisma-client';
 import type { StorageService } from '../../infrastructure/storage/storage.service';
 import type { TagsService } from '../tags/tags.service';
 import type { QuestionsRepository } from './questions.repository';
@@ -67,6 +67,7 @@ describe('QuestionsService', () => {
       answerChoice: 1,
       answerText: null,
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+      imageHash: 'legacy_question_1',
       tags: [],
     } as never);
     repository.findPaper.mockResolvedValue({
@@ -99,6 +100,57 @@ describe('QuestionsService', () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
+  it('이미지 업로드 파일 내용의 sha256 해시를 문항에 저장한다', async () => {
+    repository.findPaper.mockResolvedValue({
+      id: 'paper_1',
+      questionCount: 20,
+      examSession: { examId: 'exam_1' },
+    } as never);
+    storageService.uploadQuestionImage.mockResolvedValue({
+      objectKey: 'questions/question_1.png',
+      url: 'http://localhost:4000/uploads/questions/question_1.png',
+    });
+    repository.create.mockResolvedValue({
+      id: 'question_1',
+      paperId: 'paper_1',
+      number: 1,
+      type: QuestionType.MULTIPLE_CHOICE,
+      choiceCount: 5,
+      answerChoice: 2,
+      answerText: null,
+      explanation: null,
+      points: 5,
+      recommendedTimeSeconds: null,
+      imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+      imageHash:
+        '6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
+      tags: [],
+      createdAt: new Date('2026-05-31T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-31T00:00:00.000Z'),
+    });
+
+    const response = await service.createQuestion(
+      {
+        paperId: 'paper_1',
+        number: 1,
+        choiceCount: 5,
+        answerChoice: 2,
+      },
+      image,
+    );
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageHash:
+          '6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
+      }),
+      [],
+    );
+    expect(response.question.imageCacheKey).toBe(
+      'sha256_6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
+    );
+  });
+
   it('문항을 서술형으로 바꾸면 객관식 필드를 비운다', async () => {
     repository.findById.mockResolvedValue({
       id: 'question_1',
@@ -109,6 +161,7 @@ describe('QuestionsService', () => {
       answerChoice: 2,
       answerText: null,
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+      imageHash: 'legacy_question_1',
       tags: [],
     } as never);
     repository.update.mockResolvedValue({
@@ -123,6 +176,7 @@ describe('QuestionsService', () => {
       points: 5,
       recommendedTimeSeconds: null,
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+      imageHash: 'legacy_question_1',
       tags: [],
       createdAt: new Date('2026-05-31T00:00:00.000Z'),
       updatedAt: new Date('2026-05-31T00:00:00.000Z'),

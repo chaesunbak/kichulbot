@@ -1,6 +1,6 @@
 import {
-  AuthResponse,
   AuthConnectionsResponse,
+  AuthResponse,
   ConfirmEmailVerificationRequest,
   DeleteMeResponse,
   EmailVerificationConfirmResponse,
@@ -20,11 +20,6 @@ import {
 } from '@kichulbot/api-contract/auth';
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  OAuthProvider,
-  UserAuthType,
-  UserRole,
-} from '../../../infrastructure/database/prisma-client';
-import {
   IsEmail,
   IsObject,
   IsOptional,
@@ -32,6 +27,12 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+
+import {
+  OAuthProvider,
+  UserAuthType,
+  UserRole,
+} from '../../../infrastructure/database/prisma-client';
 
 export class LoginDto implements LoginRequest {
   @ApiProperty({

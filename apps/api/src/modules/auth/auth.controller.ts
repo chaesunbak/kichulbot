@@ -5,7 +5,6 @@ import {
   Get,
   Patch,
   Post,
-  Query,
   Redirect,
   Req,
   UseGuards,
@@ -137,7 +136,7 @@ export class AuthController {
   @Get('kakao')
   @UseGuards(KakaoAuthGuard)
   @ApiOperation({ summary: '카카오 OAuth 로그인 시작' })
-  startKakao(@Query('mode') _mode?: 'login' | 'link'): undefined {
+  startKakao(): undefined {
     return undefined;
   }
 
@@ -146,14 +145,14 @@ export class AuthController {
   @Redirect()
   @ApiOperation({ summary: '카카오 OAuth 콜백' })
   async kakaoCallback(@Req() request: Request) {
-    const state = String(request.query.state ?? '');
+    const state =
+      typeof request.query.state === 'string' ? request.query.state : '';
     const url = await this.authService.handleKakaoCallback(
       (request as Request & { user: KakaoOAuthProfile }).user,
       state,
     );
     return { url };
   }
-
 }
 
 @ApiTags('me')

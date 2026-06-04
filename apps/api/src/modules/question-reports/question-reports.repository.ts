@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import {
   Prisma,
   QuestionReportCategory,
   QuestionReportStatus,
 } from '../../infrastructure/database/prisma-client';
-
-import { DatabaseService } from '../../infrastructure/database/database.service';
 
 type QuestionReportListFilters = {
   status?: QuestionReportStatus;

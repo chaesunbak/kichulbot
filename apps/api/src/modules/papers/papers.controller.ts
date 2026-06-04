@@ -23,12 +23,12 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UserRole } from '../../infrastructure/database/prisma-client';
 
 import {
   IMAGE_FILE_PIPE,
   IMAGE_UPLOAD_OPTIONS,
 } from '../../common/upload/upload-options';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';

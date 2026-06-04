@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import {
   AttemptOutcome,
   Prisma,
   QuestionSetKind,
 } from '../../infrastructure/database/prisma-client';
-
-import { DatabaseService } from '../../infrastructure/database/database.service';
 
 @Injectable()
 export class ReviewRepository {

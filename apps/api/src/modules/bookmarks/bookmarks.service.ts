@@ -19,11 +19,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+
 import {
   AnswerMode,
   Prisma,
 } from '../../infrastructure/database/prisma-client';
-
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { BookmarksRepository } from './bookmarks.repository';
 
@@ -201,7 +201,10 @@ export class BookmarksService {
     return {
       id: question.id,
       number: question.number,
-      imageUrl: question.imageUrl,
+      imageUrl: questionSetItem.questionRevision.imageUrl,
+      imageCacheKey: this.toImageCacheKey(
+        questionSetItem.questionRevision.imageHash,
+      ),
       paper: {
         id: question.paper.id,
         title: question.paper.title,
@@ -210,5 +213,9 @@ export class BookmarksService {
       },
       createdAt: questionSetItem.createdAt.toISOString(),
     };
+  }
+
+  private toImageCacheKey(imageHash: string): string {
+    return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
   }
 }

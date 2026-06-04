@@ -1,15 +1,17 @@
+import type { Server } from 'node:http';
+
 import { Controller, Get, INestApplication, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test } from '@nestjs/testing';
+import * as request from 'supertest';
+
 import {
   UserAuthType,
   UserRole,
 } from '../../../infrastructure/database/prisma-client';
-import * as request from 'supertest';
-
 import { AuthService } from '../auth.service';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Roles } from '../decorators/roles.decorator';
@@ -47,6 +49,7 @@ class ProtectedController {
 
 describe('JwtAuthGuard', () => {
   let app: INestApplication;
+  let httpServer: Server;
   let jwtService: JwtService;
   let authService: jest.Mocked<Pick<AuthService, 'validateJwtPayload'>>;
 
@@ -88,6 +91,7 @@ describe('JwtAuthGuard', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
+    httpServer = app.getHttpServer() as Server;
     jwtService = moduleRef.get(JwtService);
 
     await app.init();
@@ -98,7 +102,7 @@ describe('JwtAuthGuard', () => {
   });
 
   it('베어러 토큰이 없으면 401을 반환한다', async () => {
-    await request(app.getHttpServer()).get('/protected').expect(401);
+    await request(httpServer).get('/protected').expect(401);
     expect(authService.validateJwtPayload).not.toHaveBeenCalled();
   });
 
@@ -114,7 +118,7 @@ describe('JwtAuthGuard', () => {
       },
     );
 
-    await request(app.getHttpServer())
+    await request(httpServer)
       .get('/protected')
       .set('Authorization', `Bearer ${invalidToken}`)
       .expect(401);
@@ -128,7 +132,7 @@ describe('JwtAuthGuard', () => {
       authType: UserAuthType.EMAIL,
     });
 
-    await request(app.getHttpServer())
+    await request(httpServer)
       .get('/protected')
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
@@ -154,7 +158,7 @@ describe('JwtAuthGuard', () => {
       authType: UserAuthType.EMAIL,
     });
 
-    await request(app.getHttpServer())
+    await request(httpServer)
       .get('/protected/admin')
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
@@ -173,7 +177,7 @@ describe('JwtAuthGuard', () => {
       authType: UserAuthType.EMAIL,
     });
 
-    await request(app.getHttpServer())
+    await request(httpServer)
       .get('/protected/admin')
       .set('Authorization', `Bearer ${token}`)
       .expect(403);

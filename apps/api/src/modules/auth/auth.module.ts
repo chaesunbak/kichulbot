@@ -4,10 +4,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { AuthController, MeController } from './auth.controller';
-import { AuthMailerService } from './auth-mailer.service';
 import { AuthService } from './auth.service';
-import { KakaoAuthGuard, KakaoCallbackGuard } from './guards/kakao-auth.guard';
+import { AuthMailerService } from './auth-mailer.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { KakaoAuthGuard, KakaoCallbackGuard } from './guards/kakao-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { KakaoStrategy } from './strategies/kakao.strategy';

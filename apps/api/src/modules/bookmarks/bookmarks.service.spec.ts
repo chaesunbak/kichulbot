@@ -6,7 +6,6 @@ import type {
   QuestionSet,
 } from '../../infrastructure/database/prisma-client';
 import { QuestionSetKind } from '../../infrastructure/database/prisma-client';
-
 import type { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import type { BookmarksRepository } from './bookmarks.repository';
 import { BookmarksService } from './bookmarks.service';
@@ -48,6 +47,7 @@ const question = {
   number: 1,
   type: 'MULTIPLE_CHOICE',
   imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+  imageHash: 'legacy_question_1',
   choiceCount: 5,
   answerChoice: 3,
   answerText: null,
@@ -83,6 +83,7 @@ const questionSetItem = {
     revision: 1,
     type: question.type,
     imageUrl: question.imageUrl,
+    imageHash: question.imageHash,
     choiceCount: question.choiceCount,
     answerChoice: question.answerChoice,
     answerText: question.answerText,

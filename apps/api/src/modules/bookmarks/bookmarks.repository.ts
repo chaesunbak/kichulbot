@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { QuestionSetKind } from '../../infrastructure/database/prisma-client';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import { QuestionSetKind } from '../../infrastructure/database/prisma-client';
 
 @Injectable()
 export class BookmarksRepository {

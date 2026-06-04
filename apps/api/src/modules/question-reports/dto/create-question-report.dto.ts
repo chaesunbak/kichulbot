@@ -1,6 +1,5 @@
 import { CreateQuestionReportRequest } from '@kichulbot/api-contract/question-reports';
 import { ApiProperty } from '@nestjs/swagger';
-import { QuestionReportCategory } from '../../../infrastructure/database/prisma-client';
 import {
   IsEnum,
   IsOptional,
@@ -8,6 +7,8 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+
+import { QuestionReportCategory } from '../../../infrastructure/database/prisma-client';
 
 export class CreateQuestionReportDto implements CreateQuestionReportRequest {
   @ApiProperty({ enum: QuestionReportCategory })

@@ -5,7 +5,8 @@ kichulbot/
 ├── apps/
 │   ├── api/      # NestJS backend
 │   ├── web/      # Next.js user-facing frontend
-│   └── admin/    # Vite + react-router admin frontend
+│   ├── admin/    # Vite + react-router admin frontend
+│   └── mobile/   # Expo + React Native mobile app
 └── packages/
     ├── api-contract/       # Shared API types between frontend and backend
     ├── ui/                 # Shared React component library (shadcn/ui-based)
@@ -39,6 +40,12 @@ apps/web/
 ├── package.json
 └── tsconfig.json
 ```
+
+## Mobile App Structure
+
+The mobile app lives in `apps/mobile`.
+
+The mobile app uses Expo, React Native, NativeWind, and react-native-reusables.
 
 ## Backend Structure
 

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
+
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import {
   Prisma,
   QuestionSetKind,
 } from '../../infrastructure/database/prisma-client';
-
-import { DatabaseService } from '../../infrastructure/database/database.service';
 
 interface CreatePaperInput {
   title: string;
@@ -55,6 +55,7 @@ export class PapersRepository {
       orderBy: [
         { examSession: { displayYear: 'desc' } },
         { examSession: { month: 'desc' } },
+        { examSession: { round: 'desc' } },
         { createdAt: 'desc' },
       ],
     });

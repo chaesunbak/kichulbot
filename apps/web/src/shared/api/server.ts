@@ -28,7 +28,11 @@ async function request<T>(
 
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+    res = await fetch(`${BASE_URL}${path}`, {
+      ...init,
+      cache: token ? 'no-store' : init.cache,
+      headers,
+    });
   } catch {
     throw new ApiError(0, '네트워크 연결을 확인해주세요');
   }

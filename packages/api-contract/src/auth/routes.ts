@@ -17,12 +17,6 @@ import {
 } from './dto.js';
 
 export const authRoutes = {
-  startAnonymous: {
-    method: 'POST',
-    path: '/auth/anonymous',
-    request: null,
-    response: AuthResponseSchema,
-  },
   login: {
     method: 'POST',
     path: '/auth/login',
@@ -58,18 +52,6 @@ export const authRoutes = {
     path: '/auth/email-verifications/confirm',
     request: ConfirmEmailVerificationRequestSchema,
     response: EmailVerificationConfirmResponseSchema,
-  },
-  convertAnonymousWithEmail: {
-    method: 'POST',
-    path: '/auth/convert/email',
-    request: RegisterRequestSchema,
-    response: AuthResponseSchema,
-  },
-  convertAnonymousWithKakao: {
-    method: 'POST',
-    path: '/auth/convert/kakao',
-    request: KakaoOAuthProfileRequestSchema,
-    response: AuthResponseSchema,
   },
   me: {
     method: 'GET',

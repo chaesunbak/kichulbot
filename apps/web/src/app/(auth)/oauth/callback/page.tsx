@@ -5,14 +5,12 @@ import { Suspense, useEffect, useRef } from 'react';
 
 import { ApiError, completeOAuthSessionApi } from '@/features/auth/api/client';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
-import { useAuthStore } from '@/features/auth/store';
 
 const OAUTH_NEXT_COOKIE_NAME = 'kichulbot_oauth_next';
 
 function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setAuth = useAuthStore((state) => state.setAuth);
   const started = useRef(false);
 
   useEffect(() => {
@@ -33,9 +31,9 @@ function OAuthCallbackContent() {
     }
 
     completeOAuthSessionApi(accessToken)
-      .then((data) => {
-        setAuth(data.user);
+      .then(() => {
         router.replace(takeOAuthNextPath());
+        router.refresh();
       })
       .catch((error) => {
         const query =
@@ -48,7 +46,7 @@ function OAuthCallbackContent() {
           `/login${query}${separator}next=${encodeURIComponent(nextPath)}`,
         );
       });
-  }, [router, searchParams, setAuth]);
+  }, [router, searchParams]);
 
   return (
     <p className="text-center text-sm text-zinc-500">잠시만 기다려주세요...</p>

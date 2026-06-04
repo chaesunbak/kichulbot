@@ -16,7 +16,6 @@ import { useForm } from 'react-hook-form';
 
 import { ApiError, updateProfileApi } from '@/features/auth/api/client';
 import { updateProfileSchema } from '@/features/auth/schemas';
-import { useAuthStore } from '@/features/auth/store';
 import type { UpdateProfileFormValues } from '@/features/auth/types';
 
 interface ProfileFormProps {
@@ -26,7 +25,6 @@ interface ProfileFormProps {
 
 export function ProfileForm({ email, nickname }: ProfileFormProps) {
   const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -43,8 +41,7 @@ export function ProfileForm({ email, nickname }: ProfileFormProps) {
     setServerError(null);
 
     try {
-      const data = await updateProfileApi(values.nickname.trim());
-      setAuth(data.user);
+      await updateProfileApi(values.nickname.trim());
       toast.success('닉네임을 변경했습니다.');
       router.push('/my');
       router.refresh();

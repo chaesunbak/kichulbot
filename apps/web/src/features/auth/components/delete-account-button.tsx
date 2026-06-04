@@ -19,11 +19,9 @@ import type { MouseEvent } from 'react';
 import { useState } from 'react';
 
 import { ApiError, deleteAccountApi } from '@/features/auth/api/client';
-import { useAuthStore } from '@/features/auth/store';
 
 export function DeleteAccountButton() {
   const router = useRouter();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isPending, setIsPending] = useState(false);
 
   const handleDelete = async (event: MouseEvent<HTMLButtonElement>) => {
@@ -32,7 +30,6 @@ export function DeleteAccountButton() {
 
     try {
       await deleteAccountApi();
-      clearAuth();
       router.push('/');
       router.refresh();
     } catch (error) {

@@ -1,4 +1,4 @@
-import type { AuthUser } from '@/features/auth/store';
+import type { AuthUser } from '@/features/auth/types';
 import { ApiError, clientApi } from '@/shared/api/client';
 
 export { ApiError };

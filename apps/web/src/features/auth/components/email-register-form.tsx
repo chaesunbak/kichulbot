@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -25,12 +24,10 @@ import {
   requestEmailVerificationApi,
 } from '@/features/auth/api/client';
 import { emailRegisterSchema } from '@/features/auth/schemas';
-import { useAuthStore } from '@/features/auth/store';
 import type { EmailRegisterFormValues } from '@/features/auth/types';
 
 export function EmailRegisterForm() {
   const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     null,
@@ -107,7 +104,6 @@ export function EmailRegisterForm() {
       }
       setVerifiedEmail(email);
       setVerificationToken(response.emailVerificationToken);
-      toast.success('이메일 인증이 완료되었습니다.');
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -137,14 +133,12 @@ export function EmailRegisterForm() {
 
     setServerError(null);
     try {
-      const data = await registerWithEmailApi({
+      await registerWithEmailApi({
         email,
         password: values.password,
         nickname: values.nickname?.trim() || undefined,
         emailVerificationToken: verificationToken,
       });
-      setAuth(data.user);
-      toast.success('이메일 회원가입이 완료되었습니다.');
       router.push('/');
       router.refresh();
     } catch (error) {
@@ -214,11 +208,6 @@ export function EmailRegisterForm() {
               {isVerified ? '확인됨' : '확인'}
             </Button>
           </div>
-          {!isVerified && (
-            <FieldDescription>
-              인증번호를 입력한 뒤 확인까지 완료해야 가입할 수 있습니다.
-            </FieldDescription>
-          )}
           <FieldError errors={[errors.code]} />
         </Field>
 
@@ -260,9 +249,6 @@ export function EmailRegisterForm() {
             aria-invalid={!!errors.password}
             {...register('password')}
           />
-          <FieldDescription>
-            비밀번호는 8자 이상 72자 이하로 입력해주세요.
-          </FieldDescription>
           <FieldError errors={[errors.password]} />
         </Field>
 

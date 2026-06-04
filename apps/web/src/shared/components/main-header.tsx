@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import type { AuthUser } from '@/features/auth/server';
+import type { AuthUser } from '@/features/auth/types';
 import { DesktopNavigation } from '@/shared/components/main-navigation';
 
 interface Props {
@@ -9,7 +9,10 @@ interface Props {
 
 export default function MainHeader({ user }: Props) {
   return (
-    <header className="sticky top-0 z-40 hidden bg-card/75 px-4 backdrop-blur-sm md:block">
+    <header className="
+      sticky top-0 z-40 hidden bg-card/75 px-4 backdrop-blur-sm
+      md:block
+    ">
       <div
         className="
           mx-auto flex h-16 max-w-5xl items-center justify-between gap-6
@@ -23,8 +26,8 @@ export default function MainHeader({ user }: Props) {
           <Link
             href="/my"
             className="
-              flex shrink-0 items-center gap-2 text-sm font-medium
-              text-zinc-600 transition-colors
+              flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-600
+              transition-colors
               hover:text-zinc-900
             "
           >

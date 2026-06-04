@@ -5,16 +5,14 @@ import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { logoutApi } from '@/features/auth/api/client';
-import { useAuthStore } from '@/features/auth/store';
 
 export function LogoutButton() {
   const router = useRouter();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const handleLogout = async () => {
-    clearAuth();
     await logoutApi();
     router.push('/');
+    router.refresh();
   };
 
   return (

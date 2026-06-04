@@ -2,9 +2,7 @@ import { cookies } from 'next/headers';
 import { cache } from 'react';
 
 import { getCurrentUser } from '@/features/auth/api/server';
-import type { AuthUser } from '@/features/auth/store';
-
-export { type AuthUser };
+import type { AuthUser } from '@/features/auth/types';
 
 export const COOKIE_NAME = 'kichulbot_token';
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30일

@@ -10,9 +10,7 @@ import {
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
 import { PasswordInput } from '@kichulbot/ui/components/ui/password-input';
-import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Loader2 } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -20,13 +18,11 @@ import { useForm } from 'react-hook-form';
 import { ApiError, loginWithEmailApi } from '@/features/auth/api/client';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { loginSchema } from '@/features/auth/schemas';
-import { useAuthStore } from '@/features/auth/store';
 import type { LoginFormValues } from '@/features/auth/types';
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setAuth = useAuthStore((state) => state.setAuth);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -44,11 +40,10 @@ export function LoginForm() {
     setServerError(null);
 
     try {
-      const data = await loginWithEmailApi({
+      await loginWithEmailApi({
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
-      setAuth(data.user);
       router.push(normalizeNextPath(searchParams.get('next')));
       router.refresh();
     } catch (error) {
@@ -57,7 +52,6 @@ export function LoginForm() {
           ? error.message
           : '로그인 중 오류가 발생했습니다.';
       setServerError(message);
-      toast.error(message);
     }
   };
 
@@ -70,7 +64,6 @@ export function LoginForm() {
             id="login-email"
             type="email"
             autoComplete="email"
-            placeholder="student@example.com"
             aria-invalid={!!errors.email}
             {...register('email')}
           />
@@ -78,15 +71,7 @@ export function LoginForm() {
         </Field>
 
         <Field>
-          <div className="flex items-center justify-between gap-3">
-            <FieldLabel htmlFor="login-password">비밀번호</FieldLabel>
-            <Link
-              href="/password-reset"
-              className="text-xs font-medium text-zinc-500 hover:text-zinc-950"
-            >
-              비밀번호를 잊으셨나요?
-            </Link>
-          </div>
+          <FieldLabel htmlFor="login-password">비밀번호</FieldLabel>
           <PasswordInput
             id="login-password"
             autoComplete="current-password"
@@ -104,7 +89,7 @@ export function LoginForm() {
 
         <Button type="submit" size="lg" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-          이메일로 로그인
+          로그인
         </Button>
       </FieldGroup>
     </form>

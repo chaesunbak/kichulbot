@@ -8,6 +8,15 @@ import type {
   updateProfileSchema,
 } from './schemas';
 
+export interface AuthUser {
+  id: string;
+  email: string | null;
+  nickname: string | null;
+  authType: 'EMAIL' | 'OAUTH';
+  linkedProviders: 'KAKAO'[];
+  role: 'USER' | 'ADMIN';
+}
+
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
 export type EmailRegisterFormValues = z.infer<typeof emailRegisterSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;

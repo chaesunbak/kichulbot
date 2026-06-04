@@ -1,4 +1,4 @@
-import type { AuthUser } from '@/features/auth/store';
+import type { AuthUser } from '@/features/auth/types';
 import { serverApi } from '@/shared/api/server';
 
 export async function getCurrentUser(token: string): Promise<AuthUser> {

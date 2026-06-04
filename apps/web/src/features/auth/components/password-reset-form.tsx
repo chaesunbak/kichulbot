@@ -96,7 +96,6 @@ function PasswordResetRequestForm() {
             id="reset-email"
             type="email"
             autoComplete="email"
-            placeholder="student@example.com"
             aria-invalid={!!errors.email}
             {...register('email')}
           />
@@ -111,7 +110,7 @@ function PasswordResetRequestForm() {
 
         <Button type="submit" size="lg" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-          재설정 링크 받기
+          비밀번호 재설정하기
         </Button>
       </FieldGroup>
     </form>
@@ -142,7 +141,6 @@ function PasswordResetConfirmForm({ token }: { token: string }) {
         token: values.token,
         password: values.password,
       });
-      toast.success('비밀번호를 재설정했습니다.');
       router.push('/login');
       router.refresh();
     } catch (error) {
@@ -151,7 +149,6 @@ function PasswordResetConfirmForm({ token }: { token: string }) {
           ? error.message
           : '비밀번호 재설정 중 오류가 발생했습니다.';
       setServerError(message);
-      toast.error(message);
     }
   };
 

@@ -10,17 +10,28 @@ import {
   zodNamespaceImportRule,
 } from './rules.js';
 
-export default defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  importSortRule,
-  kichulbotRule,
-  betterTailwindConfig(),
-  {
-    rules: {
-      ...consistentTypeImportsRule,
-      ...zodNamespaceImportRule,
+export function nextConfig({ tsconfigRootDir } = {}) {
+  return defineConfig([
+    ...nextVitals,
+    ...nextTs,
+    {
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir,
+        },
+      },
     },
-  },
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
-]);
+    importSortRule,
+    kichulbotRule,
+    betterTailwindConfig(),
+    {
+      rules: {
+        ...consistentTypeImportsRule,
+        ...zodNamespaceImportRule,
+      },
+    },
+    globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  ]);
+}
+
+export default nextConfig();

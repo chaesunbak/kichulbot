@@ -10,11 +10,18 @@ import {
   zodNamespaceImportRule,
 } from './rules.js';
 
-export function reactConfig({ ignores = [] } = {}) {
+export function reactConfig({ ignores = [], tsconfigRootDir } = {}) {
   return defineConfig([
     globalIgnores(['dist/**', ...ignores]),
     js.configs.recommended,
     ...tseslint.configs.recommended,
+    {
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir,
+        },
+      },
+    },
     importSortRule,
     kichulbotRule,
     betterTailwindConfig(),

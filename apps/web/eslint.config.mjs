@@ -1,3 +1,3 @@
-import nextConfig from '@kichulbot/eslint-config/next';
+import { nextConfig } from '@kichulbot/eslint-config/next';
 
-export default nextConfig;
+export default nextConfig({ tsconfigRootDir: import.meta.dirname });

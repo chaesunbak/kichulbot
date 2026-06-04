@@ -2,6 +2,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 const apiBaseUrl =
   process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
+const appScheme = process.env.EXPO_PUBLIC_APP_SCHEME ?? 'kichulbot';
 const webBaseUrl =
   process.env.EXPO_PUBLIC_WEB_BASE_URL ?? 'http://localhost:3000';
 
@@ -12,7 +13,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: '0.1.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
-  scheme: 'kichulbot',
+  scheme: appScheme,
   userInterfaceStyle: 'automatic',
   ios: {
     ...config.ios,
@@ -60,6 +61,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     apiBaseUrl,
+    appScheme,
     webBaseUrl,
   },
 });

@@ -9,6 +9,7 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="sign-in" options={{ title: '로그인' }} />
+      <Stack.Screen name="sign-up" options={{ title: '회원가입' }} />
     </Stack>
   );
 }

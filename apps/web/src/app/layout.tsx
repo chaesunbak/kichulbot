@@ -6,6 +6,7 @@ import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { OverlayProvider } from 'overlay-kit';
 
+import { LegacyAuthStorageCleaner } from '@/features/auth/components/legacy-auth-storage-cleaner';
 import { cn } from '@/shared/lib/utils';
 
 const geistHeading = Geist({ subsets: ['latin'], variable: '--font-heading' });
@@ -37,6 +38,7 @@ export default function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col">
+        <LegacyAuthStorageCleaner />
         <NuqsAdapter>
           <OverlayProvider>{children}</OverlayProvider>
         </NuqsAdapter>

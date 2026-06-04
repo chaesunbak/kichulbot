@@ -11,7 +11,7 @@ interface RegisterOptionsProps {
 
 export function RegisterOptions({ nextPath }: RegisterOptionsProps) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <Button asChild size="lg" variant="outline">
         <Link
           href={`/register/email?next=${encodeURIComponent(nextPath ?? '/')}`}

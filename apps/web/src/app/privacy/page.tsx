@@ -224,12 +224,9 @@ export default function PrivacyPage() {
         sm:py-14
       "
     >
-      <Link href="/" className="text-sm font-medium text-zinc-500">
-        기출봇
-      </Link>
       <header className="mt-8 border-b pb-6">
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">
-          개인정보처리방침
+          기출봇 개인정보처리방침
         </h1>
         <p className="mt-3 text-sm text-zinc-500">시행일: 2026년 6월 1일</p>
       </header>

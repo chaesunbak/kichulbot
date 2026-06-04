@@ -1,0 +1,51 @@
+FROM node:22-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
+
+WORKDIR /app
+
+FROM base AS deps
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY packages/api-contract/package.json ./packages/api-contract/package.json
+COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
+COPY packages/utils/package.json ./packages/utils/package.json
+
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS builder
+
+COPY apps/api ./apps/api
+COPY packages/api-contract ./packages/api-contract
+COPY packages/typescript-config ./packages/typescript-config
+COPY packages/utils ./packages/utils
+
+RUN pnpm turbo run build --filter=@kichulbot/api
+RUN CI=true pnpm prune --prod --ignore-scripts
+
+FROM node:22-alpine AS runner
+
+ENV NODE_ENV="production"
+ENV PORT="4000"
+
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/src/infrastructure/database/schema.prisma ./apps/api/src/infrastructure/database/schema.prisma
+COPY --from=builder /app/apps/api/src/infrastructure/generated/prisma ./apps/api/src/infrastructure/generated/prisma
+COPY --from=builder /app/packages/api-contract ./packages/api-contract
+COPY --from=builder /app/packages/utils ./packages/utils
+
+WORKDIR /app/apps/api
+
+EXPOSE 4000
+
+CMD ["node", "dist/src/main"]

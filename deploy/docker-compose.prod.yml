@@ -1,0 +1,99 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: kichulbot-caddy
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+      - admin
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - public
+      - internal
+
+  web:
+    image: ghcr.io/${GHCR_OWNER}/kichulbot-web:${IMAGE_TAG:-latest}
+    container_name: kichulbot-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: http://api:4000/api
+    networks:
+      - internal
+
+  admin:
+    image: ghcr.io/${GHCR_OWNER}/kichulbot-admin:${IMAGE_TAG:-latest}
+    container_name: kichulbot-admin
+    restart: unless-stopped
+    networks:
+      - internal
+
+  api:
+    image: ghcr.io/${GHCR_OWNER}/kichulbot-api:${IMAGE_TAG:-latest}
+    container_name: kichulbot-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      WEB_ORIGINS: https://${WEB_DOMAIN},https://${ADMIN_DOMAIN}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      KAKAO_CALLBACK_URL: https://${API_DOMAIN}/api/auth/kakao/callback
+      AUTH_WEB_REDIRECT_URL: https://${WEB_DOMAIN}/oauth/callback
+      AUTH_PASSWORD_RESET_URL: https://${WEB_DOMAIN}/password-reset
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      STORAGE_DRIVER: local
+      STORAGE_PUBLIC_BASE_URL: https://${API_DOMAIN}/uploads
+      STORAGE_LOCAL_DIR: /app/apps/api/uploads
+    volumes:
+      - api_uploads:/app/apps/api/uploads
+    networks:
+      - internal
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: kichulbot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+networks:
+  public:
+  internal:
+    internal: true
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  api_uploads:

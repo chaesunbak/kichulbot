@@ -1,10 +1,8 @@
-import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Mail } from 'lucide-react';
 
 import { Button } from '@kichulbot/ui/components/ui/button';
-import { GuestButton } from '@/features/auth/components/guest-button';
 import { KakaoAuthButton } from '@/features/auth/components/kakao-auth-button';
 import { getKakaoAuthStartPath } from '@/features/auth/lib/kakao-auth';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
@@ -31,25 +29,26 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     >
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-4">
-          <div className="text-center">
+          <div className="text-center mb-4">
             <h1 className="text-2xl font-semibold tracking-tight">로그인</h1>
             <p className="mt-2 text-sm text-zinc-500">
               기출봇에 오신 것을 환영합니다
             </p>
           </div>
 
-          <Suspense>
-            <GuestButton />
-          </Suspense>
-          <Button asChild size="lg" variant="outline">
-            <Link href={`/register/email?next=${encodeURIComponent(nextPath)}`}>
-              <Mail className="size-4" />
-              이메일로 회원가입하기
-            </Link>
-          </Button>
-          <KakaoAuthButton href={getKakaoAuthStartPath('login', nextPath)}>
-            카카오 계정으로 시작하기
-          </KakaoAuthButton>
+          <div className="flex flex-col gap-2">
+            <Button asChild size="lg" variant="outline">
+              <Link
+                href={`/login/email?next=${encodeURIComponent(nextPath)}`}
+              >
+                <Mail className="size-4" />
+                이메일로 로그인하기
+              </Link>
+            </Button>
+            <KakaoAuthButton href={getKakaoAuthStartPath('login', nextPath)}>
+              카카오 계정으로 시작하기
+            </KakaoAuthButton>
+          </div>
           <p className="text-center text-sm text-zinc-500">
             아직 계정이 없으신가요?{' '}
             <Link

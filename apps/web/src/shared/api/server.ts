@@ -35,7 +35,10 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, body?.message ?? res.statusText);
+    throw new ApiError(
+      res.status,
+      getErrorMessage(body) ?? res.statusText ?? '오류가 발생했습니다',
+    );
   }
 
   if (res.status === 204) return undefined as T;
@@ -45,6 +48,32 @@ async function request<T>(
   } catch {
     throw new ApiError(res.status, '서버 응답을 읽을 수 없습니다');
   }
+}
+
+function getErrorMessage(body: unknown) {
+  if (!body || typeof body !== 'object') return null;
+
+  const errorBody = body as Record<string, unknown>;
+  const directMessage = normalizeMessage(errorBody.message);
+  if (directMessage) return directMessage;
+
+  const directError = normalizeMessage(errorBody.error);
+  if (directError) return directError;
+
+  if (errorBody.error && typeof errorBody.error === 'object') {
+    const nestedError = errorBody.error as Record<string, unknown>;
+    return (
+      normalizeMessage(nestedError.message) ??
+      normalizeMessage(nestedError.error)
+    );
+  }
+
+  return null;
+}
+
+function normalizeMessage(message: unknown) {
+  if (Array.isArray(message)) return message.join(', ');
+  return typeof message === 'string' && message.trim() ? message : null;
 }
 
 export const serverApi = {

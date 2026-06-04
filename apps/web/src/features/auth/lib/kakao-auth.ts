@@ -1,4 +1,4 @@
-export type KakaoAuthMode = 'login' | 'convert' | 'link';
+export type KakaoAuthMode = 'login' | 'link';
 
 export function getKakaoAuthStartPath(
   mode: KakaoAuthMode = 'login',

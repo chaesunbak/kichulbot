@@ -9,6 +9,7 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
+import { PasswordInput } from '@kichulbot/ui/components/ui/password-input';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -86,9 +87,8 @@ export function LoginForm() {
               비밀번호를 잊으셨나요?
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="login-password"
-            type="password"
             autoComplete="current-password"
             aria-invalid={!!errors.password}
             {...register('password')}

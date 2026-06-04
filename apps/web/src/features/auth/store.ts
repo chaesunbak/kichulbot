@@ -5,7 +5,7 @@ export interface AuthUser {
   id: string;
   email: string | null;
   nickname: string | null;
-  authType: 'ANONYMOUS' | 'EMAIL' | 'OAUTH';
+  authType: 'EMAIL' | 'OAUTH';
   linkedProviders: 'KAKAO'[];
   role: 'USER' | 'ADMIN';
 }

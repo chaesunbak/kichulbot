@@ -17,9 +17,11 @@ export async function POST(request: Request) {
 
   try {
     const res = await serverApi.post<{
-      emailVerificationToken: string;
+      data: {
+        emailVerificationToken: string;
+      };
     }>('/auth/email-verifications/confirm', body);
-    return Response.json(res);
+    return Response.json(res.data);
   } catch (err) {
     if (err instanceof ApiError) {
       return authErrorResponse(err.status, err.message);

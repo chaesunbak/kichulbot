@@ -8,9 +8,9 @@ export const metadata: Metadata = {
 
 const processingRows = [
   {
-    category: '게스트 이용',
+    category: '비로그인 이용',
     items: '사용자 식별값, 인증 유형, 시간대, 생성·수정 일시',
-    purpose: '게스트 계정 생성, 사용자별 학습 기록 분리, 계정 전환',
+    purpose: '로컬 풀이 체험, 브라우저 내 임시 학습 상태 저장',
     period: '회원 탈퇴 또는 계정 삭제 요청 시까지',
   },
   {

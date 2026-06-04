@@ -34,7 +34,7 @@ export default async function EmailRegisterPage({
             </h1>
           </div>
 
-          <EmailRegisterForm isGuestConvert={false} />
+          <EmailRegisterForm />
 
           <p className="text-center text-sm text-zinc-500">
             이미 계정이 있으신가요?{' '}

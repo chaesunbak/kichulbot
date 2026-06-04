@@ -1,6 +1,5 @@
 import type { NextRequest } from 'next/server';
 
-import { COOKIE_NAME } from '@/features/auth/server';
 import { ApiError, serverApi } from '@/shared/api/server';
 import type { AuthResponse } from '@/shared/lib/route-helpers';
 import {
@@ -20,14 +19,8 @@ export async function POST(request: NextRequest) {
     return authErrorResponse(400, 'Invalid request body');
   }
 
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-
   try {
-    const res = await serverApi.post<AuthResponse>(
-      token ? '/auth/convert/email' : '/auth/register',
-      body,
-      token,
-    );
+    const res = await serverApi.post<AuthResponse>('/auth/register', body);
     return authSuccessResponse(res.data.user, res.data.accessToken);
   } catch (err) {
     if (err instanceof ApiError) {

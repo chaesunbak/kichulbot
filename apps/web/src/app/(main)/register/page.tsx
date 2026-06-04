@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { RegisterOptions } from '@/features/auth/components/register-options';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
-import { getCachedUser } from '@/features/auth/server';
 import { PageContainer } from '@/shared/components/page-container';
 
 type RegisterPageProps = {
@@ -16,8 +15,6 @@ export default async function RegisterPage({
 }: RegisterPageProps) {
   const params = await searchParams;
   const nextPath = normalizeNextPath(params?.next);
-  const user = await getCachedUser();
-  const isGuestConvert = user?.authType === 'ANONYMOUS';
 
   return (
     <PageContainer
@@ -29,17 +26,9 @@ export default async function RegisterPage({
         <div className="flex flex-col gap-8">
           <div className="text-center">
             <h1 className="text-2xl font-semibold tracking-tight">회원가입</h1>
-            <p className="mt-2 text-sm text-zinc-500">
-              {isGuestConvert
-                ? '게스트 기록을 계정에 이어서 저장할 수 있습니다'
-                : ''}
-            </p>
           </div>
 
-          <RegisterOptions
-            isGuestConvert={isGuestConvert}
-            nextPath={nextPath}
-          />
+          <RegisterOptions nextPath={nextPath} />
         </div>
       </div>
       <div className="text-center text-sm text-zinc-500">

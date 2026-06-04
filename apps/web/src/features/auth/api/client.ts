@@ -7,10 +7,6 @@ interface AuthResult {
   user: AuthUser;
 }
 
-export async function anonymousLoginApi(): Promise<AuthResult> {
-  return clientApi.post<AuthResult>('/api/auth/anonymous');
-}
-
 export async function loginWithEmailApi(body: {
   email: string;
   password: string;
@@ -21,27 +17,43 @@ export async function loginWithEmailApi(body: {
 export async function requestPasswordResetApi(email: string): Promise<{
   ok: true;
 }> {
-  return clientApi.post('/api/auth/password-reset-requests', { email });
+  return assertOkResponse(
+    await clientApi.post('/api/auth/password-reset-requests', { email }),
+  );
 }
 
 export async function confirmPasswordResetApi(body: {
   token: string;
   password: string;
 }): Promise<{ ok: true }> {
-  return clientApi.post('/api/auth/password-resets/confirm', body);
+  return assertOkResponse(
+    await clientApi.post('/api/auth/password-resets/confirm', body),
+  );
 }
 
 export async function requestEmailVerificationApi(email: string): Promise<{
   ok: true;
 }> {
-  return clientApi.post('/api/auth/email-verifications', { email });
+  return assertOkResponse(
+    await clientApi.post('/api/auth/email-verifications', { email }),
+  );
 }
 
 export async function confirmEmailVerificationApi(body: {
   email: string;
   code: string;
 }): Promise<{ emailVerificationToken: string }> {
-  return clientApi.post('/api/auth/email-verifications/confirm', body);
+  const response = await clientApi.post(
+    '/api/auth/email-verifications/confirm',
+    body,
+  );
+  if (
+    !isRecord(response) ||
+    typeof response.emailVerificationToken !== 'string'
+  ) {
+    throw new ApiError(500, '이메일 인증 응답이 올바르지 않습니다.');
+  }
+  return { emailVerificationToken: response.emailVerificationToken };
 }
 
 export async function registerWithEmailApi(body: {
@@ -57,15 +69,6 @@ export async function completeOAuthSessionApi(
   accessToken: string,
 ): Promise<AuthResult> {
   return clientApi.post<AuthResult>('/api/auth/oauth/session', { accessToken });
-}
-
-export async function convertAnonymousWithKakaoApi(body: {
-  providerAccountId: string;
-  providerEmail?: string | null;
-  providerNickname?: string | null;
-  rawProfile?: Record<string, unknown> | null;
-}): Promise<AuthResult> {
-  return clientApi.post<AuthResult>('/api/auth/convert/kakao', body);
 }
 
 export async function logoutApi(): Promise<void> {
@@ -90,4 +93,15 @@ export async function listAuthConnectionsApi(): Promise<{
   }>;
 }> {
   return clientApi.get('/api/me/auth-connections');
+}
+
+function assertOkResponse(response: unknown): { ok: true } {
+  if (!isRecord(response) || response.ok !== true) {
+    throw new ApiError(500, '서버 응답이 올바르지 않습니다.');
+  }
+  return { ok: true };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }

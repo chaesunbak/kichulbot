@@ -45,7 +45,7 @@ export default async function MyPage() {
           </CardHeader>
           <CardContent>
             <p className="mt-4 text-lg font-semibold text-zinc-900">
-              {user.nickname ?? '게스트'}
+              {user.nickname ?? user.email ?? '사용자'}
             </p>
             <p
               className="
@@ -53,7 +53,7 @@ export default async function MyPage() {
               "
             >
               <Mail className="size-4 shrink-0" />
-              <span className="truncate">{user.email ?? '게스트 계정'}</span>
+              <span className="truncate">{user.email ?? '이메일 미제공'}</span>
             </p>
           </CardContent>
         </Card>

@@ -66,7 +66,7 @@ export function ProfileForm({ email, nickname }: ProfileFormProps) {
           <Input
             id="email"
             type="text"
-            defaultValue={email ?? '게스트 계정'}
+            defaultValue={email ?? '이메일 미제공'}
             disabled
           />
         </Field>
@@ -76,7 +76,6 @@ export function ProfileForm({ email, nickname }: ProfileFormProps) {
           <Input
             id="nickname"
             type="text"
-            placeholder="사용할 닉네임"
             autoComplete="nickname"
             aria-invalid={!!errors.nickname}
             {...register('nickname')}

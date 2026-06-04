@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -11,10 +12,11 @@ import {
 import { Input } from '@kichulbot/ui/components/ui/input';
 import { PasswordInput } from '@kichulbot/ui/components/ui/password-input';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
-import { Check, Loader2, Mail } from 'lucide-react';
+import { generateRandomNickname } from '@kichulbot/utils';
+import { Check, Dices, Loader2, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
 import {
   ApiError,
@@ -26,17 +28,14 @@ import { emailRegisterSchema } from '@/features/auth/schemas';
 import { useAuthStore } from '@/features/auth/store';
 import type { EmailRegisterFormValues } from '@/features/auth/types';
 
-interface EmailRegisterFormProps {
-  isGuestConvert: boolean;
-}
-
-export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
+export function EmailRegisterForm() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string | null>(
     null,
   );
+  const [initialNickname] = useState(() => generateRandomNickname());
   const [sending, setSending] = useState(false);
   const [checking, setChecking] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -45,28 +44,33 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
     register,
     handleSubmit,
     getValues,
-    watch,
+    setValue,
+    trigger,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<EmailRegisterFormValues>({
     resolver: zodResolver(emailRegisterSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       email: '',
       code: '',
-      nickname: '',
+      nickname: initialNickname,
       password: '',
       passwordConfirm: '',
     },
   });
 
-  const currentEmail = watch('email').trim().toLowerCase();
+  const currentEmail = useWatch({ control, name: 'email' })
+    .trim()
+    .toLowerCase();
   const isVerified = !!verificationToken && verifiedEmail === currentEmail;
 
   const handleSendCode = async () => {
+    const isEmailValid = await trigger('email');
+    if (!isEmailValid) return;
+
     const email = getValues('email').trim().toLowerCase();
-    if (!email) {
-      toast.error('이메일을 입력해주세요.');
-      return;
-    }
 
     setSending(true);
     setServerError(null);
@@ -88,17 +92,19 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
   };
 
   const handleConfirmCode = async () => {
+    const isCodeValid = await trigger(['email', 'code']);
+    if (!isCodeValid) return;
+
     const email = getValues('email').trim().toLowerCase();
     const code = getValues('code').trim();
-    if (!email || !code) {
-      toast.error('이메일과 인증번호를 입력해주세요.');
-      return;
-    }
 
     setChecking(true);
     setServerError(null);
     try {
       const response = await confirmEmailVerificationApi({ email, code });
+      if (!response.emailVerificationToken) {
+        throw new Error('이메일 인증 응답이 올바르지 않습니다.');
+      }
       setVerifiedEmail(email);
       setVerificationToken(response.emailVerificationToken);
       toast.success('이메일 인증이 완료되었습니다.');
@@ -112,6 +118,14 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
     } finally {
       setChecking(false);
     }
+  };
+
+  const handleGenerateNickname = () => {
+    setValue('nickname', generateRandomNickname(), {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
   };
 
   const onSubmit = async (values: EmailRegisterFormValues) => {
@@ -130,11 +144,7 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
         emailVerificationToken: verificationToken,
       });
       setAuth(data.user);
-      toast.success(
-        isGuestConvert
-          ? '게스트 기록을 이메일 계정에 저장했습니다.'
-          : '이메일 회원가입이 완료되었습니다.',
-      );
+      toast.success('이메일 회원가입이 완료되었습니다.');
       router.push('/');
       router.refresh();
     } catch (error) {
@@ -156,7 +166,6 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
             <Input
               id="email"
               type="email"
-              placeholder="student@example.com"
               autoComplete="email"
               aria-invalid={!!errors.email}
               {...register('email')}
@@ -187,7 +196,6 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
               type="text"
               inputMode="numeric"
               maxLength={6}
-              placeholder="123456"
               aria-invalid={!!errors.code}
               {...register('code')}
             />
@@ -206,19 +214,41 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
               {isVerified ? '확인됨' : '확인'}
             </Button>
           </div>
+          {!isVerified && (
+            <FieldDescription>
+              인증번호를 입력한 뒤 확인까지 완료해야 가입할 수 있습니다.
+            </FieldDescription>
+          )}
           <FieldError errors={[errors.code]} />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="nickname">닉네임</FieldLabel>
-          <Input
-            id="nickname"
-            type="text"
-            placeholder="사용할 닉네임"
-            autoComplete="nickname"
-            aria-invalid={!!errors.nickname}
-            {...register('nickname')}
-          />
+          <div className="relative">
+            <Input
+              id="nickname"
+              type="text"
+              autoComplete="nickname"
+              className="pr-11"
+              aria-invalid={!!errors.nickname}
+              {...register('nickname')}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="
+                absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground
+                hover:text-foreground
+                active:not-aria-[haspopup]:translate-y-[-50%]
+              "
+              aria-label="닉네임 랜덤 생성"
+              title="닉네임 랜덤 생성"
+              onClick={handleGenerateNickname}
+            >
+              <Dices className="size-4" />
+            </Button>
+          </div>
           <FieldError errors={[errors.nickname]} />
         </Field>
 
@@ -230,6 +260,9 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
             aria-invalid={!!errors.password}
             {...register('password')}
           />
+          <FieldDescription>
+            비밀번호는 8자 이상 72자 이하로 입력해주세요.
+          </FieldDescription>
           <FieldError errors={[errors.password]} />
         </Field>
 
@@ -251,7 +284,11 @@ export function EmailRegisterForm({ isGuestConvert }: EmailRegisterFormProps) {
         )}
 
         <Button type="submit" size="lg" disabled={isSubmitting || !isVerified}>
-          {isSubmitting ? '가입 중...' : '이메일로 시작하기'}
+          {isSubmitting
+            ? '가입 중...'
+            : isVerified
+              ? '이메일로 시작하기'
+              : '인증번호 확인 후 시작하기'}
         </Button>
       </FieldGroup>
     </form>

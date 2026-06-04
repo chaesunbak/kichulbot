@@ -16,11 +16,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const res = await serverApi.post<{ ok: true }>(
+    const res = await serverApi.post<{ data: { ok: true } }>(
       '/auth/password-reset/confirm',
       body,
     );
-    return Response.json(res);
+    return Response.json(res.data);
   } catch (err) {
     if (err instanceof ApiError) {
       return authErrorResponse(err.status, err.message);

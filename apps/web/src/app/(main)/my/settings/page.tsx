@@ -1,11 +1,9 @@
-import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { KakaoAuthButton } from '@/features/auth/components/kakao-auth-button';
@@ -29,25 +27,12 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {user.authType === 'ANONYMOUS' && (
-              <Button asChild>
-                <Link href="/register">계정 만들기</Link>
-              </Button>
-            )}
-            {user.authType === 'ANONYMOUS' ? (
+            {!user.linkedProviders.includes('KAKAO') && (
               <div className="w-full max-w-52">
-                <KakaoAuthButton href={getKakaoAuthStartPath('convert')}>
-                  카카오로 계정 만들기
+                <KakaoAuthButton href={getKakaoAuthStartPath('link')}>
+                  카카오 연결
                 </KakaoAuthButton>
               </div>
-            ) : (
-              !user.linkedProviders.includes('KAKAO') && (
-                <div className="w-full max-w-44">
-                  <KakaoAuthButton href={getKakaoAuthStartPath('link')}>
-                    카카오 연결
-                  </KakaoAuthButton>
-                </div>
-              )
             )}
             <LogoutButton />
             <DeleteAccountButton />

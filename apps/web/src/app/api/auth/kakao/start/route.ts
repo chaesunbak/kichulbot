@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('mode');
   const nextPath = normalizeNextPath(request.nextUrl.searchParams.get('next'));
   const url = new URL(`${API_BASE_URL}/auth/kakao`);
-  if (mode === 'convert' || mode === 'link') {
+  if (mode === 'link') {
     url.searchParams.set('mode', mode);
   }
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   }
 
   const redirectResponse = NextResponse.redirect(location);
-  if (mode !== 'convert' && mode !== 'link') {
+  if (mode !== 'link') {
     redirectResponse.cookies.set(OAUTH_NEXT_COOKIE_NAME, nextPath, {
       path: '/',
       maxAge: 60 * 5,

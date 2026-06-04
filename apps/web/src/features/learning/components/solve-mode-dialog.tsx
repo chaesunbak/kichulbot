@@ -38,20 +38,20 @@ export function SolveModeDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>어떤 방식으로 풀까요?</DialogTitle>
+          <DialogTitle>풀이 모드를 선택해주세요</DialogTitle>
           <DialogDescription>
             풀이 진행 방식에 따라 정답과 해설을 확인하는 시점이 달라집니다.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
           <SolveModeButton
-            title="한 문제씩 풀기"
+            title="연습모드"
             description="문제를 푼 직후 정답과 해설을 확인합니다."
             onClick={() => onSelect('ONE_BY_ONE')}
           />
           <SolveModeButton
-            title="한번에 풀기"
-            description="시험 종료 후 결과와 해설을 확인합니다."
+            title="시험모드"
+            description="전체 답안을 제출한 뒤 결과와 해설을 확인합니다."
             onClick={() => onSelect('EXAM')}
           />
         </div>

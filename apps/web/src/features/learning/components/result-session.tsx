@@ -14,6 +14,7 @@ import type {
   SolveQuestion,
   SolveSession,
 } from '@/features/learning/types';
+import { SectionTitle } from '@/shared/components/section-title';
 import { cn } from '@/shared/lib/utils';
 
 type ResultFilter = 'ALL' | 'WRONG' | 'OMITTED' | 'CORRECT';
@@ -76,9 +77,7 @@ export function ResultSession({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-primary">
-            {session.mode === 'ONE_BY_ONE'
-              ? '한 문제씩 풀기 결과'
-              : '시험 결과'}
+            {session.mode === 'ONE_BY_ONE' ? '연습모드 결과' : '시험모드 결과'}
           </p>
           <h1 className="mt-2 text-2xl font-semibold text-zinc-950">
             {session.paper.title}
@@ -133,9 +132,9 @@ export function ResultSession({
           >
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-zinc-950">
+                <SectionTitle className="text-zinc-950">
                   {selectedQuestion.number}번
-                </h2>
+                </SectionTitle>
                 <StatusBadge
                   question={selectedQuestion}
                   answer={selectedAnswer}
@@ -190,9 +189,9 @@ export function ResultSession({
 
         <aside
           className="
-          h-fit rounded-lg border bg-card p-4
-          lg:sticky lg:top-24
-        "
+            h-fit rounded-lg border bg-card p-4
+            lg:sticky lg:top-24
+          "
         >
           <div
             className="
@@ -316,7 +315,9 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+    <div className="
+      mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
+    ">
       <span className="font-semibold text-blue-900">해설</span>
       <span className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}

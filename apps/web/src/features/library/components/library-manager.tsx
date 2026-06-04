@@ -37,6 +37,7 @@ import {
 } from '@/features/library/api/client';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
+import { SectionTitle } from '@/shared/components/section-title';
 
 import { FileCard } from './file-card';
 import { FolderCard } from './folder-card';
@@ -169,7 +170,7 @@ export function LibraryManager({
     <section className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-4">
-          <h2 className="text-2xl font-semibold text-zinc-900">{title}</h2>
+          <SectionTitle className="text-2xl">{title}</SectionTitle>
           {selectedFolder && (
             <Button
               type="button"

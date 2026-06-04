@@ -1,7 +1,7 @@
 import type { SolveSession } from '@/features/learning/types';
 
 export function formatSolveMode(mode: SolveSession['mode']) {
-  return mode === 'ONE_BY_ONE' ? '한 문제씩 풀기' : '한번에 풀기';
+  return mode === 'ONE_BY_ONE' ? '연습모드' : '시험모드';
 }
 
 export function formatDuration(milliseconds: number) {

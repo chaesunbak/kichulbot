@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+
+import { SectionTitle } from '@/shared/components/section-title';
 
 export const metadata: Metadata = {
   title: '개인정보처리방침 | 기출봇',
@@ -238,9 +239,7 @@ export default function PrivacyPage() {
         </p>
         {sections.map((section) => (
           <section key={section.title}>
-            <h2 className="text-lg font-semibold text-zinc-900">
-              {section.title}
-            </h2>
+            <SectionTitle>{section.title}</SectionTitle>
             <div className="mt-3 space-y-3">{section.body}</div>
           </section>
         ))}

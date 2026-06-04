@@ -16,6 +16,7 @@ import { useState } from 'react';
 import type { BookmarkListSummary } from '@/features/learning/types';
 import { createBookmarkList as createBookmarkListApi } from '@/features/library/api/client';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
+import { SectionTitle } from '@/shared/components/section-title';
 
 export function BookmarkListManager({
   initialBookmarkLists,
@@ -52,7 +53,7 @@ export function BookmarkListManager({
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-zinc-900">북마크</h2>
+        <SectionTitle className="text-2xl">북마크</SectionTitle>
         <Button
           type="button"
           variant="outline"

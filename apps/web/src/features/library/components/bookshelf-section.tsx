@@ -1,6 +1,7 @@
 import { BookOpen } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { SectionTitle } from '@/shared/components/section-title';
 import { cn } from '@/shared/lib/utils';
 
 export function BookshelfSection({
@@ -29,7 +30,9 @@ export function BookshelfSection({
       >
         <div className="flex min-w-0 items-center gap-2">
           <BookOpen className="size-4 shrink-0" />
-          <h2 className="truncate text-sm font-bold">{title}</h2>
+          <SectionTitle className="truncate text-sm font-bold">
+            {title}
+          </SectionTitle>
         </div>
         {countLabel ? (
           <p className="shrink-0 text-xs font-medium">{countLabel}</p>

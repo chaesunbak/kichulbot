@@ -25,7 +25,7 @@ export default async function LogPage({ searchParams }: LogPageProps) {
   if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 
   const logPage = await getSolveSessionLogPage({
-    status: 'completed',
+    status: 'all',
     page,
     limit: LOG_PAGE_SIZE,
   });
@@ -38,7 +38,7 @@ export default async function LogPage({ searchParams }: LogPageProps) {
 
       <SolveSessionLogList
         logs={logPage.logs}
-        emptyMessage="종료한 풀이가 없습니다."
+        emptyMessage="아직 풀이 기록이 없습니다."
       />
 
       {logPage.totalPages > 1 && (

@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Clock,
   List,
+  LogOut,
+  Send,
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -39,6 +41,8 @@ import type {
   SolveQuestion,
   SolveSession,
 } from '@/features/learning/types';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { SectionTitle } from '@/shared/components/section-title';
 import { cn } from '@/shared/lib/utils';
 
 type SaveAnswerPayload = {
@@ -59,6 +63,7 @@ export function SolveSession({
   const [activeElapsed, setActiveElapsed] = useState(0);
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const elapsedMilliseconds = useRef(0);
   const question = session.paper.questions[currentIndex];
   const answer = session.answers.find(
@@ -78,6 +83,15 @@ export function SolveSession({
       ),
     [session.answers],
   );
+  const effectiveAnsweredIds = useMemo(() => {
+    const ids = new Set(answeredIds);
+    if (question?.type === 'WRITTEN' && answerText.trim()) {
+      ids.add(question.id);
+    }
+    return ids;
+  }, [answeredIds, answerText, question]);
+  const unansweredCount =
+    session.paper.questions.length - effectiveAnsweredIds.size;
   const totalElapsedMilliseconds = useMemo(
     () =>
       session.answers.reduce(
@@ -141,6 +155,23 @@ export function SolveSession({
     return elapsed;
   };
 
+  const getCurrentAnswerPayload = (): SaveAnswerPayload => {
+    if (question?.type !== 'WRITTEN') return {};
+    const trimmedAnswerText = answerText.trim();
+    if (!trimmedAnswerText || trimmedAnswerText === answer?.answerText) {
+      return {};
+    }
+    return { answerText: trimmedAnswerText };
+  };
+
+  const saveCurrentProgress = async () => {
+    if (!question || session.submittedAt) return;
+    await saveProgress(question.id, {
+      ...getCurrentAnswerPayload(),
+      spentMilliseconds: takeElapsed(),
+    });
+  };
+
   const showFailureMessage = (message: string) => {
     setMessage(message);
     toast.error(message);
@@ -175,12 +206,35 @@ export function SolveSession({
     elapsedMilliseconds.current = 0;
   };
 
-  const finish = async () => {
+  const leave = async () => {
     if (!question || session.submittedAt || isFinishing) return;
     setIsFinishing(true);
-    setMessage('시험을 종료하는 중...');
+    setMessage('풀이를 저장하는 중...');
     try {
-      await saveProgress(question.id, { spentMilliseconds: takeElapsed() });
+      await saveCurrentProgress();
+      setMessage('저장했습니다.');
+      router.push(isLocalSession ? `/resources/${session.paper.id}` : '/log');
+    } catch {
+      setIsFinishing(false);
+      showFailureMessage('풀이를 저장하지 못했습니다.');
+    }
+  };
+
+  const requestSubmit = () => {
+    if (unansweredCount > 0) {
+      setIsSubmitConfirmOpen(true);
+      return;
+    }
+    void submit();
+  };
+
+  const submit = async () => {
+    if (!question || session.submittedAt || isFinishing) return;
+    setIsSubmitConfirmOpen(false);
+    setIsFinishing(true);
+    setMessage('제출하는 중...');
+    try {
+      await saveCurrentProgress();
       if (isLocalSession) {
         submitLocalSolveSession(session.id);
       } else {
@@ -194,7 +248,7 @@ export function SolveSession({
       );
     } catch {
       setIsFinishing(false);
-      showFailureMessage('시험을 종료하지 못했습니다.');
+      showFailureMessage('풀이를 제출하지 못했습니다.');
     }
   };
 
@@ -215,7 +269,9 @@ export function SolveSession({
         elapsedMilliseconds={totalElapsedMilliseconds}
         submitted={!!session.submittedAt}
         isFinishing={isFinishing}
-        onFinish={finish}
+        allAnswered={unansweredCount === 0}
+        onLeave={leave}
+        onSubmit={requestSubmit}
       />
 
       <div
@@ -245,6 +301,16 @@ export function SolveSession({
           onMoveTo={moveTo}
         />
       </div>
+      <ConfirmDialog
+        isOpen={isSubmitConfirmOpen}
+        title="아직 풀지 않은 문제가 있습니다"
+        description={`미답 문항 ${unansweredCount}개가 오답으로 처리됩니다.`}
+        cancelLabel="계속 풀기"
+        confirmLabel="제출하기"
+        onCancel={() => setIsSubmitConfirmOpen(false)}
+        onConfirm={() => void submit()}
+        onExit={() => undefined}
+      />
     </div>
   );
 }
@@ -256,7 +322,9 @@ function SolveSessionHeader({
   elapsedMilliseconds,
   submitted,
   isFinishing,
-  onFinish,
+  allAnswered,
+  onLeave,
+  onSubmit,
 }: {
   title: string;
   mode: SolveSession['mode'];
@@ -264,8 +332,19 @@ function SolveSessionHeader({
   elapsedMilliseconds: number;
   submitted: boolean;
   isFinishing: boolean;
-  onFinish: () => void;
+  allAnswered: boolean;
+  onLeave: () => void;
+  onSubmit: () => void;
 }) {
+  const isExamMode = mode === 'EXAM';
+  const practiceActionLabel = allAnswered ? '결과 보기' : '나가기';
+  const actionIcon = allAnswered ? (
+    <Send data-icon="inline-start" />
+  ) : (
+    <LogOut data-icon="inline-start" />
+  );
+  const handlePracticeAction = allAnswered ? onSubmit : onLeave;
+
   return (
     <header
       className="
@@ -327,14 +406,31 @@ function SolveSessionHeader({
           >
             종료 완료
           </span>
+        ) : isExamMode ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isFinishing}
+              onClick={onLeave}
+            >
+              <LogOut data-icon="inline-start" />
+              나가기
+            </Button>
+            <Button type="button" disabled={isFinishing} onClick={onSubmit}>
+              <Send data-icon="inline-start" />
+              {isFinishing ? '처리 중...' : '제출하기'}
+            </Button>
+          </>
         ) : (
           <Button
             type="button"
-            variant="destructive"
+            variant={allAnswered ? 'default' : 'outline'}
             disabled={isFinishing}
-            onClick={onFinish}
+            onClick={handlePracticeAction}
           >
-            {isFinishing ? '종료 중...' : '시험 종료'}
+            {actionIcon}
+            {isFinishing ? '처리 중...' : practiceActionLabel}
           </Button>
         )}
       </div>
@@ -389,7 +485,7 @@ function QuestionHeader({
     >
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold">{question.number}번</h2>
+          <SectionTitle>{question.number}번</SectionTitle>
           <span
             className="
               rounded-full border px-2 py-0.5 text-xs font-medium text-zinc-500
@@ -465,7 +561,7 @@ function AnswerSection({
   return (
     <section className="grid gap-3">
       <div>
-        <h2 className="text-sm font-semibold">답안 입력</h2>
+        <SectionTitle className="text-sm">답안 입력</SectionTitle>
       </div>
       {question.type === 'MULTIPLE_CHOICE' ? (
         <ChoiceAnswerInput
@@ -514,7 +610,7 @@ function ChoiceAnswerInput({
               selectedChoice === choice &&
                 `
                   bg-zinc-500 text-zinc-100
-                  hover:bg-zinc-450 hover:text-zinc-100
+                  hover:bg-zinc-400 hover:text-zinc-100
                 `,
             )}
             disabled={disabled}
@@ -625,7 +721,9 @@ function SolveControlPanel({
         onAnswerTextChange={onAnswerTextChange}
         onSaveAnswer={onSaveAnswer}
       />
-      <ResultCheckPanel question={question} answer={answer} />
+      {session.mode === 'ONE_BY_ONE' && (
+        <ResultCheckPanel question={question} answer={answer} />
+      )}
     </aside>
   );
 }

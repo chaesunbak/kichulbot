@@ -1,9 +1,20 @@
+import { Button } from '@kichulbot/ui/components/ui/button';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@kichulbot/ui/components/ui/card';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 
-import { Button } from '@kichulbot/ui/components/ui/button';
-import { Search } from 'lucide-react';
-
-import { getCategories, getExams } from '@/features/exams/api/server';
+import {
+  type Category,
+  type Exam,
+  getCategories,
+  getExams,
+} from '@/features/exams/api/server';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
@@ -51,75 +62,78 @@ export default async function PapersPage() {
             sm:grid-cols-2
           "
         >
-          {categories.map((category) => {
-            const categoryExams = exams.filter((exam) =>
-              exam.categories.some((item) => item.id === category.id),
-            );
-
-            return (
-              <section
-                key={category.id}
-                className="rounded-lg border border-zinc-200 bg-white p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-zinc-900">
-                      {category.name}
-                    </h2>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {categoryExams.length}개 시험
-                    </p>
-                  </div>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/resources/search?categoryId=${category.id}`}>
-                      보기
-                    </Link>
-                  </Button>
-                </div>
-
-                {categoryExams.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {categoryExams.map((exam) => (
-                      <Link
-                        key={exam.id}
-                        href={`/resources/search?examId=${exam.id}`}
-                        className="
-                          rounded-full bg-zinc-100 px-3 py-1 text-sm
-                          text-zinc-700 transition
-                          hover:bg-zinc-200
-                        "
-                      >
-                        {exam.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </section>
-            );
-          })}
+          {categories.map((category) => (
+            <CategoryCardItem
+              key={category.id}
+              category={category}
+              exams={exams.filter((exam) =>
+                exam.categories.some((item) => item.id === category.id),
+              )}
+            />
+          ))}
 
           {categories.length === 0 &&
             exams.map((exam) => (
-              <section
-                key={exam.id}
-                className="rounded-lg border border-zinc-200 bg-white p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
+              <Card key={exam.id} size="sm">
+                <CardHeader className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-zinc-900">
-                      {exam.name}
-                    </h2>
+                    <CardTitle>{exam.name}</CardTitle>
                   </div>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/resources/search?examId=${exam.id}`}>
-                      보기
-                    </Link>
-                  </Button>
-                </div>
-              </section>
+                  <CardAction>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/resources/search?examId=${exam.id}`}>
+                        보기
+                      </Link>
+                    </Button>
+                  </CardAction>
+                </CardHeader>
+              </Card>
             ))}
         </div>
       )}
     </PageContainer>
+  );
+}
+
+type CategoryCardItemProps = {
+  category: Category;
+  exams: Exam[];
+};
+
+function CategoryCardItem({ category, exams }: CategoryCardItemProps) {
+  return (
+    <Card size="sm">
+      <CardHeader className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <CardTitle>{category.name}</CardTitle>
+          <p className="mt-1 text-sm text-zinc-500">{exams.length}개 시험</p>
+        </div>
+        <CardAction>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/resources/search?categoryId=${category.id}`}>
+              보기
+            </Link>
+          </Button>
+        </CardAction>
+      </CardHeader>
+
+      {exams.length > 0 && (
+        <CardContent className="flex flex-wrap gap-2">
+          {exams.map((exam) => (
+            <Link
+              key={exam.id}
+              href={`/resources/search?examId=${exam.id}`}
+              className="
+                rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-700
+                transition
+                hover:bg-zinc-200
+              "
+            >
+              {exam.name}
+            </Link>
+          ))}
+        </CardContent>
+      )}
+    </Card>
   );
 }

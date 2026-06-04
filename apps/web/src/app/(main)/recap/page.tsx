@@ -24,7 +24,7 @@ export default async function RecapPage() {
   if (!user) redirect('/login?next=/recap');
 
   const [logPage, wrongQuestionSet] = await Promise.all([
-    getSolveSessionLogPage({ status: 'completed', limit: 5 }),
+    getSolveSessionLogPage({ status: 'all', limit: 5 }),
     getTodayWrongQuestions(),
   ]);
 
@@ -56,7 +56,7 @@ export default async function RecapPage() {
       </div>
       <SolveSessionLogList
         logs={logPage.logs}
-        emptyMessage="종료한 풀이가 없습니다."
+        emptyMessage="아직 풀이 기록이 없습니다."
       />
     </PageContainer>
   );

@@ -15,6 +15,7 @@ import {
   shiftMonth,
 } from '@/features/question-attempts/lib/streak-date';
 import { countAttemptsByDate } from '@/features/question-attempts/lib/streak-summary';
+import { SectionTitle } from '@/shared/components/section-title';
 
 interface StreakPageProps {
   searchParams?: Promise<{
@@ -55,9 +56,9 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
           sm:flex-row sm:items-end sm:justify-between
         "
       >
-        <h2 className="text-2xl font-semibold text-zinc-900">
+        <SectionTitle className="text-2xl">
           {formatMonthTitle(month)}
-        </h2>
+        </SectionTitle>
 
         <div className="flex gap-2">
           <Button asChild variant="outline">

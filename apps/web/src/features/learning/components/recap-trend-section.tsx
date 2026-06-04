@@ -30,6 +30,7 @@ import type {
   RecapTrendPoint,
   RecapWeaknessGroup,
 } from '@/features/learning/lib/recap-stats';
+import { SectionTitle } from '@/shared/components/section-title';
 
 interface RecapTrendSectionProps {
   data: RecapTrendPoint[];
@@ -80,9 +81,7 @@ export function RecapTrendSection({
 
   return (
     <section className="mt-6" aria-labelledby="recap-trend-title">
-      <h2 id="recap-trend-title" className="text-lg font-semibold">
-        나의 학습 분석
-      </h2>
+      <SectionTitle id="recap-trend-title">나의 학습 분석</SectionTitle>
       {weaknessGroups.length > 0 && (
         <div
           className="

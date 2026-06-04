@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+
+import { SectionTitle } from '@/shared/components/section-title';
 
 export const metadata: Metadata = {
   title: '이용약관 | 기출봇',
@@ -114,9 +115,7 @@ export default function TermsPage() {
       <div className="mt-8 space-y-8">
         {sections.map((section) => (
           <section key={section.title}>
-            <h2 className="text-lg font-semibold text-zinc-900">
-              {section.title}
-            </h2>
+            <SectionTitle>{section.title}</SectionTitle>
             <div className="mt-3 space-y-3 text-sm/7 text-zinc-600">
               {section.content.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>

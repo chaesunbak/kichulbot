@@ -12,6 +12,7 @@ import {
   formatRelativeDate,
 } from '@/features/learning/lib/format';
 import type { SolveSessionLog } from '@/features/learning/types';
+import { SectionTitle } from '@/shared/components/section-title';
 
 type PaperSolveHistorySectionProps = {
   logs: SolveSessionLog[];
@@ -25,10 +26,12 @@ export function PaperSolveHistorySection({
   const paperLogs = getPaperLogs(logs, paperId);
 
   return (
-    <section>
-      <h2 className="text-lg font-semibold text-zinc-900">풀이 기록</h2>
+    <section className="flex flex-col gap-4">
+      <SectionTitle>풀이 기록</SectionTitle>
       {paperLogs.length === 0 ? (
-        <p className="text-sm text-zinc-500">아직 풀이 기록이 없습니다.</p>
+        <span className="text-sm text-zinc-500">
+          아직 풀이 기록이 없습니다.
+        </span>
       ) : (
         <ul className="grid gap-3">
           {paperLogs.map(({ log, attemptNumber }) => (

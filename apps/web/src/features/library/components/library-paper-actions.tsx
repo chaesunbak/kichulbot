@@ -124,7 +124,8 @@ export function LibraryPaperActions({
           disabled={isStarting || isDeleting || isMoving}
           onClick={() => start('ONE_BY_ONE')}
         >
-          <Play />한 문제씩 풀기
+          <Play />
+          연습모드
         </Button>
         <Button
           type="button"
@@ -133,7 +134,7 @@ export function LibraryPaperActions({
           onClick={() => start('EXAM')}
         >
           <Play />
-          한번에 풀기
+          시험모드
         </Button>
         <Button
           type="button"

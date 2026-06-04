@@ -1,4 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -25,7 +25,7 @@ export function LoginForm() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
   const form = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: standardSchemaResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
   const mutation = useMutation({

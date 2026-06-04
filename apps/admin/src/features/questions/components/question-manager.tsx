@@ -1,4 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -110,7 +110,7 @@ export function QuestionManager({
   const isComplete = registeredQuestionCount >= questionCount;
 
   const questionForm = useForm<QuestionValues>({
-    resolver: zodResolver(questionSchema),
+    resolver: standardSchemaResolver(questionSchema),
     defaultValues: DEFAULT_QUESTION,
   });
   const questionType = questionForm.watch('type');

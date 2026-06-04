@@ -1,4 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -47,7 +47,7 @@ export function CreatePaperForm({
   exams: Exam[];
 }) {
   const form = useForm<PaperValues>({
-    resolver: zodResolver(paperSchema),
+    resolver: standardSchemaResolver(paperSchema),
     defaultValues: defaults,
   });
   const mutation = useCreatePaperMutation(token);

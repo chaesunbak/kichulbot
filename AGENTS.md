@@ -80,7 +80,17 @@ pnpm turbo run build --filter=@kichulbot/api
 pnpm turbo run typecheck --filter=@kichulbot/api
 ```
 
+## Overlay
+
+use `overlay-kit` to manage overlay elements. reference existing codes.
+
 ## Styleing
+
+### No shadow
+
+Never use shadow
+
+### Border
 
 Don't
 

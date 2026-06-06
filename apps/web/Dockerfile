@@ -13,6 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
+COPY packages/api-contract/package.json ./packages/api-contract/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/utils/package.json ./packages/utils/package.json
 
@@ -23,6 +24,7 @@ FROM deps AS builder
 COPY apps/web ./apps/web
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/typescript-config ./packages/typescript-config
+COPY packages/api-contract ./packages/api-contract
 COPY packages/ui ./packages/ui
 COPY packages/utils ./packages/utils
 

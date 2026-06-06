@@ -122,6 +122,10 @@ export function betterTailwindConfig({
 } = {}) {
   return {
     ...betterTailwindcss.configs.recommended,
+    rules: {
+      ...betterTailwindcss.configs.recommended.rules,
+      'better-tailwindcss/enforce-consistent-line-wrapping': 'off',
+    },
     settings: {
       'better-tailwindcss': {
         entryPoint,

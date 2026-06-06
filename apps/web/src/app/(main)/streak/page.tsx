@@ -1,21 +1,18 @@
-import { Button } from '@kichulbot/ui/components/ui/button';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server';
-import { MonthlyStreakCalendar } from '@/features/question-attempts/components/monthly-streak-calendar';
-import { WeeklyStreakSection } from '@/features/question-attempts/components/weekly-streak-section';
+import { StreakSummaryCard } from '@/features/question-attempts/components/streak-summary-card';
 import {
-  formatMonthTitle,
   getCurrentWeekRange,
   getMonthRange,
   getRecentStreakRange,
   normalizeMonth,
-  shiftMonth,
 } from '@/features/question-attempts/lib/streak-date';
 import { countAttemptsByDate } from '@/features/question-attempts/lib/streak-summary';
-import { SectionTitle } from '@/shared/components/section-title';
+import { ConstructionSection } from '@/shared/components/construction-section';
+import { PageContainer } from '@/shared/components/page-container';
+import { PageTitle } from '@/shared/components/page-title';
 
 interface StreakPageProps {
   searchParams?: Promise<{
@@ -38,39 +35,17 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
     getQuestionAttempts(streakRange.from, currentWeek.to),
   ]);
   const countsByDate = countAttemptsByDate(questionAttempts);
-  const previousMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
+  const totalDaysInMonth = Number(range.to.slice(-2));
 
   return (
-    <main
-      className="
-        mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8
-        sm:py-10
-      "
-    >
-      <WeeklyStreakSection questionAttempts={weeklyQuestionAttempts} />
-
-      <section
-        className="
-          flex flex-col gap-4
-          sm:flex-row sm:items-end sm:justify-between
-        "
-      >
-        <SectionTitle className="text-2xl">
-          {formatMonthTitle(month)}
-        </SectionTitle>
-
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href={`/streak?month=${previousMonth}`}>이전 달</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={`/streak?month=${nextMonth}`}>다음 달</Link>
-          </Button>
-        </div>
-      </section>
-
-      <MonthlyStreakCalendar month={month} countsByDate={countsByDate} />
-    </main>
+    <PageContainer>
+      <PageTitle>출석</PageTitle>
+      <StreakSummaryCard
+        countsByDate={countsByDate}
+        questionAttempts={weeklyQuestionAttempts}
+        totalDaysInMonth={totalDaysInMonth}
+      />
+      <ConstructionSection />
+    </PageContainer>
   );
 }

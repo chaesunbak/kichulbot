@@ -1,18 +1,55 @@
 import { Card, CardContent } from '@kichulbot/ui/components/ui/card';
+import type { StaticImageData } from 'next/image';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export interface FeatureSectionItem {
+import bookmarkIcon from '@/shared/assets/home/bookmark.png';
+import libraryIcon from '@/shared/assets/home/library.png';
+import paperIcon from '@/shared/assets/home/paper.png';
+import recapIcon from '@/shared/assets/home/recap.png';
+import reportIcon from '@/shared/assets/home/report.png';
+import searchIcon from '@/shared/assets/home/search.png';
+
+interface FeatureSectionItem {
   href: string;
   label: string;
-  iconSrc: string;
+  iconSrc: StaticImageData;
 }
 
-interface FeatureSectionProps {
-  items: FeatureSectionItem[];
-}
+export function FeatureSection() {
+  const featureItems = [
+    {
+      href: '/library',
+      label: '내 서재',
+      iconSrc: libraryIcon,
+    },
+    {
+      href: '/resources',
+      label: '시험지 풀이',
+      iconSrc: paperIcon,
+    },
+    {
+      href: '/resources/search',
+      label: '문제 검색',
+      iconSrc: searchIcon,
+    },
+    {
+      href: '/recap',
+      label: '오답 복습',
+      iconSrc: recapIcon,
+    },
+    {
+      href: '/library',
+      label: '북마크',
+      iconSrc: bookmarkIcon,
+    },
+    {
+      href: '/report',
+      label: '학습 분석',
+      iconSrc: reportIcon,
+    },
+  ] satisfies FeatureSectionItem[];
 
-export function FeatureSection({ items }: FeatureSectionProps) {
   return (
     <Card>
       <CardContent>
@@ -25,7 +62,7 @@ export function FeatureSection({ items }: FeatureSectionProps) {
           "
           aria-label="학습 기능 바로가기"
         >
-          {items.map((item) => (
+          {featureItems.map((item) => (
             <li key={item.label} className="min-w-0 sm:shrink-0">
               <FeatureItem item={item} />
             </li>
@@ -63,7 +100,7 @@ const FeatureItem = ({ item }: { item: FeatureSectionItem }) => {
       <span
         className="
           w-full truncate text-center text-sm font-bold text-zinc-500
-          sm:text-left sm:text-base sm:text-zinc-950
+          sm:text-left sm:text-base sm:text-zinc-900
         "
       >
         {item.label}

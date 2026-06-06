@@ -9,12 +9,9 @@ import {
 } from '@kichulbot/ui/components/ui/card';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
-import {
-  createWrongQuestionSolveSession,
-  refreshWrongQuestionSet,
-} from '@/features/learning/api/client';
+import { createLatestWrongQuestionSolveSession } from '@/features/learning/api/client';
 import type { DailyWrongQuestionSet } from '@/features/learning/types';
 
 export type WrongReviewStats = {
@@ -29,19 +26,16 @@ export function WrongReviewCard({
   initialQuestionSet,
   stats,
 }: {
-  initialQuestionSet: DailyWrongQuestionSet;
+  initialQuestionSet: DailyWrongQuestionSet | null;
   stats: WrongReviewStats;
 }) {
   const router = useRouter();
-  const [questionSet, setQuestionSet] = useState(initialQuestionSet);
   const [isPending, setIsPending] = useState(false);
-  const didAutoRefresh = useRef(false);
 
   const start = async () => {
     setIsPending(true);
     try {
-      const session = await createWrongQuestionSolveSession({
-        questionSetId: questionSet.id,
+      const session = await createLatestWrongQuestionSolveSession({
         mode: 'ONE_BY_ONE',
       });
       router.push(`/solve/${session.id}`);
@@ -52,36 +46,13 @@ export function WrongReviewCard({
     }
   };
 
-  const refresh = useCallback(
-    async ({ silent = false } = {}) => {
-      setIsPending(true);
-      try {
-        const nextQuestionSet = await refreshWrongQuestionSet(
-          questionSet.studyDate,
-        );
-        setQuestionSet(nextQuestionSet);
-        if (!silent) toast.success('최신 풀이 기록으로 갱신했습니다.');
-      } catch {
-        if (!silent) toast.error('오늘의 오답을 갱신하지 못했습니다.');
-      } finally {
-        setIsPending(false);
-      }
-    },
-    [questionSet.studyDate],
-  );
-
-  useEffect(() => {
-    if (didAutoRefresh.current) return;
-    didAutoRefresh.current = true;
-    void refresh({ silent: true });
-  }, [refresh]);
-
   const chartValue = stats.totalCount > 0 ? stats.accuracyRate : 0;
+  const questionCount = initialQuestionSet?.questionCount;
 
   return (
     <Card className="mt-6 border-blue-200 bg-blue-50/40">
       <CardHeader className="pb-3">
-        <CardTitle>{questionSet.title}</CardTitle>
+        <CardTitle>오답 복습</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-5">
@@ -106,14 +77,14 @@ export function WrongReviewCard({
           <Button
             type="button"
             size="sm"
-            disabled={isPending || questionSet.questionCount === 0}
+            disabled={isPending || questionCount === 0}
             onClick={() => void start()}
           >
-            오답문제 다시 풀기
+            {isPending ? '준비 중' : '오답 복습하기'}
           </Button>
         </div>
-        {questionSet.questionCount === 0 && (
-          <p className="text-xs text-zinc-500">오늘 다시 풀 오답이 없습니다.</p>
+        {questionCount === 0 && (
+          <p className="text-xs text-zinc-500">다시 풀 오답이 없습니다.</p>
         )}
       </CardContent>
     </Card>

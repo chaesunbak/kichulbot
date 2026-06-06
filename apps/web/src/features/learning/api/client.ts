@@ -38,6 +38,18 @@ export async function createWrongQuestionSolveSession({
   return body.session;
 }
 
+export async function createLatestWrongQuestionSolveSession({
+  mode,
+}: {
+  mode: SolveMode;
+}): Promise<SolveSession> {
+  const body = await clientApi.post<{ session: SolveSession }>(
+    '/api/me/wrong-question-sets/solve-sessions',
+    { mode },
+  );
+  return body.session;
+}
+
 export async function createBookmarkListSolveSession({
   bookmarkListId,
   mode,

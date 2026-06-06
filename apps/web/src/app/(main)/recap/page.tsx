@@ -40,12 +40,10 @@ export default async function RecapPage() {
   return (
     <PageContainer>
       <PageTitle>복습</PageTitle>
-      {wrongQuestionSet && (
-        <WrongReviewCard
-          initialQuestionSet={wrongQuestionSet}
-          stats={todayStats}
-        />
-      )}
+      <WrongReviewCard
+        initialQuestionSet={wrongQuestionSet}
+        stats={todayStats}
+      />
       <Card>
         <CardHeader>
           <CardTitle>나의 학습 분석</CardTitle>

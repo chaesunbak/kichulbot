@@ -83,9 +83,9 @@ export const getTodayWrongQuestions =
     const token = await getToken();
     if (!token) return null;
     const res = await serverApi
-      .post<{
-        data: { questionSet: DailyWrongQuestionSet };
-      }>('/me/wrong-question-sets', {}, token)
+      .get<{
+        data: { questionSet: DailyWrongQuestionSet | null };
+      }>('/me/wrong-question-sets', token)
       .catch((error: unknown) => {
         if (error instanceof ApiError && error.status === 401) return null;
         throw error;

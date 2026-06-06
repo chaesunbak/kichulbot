@@ -62,16 +62,3 @@ export function getMonthRange(month: string) {
 
   return { from, to };
 }
-
-export function shiftMonth(month: string, amount: number) {
-  const [year, monthNumber] = month.split('-').map(Number);
-  const date = new Date(Date.UTC(year, monthNumber - 1 + amount, 1));
-  const nextYear = date.getUTCFullYear();
-  const nextMonth = String(date.getUTCMonth() + 1).padStart(2, '0');
-  return `${nextYear}-${nextMonth}`;
-}
-
-export function formatMonthTitle(month: string) {
-  const [year, monthNumber] = month.split('-');
-  return `${year}년 ${Number(monthNumber)}월`;
-}

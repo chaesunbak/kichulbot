@@ -18,13 +18,26 @@ export const getSolveSession = async (id: string): Promise<SolveSession> => {
   return res.data.session;
 };
 
-export const getSolveSessionLogs = async (): Promise<SolveSessionLog[]> => {
+type GetSolveSessionLogsOptions = {
+  status?: SolveSessionLogStatus;
+  submittedDate?: string;
+};
+
+export const getSolveSessionLogs = async ({
+  status = 'all',
+  submittedDate,
+}: GetSolveSessionLogsOptions = {}): Promise<SolveSessionLog[]> => {
   const logs: SolveSessionLog[] = [];
   let page = 1;
   let totalPages = 1;
 
   do {
-    const result = await getSolveSessionLogPage({ page, limit: 100 });
+    const result = await getSolveSessionLogPage({
+      status,
+      submittedDate,
+      page,
+      limit: 100,
+    });
     logs.push(...result.logs);
     totalPages = result.totalPages;
     page += 1;
@@ -35,12 +48,14 @@ export const getSolveSessionLogs = async (): Promise<SolveSessionLog[]> => {
 
 type GetSolveSessionLogPageOptions = {
   status?: SolveSessionLogStatus;
+  submittedDate?: string;
   page?: number;
   limit?: number;
 };
 
 export const getSolveSessionLogPage = async ({
   status = 'all',
+  submittedDate,
   page = 1,
   limit = 20,
 }: GetSolveSessionLogPageOptions = {}): Promise<SolveSessionLogPage> => {
@@ -53,6 +68,7 @@ export const getSolveSessionLogPage = async ({
     page: String(page),
     limit: String(limit),
   });
+  if (submittedDate) query.set('submittedDate', submittedDate);
   const res = await serverApi
     .get<{ data: SolveSessionLogPage }>(`/me/solve-sessions?${query}`, token)
     .catch((error: unknown) => {

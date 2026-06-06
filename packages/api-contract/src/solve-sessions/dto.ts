@@ -64,6 +64,7 @@ export type SolveSessionLogStatus = z.infer<typeof SolveSessionLogStatusSchema>;
 
 export const ListSolveSessionLogsQuerySchema = PaginationQuerySchema.extend({
   status: SolveSessionLogStatusSchema.default('all'),
+  submittedDate: z.iso.date().optional(),
 });
 export type ListSolveSessionLogsQuery = z.infer<
   typeof ListSolveSessionLogsQuerySchema

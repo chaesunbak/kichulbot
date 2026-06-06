@@ -107,12 +107,17 @@ export class SolveSessionsService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const status = query.status ?? 'all';
+    const submittedRange = query.submittedDate
+      ? this.toKstDateRange(query.submittedDate)
+      : null;
     const { sessions, total } = await this.solveSessionsRepository.findLogs(
       userId,
       {
         page,
         limit,
         status,
+        submittedFrom: submittedRange?.from,
+        submittedTo: submittedRange?.to,
       },
     );
     return ListSolveSessionLogsResponseSchema.parse({
@@ -122,6 +127,27 @@ export class SolveSessionsService {
       limit,
       totalPages: total === 0 ? 0 : Math.ceil(total / limit),
     });
+  }
+
+  private toKstDateRange(date: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new BadRequestException(
+        'submittedDate는 YYYY-MM-DD 형식이어야 합니다.',
+      );
+    }
+    const [year, month, day] = date.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    if (
+      parsed.getUTCFullYear() !== year ||
+      parsed.getUTCMonth() !== month - 1 ||
+      parsed.getUTCDate() !== day
+    ) {
+      throw new BadRequestException('submittedDate가 올바른 날짜가 아닙니다.');
+    }
+    const from = new Date(`${date}T00:00:00+09:00`);
+    const to = new Date(from);
+    to.setUTCDate(to.getUTCDate() + 1);
+    return { from, to };
   }
 
   async startQuestionSet(

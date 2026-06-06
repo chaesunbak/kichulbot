@@ -16,6 +16,8 @@ type SolveSessionLogListFilters = {
   page: number;
   limit: number;
   status: SolveSessionLogStatus;
+  submittedFrom?: Date;
+  submittedTo?: Date;
 };
 
 @Injectable()
@@ -113,14 +115,24 @@ export class SolveSessionsRepository {
   }
 
   async findLogs(userId: string, filters: SolveSessionLogListFilters) {
+    const submittedAt =
+      filters.submittedFrom && filters.submittedTo
+        ? {
+            gte: filters.submittedFrom,
+            lt: filters.submittedTo,
+          }
+        : filters.status === 'completed'
+          ? { not: null }
+          : filters.status === 'in_progress'
+            ? null
+            : undefined;
     const where: Prisma.SolveSessionWhereInput = {
       userId,
       OR: [
         { sourceSetId: null },
         { sourceSet: { is: { kind: { not: QuestionSetKind.DAILY_WRONG } } } },
       ],
-      ...(filters.status === 'completed' ? { submittedAt: { not: null } } : {}),
-      ...(filters.status === 'in_progress' ? { submittedAt: null } : {}),
+      ...(submittedAt !== undefined ? { submittedAt } : {}),
     };
     const skip = (filters.page - 1) * filters.limit;
     const [sessions, total] = await this.db.$transaction([

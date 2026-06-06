@@ -20,8 +20,10 @@ import {
   FolderPlus,
   MoreVertical,
   Pencil,
+  Plus,
   Trash2,
 } from 'lucide-react';
+import Link from 'next/link';
 import { overlay } from 'overlay-kit';
 import { useMemo, useState } from 'react';
 
@@ -186,6 +188,11 @@ export function LibraryManager({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/resources" aria-label="자료 추가">
+              <Plus className="size-5" />
+            </Link>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -244,7 +251,7 @@ export function LibraryManager({
 
       {isEmpty ? (
         <section className="rounded-2xl border px-4 py-14 text-center">
-          <div className="text-lg text-zinc-800">비어 있습니다</div>
+          <div className="text-zinc-700">비어 있습니다</div>
         </section>
       ) : (
         <ul

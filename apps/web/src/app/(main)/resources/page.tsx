@@ -25,7 +25,7 @@ export default async function PapersPage() {
     [categories, exams] = await Promise.all([getCategories(), getExams()]);
   } catch {
     return (
-      <PageContainer>
+      <PageContainer className="min-h-[calc(100svh-16rem)]">
         <PageTitle>자료실</PageTitle>
         <p className="mt-3 text-sm text-destructive">
           학습자료를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
@@ -35,7 +35,7 @@ export default async function PapersPage() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer className="min-h-[calc(100svh-16rem)]">
       <div
         className="
           flex flex-col gap-4

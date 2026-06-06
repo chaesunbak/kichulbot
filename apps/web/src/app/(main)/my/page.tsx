@@ -19,7 +19,7 @@ export default async function MyPage() {
   if (!user) redirect('/login?next=/my');
 
   return (
-    <PageContainer>
+    <PageContainer className="min-h-[calc(100svh-16rem)]">
       <PageTitle>마이 페이지</PageTitle>
       <section
         className="

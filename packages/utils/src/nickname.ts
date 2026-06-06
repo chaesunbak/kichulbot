@@ -1,23 +1,27 @@
 const NICKNAME_ADJECTIVES = [
-  '꼼꼼한',
-  '차분한',
-  '날카로운',
-  '성실한',
-  '빠른',
+  '귀여운',
+  '상냥한',
+  '씩씩한',
+  '명랑한',
+  '포근한',
+  '활발한',
   '든든한',
-  '집중한',
   '영리한',
 ] as const;
 
-const NICKNAME_NOUNS = [
-  '기출러',
-  '합격러',
-  '문제왕',
-  '풀이왕',
-  '정답러',
-  '복습러',
-  '암기왕',
-  '학습러',
+const NICKNAME_ANIMALS = [
+  '코끼리',
+  '고양이',
+  '강아지',
+  '토끼',
+  '다람쥐',
+  '햄스터',
+  '펭귄',
+  '수달',
+  '고래',
+  '판다',
+  '사슴',
+  '여우',
 ] as const;
 
 function pickRandom<T>(items: readonly T[]) {
@@ -26,8 +30,8 @@ function pickRandom<T>(items: readonly T[]) {
 
 export function generateRandomNickname() {
   const adjective = pickRandom(NICKNAME_ADJECTIVES);
-  const noun = pickRandom(NICKNAME_NOUNS);
+  const animal = pickRandom(NICKNAME_ANIMALS);
   const suffix = Math.floor(Math.random() * 90) + 10;
 
-  return `${adjective}${noun}${suffix}`;
+  return `${adjective}${animal}${suffix}`;
 }

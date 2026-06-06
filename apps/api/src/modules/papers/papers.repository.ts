@@ -72,11 +72,38 @@ export class PapersRepository {
         questions: {
           orderBy: { number: 'asc' },
           include: {
+            revisions: {
+              orderBy: { revision: 'desc' },
+              take: 1,
+            },
             tags: { include: { tag: true } },
           },
         },
       },
     });
+  }
+
+  async findBookmarkedQuestionIds(userId: string, questionIds: string[]) {
+    if (questionIds.length === 0) return [];
+
+    const items = await this.db.questionSetItem.findMany({
+      where: {
+        questionSet: {
+          ownerUserId: userId,
+          kind: QuestionSetKind.CUSTOM,
+        },
+        questionRevision: {
+          questionId: { in: questionIds },
+        },
+      },
+      select: {
+        questionRevision: {
+          select: { questionId: true },
+        },
+      },
+    });
+
+    return items.map((item) => item.questionRevision.questionId);
   }
 
   update(id: string, data: Prisma.PaperUncheckedUpdateInput) {

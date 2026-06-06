@@ -1,6 +1,10 @@
 import * as z from 'zod';
 import { QuestionTypeSchema } from '../common.js';
-import { AdminPaperResponseSchema, PaperResponseSchema } from './schema.js';
+import {
+  AdminPaperResponseSchema,
+  PaperQuestionResponseSchema,
+  PaperResponseSchema,
+} from './schema.js';
 
 export const CreatePaperRequestSchema = z.object({
   title: z.string().min(1).max(100),
@@ -111,3 +115,11 @@ export const GetPaperResponseSchema = z.object({
   paper: z.union([AdminPaperResponseSchema, PaperResponseSchema]),
 });
 export type GetPaperResponse = z.infer<typeof GetPaperResponseSchema>;
+
+export const ListPaperQuestionsResponseSchema = z.object({
+  paper: PaperResponseSchema,
+  questions: z.array(PaperQuestionResponseSchema),
+});
+export type ListPaperQuestionsResponse = z.infer<
+  typeof ListPaperQuestionsResponseSchema
+>;

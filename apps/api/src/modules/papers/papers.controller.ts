@@ -94,6 +94,16 @@ export class PapersController {
     return this.papersService.createPaper(body, user.role);
   }
 
+  @Get(':id/questions')
+  @ApiOperation({ summary: '문제지 문항 목록 조회' })
+  @ApiOkResponse({ description: '문제지의 문항 목록을 반환합니다.' })
+  listPaperQuestions(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+  ) {
+    return this.papersService.listPaperQuestions(id, user.role, user.id);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: '문제지 상세 조회',
@@ -140,6 +150,13 @@ export class PublicPapersController {
       categoryId,
       q,
     });
+  }
+
+  @Get(':id/questions')
+  @ApiOperation({ summary: '공개 문제지 문항 목록 조회' })
+  @ApiOkResponse({ description: '공개된 문제지의 문항 목록을 반환합니다.' })
+  listPaperQuestions(@Param('id') id: string) {
+    return this.papersService.listPaperQuestions(id, UserRole.USER);
   }
 
   @Get(':id')

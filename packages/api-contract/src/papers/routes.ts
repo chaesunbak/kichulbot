@@ -5,6 +5,7 @@ import {
   ListPapersResponseSchema,
   ListPapersQuerySchema,
   GetPaperResponseSchema,
+  ListPaperQuestionsResponseSchema,
   PaperImportDraftResponseSchema,
   UpdatePaperRequestSchema,
   UpdatePaperResponseSchema,
@@ -34,6 +35,12 @@ export const papersRoutes = {
     path: '/exam-papers/:id',
     request: null,
     response: GetPaperResponseSchema,
+  },
+  listPaperQuestions: {
+    method: 'GET',
+    path: '/exam-papers/:id/questions',
+    request: null,
+    response: ListPaperQuestionsResponseSchema,
   },
   updatePaper: {
     method: 'PATCH',

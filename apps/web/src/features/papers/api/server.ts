@@ -1,5 +1,5 @@
 import { getToken } from '@/features/auth/server';
-import type { Paper } from '@/features/papers/types';
+import type { Paper, PaperQuestion } from '@/features/papers/types';
 import { ApiError, serverApi } from '@/shared/api/server';
 
 export type { Paper, Taxonomy } from '@/features/papers/types';
@@ -57,4 +57,24 @@ export const getPaper = async (id: string): Promise<Paper> => {
       throw error;
     });
   return res.data.paper;
+};
+
+export const getPaperQuestions = async (
+  id: string,
+): Promise<{ paper: Paper; questions: PaperQuestion[] }> => {
+  const token = await getToken();
+  const path = token ? '/exam-papers' : '/public/exam-papers';
+  const res = await serverApi
+    .get<{
+      data: { paper: Paper; questions: PaperQuestion[] };
+    }>(`${path}/${id}/questions`, token ?? undefined)
+    .catch((error: unknown) => {
+      if (token && error instanceof ApiError && error.status === 401) {
+        return serverApi.get<{
+          data: { paper: Paper; questions: PaperQuestion[] };
+        }>(`/public/exam-papers/${id}/questions`);
+      }
+      throw error;
+    });
+  return res.data;
 };

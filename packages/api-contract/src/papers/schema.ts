@@ -40,6 +40,23 @@ export const PaperResponseSchema = z.object({
 });
 export type PaperResponse = z.infer<typeof PaperResponseSchema>;
 
+export const PaperQuestionResponseSchema = z.object({
+  id: z.string(),
+  questionRevisionId: z.string(),
+  number: z.number().int(),
+  type: QuestionTypeSchema,
+  imageUrl: z.string().url(),
+  imageCacheKey: z.string().min(1),
+  choiceCount: z.number().int().nullable(),
+  answerChoice: z.number().int().nullable(),
+  answerText: z.string().nullable(),
+  explanation: z.string().nullable(),
+  points: z.number().int(),
+  recommendedTimeSeconds: z.number().int().nullable(),
+  isBookmarked: z.boolean(),
+});
+export type PaperQuestionResponse = z.infer<typeof PaperQuestionResponseSchema>;
+
 export const AdminPaperResponseSchema = PaperResponseSchema.extend({
   isPublished: z.boolean(),
   registeredQuestionCount: z.number().int(),

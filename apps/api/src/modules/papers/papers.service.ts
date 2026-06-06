@@ -9,6 +9,8 @@ import {
   DeletePaperResponseSchema,
   GetPaperResponse,
   GetPaperResponseSchema,
+  ListPaperQuestionsResponse,
+  ListPaperQuestionsResponseSchema,
   ListPapersResponse,
   ListPapersResponseSchema,
   PaperResponse,
@@ -28,6 +30,7 @@ import {
   Paper,
   Prisma,
   Question,
+  QuestionRevision,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 import { StorageService } from '../../infrastructure/storage/storage.service';
@@ -42,6 +45,7 @@ type PaperWithRelations = Paper & {
   examSession: ExamSession & { exam: Exam };
   questions?: Array<
     Question & {
+      revisions?: QuestionRevision[];
       tags?: Array<
         Prisma.QuestionTagGetPayload<{
           include: { tag: true };
@@ -204,6 +208,54 @@ export class PapersService {
 
     return GetPaperResponseSchema.parse({
       paper: this.toPaperResponse(paper, role),
+    });
+  }
+
+  async listPaperQuestions(
+    id: string,
+    role: UserRole,
+    userId?: string,
+  ): Promise<ListPaperQuestionsResponse> {
+    const where = role === UserRole.ADMIN ? {} : { isPublished: true };
+    const paper = userId
+      ? await this.papersRepository.findById(id, where, userId)
+      : await this.papersRepository.findById(id, where);
+
+    if (!paper) {
+      throw new NotFoundException('문제지를 찾을 수 없습니다.');
+    }
+
+    const questions = paper.questions ?? [];
+    const bookmarkedQuestionIds = userId
+      ? new Set(
+          await this.papersRepository.findBookmarkedQuestionIds(
+            userId,
+            questions.map((question) => question.id),
+          ),
+        )
+      : new Set<string>();
+
+    return ListPaperQuestionsResponseSchema.parse({
+      paper: this.toPaperResponse(paper, UserRole.USER),
+      questions: questions.map((question) => {
+        const revision = question.revisions?.[0];
+
+        return {
+          id: question.id,
+          questionRevisionId: revision?.id ?? question.id,
+          number: question.number,
+          type: question.type,
+          imageUrl: question.imageUrl,
+          imageCacheKey: this.toImageCacheKey(question.imageHash),
+          choiceCount: question.choiceCount,
+          answerChoice: revision?.answerChoice ?? question.answerChoice,
+          answerText: revision?.answerText ?? question.answerText,
+          explanation: revision?.explanation ?? question.explanation,
+          points: question.points,
+          recommendedTimeSeconds: question.recommendedTimeSeconds,
+          isBookmarked: bookmarkedQuestionIds.has(question.id),
+        };
+      }),
     });
   }
 

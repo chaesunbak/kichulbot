@@ -33,6 +33,7 @@ const ALLOWED_ROUTES = [
   ['GET', /^\/me\/wrong-question-sets$/],
   ['POST', /^\/me\/wrong-question-sets$/],
   ['POST', /^\/me\/wrong-question-sets\/[^/]+\/solve-sessions$/],
+  ['GET', /^\/exam-papers\/[^/]+\/questions$/],
 ] as const;
 
 function isAllowedRoute(method: string, path: string) {

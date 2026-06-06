@@ -347,6 +347,7 @@ export function SolveSession({
       className="mx-auto flex size-full max-w-7xl flex-col overflow-hidden"
     >
       <SolveSessionHeader
+        paperId={session.paper.id}
         title={session.paper.title}
         mode={session.mode}
         question={question}
@@ -372,6 +373,7 @@ export function SolveSession({
         "
       >
         <QuestionPanel
+          paperId={session.paper.id}
           question={question}
           currentIndex={currentIndex}
           questionCount={session.paper.questions.length}
@@ -403,6 +405,7 @@ export function SolveSession({
 }
 
 function SolveSessionHeader({
+  paperId,
   title,
   mode,
   question,
@@ -420,6 +423,7 @@ function SolveSessionHeader({
   onLeave,
   onSubmit,
 }: {
+  paperId: string;
   title: string;
   mode: SolveSession['mode'];
   question: SolveQuestion;
@@ -503,6 +507,7 @@ function SolveSessionHeader({
         <QuestionActions
           questionId={question.id}
           questionRevisionId={question.questionRevisionId}
+          shareHref={getQuestionShareHref(paperId, question.number)}
           isAuthenticated={isAuthenticated}
           compact
           showReportAction={false}
@@ -691,11 +696,13 @@ function ElapsedTimeText({
 }
 
 function QuestionPanel({
+  paperId,
   question,
   currentIndex,
   questionCount,
   isAuthenticated,
 }: {
+  paperId: string;
   question: SolveQuestion;
   currentIndex: number;
   questionCount: number;
@@ -708,6 +715,7 @@ function QuestionPanel({
       "
     >
       <QuestionHeader
+        paperId={paperId}
         question={question}
         currentIndex={currentIndex}
         questionCount={questionCount}
@@ -719,11 +727,13 @@ function QuestionPanel({
 }
 
 function QuestionHeader({
+  paperId,
   question,
   currentIndex,
   questionCount,
   isAuthenticated,
 }: {
+  paperId: string;
   question: SolveQuestion;
   currentIndex: number;
   questionCount: number;
@@ -758,6 +768,7 @@ function QuestionHeader({
         <QuestionActions
           questionId={question.id}
           questionRevisionId={question.questionRevisionId}
+          shareHref={getQuestionShareHref(paperId, question.number)}
           isAuthenticated={isAuthenticated}
         />
         <span className="text-sm text-zinc-500">
@@ -1255,4 +1266,8 @@ function formatCorrectAnswer(result: SolveQuestion['result']) {
   return result.answerChoice
     ? `${result.answerChoice}번`
     : (result.answerText ?? '등록된 정답 없음');
+}
+
+function getQuestionShareHref(paperId: string, questionNumber: number) {
+  return `/resources/${paperId}/questions?question=${questionNumber}`;
 }

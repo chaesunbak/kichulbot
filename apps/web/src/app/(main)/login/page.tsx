@@ -22,9 +22,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   if (user) redirect(nextPath);
 
   return (
-    <PageContainer
-      className="min-h-[calc(100svh-16rem)] items-center justify-center"
-    >
+    <PageContainer className="min-h-[calc(100svh-16rem)] items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-4">
           <div className="mb-4 text-center">

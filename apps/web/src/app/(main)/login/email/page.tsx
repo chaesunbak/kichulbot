@@ -21,9 +21,7 @@ export default async function EmailLoginPage({
   if (user) redirect(nextPath);
 
   return (
-    <PageContainer
-      className="min-h-[calc(100svh-16rem)] items-center justify-center"
-    >
+    <PageContainer className="min-h-[calc(100svh-16rem)] items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-8">
           <div className="text-center">

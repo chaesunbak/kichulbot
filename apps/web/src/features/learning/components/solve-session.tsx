@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
+import posthog from 'posthog-js';
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -113,6 +114,14 @@ export function SolveSession({
       }, 0),
     [session.answers],
   );
+  const getSolveEventProperties = () => ({
+    session_id: session.id,
+    paper_id: session.paper.id,
+    mode: session.mode,
+    question_count: session.paper.questions.length,
+    answered_count: effectiveAnsweredIds.size,
+    authenticated: !isLocalSession,
+  });
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -220,10 +229,19 @@ export function SolveSession({
       next.delete(question.id);
       return next;
     });
+    const spentMilliseconds = takeElapsed();
     try {
       await saveProgress(question.id, {
         ...payload,
-        spentMilliseconds: takeElapsed(),
+        spentMilliseconds,
+      });
+      posthog.capture('solve_question_answered', {
+        ...getSolveEventProperties(),
+        question_id: question.id,
+        question_number: question.number,
+        question_type: question.type,
+        answer_type: payload.answerChoice ? 'choice' : 'written',
+        spent_milliseconds: spentMilliseconds,
       });
       setMessage('저장했습니다.');
     } catch {
@@ -261,8 +279,17 @@ export function SolveSession({
     if (!question || session.submittedAt || isFinishing) return;
     setIsFinishing(true);
     setMessage('풀이를 저장하는 중...');
+    const durationMilliseconds =
+      savedElapsedMilliseconds + elapsedMilliseconds.current;
     try {
       await saveCurrentProgress();
+      posthog.capture('solve_session_left', {
+        ...getSolveEventProperties(),
+        current_question_id: question.id,
+        current_question_number: question.number,
+        unanswered_count: unansweredCount,
+        duration_milliseconds: durationMilliseconds,
+      });
       setMessage('저장했습니다.');
       router.push(isLocalSession ? `/resources/${session.paper.id}` : '/logs');
     } catch {
@@ -297,6 +324,8 @@ export function SolveSession({
     if (!question || session.submittedAt || isFinishing) return;
     setIsFinishing(true);
     setMessage('제출하는 중...');
+    const durationMilliseconds =
+      savedElapsedMilliseconds + elapsedMilliseconds.current;
     try {
       await saveCurrentProgress();
       if (isLocalSession) {
@@ -304,6 +333,16 @@ export function SolveSession({
       } else {
         await submitSolveSession(session.id);
       }
+      posthog.capture('solve_session_submitted', {
+        session_id: session.id,
+        paper_id: session.paper.id,
+        mode: session.mode,
+        question_count: session.paper.questions.length,
+        answered_count: effectiveAnsweredIds.size,
+        unanswered_count: unansweredCount,
+        duration_milliseconds: durationMilliseconds,
+        authenticated: !isLocalSession,
+      });
       setMessage('결과 페이지로 이동 중입니다.');
       router.replace(
         isLocalSession
@@ -322,6 +361,13 @@ export function SolveSession({
     try {
       await saveCurrentProgress();
       setRevealedAnswerIds((current) => new Set(current).add(question.id));
+      posthog.capture('solve_answer_revealed', {
+        ...getSolveEventProperties(),
+        question_id: question.id,
+        question_number: question.number,
+        question_type: question.type,
+        has_answer: hasCurrentAnswer,
+      });
       setMessage('답안을 확인했습니다.');
     } catch {
       showFailureMessage('답안을 확인하지 못했습니다.');

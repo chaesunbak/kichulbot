@@ -5,6 +5,7 @@ import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 
 import {
@@ -16,9 +17,13 @@ import { createLocalSolveSession } from '@/features/learning/lib/local-solve-ses
 
 export function PaperSolveButton({
   paperId,
+  questionCount,
+  source = 'resource_detail',
   isAuthenticated = false,
 }: {
   paperId: string;
+  questionCount?: number;
+  source?: string;
   isAuthenticated?: boolean;
 }) {
   const router = useRouter();
@@ -45,11 +50,27 @@ export function PaperSolveButton({
     try {
       if (isAuthenticated) {
         const session = await createSolveSession({ paperId, mode });
+        posthog.capture('solve_session_started', {
+          session_id: session.id,
+          paper_id: paperId,
+          mode,
+          question_count: questionCount,
+          authenticated: true,
+          source,
+        });
         router.push(`/solve/${session.id}`);
         return;
       }
 
       const session = await createLocalSolveSession({ paperId, mode });
+      posthog.capture('solve_session_started', {
+        session_id: session.id,
+        paper_id: paperId,
+        mode,
+        question_count: questionCount,
+        authenticated: false,
+        source,
+      });
       router.push(`/solve/local/${session.id}`);
     } catch {
       setIsStarting(false);

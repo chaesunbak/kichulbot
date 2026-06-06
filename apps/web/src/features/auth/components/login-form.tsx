@@ -12,6 +12,7 @@ import {
 import { Input } from '@kichulbot/ui/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -39,14 +40,20 @@ export function LoginForm() {
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
 
+    const email = values.email.trim().toLowerCase();
     try {
-      await loginWithEmailApi({
-        email: values.email.trim().toLowerCase(),
+      const { user } = await loginWithEmailApi({
+        email,
         password: values.password,
       });
+      posthog.identify(user.id, { email: user.email, nickname: user.nickname });
+      posthog.capture('user_logged_in', { method: 'email' });
       router.push(normalizeNextPath(searchParams.get('next')));
       router.refresh();
     } catch (error) {
+      if (error instanceof Error) {
+        posthog.captureException(error);
+      }
       const message =
         error instanceof ApiError
           ? error.message

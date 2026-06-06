@@ -58,6 +58,7 @@ export default async function LibraryPaperPage({
           <LibraryPaperActions
             libraryPaperId={libraryPaper.id}
             paperId={paper.id}
+            questionCount={paper.questionCount}
             folders={library.folders}
             initialFolderId={libraryPaper.folderId}
           />

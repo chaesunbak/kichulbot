@@ -11,6 +11,7 @@ import {
 } from '@kichulbot/ui/components/ui/select';
 import { Search, X } from 'lucide-react';
 import { parseAsString, useQueryStates } from 'nuqs';
+import posthog from 'posthog-js';
 import type { SyntheticEvent } from 'react';
 import { useMemo, useRef } from 'react';
 
@@ -50,19 +51,37 @@ export function ResourceSearchControls({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const query = formData.get('q');
+    const q = query?.toString().trim() || null;
 
-    void setFilters({ q: query?.toString().trim() || null });
+    posthog.capture('resources_searched', {
+      query: q,
+      category_id: filters.categoryId || null,
+      exam_id: filters.examId || null,
+    });
+    void setFilters({ q });
   }
 
   function updateCategory(categoryId: string) {
+    const nextCategoryId = categoryId || null;
+    posthog.capture('resources_searched', {
+      query: filters.q || null,
+      category_id: nextCategoryId,
+      exam_id: null,
+    });
     void setFilters({
-      categoryId: categoryId || null,
+      categoryId: nextCategoryId,
       examId: null,
     });
   }
 
   function updateExam(examId: string) {
-    void setFilters({ examId: examId || null });
+    const nextExamId = examId || null;
+    posthog.capture('resources_searched', {
+      query: filters.q || null,
+      category_id: filters.categoryId || null,
+      exam_id: nextExamId,
+    });
+    void setFilters({ examId: nextExamId });
   }
 
   function clearFilters() {

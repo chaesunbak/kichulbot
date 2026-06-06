@@ -20,6 +20,7 @@ import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { FolderInput, Play, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 
 import { createSolveSession } from '@/features/learning/api/client';
@@ -35,11 +36,13 @@ const ROOT_FOLDER_VALUE = '__root__';
 export function LibraryPaperActions({
   libraryPaperId,
   paperId,
+  questionCount,
   folders,
   initialFolderId,
 }: {
   libraryPaperId: string;
   paperId: string;
+  questionCount?: number;
   folders: LibraryFolder[];
   initialFolderId: string | null;
 }) {
@@ -57,6 +60,14 @@ export function LibraryPaperActions({
     setIsStarting(true);
     try {
       const session = await createSolveSession({ paperId, mode });
+      posthog.capture('solve_session_started', {
+        session_id: session.id,
+        paper_id: paperId,
+        mode,
+        question_count: questionCount,
+        authenticated: true,
+        source: 'library',
+      });
       router.push(`/solve/${session.id}`);
     } catch {
       toast.error('풀이를 시작하지 못했습니다.');

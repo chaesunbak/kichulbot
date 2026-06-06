@@ -4,6 +4,7 @@ import { Button } from '@kichulbot/ui/components/ui/button';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { BookCheck, BookPlus, Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 
 import { addExamPaperToLibrary } from '@/features/papers/api/client';
@@ -36,6 +37,7 @@ export function PaperBookmarkButton({
         addExamPaperToLibrary(paperId, targetFolderId),
         delay(MIN_ADDING_DURATION_MS),
       ]);
+      posthog.capture('paper_added_to_library', { paper_id: paperId });
       setIsInLibrary(true);
       router.refresh();
     } catch {

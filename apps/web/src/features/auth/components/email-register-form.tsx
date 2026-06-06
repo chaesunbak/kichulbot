@@ -14,7 +14,8 @@ import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { generateRandomNickname } from '@kichulbot/utils';
 import { Check, Dices, Loader2, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import posthog from 'posthog-js';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import {
@@ -36,6 +37,9 @@ export function EmailRegisterForm() {
   const [sending, setSending] = useState(false);
   const [checking, setChecking] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const trackedFieldsRef = useRef<Set<keyof EmailRegisterFormValues>>(
+    new Set(),
+  );
 
   const {
     register,
@@ -62,10 +66,42 @@ export function EmailRegisterForm() {
     .trim()
     .toLowerCase();
   const isVerified = !!verificationToken && verifiedEmail === currentEmail;
+  const getRegisterProgress = () => {
+    const values = getValues();
+
+    return {
+      method: 'email',
+      has_email: !!values.email?.trim(),
+      has_code: !!values.code?.trim(),
+      has_nickname: !!values.nickname?.trim(),
+      has_password: !!values.password,
+      has_password_confirm: !!values.passwordConfirm,
+      email_verified: isVerified,
+    };
+  };
+  const captureFieldStarted = (field: keyof EmailRegisterFormValues) => {
+    if (trackedFieldsRef.current.has(field)) return;
+
+    trackedFieldsRef.current.add(field);
+    posthog.capture('email_register_field_started', {
+      field,
+      ...getRegisterProgress(),
+    });
+  };
+
+  useEffect(() => {
+    posthog.capture('email_register_viewed', { method: 'email' });
+  }, []);
 
   const handleSendCode = async () => {
     const isEmailValid = await trigger('email');
-    if (!isEmailValid) return;
+    if (!isEmailValid) {
+      posthog.capture('email_register_verification_request_blocked', {
+        reason: 'invalid_email',
+        ...getRegisterProgress(),
+      });
+      return;
+    }
 
     const email = getValues('email').trim().toLowerCase();
 
@@ -73,10 +109,20 @@ export function EmailRegisterForm() {
     setServerError(null);
     setVerifiedEmail(null);
     setVerificationToken(null);
+    posthog.capture('email_register_verification_requested', {
+      ...getRegisterProgress(),
+    });
     try {
       await requestEmailVerificationApi(email);
+      posthog.capture('email_register_verification_sent', {
+        ...getRegisterProgress(),
+      });
       toast.success('인증번호를 발송했습니다.');
     } catch (error) {
+      posthog.capture('email_register_verification_failed', {
+        error_type: error instanceof ApiError ? 'api_error' : 'unknown_error',
+        ...getRegisterProgress(),
+      });
       const message =
         error instanceof ApiError
           ? error.message
@@ -90,13 +136,22 @@ export function EmailRegisterForm() {
 
   const handleConfirmCode = async () => {
     const isCodeValid = await trigger(['email', 'code']);
-    if (!isCodeValid) return;
+    if (!isCodeValid) {
+      posthog.capture('email_register_code_confirmation_blocked', {
+        reason: 'invalid_code_form',
+        ...getRegisterProgress(),
+      });
+      return;
+    }
 
     const email = getValues('email').trim().toLowerCase();
     const code = getValues('code').trim();
 
     setChecking(true);
     setServerError(null);
+    posthog.capture('email_register_code_confirmation_requested', {
+      ...getRegisterProgress(),
+    });
     try {
       const response = await confirmEmailVerificationApi({ email, code });
       if (!response.emailVerificationToken) {
@@ -104,7 +159,20 @@ export function EmailRegisterForm() {
       }
       setVerifiedEmail(email);
       setVerificationToken(response.emailVerificationToken);
+      posthog.capture('email_register_code_confirmed', {
+        method: 'email',
+        has_email: true,
+        has_code: true,
+        has_nickname: !!getValues('nickname')?.trim(),
+        has_password: !!getValues('password'),
+        has_password_confirm: !!getValues('passwordConfirm'),
+        email_verified: true,
+      });
     } catch (error) {
+      posthog.capture('email_register_code_confirmation_failed', {
+        error_type: error instanceof ApiError ? 'api_error' : 'unknown_error',
+        ...getRegisterProgress(),
+      });
       const message =
         error instanceof ApiError
           ? error.message
@@ -122,26 +190,45 @@ export function EmailRegisterForm() {
       shouldTouch: true,
       shouldValidate: true,
     });
+    posthog.capture('email_register_nickname_generated', {
+      ...getRegisterProgress(),
+    });
   };
 
   const onSubmit = async (values: EmailRegisterFormValues) => {
     const email = values.email.trim().toLowerCase();
     if (!verificationToken || verifiedEmail !== email) {
+      posthog.capture('email_register_submit_blocked', {
+        reason: 'email_not_verified',
+        ...getRegisterProgress(),
+      });
       toast.error('이메일 인증을 먼저 완료해주세요.');
       return;
     }
 
     setServerError(null);
+    posthog.capture('email_register_submitted', {
+      ...getRegisterProgress(),
+    });
     try {
-      await registerWithEmailApi({
+      const { user } = await registerWithEmailApi({
         email,
         password: values.password,
         nickname: values.nickname?.trim() || undefined,
         emailVerificationToken: verificationToken,
       });
+      posthog.identify(user.id, { email: user.email, nickname: user.nickname });
+      posthog.capture('user_registered', { method: 'email' });
       router.push('/');
       router.refresh();
     } catch (error) {
+      posthog.capture('email_register_failed', {
+        error_type: error instanceof ApiError ? 'api_error' : 'unknown_error',
+        ...getRegisterProgress(),
+      });
+      if (error instanceof Error) {
+        posthog.captureException(error);
+      }
       const message =
         error instanceof ApiError
           ? error.message
@@ -150,9 +237,15 @@ export function EmailRegisterForm() {
       toast.error(message);
     }
   };
+  const onInvalid = () => {
+    posthog.capture('email_register_submit_blocked', {
+      reason: 'invalid_form',
+      ...getRegisterProgress(),
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
       <FieldGroup className="gap-4">
         <Field>
           <FieldLabel htmlFor="email">이메일</FieldLabel>
@@ -162,6 +255,7 @@ export function EmailRegisterForm() {
               type="email"
               autoComplete="email"
               aria-invalid={!!errors.email}
+              onFocus={() => captureFieldStarted('email')}
               {...register('email')}
             />
             <Button
@@ -191,6 +285,7 @@ export function EmailRegisterForm() {
               inputMode="numeric"
               maxLength={6}
               aria-invalid={!!errors.code}
+              onFocus={() => captureFieldStarted('code')}
               {...register('code')}
             />
             <Button
@@ -220,6 +315,7 @@ export function EmailRegisterForm() {
               autoComplete="nickname"
               className="pr-11"
               aria-invalid={!!errors.nickname}
+              onFocus={() => captureFieldStarted('nickname')}
               {...register('nickname')}
             />
             <Button
@@ -247,6 +343,7 @@ export function EmailRegisterForm() {
             id="password"
             autoComplete="new-password"
             aria-invalid={!!errors.password}
+            onFocus={() => captureFieldStarted('password')}
             {...register('password')}
           />
           <FieldError errors={[errors.password]} />
@@ -258,6 +355,7 @@ export function EmailRegisterForm() {
             id="passwordConfirm"
             autoComplete="new-password"
             aria-invalid={!!errors.passwordConfirm}
+            onFocus={() => captureFieldStarted('passwordConfirm')}
             {...register('passwordConfirm')}
           />
           <FieldError errors={[errors.passwordConfirm]} />

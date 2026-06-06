@@ -1,5 +1,8 @@
+'use client';
+
 import { Button } from '@kichulbot/ui/components/ui/button';
 import Link from 'next/link';
+import posthog from 'posthog-js';
 import type { ComponentProps, ReactNode } from 'react';
 
 interface KakaoAuthButtonProps {
@@ -16,7 +19,7 @@ export function KakaoAuthButton({ href, children }: KakaoAuthButtonProps) {
         hover:bg-[#FADA0A]
       "
     >
-      <Link href={href}>
+      <Link href={href} onClick={() => posthog.capture('kakao_login_clicked')}>
         <KakaoIcon className="size-4" data-icon="inline-start" />
         {children}
       </Link>

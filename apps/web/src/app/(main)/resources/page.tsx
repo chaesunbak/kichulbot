@@ -117,7 +117,11 @@ function CategoryPaperSectionItem({ section }: CategoryPaperSectionItemProps) {
           </Link>
         </Button>
       </div>
-      <PaperGrid papers={papers} />
+      <PaperGrid
+        papers={papers}
+        source="resources_category_section"
+        resultCount={paperCount}
+      />
     </section>
   );
 }

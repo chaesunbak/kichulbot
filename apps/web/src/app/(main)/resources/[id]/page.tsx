@@ -6,6 +6,7 @@ import { PaperSolveHistorySection } from '@/features/learning/components/paper-s
 import { getPaper, type Paper } from '@/features/papers/api/server';
 import { PaperActions } from '@/features/papers/components/paper-actions';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
+import { PaperViewTracker } from '@/features/papers/components/paper-view-tracker';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
@@ -29,6 +30,7 @@ export default async function PaperPage({
 
   return (
     <PageContainer>
+      <PaperViewTracker paperId={paper.id} />
       <div
         className="
           grid gap-8
@@ -46,6 +48,7 @@ export default async function PaperPage({
           </div>
           <PaperActions
             paperId={paper.id}
+            questionCount={paper.questionCount}
             initialIsInLibrary={paper.isInLibrary}
             isAuthenticated={!!user}
           />

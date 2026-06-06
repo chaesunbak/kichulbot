@@ -13,6 +13,7 @@ import { BookmarkPlus, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { overlay } from 'overlay-kit';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 
 import type { BookmarkListSummary } from '@/features/learning/types';
@@ -59,6 +60,10 @@ export function QuestionBookmarkButton({
       await addQuestionToBookmarkList({
         bookmarkListId,
         questionId,
+      });
+      posthog.capture('question_bookmarked', {
+        question_id: questionId,
+        bookmark_list_id: bookmarkListId,
       });
       toast.success('선택한 리스트에 추가했습니다.');
     } catch {

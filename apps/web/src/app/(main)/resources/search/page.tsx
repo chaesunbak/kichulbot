@@ -62,7 +62,11 @@ export default async function ResourcesSearchPage({
         </p>
       </div>
 
-      <PaperGrid papers={data.papers} />
+      <PaperGrid
+        papers={data.papers}
+        source="resources_search"
+        resultCount={data.papers.length}
+      />
     </PageContainer>
   );
 }

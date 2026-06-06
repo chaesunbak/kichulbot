@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import posthog from 'posthog-js';
 import { Suspense, useEffect, useRef } from 'react';
 
 import { ApiError, completeOAuthSessionApi } from '@/features/auth/api/client';
@@ -31,7 +32,12 @@ function OAuthCallbackContent() {
     }
 
     completeOAuthSessionApi(accessToken)
-      .then(() => {
+      .then(({ user }) => {
+        posthog.identify(user.id, {
+          email: user.email,
+          nickname: user.nickname,
+        });
+        posthog.capture('user_logged_in', { method: 'kakao' });
         router.replace(takeOAuthNextPath());
         router.refresh();
       })

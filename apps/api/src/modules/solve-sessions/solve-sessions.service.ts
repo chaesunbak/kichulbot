@@ -83,7 +83,7 @@ export class SolveSessionsService {
       mode,
     );
     return StartSolveSessionResponseSchema.parse({
-      session: this.toResponse(session),
+      session: await this.toResponse(session),
     });
   }
 
@@ -161,14 +161,14 @@ export class SolveSessionsService {
       mode,
     );
     return StartSolveSessionResponseSchema.parse({
-      session: this.toResponse(session),
+      session: await this.toResponse(session),
     });
   }
 
   async get(userId: string, id: string): Promise<GetSolveSessionResponse> {
     const session = await this.findOwnedSession(userId, id);
     return GetSolveSessionResponseSchema.parse({
-      session: this.toResponse(session),
+      session: await this.toResponse(session),
     });
   }
 
@@ -227,7 +227,7 @@ export class SolveSessionsService {
       ? existing
       : await this.solveSessionsRepository.submit(id);
     return SubmitSolveSessionResponseSchema.parse({
-      session: this.toResponse(session),
+      session: await this.toResponse(session),
     });
   }
 
@@ -266,7 +266,14 @@ export class SolveSessionsService {
     return { answerChoice: null, answerText };
   }
 
-  private toResponse(session: SessionWithRelations): SolveSessionResponse {
+  private async toResponse(
+    session: SessionWithRelations,
+  ): Promise<SolveSessionResponse> {
+    const bookmarkedQuestionIds = await this.getBookmarkedQuestionIdSet(
+      session.userId,
+      session,
+    );
+
     return {
       id: session.id,
       mode: session.mode,
@@ -287,6 +294,9 @@ export class SolveSessionsService {
             points: item.questionRevision.points,
             recommendedTimeSeconds:
               item.questionRevision.recommendedTimeSeconds,
+            isBookmarked: bookmarkedQuestionIds.has(
+              item.questionRevision.questionId,
+            ),
             result: this.shouldRevealResult(session, gradedAnswer)
               ? this.toQuestionResult(item.questionRevision, gradedAnswer)
               : null,
@@ -389,6 +399,7 @@ export class SolveSessionsService {
           choiceCount: item.questionRevision.choiceCount,
           points: item.questionRevision.points,
           recommendedTimeSeconds: item.questionRevision.recommendedTimeSeconds,
+          isBookmarked: false,
           result: {
             answerChoice: item.questionRevision.answerChoice,
             answerText: item.questionRevision.answerText,
@@ -429,6 +440,21 @@ export class SolveSessionsService {
 
   private toImageCacheKey(imageHash: string): string {
     return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
+  }
+
+  private async getBookmarkedQuestionIdSet(
+    userId: string,
+    session: SessionWithRelations,
+  ) {
+    const questionIds = session.items.map(
+      (item) => item.questionRevision.questionId,
+    );
+    const bookmarkedQuestionIds =
+      await this.solveSessionsRepository.findBookmarkedQuestionIds(
+        userId,
+        questionIds,
+      );
+    return new Set(bookmarkedQuestionIds);
   }
 
   private toAnswerResponse(

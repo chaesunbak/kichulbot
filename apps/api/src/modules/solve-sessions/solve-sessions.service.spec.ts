@@ -148,6 +148,7 @@ describe('SolveSessionsService', () => {
       findPublishedPaper: jest.fn(),
       start: jest.fn(),
       findById: jest.fn(),
+      findBookmarkedQuestionIds: jest.fn().mockResolvedValue([]),
       saveAnswer: jest.fn(),
       submit: jest.fn(),
       findLogs: jest.fn(),
@@ -158,6 +159,7 @@ describe('SolveSessionsService', () => {
   it('저장소가 반환한 기존 세션을 그대로 복원한다', async () => {
     repository.findPublishedPaper.mockResolvedValue(paper);
     repository.start.mockResolvedValue(session);
+    repository.findBookmarkedQuestionIds.mockResolvedValue([question.id]);
 
     const response = await service.start('user_1', paper.id, AnswerMode.EXAM);
 
@@ -167,6 +169,7 @@ describe('SolveSessionsService', () => {
       AnswerMode.EXAM,
     );
     expect(response.session.id).toBe(session.id);
+    expect(response.session.paper.questions[0].isBookmarked).toBe(true);
   });
 
   it('다른 사용자의 세션 접근을 거부한다', async () => {

@@ -26,6 +26,7 @@ export const SolveQuestionResponseSchema = z.object({
   choiceCount: z.number().int().nullable(),
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
+  isBookmarked: z.boolean(),
   result: QuestionResultResponseSchema.nullable(),
 });
 export type SolveQuestionResponse = z.infer<typeof SolveQuestionResponseSchema>;

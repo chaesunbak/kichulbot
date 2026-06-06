@@ -114,6 +114,29 @@ export class SolveSessionsRepository {
     });
   }
 
+  async findBookmarkedQuestionIds(userId: string, questionIds: string[]) {
+    if (questionIds.length === 0) return [];
+
+    const items = await this.db.questionSetItem.findMany({
+      where: {
+        questionSet: {
+          ownerUserId: userId,
+          kind: QuestionSetKind.CUSTOM,
+        },
+        questionRevision: {
+          questionId: { in: questionIds },
+        },
+      },
+      select: {
+        questionRevision: {
+          select: { questionId: true },
+        },
+      },
+    });
+
+    return [...new Set(items.map((item) => item.questionRevision.questionId))];
+  }
+
   async findLogs(userId: string, filters: SolveSessionLogListFilters) {
     const submittedAt =
       filters.submittedFrom && filters.submittedTo

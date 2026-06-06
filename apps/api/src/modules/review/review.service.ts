@@ -102,6 +102,27 @@ export class ReviewService {
     );
   }
 
+  async startLatest(
+    userId: string,
+    mode: AnswerMode = AnswerMode.ONE_BY_ONE,
+    studyDateInput?: string,
+  ): Promise<StartWrongReviewSessionResponse> {
+    const studyDate = await this.resolveStudyDate(userId, studyDateInput);
+    const questionSet = await this.reviewRepository.regenerate(
+      userId,
+      studyDate,
+    );
+    if (questionSet.items.length === 0) {
+      throw new BadRequestException('다시 풀 오답이 없습니다.');
+    }
+    return this.solveSessionsService.startQuestionSet(
+      userId,
+      questionSet.id,
+      mode,
+      { reuseUnsubmitted: false },
+    );
+  }
+
   private async resolveStudyDate(userId: string, studyDateInput?: string) {
     if (studyDateInput) return this.parseStudyDate(studyDateInput);
 

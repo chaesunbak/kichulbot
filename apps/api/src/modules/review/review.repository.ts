@@ -165,7 +165,7 @@ export class ReviewRepository {
     const month = studyDate.getUTCMonth() + 1;
     const date = studyDate.getUTCDate();
 
-    return `${year}년 ${month}월 ${date}일 오늘의 오답`;
+    return `${year}년 ${month}월 ${date}일 오답 복습`;
   }
 
   private toParameters(questionCount: number) {

@@ -154,11 +154,13 @@ export class SolveSessionsService {
     userId: string,
     questionSetId: string,
     mode: AnswerMode,
+    options?: { reuseUnsubmitted?: boolean },
   ) {
     const session = await this.solveSessionsRepository.startQuestionSet(
       userId,
       questionSetId,
       mode,
+      options,
     );
     return StartSolveSessionResponseSchema.parse({
       session: await this.toResponse(session),
@@ -327,6 +329,7 @@ export class SolveSessionsService {
       mode: session.mode,
       paper: this.toPaperResponse(session),
       result: session.submittedAt ? this.toSessionResult(session) : null,
+      progress: this.toProgressResponse(session),
       submittedAt: session.submittedAt?.toISOString() ?? null,
       totalSpentMilliseconds: this.getTotalSpentMilliseconds(session),
       createdAt: session.createdAt.toISOString(),
@@ -511,6 +514,20 @@ export class SolveSessionsService {
     );
   }
 
+  private toProgressResponse(session: SessionWithRelations) {
+    const totalCount = session.items.length;
+    const answeredCount = session.items.filter((item) =>
+      this.hasAnswer(item.draft),
+    ).length;
+
+    return {
+      answeredCount,
+      totalCount,
+      percent:
+        totalCount === 0 ? 0 : Math.round((answeredCount / totalCount) * 100),
+    };
+  }
+
   private toSessionResult(
     session: SessionWithRelations,
   ): SolveSessionResultResponse {
@@ -552,10 +569,12 @@ export class SolveSessionsService {
     return isCorrect ? AttemptOutcome.CORRECT : AttemptOutcome.INCORRECT;
   }
 
-  private hasAnswer(answer?: {
-    answerChoice?: number | null;
-    answerText?: string | null;
-  }) {
+  private hasAnswer(
+    answer?: {
+      answerChoice?: number | null;
+      answerText?: string | null;
+    } | null,
+  ) {
     return answer?.answerChoice != null || answer?.answerText != null;
   }
 }

@@ -55,6 +55,18 @@ export class ReviewController {
     return this.reviewService.generate(user.id, dto.studyDate);
   }
 
+  @Post('solve-sessions')
+  @ApiOperation({ summary: '최신 오답 세트 생성 후 풀이 세션 시작' })
+  @ApiCreatedResponse({
+    description: '최신 attempt 기준 오답 세트를 갱신하고 새 풀이를 시작합니다.',
+  })
+  startLatest(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: StartWrongReviewSessionDto,
+  ) {
+    return this.reviewService.startLatest(user.id, dto.mode);
+  }
+
   @Post(':questionSetId/solve-sessions')
   @ApiOperation({ summary: '오답 세트 풀이 세션 시작' })
   @ApiCreatedResponse({ description: '오답 세트 snapshot 풀이를 시작합니다.' })

@@ -176,6 +176,26 @@ describe('ReviewService', () => {
     );
   });
 
+  it('최신 오답 세트를 갱신하고 새 스냅샷 세션을 시작한다', async () => {
+    repository.regenerate.mockResolvedValue(questionSet as never);
+    solveSessionsService.startQuestionSet.mockResolvedValue({
+      session: { id: 'review_session_1' },
+    } as never);
+
+    await service.startLatest('user_1');
+
+    expect(repository.regenerate).toHaveBeenCalledWith(
+      'user_1',
+      expect.any(Date),
+    );
+    expect(solveSessionsService.startQuestionSet).toHaveBeenCalledWith(
+      'user_1',
+      questionSet.id,
+      AnswerMode.ONE_BY_ONE,
+      { reuseUnsubmitted: false },
+    );
+  });
+
   it('오답 문항이 없으면 리뷰 시작을 거부한다', async () => {
     repository.findOwnedDailyWrongQuestionSet.mockResolvedValue({
       ...questionSet,
@@ -185,5 +205,16 @@ describe('ReviewService', () => {
     await expect(
       service.start('user_1', questionSet.id),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('최신 오답 문항이 없으면 리뷰 시작을 거부한다', async () => {
+    repository.regenerate.mockResolvedValue({
+      ...questionSet,
+      items: [],
+    });
+
+    await expect(service.startLatest('user_1')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 });

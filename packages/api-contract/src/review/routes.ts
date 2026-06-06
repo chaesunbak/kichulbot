@@ -19,6 +19,12 @@ export const reviewRoutes = {
     request: CreateWrongQuestionSetRequestSchema,
     response: CreateWrongQuestionSetResponseSchema,
   },
+  startLatestWrongQuestionSetSolveSession: {
+    method: 'POST',
+    path: '/me/wrong-question-sets/solve-sessions',
+    request: StartWrongReviewSessionRequestSchema,
+    response: StartWrongReviewSessionResponseSchema,
+  },
   startWrongQuestionSetSolveSession: {
     method: 'POST',
     path: '/me/wrong-question-sets/:questionSetId/solve-sessions',

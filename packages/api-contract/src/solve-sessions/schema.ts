@@ -53,6 +53,15 @@ export type SolveSessionResultResponse = z.infer<
   typeof SolveSessionResultResponseSchema
 >;
 
+export const SolveSessionProgressResponseSchema = z.object({
+  answeredCount: z.number().int().nonnegative(),
+  totalCount: z.number().int().nonnegative(),
+  percent: z.number().int().min(0).max(100),
+});
+export type SolveSessionProgressResponse = z.infer<
+  typeof SolveSessionProgressResponseSchema
+>;
+
 export const SolveSessionResponseSchema = z.object({
   id: z.string(),
   mode: AnswerModeSchema,
@@ -72,6 +81,7 @@ export const SolveSessionLogResponseSchema = z.object({
   mode: AnswerModeSchema,
   paper: PaperResponseSchema,
   result: SolveSessionResultResponseSchema.nullable(),
+  progress: SolveSessionProgressResponseSchema,
   submittedAt: IsoDateStringSchema.nullable(),
   totalSpentMilliseconds: z.number().int().nonnegative(),
   createdAt: IsoDateStringSchema,

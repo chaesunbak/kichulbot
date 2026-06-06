@@ -61,9 +61,20 @@ export class SolveSessionsRepository {
     });
   }
 
-  startQuestionSet(userId: string, questionSetId: string, mode: AnswerMode) {
+  startQuestionSet(
+    userId: string,
+    questionSetId: string,
+    mode: AnswerMode,
+    options: { reuseUnsubmitted?: boolean } = {},
+  ) {
     return this.db.$transaction((tx) =>
-      this.startQuestionSetTransaction(tx, userId, questionSetId, mode),
+      this.startQuestionSetTransaction(
+        tx,
+        userId,
+        questionSetId,
+        mode,
+        options,
+      ),
     );
   }
 
@@ -72,6 +83,7 @@ export class SolveSessionsRepository {
     userId: string,
     questionSetId: string,
     mode: AnswerMode,
+    { reuseUnsubmitted = true }: { reuseUnsubmitted?: boolean } = {},
   ) {
     const questionSet = await tx.questionSet.findFirstOrThrow({
       where: {
@@ -83,12 +95,14 @@ export class SolveSessionsRepository {
         items: { orderBy: { position: 'asc' } },
       },
     });
-    const existing = await tx.solveSession.findFirst({
-      where: { userId, sourceSetId: questionSetId, mode, submittedAt: null },
-      include: this.sessionIncludes(),
-      orderBy: { createdAt: 'desc' },
-    });
-    if (existing) return existing;
+    if (reuseUnsubmitted) {
+      const existing = await tx.solveSession.findFirst({
+        where: { userId, sourceSetId: questionSetId, mode, submittedAt: null },
+        include: this.sessionIncludes(),
+        orderBy: { createdAt: 'desc' },
+      });
+      if (existing) return existing;
+    }
 
     return tx.solveSession.create({
       data: {

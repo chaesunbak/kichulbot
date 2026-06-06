@@ -21,9 +21,11 @@ export default async function EmailRegisterPage({
   if (user) redirect(nextPath);
 
   return (
-    <PageContainer className="
+    <PageContainer
+      className="
       min-h-[calc(100svh-16rem)] items-center justify-center
-    ">
+    "
+    >
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-8">
           <div className="text-center">
@@ -33,25 +35,26 @@ export default async function EmailRegisterPage({
           </div>
 
           <EmailRegisterForm />
-
-          <p className="text-center text-sm text-zinc-500">
-            이미 계정이 있으신가요?{' '}
-            <Link
-              href={`/login?next=${encodeURIComponent(nextPath)}`}
-              className="
+          <div className="flex flex-col gap-2">
+            <p className="text-center text-sm text-zinc-500">
+              이미 계정이 있으신가요?{' '}
+              <Link
+                href={`/login?next=${encodeURIComponent(nextPath)}`}
+                className="
                 text-blue-500
                 hover:underline
               "
-            >
-              로그인하기
-            </Link>
-          </p>
+              >
+                로그인하기
+              </Link>
+            </p>
 
-          <p className="text-center text-sm text-zinc-500">
-            <Link href={`/register?next=${encodeURIComponent(nextPath)}`}>
-              다른 가입 방식으로 돌아가기
-            </Link>
-          </p>
+            <p className="text-center text-sm text-zinc-500">
+              <Link href={`/register?next=${encodeURIComponent(nextPath)}`}>
+                다른 가입 방식으로 돌아가기
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </PageContainer>

@@ -3,16 +3,15 @@ import { NextResponse } from 'next/server';
 
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { COOKIE_NAME } from '@/features/auth/server';
+import { getInternalApiBaseUrl } from '@/shared/api/base-url';
 import { authErrorResponse } from '@/shared/lib/route-helpers';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
 const OAUTH_NEXT_COOKIE_NAME = 'kichulbot_oauth_next';
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get('mode');
   const nextPath = normalizeNextPath(request.nextUrl.searchParams.get('next'));
-  const url = new URL(`${API_BASE_URL}/auth/kakao`);
+  const url = new URL(`${getInternalApiBaseUrl()}/auth/kakao`);
   if (mode === 'link') {
     url.searchParams.set('mode', mode);
   }
@@ -20,10 +19,16 @@ export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-  const response = await fetch(url, {
-    headers,
-    redirect: 'manual',
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers,
+      redirect: 'manual',
+    });
+  } catch {
+    return authErrorResponse(502, '백엔드 서버에 연결할 수 없습니다.');
+  }
+
   const location = response.headers.get('location');
 
   if (!location) {

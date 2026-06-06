@@ -23,7 +23,6 @@ export default async function PasswordResetPage({
             : '가입한 이메일로 재설정 링크를 보내드립니다'}
         </p>
       </div>
-
       <PasswordResetForm token={token} />
     </div>
   );

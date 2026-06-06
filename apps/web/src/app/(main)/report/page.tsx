@@ -30,7 +30,7 @@ export default async function ReportPage() {
 
   return (
     <PageContainer>
-      <PageTitle>학습 리포트</PageTitle>
+      <PageTitle>학습 분석</PageTitle>
       <RecapTrendSection data={trendPoints} weaknessGroups={weaknessGroups} />
     </PageContainer>
   );

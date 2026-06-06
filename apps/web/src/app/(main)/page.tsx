@@ -40,7 +40,7 @@ const featureItems = [
   },
   {
     href: '/report',
-    label: '학습 리포트',
+    label: '학습 분석',
     iconSrc: '/icons/home/report.png?v=20260606',
   },
 ] satisfies FeatureSectionItem[];

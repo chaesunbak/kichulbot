@@ -5,23 +5,23 @@ import { redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
 import { getSolveSessionLogPage } from '@/features/learning/api/server';
-import { SolveSessionLogList } from '@/features/learning/components/solve-session-log-list';
+import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 const LOG_PAGE_SIZE = 10;
 
-interface LogPageProps {
+interface LogsPageProps {
   searchParams?: Promise<{
     page?: string;
   }>;
 }
 
-export default async function LogPage({ searchParams }: LogPageProps) {
+export default async function LogsPage({ searchParams }: LogsPageProps) {
   const params = await searchParams;
   const page = normalizePage(params?.page);
   const user = await getCachedUser();
-  const nextPath = page > 1 ? `/log?page=${page}` : '/log';
+  const nextPath = page > 1 ? `/logs?page=${page}` : '/logs';
   if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 
   const logPage = await getSolveSessionLogPage({
@@ -36,7 +36,7 @@ export default async function LogPage({ searchParams }: LogPageProps) {
     <PageContainer>
       <PageTitle>내 풀이</PageTitle>
 
-      <SolveSessionLogList
+      <CompactSolveSessionLogList
         logs={logPage.logs}
         emptyMessage="아직 풀이 기록이 없습니다."
       />
@@ -45,7 +45,7 @@ export default async function LogPage({ searchParams }: LogPageProps) {
         <div className="flex justify-center gap-2">
           {hasPrevious ? (
             <Button asChild variant="outline">
-              <Link href={`/log?page=${logPage.page - 1}`}>
+              <Link href={`/logs?page=${logPage.page - 1}`}>
                 <ChevronLeft className="size-4" />
                 이전
               </Link>
@@ -59,7 +59,7 @@ export default async function LogPage({ searchParams }: LogPageProps) {
 
           {hasNext ? (
             <Button asChild variant="outline">
-              <Link href={`/log?page=${logPage.page + 1}`}>
+              <Link href={`/logs?page=${logPage.page + 1}`}>
                 다음
                 <ChevronRight className="size-4" />
               </Link>

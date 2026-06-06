@@ -39,7 +39,7 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
 
   return (
     <PageContainer>
-      <PageTitle>출석</PageTitle>
+      <PageTitle>연속 학습</PageTitle>
       <StreakSummaryCard
         countsByDate={countsByDate}
         questionAttempts={weeklyQuestionAttempts}

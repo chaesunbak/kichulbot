@@ -31,7 +31,46 @@ export interface RecapWeaknessGroup {
   tags: RecapWeaknessTagPoint[];
 }
 
+export type WrongReviewStats = {
+  accuracyRate: number;
+  correctCount: number;
+  incorrectCount: number;
+  omittedCount: number;
+  totalCount: number;
+};
+
 const MAX_TREND_POINTS = 30;
+
+export function getTodayStats(logs: SolveSessionLog[]): WrongReviewStats {
+  const stats = logs.reduce(
+    (acc, log) => {
+      if (!log.result) return acc;
+
+      const omittedCount = log.result.totalCount - log.result.answeredCount;
+      const incorrectCount = log.result.answeredCount - log.result.correctCount;
+
+      return {
+        correctCount: acc.correctCount + log.result.correctCount,
+        incorrectCount: acc.incorrectCount + incorrectCount,
+        omittedCount: acc.omittedCount + omittedCount,
+        totalCount: acc.totalCount + log.result.totalCount,
+      };
+    },
+    {
+      correctCount: 0,
+      incorrectCount: 0,
+      omittedCount: 0,
+      totalCount: 0,
+    },
+  );
+  return {
+    ...stats,
+    accuracyRate:
+      stats.totalCount > 0
+        ? Math.round((stats.correctCount / stats.totalCount) * 100)
+        : 0,
+  };
+}
 
 export function getRecapTrendPoints(logs: SolveSessionLog[]) {
   const statsByDate = new Map<

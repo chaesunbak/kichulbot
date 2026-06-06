@@ -54,7 +54,7 @@ export function StreakSummaryCard({
         />
         <SummaryItem
           className="border-t pt-4 sm:border-t-0 sm:border-l sm:pt-0"
-          label="이번 달 출석일"
+          label="이번 달 연속 학습일"
           value={`${monthlySolvedDays}일`}
           description={`총 ${totalDaysInMonth}일 중`}
         />
@@ -88,7 +88,7 @@ function SummaryItem({
     <div
       className={cn('flex flex-col items-center gap-2 text-center', className)}
     >
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+      <div className="flex items-center gap-1 text-xs font-semibold text-slate-500">
         {icon}
         <span>{label}</span>
       </div>

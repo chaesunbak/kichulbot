@@ -1,4 +1,5 @@
 import { FeatureSection } from '@/features/home/components/feature-section';
+import { MissionSection } from '@/features/home/components/mission-section';
 import { RecentLearningRecordsSection } from '@/features/home/components/recent-learning-records-section';
 import { getSolveSessionLogs } from '@/features/learning/api/server';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server';
@@ -21,7 +22,15 @@ export default async function HomePage() {
     <PageContainer>
       <StreakSection questionAttempts={questionAttempts} />
       <FeatureSection />
-      <RecentLearningRecordsSection logs={solveSessionLogs} />
+      <div
+        className="
+          grid gap-6
+          lg:grid-cols-[minmax(0,1fr)_22rem]
+        "
+      >
+        <RecentLearningRecordsSection logs={solveSessionLogs} />
+        <MissionSection />
+      </div>
     </PageContainer>
   );
 }

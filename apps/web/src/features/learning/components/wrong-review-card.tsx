@@ -12,15 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { createLatestWrongQuestionSolveSession } from '@/features/learning/api/client';
+import type { WrongReviewStats } from '@/features/learning/lib/recap-stats';
 import type { DailyWrongQuestionSet } from '@/features/learning/types';
-
-export type WrongReviewStats = {
-  accuracyRate: number;
-  correctCount: number;
-  incorrectCount: number;
-  omittedCount: number;
-  totalCount: number;
-};
 
 export function WrongReviewCard({
   initialQuestionSet,

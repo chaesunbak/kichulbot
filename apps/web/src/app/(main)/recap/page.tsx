@@ -15,12 +15,9 @@ import {
   getSolveSessionLogs,
   getTodayWrongQuestions,
 } from '@/features/learning/api/server';
-import { SolveSessionLogList } from '@/features/learning/components/solve-session-log-list';
-import {
-  WrongReviewCard,
-  type WrongReviewStats,
-} from '@/features/learning/components/wrong-review-card';
-import type { SolveSessionLog } from '@/features/learning/types';
+import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
+import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
+import { getTodayStats } from '@/features/learning/lib/recap-stats';
 import { toKstDateString } from '@/features/question-attempts/lib/streak-date';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
@@ -58,47 +55,16 @@ export default async function RecapPage() {
       <div className="flex items-center justify-between gap-4">
         <div className="text-lg font-semibold">나의 최근 풀이</div>
         <Button asChild variant="outline" size="sm">
-          <Link href="/log">
+          <Link href="/logs">
             더보기
             <ChevronRight className="size-4" />
           </Link>
         </Button>
       </div>
-      <SolveSessionLogList
+      <CompactSolveSessionLogList
         logs={logPage.logs}
         emptyMessage="아직 풀이 기록이 없습니다."
       />
     </PageContainer>
   );
-}
-
-function getTodayStats(logs: SolveSessionLog[]): WrongReviewStats {
-  const stats = logs.reduce(
-    (acc, log) => {
-      if (!log.result) return acc;
-
-      const omittedCount = log.result.totalCount - log.result.answeredCount;
-      const incorrectCount = log.result.answeredCount - log.result.correctCount;
-
-      return {
-        correctCount: acc.correctCount + log.result.correctCount,
-        incorrectCount: acc.incorrectCount + incorrectCount,
-        omittedCount: acc.omittedCount + omittedCount,
-        totalCount: acc.totalCount + log.result.totalCount,
-      };
-    },
-    {
-      correctCount: 0,
-      incorrectCount: 0,
-      omittedCount: 0,
-      totalCount: 0,
-    },
-  );
-  return {
-    ...stats,
-    accuracyRate:
-      stats.totalCount > 0
-        ? Math.round((stats.correctCount / stats.totalCount) * 100)
-        : 0,
-  };
 }

@@ -264,7 +264,7 @@ export function SolveSession({
     try {
       await saveCurrentProgress();
       setMessage('저장했습니다.');
-      router.push(isLocalSession ? `/resources/${session.paper.id}` : '/log');
+      router.push(isLocalSession ? `/resources/${session.paper.id}` : '/logs');
     } catch {
       setIsFinishing(false);
       showFailureMessage('풀이를 저장하지 못했습니다.');

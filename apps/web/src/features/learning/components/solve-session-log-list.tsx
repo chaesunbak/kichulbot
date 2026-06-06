@@ -9,10 +9,9 @@ import { ChevronRight, Play } from 'lucide-react';
 import Link from 'next/link';
 
 import {
-  formatDuration,
-  formatRelativeDate,
-  formatSolveMode,
-} from '@/features/learning/lib/format';
+  formatSolveSessionLogDetailMeta,
+  getSolveSessionLogHref,
+} from '@/features/learning/lib/solve-session-log';
 import type { SolveSessionLog } from '@/features/learning/types';
 
 type SolveSessionLogListProps = {
@@ -36,13 +35,7 @@ export function SolveSessionLogList({
             <CardHeader>
               <CardTitle>{log.paper.title}</CardTitle>
               <CardDescription>
-                {formatSolveMode(log.mode)} ·{' '}
-                {log.result
-                  ? `${log.result.score}점 · ${log.result.correctCount}/${log.result.totalCount} 정답 · ${formatDuration(
-                      log.result.totalSpentMilliseconds,
-                    )}`
-                  : `${formatDuration(log.totalSpentMilliseconds)} · 풀이 중`}{' '}
-                · {formatRelativeDate(log.submittedAt ?? log.updatedAt)}
+                {formatSolveSessionLogDetailMeta(log)}
               </CardDescription>
               <Button
                 asChild
@@ -50,11 +43,7 @@ export function SolveSessionLogList({
                 size="sm"
                 className="mt-3 w-fit"
               >
-                <Link
-                  href={
-                    log.submittedAt ? `/results/${log.id}` : `/solve/${log.id}`
-                  }
-                >
+                <Link href={getSolveSessionLogHref(log)}>
                   {log.submittedAt ? (
                     <ChevronRight className="size-4" />
                   ) : (

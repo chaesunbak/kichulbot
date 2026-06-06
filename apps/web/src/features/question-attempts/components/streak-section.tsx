@@ -32,9 +32,7 @@ export function StreakSection({ questionAttempts }: StreakSectionProps) {
       <CardHeader className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
           <CardTitle className="flex items-center gap-1">
-            <Flame
-              className="inline-block size-4 fill-orange-500 text-orange-500"
-            />{' '}
+            <Flame className="inline-block size-4 fill-orange-500 text-orange-500" />{' '}
             연속 {currentStreakDays}일째 공부 중
           </CardTitle>
         </div>

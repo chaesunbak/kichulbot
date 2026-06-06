@@ -35,7 +35,9 @@ export function RecentPapersSection({ logs }: RecentPapersSectionProps) {
       </CardHeader>
       <CardContent>
         {recentPapers.length === 0 ? (
-          <p className="text-sm text-zinc-500">최근 본 문제지가 없습니다.</p>
+          <span className="text-sm text-zinc-500">
+            아직 본 문제지가 없어요.
+          </span>
         ) : (
           <ul
             className="
@@ -57,9 +59,7 @@ export function RecentPapersSection({ logs }: RecentPapersSectionProps) {
                       sm:max-w-36
                     "
                   />
-                  <span className="
-                    line-clamp-2 text-sm font-semibold text-zinc-900
-                  ">
+                  <span className="line-clamp-2 text-sm font-semibold text-zinc-900">
                     {paper.title}
                   </span>
                   <span className="truncate text-xs text-zinc-500">

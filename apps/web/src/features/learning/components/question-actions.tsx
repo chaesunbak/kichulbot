@@ -8,12 +8,16 @@ export function QuestionActions({
   questionId,
   questionRevisionId,
   showPersonalActions = true,
+  showReportAction = true,
   isAuthenticated = true,
+  compact = false,
 }: {
   questionId: string;
   questionRevisionId: string;
   showPersonalActions?: boolean;
+  showReportAction?: boolean;
   isAuthenticated?: boolean;
+  compact?: boolean;
 }) {
   return (
     <>
@@ -22,18 +26,23 @@ export function QuestionActions({
           <QuestionBookmarkButton
             questionId={questionId}
             isAuthenticated={isAuthenticated}
+            compact={compact}
           />
           <QuestionNoteButton
             questionId={questionId}
             isAuthenticated={isAuthenticated}
+            compact={compact}
           />
         </>
       )}
-      <QuestionReportButton
-        questionId={questionId}
-        questionRevisionId={questionRevisionId}
-        isAuthenticated={isAuthenticated}
-      />
+      {showReportAction && (
+        <QuestionReportButton
+          questionId={questionId}
+          questionRevisionId={questionRevisionId}
+          isAuthenticated={isAuthenticated}
+          compact={compact}
+        />
+      )}
     </>
   );
 }

@@ -21,13 +21,16 @@ import {
   saveQuestionNote,
 } from '@/features/learning/api/client';
 import { LoginRequiredDialog } from '@/features/learning/components/login-required-dialog';
+import { cn } from '@/shared/lib/utils';
 
 export function QuestionNoteButton({
   questionId,
   isAuthenticated = true,
+  compact = false,
 }: {
   questionId: string;
   isAuthenticated?: boolean;
+  compact?: boolean;
 }) {
   const pathname = usePathname();
   const [isOpening, setIsOpening] = useState(false);
@@ -69,13 +72,14 @@ export function QuestionNoteButton({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant={compact ? 'ghost' : 'outline'}
       size="sm"
+      className={cn(compact && 'size-9 px-0')}
       disabled={isOpening}
       onClick={() => void openNote()}
     >
       {isOpening ? <Loader2 className="animate-spin" /> : <NotebookPen />}
-      메모
+      <span className={cn(compact && 'sr-only')}>메모</span>
     </Button>
   );
 }

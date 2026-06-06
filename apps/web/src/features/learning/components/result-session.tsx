@@ -75,16 +75,18 @@ export function ResultSession({
       "
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">
-            {session.mode === 'ONE_BY_ONE' ? '연습모드 결과' : '시험모드 결과'}
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-950">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold text-zinc-900">
             {session.paper.title}
           </h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            {formatDate(session.submittedAt ?? session.updatedAt)} 제출
-          </p>
+          <div className="flex gap-2 text-sm text-zinc-500">
+            <span>
+              {formatDate(session.submittedAt ?? session.updatedAt)} 제출
+            </span>
+            <span>
+              {session.mode === 'ONE_BY_ONE' ? '연습모드' : '시험모드'}
+            </span>
+          </div>
         </div>
         <Button asChild variant="outline" size="sm">
           <Link href={`/resources/${session.paper.id}`}>
@@ -315,9 +317,11 @@ function AnswerBlock({
 
 function QuestionResultPanel({ result }: { result: QuestionResult }) {
   return (
-    <div className="
+    <div
+      className="
       mt-5 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm
-    ">
+    "
+    >
       <span className="font-semibold text-blue-900">해설</span>
       <span className="mt-2 whitespace-pre-wrap text-blue-800">
         {result.explanation || '등록된 해설이 없습니다.'}

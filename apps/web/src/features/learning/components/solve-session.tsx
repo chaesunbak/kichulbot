@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@kichulbot/ui/components/ui/dropdown-menu';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
@@ -16,17 +17,20 @@ import {
   Clock,
   List,
   LogOut,
+  MoreVertical,
   Send,
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { overlay } from 'overlay-kit';
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   saveSolveSessionAnswer,
   submitSolveSession,
 } from '@/features/learning/api/client';
 import { QuestionActions } from '@/features/learning/components/question-actions';
+import { QuestionReportMenuItem } from '@/features/learning/components/question-report-button';
 import {
   formatClock,
   formatDuration,
@@ -56,14 +60,19 @@ export function SolveSession({
   initialSession: SolveSession;
 }) {
   const router = useRouter();
+  const solveSessionRef = useRef<HTMLDivElement>(null);
+  const firstAnswerControlRef = useRef<HTMLButtonElement | HTMLTextAreaElement>(
+    null,
+  );
   const [session, setSession] = useState(initialSession);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerText, setAnswerText] = useState('');
   const [message, setMessage] = useState<string | null>(null);
-  const [activeElapsed, setActiveElapsed] = useState(0);
-  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [elapsedResetKey, setElapsedResetKey] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
-  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
+  const [revealedAnswerIds, setRevealedAnswerIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const elapsedMilliseconds = useRef(0);
   const question = session.paper.questions[currentIndex];
   const answer = session.answers.find(
@@ -92,25 +101,51 @@ export function SolveSession({
   }, [answeredIds, answerText, question]);
   const unansweredCount =
     session.paper.questions.length - effectiveAnsweredIds.size;
-  const totalElapsedMilliseconds = useMemo(
+  const hasCurrentAnswer =
+    !!answer?.answerChoice || !!answer?.answerText || !!answerText.trim();
+  const isCurrentAnswerRevealed = question
+    ? revealedAnswerIds.has(question.id)
+    : false;
+  const savedElapsedMilliseconds = useMemo(
     () =>
-      session.answers.reduce(
-        (total, answer) => total + answer.spentMilliseconds,
-        0,
-      ) + activeElapsed,
-    [activeElapsed, session.answers],
+      session.answers.reduce((total, answer) => {
+        return total + answer.spentMilliseconds;
+      }, 0),
+    [session.answers],
   );
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setCurrentTime(new Date());
       if (!session.submittedAt) {
         elapsedMilliseconds.current += 1000;
-        setActiveElapsed((current) => current + 1000);
       }
     }, 1000);
     return () => window.clearInterval(timer);
   }, [session.submittedAt]);
+
+  useEffect(() => {
+    const focusFirstAnswerOnInitialTab = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || event.shiftKey || event.defaultPrevented) {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      const isPageEntryFocus =
+        activeElement === document.body ||
+        activeElement === document.documentElement ||
+        activeElement === solveSessionRef.current;
+
+      if (!isPageEntryFocus || !firstAnswerControlRef.current) return;
+
+      event.preventDefault();
+      firstAnswerControlRef.current.focus();
+    };
+
+    window.addEventListener('keydown', focusFirstAnswerOnInitialTab);
+    return () => {
+      window.removeEventListener('keydown', focusFirstAnswerOnInitialTab);
+    };
+  }, [question?.id]);
 
   const saveProgress = async (
     questionId: string,
@@ -151,7 +186,7 @@ export function SolveSession({
   const takeElapsed = () => {
     const elapsed = elapsedMilliseconds.current;
     elapsedMilliseconds.current = 0;
-    setActiveElapsed(0);
+    setElapsedResetKey((current) => current + 1);
     return elapsed;
   };
 
@@ -180,6 +215,11 @@ export function SolveSession({
   const saveAnswer = async (payload: SaveAnswerPayload) => {
     if (!question || session.submittedAt) return;
     setMessage('저장 중...');
+    setRevealedAnswerIds((current) => {
+      const next = new Set(current);
+      next.delete(question.id);
+      return next;
+    });
     try {
       await saveProgress(question.id, {
         ...payload,
@@ -191,13 +231,24 @@ export function SolveSession({
     }
   };
 
+  const changeAnswerText = (value: string) => {
+    if (question) {
+      setRevealedAnswerIds((current) => {
+        const next = new Set(current);
+        next.delete(question.id);
+        return next;
+      });
+    }
+    setAnswerText(value);
+  };
+
   const moveTo = async (index: number) => {
     if (!question || index === currentIndex) return;
     if (!session.submittedAt) {
       try {
-        await saveProgress(question.id, { spentMilliseconds: takeElapsed() });
+        await saveCurrentProgress();
       } catch {
-        showFailureMessage('풀이 시간을 저장하지 못했습니다.');
+        showFailureMessage('풀이를 저장하지 못했습니다.');
       }
     }
     setCurrentIndex(index);
@@ -220,17 +271,30 @@ export function SolveSession({
     }
   };
 
-  const requestSubmit = () => {
+  const requestSubmit = async () => {
     if (unansweredCount > 0) {
-      setIsSubmitConfirmOpen(true);
-      return;
+      const shouldSubmit = await overlay.openAsync<boolean>(
+        ({ isOpen, close, unmount }) => (
+          <ConfirmDialog
+            isOpen={isOpen}
+            title="아직 풀지 않은 문제가 있습니다"
+            description={`미답 문항 ${unansweredCount}개가 오답으로 처리됩니다.`}
+            cancelLabel="계속 풀기"
+            confirmLabel="시험종료"
+            onCancel={() => close(false)}
+            onConfirm={() => close(true)}
+            onExit={unmount}
+          />
+        ),
+      );
+      if (!shouldSubmit) return;
     }
+
     void submit();
   };
 
   const submit = async () => {
     if (!question || session.submittedAt || isFinishing) return;
-    setIsSubmitConfirmOpen(false);
     setIsFinishing(true);
     setMessage('제출하는 중...');
     try {
@@ -252,6 +316,23 @@ export function SolveSession({
     }
   };
 
+  const revealAnswer = async () => {
+    if (!question || session.submittedAt || isFinishing) return;
+    setMessage('답안을 확인하는 중...');
+    try {
+      await saveCurrentProgress();
+      setRevealedAnswerIds((current) => new Set(current).add(question.id));
+      setMessage('답안을 확인했습니다.');
+    } catch {
+      showFailureMessage('답안을 확인하지 못했습니다.');
+    }
+  };
+
+  const moveToNextQuestion = () => {
+    if (currentIndex >= session.paper.questions.length - 1) return;
+    void moveTo(currentIndex + 1);
+  };
+
   if (!question) {
     return (
       <div className="grid h-full place-items-center text-sm text-zinc-500">
@@ -261,23 +342,33 @@ export function SolveSession({
   }
 
   return (
-    <div className="mx-auto flex size-full max-w-7xl flex-col overflow-hidden">
+    <div
+      ref={solveSessionRef}
+      className="mx-auto flex size-full max-w-7xl flex-col overflow-hidden"
+    >
       <SolveSessionHeader
         title={session.paper.title}
         mode={session.mode}
-        currentTime={currentTime}
-        elapsedMilliseconds={totalElapsedMilliseconds}
+        question={question}
+        questions={session.paper.questions}
+        currentIndex={currentIndex}
+        questionCount={session.paper.questions.length}
+        answeredIds={answeredIds}
+        isAuthenticated={!isLocalSession}
+        savedElapsedMilliseconds={savedElapsedMilliseconds}
+        activeElapsedRef={elapsedMilliseconds}
+        elapsedResetKey={elapsedResetKey}
         submitted={!!session.submittedAt}
         isFinishing={isFinishing}
-        allAnswered={unansweredCount === 0}
+        onMoveTo={moveTo}
         onLeave={leave}
-        onSubmit={requestSubmit}
+        onSubmit={() => void requestSubmit()}
       />
 
       <div
         className="
-          grid min-h-0 w-full flex-1 gap-3 overflow-hidden p-3
-          md:grid-cols-[minmax(0,1fr)_320px] md:gap-4 md:p-4
+          grid min-h-0 w-full flex-1 gap-3 overflow-hidden
+          md:grid-cols-[minmax(0,1fr)_320px] md:gap-4
         "
       >
         <QuestionPanel
@@ -295,22 +386,18 @@ export function SolveSession({
           currentIndex={currentIndex}
           answeredIds={answeredIds}
           disabled={!!session.submittedAt}
+          hasCurrentAnswer={hasCurrentAnswer}
+          isFinishing={isFinishing}
+          isAnswerRevealed={isCurrentAnswerRevealed}
           message={message}
-          onAnswerTextChange={setAnswerText}
+          onAnswerTextChange={changeAnswerText}
           onSaveAnswer={saveAnswer}
           onMoveTo={moveTo}
+          onRevealAnswer={revealAnswer}
+          onMoveToNextQuestion={moveToNextQuestion}
+          firstAnswerControlRef={firstAnswerControlRef}
         />
       </div>
-      <ConfirmDialog
-        isOpen={isSubmitConfirmOpen}
-        title="아직 풀지 않은 문제가 있습니다"
-        description={`미답 문항 ${unansweredCount}개가 오답으로 처리됩니다.`}
-        cancelLabel="계속 풀기"
-        confirmLabel="제출하기"
-        onCancel={() => setIsSubmitConfirmOpen(false)}
-        onConfirm={() => void submit()}
-        onExit={() => undefined}
-      />
     </div>
   );
 }
@@ -318,42 +405,50 @@ export function SolveSession({
 function SolveSessionHeader({
   title,
   mode,
-  currentTime,
-  elapsedMilliseconds,
+  question,
+  questions,
+  currentIndex,
+  questionCount,
+  answeredIds,
+  isAuthenticated,
+  savedElapsedMilliseconds,
+  activeElapsedRef,
+  elapsedResetKey,
   submitted,
   isFinishing,
-  allAnswered,
+  onMoveTo,
   onLeave,
   onSubmit,
 }: {
   title: string;
   mode: SolveSession['mode'];
-  currentTime: Date;
-  elapsedMilliseconds: number;
+  question: SolveQuestion;
+  questions: SolveQuestion[];
+  currentIndex: number;
+  questionCount: number;
+  answeredIds: Set<string>;
+  isAuthenticated: boolean;
+  savedElapsedMilliseconds: number;
+  activeElapsedRef: RefObject<number>;
+  elapsedResetKey: number;
   submitted: boolean;
   isFinishing: boolean;
-  allAnswered: boolean;
+  onMoveTo: (index: number) => void;
   onLeave: () => void;
   onSubmit: () => void;
 }) {
-  const isExamMode = mode === 'EXAM';
-  const practiceActionLabel = allAnswered ? '결과 보기' : '나가기';
-  const actionIcon = allAnswered ? (
-    <Send data-icon="inline-start" />
-  ) : (
-    <LogOut data-icon="inline-start" />
-  );
-  const handlePracticeAction = allAnswered ? onSubmit : onLeave;
+  const canMovePrevious = currentIndex > 0;
+  const canMoveNext = currentIndex < questionCount - 1;
 
   return (
     <header
       className="
-        flex h-16 shrink-0 items-center justify-between gap-4 rounded-lg bg-card
-        px-4
-        md:px-6
+        grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2
+        rounded-lg bg-card
+        md:flex md:h-16 md:justify-between md:gap-4 md:px-6
       "
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="hidden min-w-0 items-center gap-3 md:flex">
         <div className="min-w-0">
           <h1
             className="
@@ -365,9 +460,67 @@ function SolveSessionHeader({
           </h1>
         </div>
       </div>
+      <div className="col-start-1 flex justify-start md:hidden">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="size-9 px-0"
+          disabled={!canMovePrevious}
+          onClick={() => onMoveTo(currentIndex - 1)}
+        >
+          <ChevronLeft />
+          <span className="sr-only">이전 문항</span>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="size-9 px-0"
+          disabled={!canMoveNext}
+          onClick={() => onMoveTo(currentIndex + 1)}
+        >
+          <ChevronRight />
+          <span className="sr-only">다음 문항</span>
+        </Button>
+      </div>
+      <span
+        className="
+          col-start-2 text-sm font-semibold text-zinc-700 tabular-nums
+          md:hidden
+        "
+      >
+        {currentIndex + 1} / {questionCount}
+      </span>
+      <div className="col-start-3 flex justify-end gap-1 md:hidden">
+        <QuestionListDropdown
+          questions={questions}
+          currentIndex={currentIndex}
+          answeredIds={answeredIds}
+          onMoveTo={onMoveTo}
+          compact
+        />
+        <QuestionActions
+          questionId={question.id}
+          questionRevisionId={question.questionRevisionId}
+          isAuthenticated={isAuthenticated}
+          compact
+          showReportAction={false}
+        />
+        <SolveSessionActionDropdown
+          questionId={question.id}
+          questionRevisionId={question.questionRevisionId}
+          isAuthenticated={isAuthenticated}
+          submitted={submitted}
+          isFinishing={isFinishing}
+          onLeave={onLeave}
+          onSubmit={onSubmit}
+        />
+      </div>
       <div
         className="
-          flex shrink-0 items-center gap-2
+          hidden shrink-0 items-center gap-2
+          md:flex
           md:gap-3
         "
       >
@@ -388,15 +541,14 @@ function SolveSessionHeader({
           "
         >
           <Clock className="size-4" aria-hidden />
-          <span>{formatClock(currentTime)}</span>
+          <ClockText />
         </div>
-        <div
-          className="
-            rounded-lg border px-3 py-2 text-sm text-zinc-600 tabular-nums
-          "
-        >
-          {formatDuration(elapsedMilliseconds)}
-        </div>
+        <ElapsedTimeText
+          activeElapsedRef={activeElapsedRef}
+          elapsedResetKey={elapsedResetKey}
+          savedElapsedMilliseconds={savedElapsedMilliseconds}
+          submitted={submitted}
+        />
         {submitted ? (
           <span
             className="
@@ -406,7 +558,7 @@ function SolveSessionHeader({
           >
             종료 완료
           </span>
-        ) : isExamMode ? (
+        ) : (
           <>
             <Button
               type="button"
@@ -419,22 +571,122 @@ function SolveSessionHeader({
             </Button>
             <Button type="button" disabled={isFinishing} onClick={onSubmit}>
               <Send data-icon="inline-start" />
-              {isFinishing ? '처리 중...' : '제출하기'}
+              {isFinishing ? '처리 중...' : '시험종료'}
             </Button>
           </>
-        ) : (
-          <Button
-            type="button"
-            variant={allAnswered ? 'default' : 'outline'}
-            disabled={isFinishing}
-            onClick={handlePracticeAction}
-          >
-            {actionIcon}
-            {isFinishing ? '처리 중...' : practiceActionLabel}
-          </Button>
         )}
       </div>
     </header>
+  );
+}
+
+function SolveSessionActionDropdown({
+  questionId,
+  questionRevisionId,
+  isAuthenticated,
+  submitted,
+  isFinishing,
+  onLeave,
+  onSubmit,
+}: {
+  questionId: string;
+  questionRevisionId: string;
+  isAuthenticated: boolean;
+  submitted: boolean;
+  isFinishing: boolean;
+  onLeave: () => void;
+  onSubmit: () => void;
+}) {
+  const disabled = submitted || isFinishing;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="ghost" size="sm" className="size-9 px-0">
+          <MoreVertical />
+          <span className="sr-only">풀이 메뉴</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem disabled={disabled} onSelect={onLeave}>
+          <LogOut />
+          나가기
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={disabled} onSelect={onSubmit}>
+          <Send />
+          시험종료
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <QuestionReportMenuItem
+          questionId={questionId}
+          questionRevisionId={questionRevisionId}
+          isAuthenticated={isAuthenticated}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function ClockText() {
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const updateClockText = () => {
+      if (textRef.current) {
+        textRef.current.textContent = formatClock(new Date());
+      }
+    };
+
+    updateClockText();
+    const timer = window.setInterval(() => {
+      updateClockText();
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return <span ref={textRef}>{formatClock(new Date())}</span>;
+}
+
+function ElapsedTimeText({
+  savedElapsedMilliseconds,
+  activeElapsedRef,
+  elapsedResetKey,
+  submitted,
+}: {
+  savedElapsedMilliseconds: number;
+  activeElapsedRef: RefObject<number>;
+  elapsedResetKey: number;
+  submitted: boolean;
+}) {
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateElapsedText = () => {
+      if (textRef.current) {
+        textRef.current.textContent = formatDuration(
+          savedElapsedMilliseconds + (activeElapsedRef.current ?? 0),
+        );
+      }
+    };
+
+    updateElapsedText();
+    if (submitted) return;
+
+    const timer = window.setInterval(() => {
+      updateElapsedText();
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [activeElapsedRef, elapsedResetKey, savedElapsedMilliseconds, submitted]);
+
+  return (
+    <div
+      ref={textRef}
+      className="
+        rounded-lg border px-3 py-2 text-sm text-zinc-600 tabular-nums
+      "
+    >
+      {formatDuration(savedElapsedMilliseconds)}
+    </div>
   );
 }
 
@@ -480,7 +732,8 @@ function QuestionHeader({
   return (
     <div
       className="
-        flex shrink-0 items-center justify-between gap-4 border-b px-4 py-3
+        hidden shrink-0 items-center justify-between gap-4 border-b px-4 py-3
+        md:flex
       "
     >
       <div>
@@ -501,7 +754,7 @@ function QuestionHeader({
           </p>
         )}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="hidden items-center gap-3 md:flex">
         <QuestionActions
           questionId={question.id}
           questionRevisionId={question.questionRevisionId}
@@ -517,7 +770,7 @@ function QuestionHeader({
 
 function QuestionImage({ question }: { question: SolveQuestion }) {
   return (
-    <div className="min-h-0 flex-1 p-3">
+    <div className="min-h-0 flex-1 p-1">
       {question.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -547,6 +800,7 @@ function AnswerSection({
   message,
   onAnswerTextChange,
   onSaveAnswer,
+  firstAnswerControlRef,
 }: {
   question: SolveQuestion;
   answer?: Answer;
@@ -555,13 +809,18 @@ function AnswerSection({
   message: string | null;
   onAnswerTextChange: (value: string) => void;
   onSaveAnswer: (payload: SaveAnswerPayload) => void;
+  firstAnswerControlRef: RefObject<
+    HTMLButtonElement | HTMLTextAreaElement | null
+  >;
 }) {
   void message;
 
   return (
-    <section className="grid gap-3">
+    <section className="grid gap-4">
       <div>
-        <SectionTitle className="text-sm">답안 입력</SectionTitle>
+        <SectionTitle className="text-sm">
+          {question.type === 'MULTIPLE_CHOICE' ? '답안 선택' : '답안 입력'}
+        </SectionTitle>
       </div>
       {question.type === 'MULTIPLE_CHOICE' ? (
         <ChoiceAnswerInput
@@ -569,6 +828,7 @@ function AnswerSection({
           selectedChoice={answer?.answerChoice}
           disabled={disabled}
           onSelect={(answerChoice) => onSaveAnswer({ answerChoice })}
+          firstAnswerControlRef={firstAnswerControlRef}
         />
       ) : (
         <WrittenAnswerInput
@@ -577,10 +837,9 @@ function AnswerSection({
           disabled={disabled}
           onAnswerTextChange={onAnswerTextChange}
           onSave={(value) => onSaveAnswer({ answerText: value })}
+          firstAnswerControlRef={firstAnswerControlRef}
         />
       )}
-
-      <AnswerMeta answer={answer} />
     </section>
   );
 }
@@ -590,33 +849,94 @@ function ChoiceAnswerInput({
   selectedChoice,
   disabled,
   onSelect,
+  firstAnswerControlRef,
 }: {
   choiceCount: number;
   selectedChoice?: number | null;
   disabled: boolean;
   onSelect: (choice: number) => void;
+  firstAnswerControlRef: RefObject<
+    HTMLButtonElement | HTMLTextAreaElement | null
+  >;
 }) {
+  const optionCount = Math.max(choiceCount || 5, selectedChoice ?? 0);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const moveFocus = (currentIndex: number, nextIndex: number) => {
+    optionRefs.current[nextIndex]?.focus();
+  };
+
+  const handleChoiceKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      moveFocus(index, Math.max(index - 1, 0));
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      moveFocus(index, Math.min(index + 1, optionCount - 1));
+    }
+  };
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {Array.from({ length: choiceCount }, (_, index) => {
+    <div
+      style={
+        {
+          '--choice-count': optionCount,
+        } as React.CSSProperties
+      }
+      className="
+        grid grid-cols-[repeat(var(--choice-count),minmax(0,1fr))]
+        gap-2
+        md:grid-cols-1
+      "
+    >
+      {Array.from({ length: optionCount }, (_, index) => {
         const choice = index + 1;
         return (
           <Button
             key={choice}
+            ref={(element) => {
+              optionRefs.current[index] = element;
+              if (index === 0) {
+                firstAnswerControlRef.current = element;
+              }
+            }}
             type="button"
             variant="outline"
             className={cn(
-              'aspect-square w-10 rounded-full p-0',
+              `
+                h-14 w-full rounded-lg border p-0 text-sm font-semibold sm:rounded-full
+                md:h-12 md:w-full md:justify-start md:rounded-md md:px-4
+              `,
               selectedChoice === choice &&
                 `
-                  bg-zinc-500 text-zinc-100
-                  hover:bg-zinc-400 hover:text-zinc-100
+                  border-primary
                 `,
             )}
             disabled={disabled}
             onClick={() => onSelect(choice)}
+            onKeyDown={(event) => handleChoiceKeyDown(event, index)}
           >
-            {choice}
+            <span
+              className={cn(
+                `
+                  grid size-6 place-items-center rounded-full border text-xs
+                  font-semibold
+                  md:mr-2
+       `,
+                selectedChoice === choice &&
+                  `
+                  border-primary
+                `,
+              )}
+            >
+              {choice}
+            </span>
           </Button>
         );
       })}
@@ -630,18 +950,23 @@ function WrittenAnswerInput({
   disabled,
   onAnswerTextChange,
   onSave,
+  firstAnswerControlRef,
 }: {
   answerText: string;
   savedAnswerText?: string | null;
   disabled: boolean;
   onAnswerTextChange: (value: string) => void;
   onSave: (value: string) => void;
+  firstAnswerControlRef: RefObject<
+    HTMLButtonElement | HTMLTextAreaElement | null
+  >;
 }) {
   const value = answerText || savedAnswerText || '';
 
   return (
     <div className="grid gap-2">
       <Textarea
+        ref={firstAnswerControlRef as RefObject<HTMLTextAreaElement>}
         className="min-h-20"
         value={value}
         disabled={disabled}
@@ -660,20 +985,6 @@ function WrittenAnswerInput({
   );
 }
 
-function AnswerMeta({ answer }: { answer?: Answer }) {
-  return (
-    <div
-      className="
-        mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500
-      "
-    >
-      {answer && (
-        <span>누적 풀이시간 {formatDuration(answer.spentMilliseconds)}</span>
-      )}
-    </div>
-  );
-}
-
 function SolveControlPanel({
   session,
   question,
@@ -682,10 +993,16 @@ function SolveControlPanel({
   currentIndex,
   answeredIds,
   disabled,
+  hasCurrentAnswer,
+  isFinishing,
+  isAnswerRevealed,
   message,
   onAnswerTextChange,
   onSaveAnswer,
   onMoveTo,
+  onRevealAnswer,
+  onMoveToNextQuestion,
+  firstAnswerControlRef,
 }: {
   session: SolveSession;
   question: SolveQuestion;
@@ -694,11 +1011,22 @@ function SolveControlPanel({
   currentIndex: number;
   answeredIds: Set<string>;
   disabled: boolean;
+  hasCurrentAnswer: boolean;
+  isFinishing: boolean;
+  isAnswerRevealed: boolean;
   message: string | null;
   onAnswerTextChange: (value: string) => void;
   onSaveAnswer: (payload: SaveAnswerPayload) => void;
   onMoveTo: (index: number) => void;
+  onRevealAnswer: () => void;
+  onMoveToNextQuestion: () => void;
+  firstAnswerControlRef: RefObject<
+    HTMLButtonElement | HTMLTextAreaElement | null
+  >;
 }) {
+  const isPracticeMode = session.mode === 'ONE_BY_ONE';
+  const canMoveNext = currentIndex < session.paper.questions.length - 1;
+
   return (
     <aside
       className="
@@ -720,10 +1048,34 @@ function SolveControlPanel({
         message={message}
         onAnswerTextChange={onAnswerTextChange}
         onSaveAnswer={onSaveAnswer}
+        firstAnswerControlRef={firstAnswerControlRef}
       />
-      {session.mode === 'ONE_BY_ONE' && (
+      {isPracticeMode && isAnswerRevealed && (
         <ResultCheckPanel question={question} answer={answer} />
       )}
+      <div className="mt-auto border-t pt-4">
+        <Button
+          type="button"
+          className="w-full"
+          disabled={
+            disabled ||
+            isFinishing ||
+            (isPracticeMode ? !hasCurrentAnswer : !canMoveNext)
+          }
+          onClick={isPracticeMode ? onRevealAnswer : onMoveToNextQuestion}
+        >
+          {isPracticeMode ? (
+            <Send data-icon="inline-start" />
+          ) : (
+            <ChevronRight data-icon="inline-start" />
+          )}
+          {isFinishing
+            ? '처리 중...'
+            : isPracticeMode
+              ? '답안 제출하기'
+              : '다음 문항'}
+        </Button>
+      </div>
     </aside>
   );
 }
@@ -743,59 +1095,107 @@ function QuestionNavigationControls({
   const canMoveNext = currentIndex < questions.length - 1;
 
   return (
-    <section className="grid gap-2">
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!canMovePrevious}
-          onClick={() => onMoveTo(currentIndex - 1)}
-        >
-          <ChevronLeft data-icon="inline-start" />
-          이전
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!canMoveNext}
-          onClick={() => onMoveTo(currentIndex + 1)}
-        >
-          다음
-          <ChevronRight data-icon="inline-end" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline" size="icon-sm">
-              <List />
-              <span className="sr-only">문항 목록</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="max-h-80 w-56">
-            {questions.map((question, index) => (
-              <DropdownMenuItem
-                key={question.id}
-                className={cn(
-                  'justify-between',
-                  currentIndex === index && 'bg-accent text-accent-foreground',
-                )}
-                onSelect={() => onMoveTo(index)}
-              >
-                <span>{question.number}번</span>
-                <span className="text-xs text-muted-foreground">
-                  {currentIndex === index
-                    ? '현재'
-                    : answeredIds.has(question.id)
-                      ? '응답'
-                      : ''}
-                </span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <section
+      className="
+        hidden
+        md:grid md:gap-2
+      "
+    >
+      <div
+        className="
+          grid grid-cols-[auto] gap-2
+          md:grid-cols-[1fr_auto]
+        "
+      >
+        <div className="hidden grid-cols-2 overflow-hidden rounded-md border md:grid">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="
+              rounded-none text-blue-600 hover:text-blue-700
+              focus-visible:relative focus-visible:z-10 focus-visible:ring-inset
+            "
+            disabled={!canMovePrevious}
+            onClick={() => onMoveTo(currentIndex - 1)}
+          >
+            <ChevronLeft data-icon="inline-start" />
+            이전
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="
+              rounded-none text-blue-600 hover:text-blue-700
+              focus-visible:relative focus-visible:z-10 focus-visible:ring-inset
+            "
+            disabled={!canMoveNext}
+            onClick={() => onMoveTo(currentIndex + 1)}
+          >
+            다음
+            <ChevronRight data-icon="inline-end" />
+          </Button>
+        </div>
+        <QuestionListDropdown
+          questions={questions}
+          currentIndex={currentIndex}
+          answeredIds={answeredIds}
+          onMoveTo={onMoveTo}
+        />
       </div>
     </section>
+  );
+}
+
+function QuestionListDropdown({
+  questions,
+  currentIndex,
+  answeredIds,
+  onMoveTo,
+  compact = false,
+}: {
+  questions: SolveQuestion[];
+  currentIndex: number;
+  answeredIds: Set<string>;
+  onMoveTo: (index: number) => void;
+  compact?: boolean;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant={compact ? 'ghost' : 'outline'}
+          size={compact ? 'sm' : 'icon-sm'}
+          className={cn(compact && 'size-9 px-0')}
+        >
+          <List />
+          <span className="sr-only">문항 목록</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="max-h-80 w-56">
+        {questions.map((question, index) => (
+          <DropdownMenuItem
+            key={question.id}
+            className={cn(
+              'justify-between',
+              currentIndex === index && 'bg-accent text-accent-foreground',
+            )}
+            onSelect={() => onMoveTo(index)}
+          >
+            <span>{question.number}번</span>
+            <span className="text-xs text-muted-foreground">
+              {currentIndex === index
+                ? '현재'
+                : answeredIds.has(question.id)
+                  ? '응답'
+                  : ''}
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

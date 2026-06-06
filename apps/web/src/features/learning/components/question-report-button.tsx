@@ -10,6 +10,12 @@ import {
   DialogTitle,
 } from '@kichulbot/ui/components/ui/dialog';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@kichulbot/ui/components/ui/dropdown-menu';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,7 +24,7 @@ import {
 } from '@kichulbot/ui/components/ui/select';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { Textarea } from '@kichulbot/ui/components/ui/textarea';
-import { Flag, Loader2 } from 'lucide-react';
+import { Flag, Loader2, MoreVertical } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { useEffect, useState } from 'react';
 
@@ -36,6 +42,80 @@ const reportCategories = [
 ] satisfies Array<{ value: QuestionReportCategory; label: string }>;
 
 export function QuestionReportButton({
+  questionId,
+  questionRevisionId,
+  isAuthenticated = true,
+  compact = false,
+}: {
+  questionId: string;
+  questionRevisionId: string;
+  isAuthenticated?: boolean;
+  compact?: boolean;
+}) {
+  const [isOpening, setIsOpening] = useState(false);
+
+  const openReport = async () => {
+    setIsOpening(true);
+    try {
+      await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+        <QuestionReportDialog
+          isOpen={isOpen}
+          questionId={questionId}
+          questionRevisionId={questionRevisionId}
+          isAuthenticated={isAuthenticated}
+          onClose={close}
+          onExit={unmount}
+        />
+      ));
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
+  if (compact) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="size-9 px-0"
+            disabled={isOpening}
+          >
+            {isOpening ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <MoreVertical />
+            )}
+            <span className="sr-only">더보기</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => void openReport()}>
+            <Flag />
+            신고
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={isOpening}
+      onClick={() => void openReport()}
+    >
+      {isOpening ? <Loader2 className="animate-spin" /> : <Flag />}
+      신고
+    </Button>
+  );
+}
+
+export function QuestionReportMenuItem({
   questionId,
   questionRevisionId,
   isAuthenticated = true,
@@ -65,16 +145,10 @@ export function QuestionReportButton({
   };
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      disabled={isOpening}
-      onClick={() => void openReport()}
-    >
+    <DropdownMenuItem disabled={isOpening} onSelect={() => void openReport()}>
       {isOpening ? <Loader2 className="animate-spin" /> : <Flag />}
       신고
-    </Button>
+    </DropdownMenuItem>
   );
 }
 

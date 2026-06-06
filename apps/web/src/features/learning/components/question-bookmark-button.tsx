@@ -22,13 +22,16 @@ import {
   getBookmarkLists,
 } from '@/features/library/api/client';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
+import { cn } from '@/shared/lib/utils';
 
 export function QuestionBookmarkButton({
   questionId,
   isAuthenticated = true,
+  compact = false,
 }: {
   questionId: string;
   isAuthenticated?: boolean;
+  compact?: boolean;
 }) {
   const pathname = usePathname();
   const [bookmarkLists, setBookmarkLists] = useState<BookmarkListSummary[]>([]);
@@ -99,9 +102,17 @@ export function QuestionBookmarkButton({
       }}
     >
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="sm" disabled={isAdding}>
+        <Button
+          type="button"
+          variant={compact ? 'ghost' : 'outline'}
+          size="sm"
+          className={cn(compact && 'size-9 px-0')}
+          disabled={isAdding}
+        >
           {isAdding ? <Loader2 className="animate-spin" /> : <BookmarkPlus />}
-          {isAdding ? '추가 중' : '북마크'}
+          <span className={cn(compact && 'sr-only')}>
+            {isAdding ? '추가 중' : '북마크'}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

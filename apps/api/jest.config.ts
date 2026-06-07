@@ -5,7 +5,14 @@ const config: Config = {
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          esModuleInterop: true,
+        },
+      },
+    ],
   },
   moduleNameMapper: {
     '^@kichulbot/api-contract/(.+)$':
@@ -15,7 +22,12 @@ const config: Config = {
     '^@kichulbot/utils$': '<rootDir>/../../packages/utils/src/index.ts',
     '^(\\.{1,2}/.+)\\.js$': '$1',
   },
-  collectCoverageFrom: ['src/**/*.ts', '!src/main.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/main.ts',
+    '!src/**/*.dto.ts',
+    '!src/**/dto/**/*.ts',
+  ],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
   watchman: false,

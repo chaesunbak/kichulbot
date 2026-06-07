@@ -30,7 +30,7 @@ export function FeatureSection() {
     },
     {
       href: '/resources/search',
-      label: '문제 검색',
+      label: '시험지 검색',
       iconSrc: searchIcon,
     },
     {

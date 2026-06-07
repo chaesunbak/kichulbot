@@ -106,7 +106,7 @@ export function ResourceSearchControls({
           name="q"
           type="search"
           defaultValue={filters.q}
-          placeholder="시험지명 또는 시험명 검색"
+          placeholder="검색어를 입력해주세요"
           className="h-10"
         />
         <Button type="submit" size="icon" aria-label="검색">

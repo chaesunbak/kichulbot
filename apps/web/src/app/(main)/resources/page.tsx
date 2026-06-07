@@ -56,7 +56,7 @@ export default async function PapersPage() {
           <Input
             name="q"
             type="search"
-            placeholder="시험지명 또는 시험명 검색"
+            placeholder="검색어를 입력해주세요"
             className="h-10"
           />
           <Button type="submit" className="h-10 shrink-0">

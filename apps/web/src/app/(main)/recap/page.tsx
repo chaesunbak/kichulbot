@@ -1,7 +1,7 @@
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
-  CardDescription,
+  CardAction,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
@@ -44,17 +44,18 @@ export default async function RecapPage() {
       <Card>
         <CardHeader>
           <CardTitle>나의 학습 분석</CardTitle>
-          <CardDescription>
-            정답률, 풀이량, 취약 태그를 차트로 확인해보세요.
-          </CardDescription>
-          <Button asChild size="sm" className="mt-3 w-fit">
-            <Link href="/report">확인해보세요</Link>
-          </Button>
+          <CardAction>
+            <Button asChild variant="link">
+              <Link href="/report">
+                확인하기 <ChevronRight />
+              </Link>
+            </Button>
+          </CardAction>
         </CardHeader>
       </Card>
       <div className="flex items-center justify-between gap-4">
         <div className="text-lg font-semibold">나의 최근 풀이</div>
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="link">
           <Link href="/logs">
             더보기
             <ChevronRight className="size-4" />

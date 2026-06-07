@@ -43,8 +43,8 @@ export function WrongReviewCard({
   const questionCount = initialQuestionSet?.questionCount;
 
   return (
-    <Card className="mt-6 border-blue-200 bg-blue-50/40">
-      <CardHeader className="pb-3">
+    <Card>
+      <CardHeader>
         <CardTitle>오답 복습</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

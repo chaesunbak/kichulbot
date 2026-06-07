@@ -18,6 +18,22 @@ const answerPdf = {
   buffer: Buffer.from('answer-pdf'),
 } satisfies UploadedMemoryFile;
 
+const extraPdf = {
+  fieldname: 'answerPdf',
+  originalname: 'answers-extra.pdf',
+  mimetype: 'application/pdf',
+  size: 1024,
+  buffer: Buffer.from('answer-pdf-extra'),
+} satisfies UploadedMemoryFile;
+
+const unexpectedPdf = {
+  fieldname: 'commentaryPdf',
+  originalname: 'commentary.pdf',
+  mimetype: 'application/pdf',
+  size: 1024,
+  buffer: Buffer.from('commentary-pdf'),
+} satisfies UploadedMemoryFile;
+
 describe('PaperImportDraftsController', () => {
   let controller: PaperImportDraftsController;
   let paperImportDraftsService: jest.Mocked<PaperImportDraftsService>;
@@ -61,5 +77,21 @@ describe('PaperImportDraftsController', () => {
       answerPdf: undefined,
       options: {},
     });
+  });
+
+  it('지원하지 않는 업로드 필드가 있으면 초안 생성을 거부한다', () => {
+    expect(() =>
+      controller.createDraft([questionPdf, unexpectedPdf], {}),
+    ).toThrow('지원하지 않는 업로드 필드입니다.');
+
+    expect(paperImportDraftsService.createDraft).not.toHaveBeenCalled();
+  });
+
+  it('같은 종류의 PDF가 2개 이상 업로드되면 초안 생성을 거부한다', () => {
+    expect(() =>
+      controller.createDraft([questionPdf, answerPdf, extraPdf], {}),
+    ).toThrow('답지 PDF는 1개만 업로드할 수 있습니다.');
+
+    expect(paperImportDraftsService.createDraft).not.toHaveBeenCalled();
   });
 });

@@ -25,9 +25,9 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { RequestUser } from '../auth/types';
-import { CreateOfficialTagDto } from './dto/create-official-tag.dto';
+import { CreateTagDto } from './dto/create-tag.dto';
 import { CreateTagGroupDto } from './dto/create-tag-group.dto';
-import { UpdateOfficialTagDto } from './dto/update-official-tag.dto';
+import { UpdateTagDto } from './dto/update-tag.dto';
 import { UpdateTagGroupDto } from './dto/update-tag-group.dto';
 import { TagsService } from './tags.service';
 
@@ -56,8 +56,8 @@ export class TagsController {
   @ApiOperation({ summary: '태그 생성' })
   @ApiCreatedResponse({ description: '태그를 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  createTag(@Body() dto: CreateOfficialTagDto) {
-    return this.tagsService.createOfficialTag(dto);
+  createTag(@Body() dto: CreateTagDto) {
+    return this.tagsService.createTag(dto);
   }
 
   @Patch(':id')
@@ -65,8 +65,8 @@ export class TagsController {
   @ApiOperation({ summary: '태그 수정' })
   @ApiOkResponse({ description: '태그를 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  updateTag(@Param('id') id: string, @Body() dto: UpdateOfficialTagDto) {
-    return this.tagsService.updateOfficialTag(id, dto);
+  updateTag(@Param('id') id: string, @Body() dto: UpdateTagDto) {
+    return this.tagsService.updateTag(id, dto);
   }
 
   @Delete(':id')
@@ -77,7 +77,7 @@ export class TagsController {
   })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
   deleteTag(@Param('id') id: string) {
-    return this.tagsService.deleteOfficialTag(id);
+    return this.tagsService.deleteTag(id);
   }
 }
 

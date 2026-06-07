@@ -1,8 +1,8 @@
-import { CreateOfficialTagRequest } from '@kichulbot/api-contract/tags';
+import { CreateTagRequest } from '@kichulbot/api-contract/tags';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class CreateOfficialTagDto implements CreateOfficialTagRequest {
+export class CreateTagDto implements CreateTagRequest {
   @ApiProperty({ example: '조선' })
   @IsString()
   @MaxLength(50)

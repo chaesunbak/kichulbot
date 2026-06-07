@@ -1,16 +1,16 @@
 import type {
-  CreateOfficialTagRequest,
   CreateTagGroupRequest,
-  UpdateOfficialTagRequest,
+  CreateTagRequest,
   UpdateTagGroupRequest,
+  UpdateTagRequest,
 } from '@kichulbot/api-contract/tags';
 import {
-  DeleteOfficialTagResponseSchema,
   DeleteTagGroupResponseSchema,
+  DeleteTagResponseSchema,
   ListTagGroupsResponseSchema,
   ListTagsResponseSchema,
-  OfficialTagMutationResponseSchema,
   TagGroupMutationResponseSchema,
+  TagMutationResponseSchema,
 } from '@kichulbot/api-contract/tags';
 
 import { apiRequest } from '@/shared/api/api-client';
@@ -24,31 +24,28 @@ export async function fetchAdminTags(token: string) {
   return apiRequest('/tags', ListTagsResponseSchema.parse, { token });
 }
 
-export async function createOfficialTag(
-  token: string,
-  input: CreateOfficialTagRequest,
-) {
-  return apiRequest('/tags', OfficialTagMutationResponseSchema.parse, {
+export async function createTag(token: string, input: CreateTagRequest) {
+  return apiRequest('/tags', TagMutationResponseSchema.parse, {
     token,
     method: 'POST',
     body: input,
   });
 }
 
-export async function updateOfficialTag(
+export async function updateTag(
   token: string,
   tagId: string,
-  input: UpdateOfficialTagRequest,
+  input: UpdateTagRequest,
 ) {
-  return apiRequest(`/tags/${tagId}`, OfficialTagMutationResponseSchema.parse, {
+  return apiRequest(`/tags/${tagId}`, TagMutationResponseSchema.parse, {
     token,
     method: 'PATCH',
     body: input,
   });
 }
 
-export async function deleteOfficialTag(token: string, tagId: string) {
-  return apiRequest(`/tags/${tagId}`, DeleteOfficialTagResponseSchema.parse, {
+export async function deleteTag(token: string, tagId: string) {
+  return apiRequest(`/tags/${tagId}`, DeleteTagResponseSchema.parse, {
     token,
     method: 'DELETE',
   });

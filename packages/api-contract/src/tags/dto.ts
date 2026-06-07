@@ -11,34 +11,25 @@ export const ListTagsResponseSchema = z.object({
 });
 export type ListTagsResponse = z.infer<typeof ListTagsResponseSchema>;
 
-export const CreateOfficialTagRequestSchema = z.object({
+export const CreateTagRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),
   examId: z.string().min(1),
   tagGroupId: z.string().min(1).nullable().optional(),
 });
-export type CreateOfficialTagRequest = z.infer<
-  typeof CreateOfficialTagRequestSchema
->;
+export type CreateTagRequest = z.infer<typeof CreateTagRequestSchema>;
 
-export const UpdateOfficialTagRequestSchema =
-  CreateOfficialTagRequestSchema.partial();
-export type UpdateOfficialTagRequest = z.infer<
-  typeof UpdateOfficialTagRequestSchema
->;
+export const UpdateTagRequestSchema = CreateTagRequestSchema.partial();
+export type UpdateTagRequest = z.infer<typeof UpdateTagRequestSchema>;
 
-export const OfficialTagMutationResponseSchema = z.object({
+export const TagMutationResponseSchema = z.object({
   tag: AdminTagResponseSchema,
 });
-export type OfficialTagMutationResponse = z.infer<
-  typeof OfficialTagMutationResponseSchema
->;
+export type TagMutationResponse = z.infer<typeof TagMutationResponseSchema>;
 
-export const DeleteOfficialTagResponseSchema = z.object({
+export const DeleteTagResponseSchema = z.object({
   id: z.string(),
 });
-export type DeleteOfficialTagResponse = z.infer<
-  typeof DeleteOfficialTagResponseSchema
->;
+export type DeleteTagResponse = z.infer<typeof DeleteTagResponseSchema>;
 
 export const ListTagGroupsResponseSchema = z.object({
   tagGroups: z.array(AdminTagGroupResponseSchema),

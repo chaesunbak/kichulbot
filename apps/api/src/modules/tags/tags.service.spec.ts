@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
+import type { TagGroup } from '../../infrastructure/database/prisma-client';
 import { UserRole } from '../../infrastructure/database/prisma-client';
 import type { TagsRepository } from './tags.repository';
 import { TagsService } from './tags.service';
@@ -20,6 +21,12 @@ describe('TagsService', () => {
       create: jest.fn(),
       update: jest.fn(),
       deleteIfUnused: jest.fn(),
+      findManyTagGroups: jest.fn(),
+      findTagGroupById: jest.fn(),
+      countTagGroupsByIds: jest.fn(),
+      createTagGroup: jest.fn(),
+      updateTagGroup: jest.fn(),
+      deleteTagGroupIfUnused: jest.fn(),
     } as unknown as jest.Mocked<TagsRepository>;
 
     service = new TagsService(repository);
@@ -34,7 +41,6 @@ describe('TagsService', () => {
     expect(response.tags[0]).not.toHaveProperty('examId');
     expect(response.tags[0]).toMatchObject({
       id: 'tag_1',
-      kind: 'OFFICIAL',
     });
   });
 
@@ -63,13 +69,13 @@ describe('TagsService', () => {
     });
   });
 
-  it('사용되지 않은 공식 태그를 삭제한다', async () => {
+  it('사용되지 않은 태그를 삭제한다', async () => {
     repository.deleteIfUnused.mockResolvedValue({
       tag: makeTag(),
       questionCount: 0,
     });
 
-    await expect(service.deleteOfficialTag('tag_1')).resolves.toEqual({
+    await expect(service.deleteTag('tag_1')).resolves.toEqual({
       id: 'tag_1',
     });
   });
@@ -80,7 +86,7 @@ describe('TagsService', () => {
       questionCount: 1,
     });
 
-    await expect(service.deleteOfficialTag('tag_1')).rejects.toThrow(
+    await expect(service.deleteTag('tag_1')).rejects.toThrow(
       '문항에 연결된 태그는 삭제할 수 없습니다.',
     );
   });
@@ -98,6 +104,53 @@ describe('TagsService', () => {
 
     expect(repository.countAssignableByIds).not.toHaveBeenCalled();
   });
+
+  it('태그 그룹 생성 시 이름을 정리하고 기본 정렬과 활성 상태를 적용한다', async () => {
+    repository.existsExamById.mockResolvedValue(true);
+    repository.createTagGroup.mockResolvedValue(makeTagGroup());
+
+    const response = await service.createTagGroup({
+      examId: 'exam_1',
+      name: '  시대  ',
+      selectionMode: 'MULTIPLE',
+    });
+
+    expect(repository.createTagGroup).toHaveBeenCalledWith({
+      examId: 'exam_1',
+      name: '시대',
+      selectionMode: 'MULTIPLE',
+      sortOrder: 0,
+      isActive: true,
+    });
+    expect(response.tagGroup).toMatchObject({
+      id: 'tag_group_1',
+      name: '시대',
+      tagCount: 0,
+    });
+  });
+
+  it('태그가 연결된 그룹은 다른 시험으로 이동하지 못한다', async () => {
+    repository.findTagGroupById.mockResolvedValue(
+      makeTagGroup({ _count: { tags: 1 } }),
+    );
+    repository.existsExamById.mockResolvedValue(true);
+
+    await expect(
+      service.updateTagGroup('tag_group_1', { examId: 'exam_2' }),
+    ).rejects.toThrow('태그가 연결된 그룹은 다른 시험으로 이동할 수 없습니다.');
+    expect(repository.updateTagGroup).not.toHaveBeenCalled();
+  });
+
+  it('태그 그룹 삭제 시 연결된 태그가 있으면 거부한다', async () => {
+    repository.deleteTagGroupIfUnused.mockResolvedValue({
+      tagGroup: makeTagGroup({ _count: { tags: 1 } }),
+      tagCount: 1,
+    });
+
+    await expect(service.deleteTagGroup('tag_group_1')).rejects.toThrow(
+      '태그가 연결된 그룹은 삭제할 수 없습니다.',
+    );
+  });
 });
 
 function makeTag() {
@@ -110,5 +163,22 @@ function makeTag() {
     createdAt: now,
     updatedAt: now,
     _count: { questions: 0 },
+  };
+}
+
+type TagGroupFixture = TagGroup & { _count: { tags: number } };
+
+function makeTagGroup(overrides: Partial<TagGroupFixture> = {}) {
+  return {
+    id: 'tag_group_1',
+    examId: 'exam_1',
+    name: '시대',
+    selectionMode: 'MULTIPLE' as const,
+    sortOrder: 0,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    _count: { tags: 0 },
+    ...overrides,
   };
 }

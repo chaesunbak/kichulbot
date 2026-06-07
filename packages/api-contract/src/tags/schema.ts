@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { IsoDateStringSchema, OfficialTagKindSchema } from '../common.js';
+import { IsoDateStringSchema } from '../common.js';
 
 export const TagSelectionModeSchema = z.enum(['SINGLE', 'MULTIPLE']);
 export type TagSelectionMode = z.infer<typeof TagSelectionModeSchema>;
@@ -24,7 +24,6 @@ export type AdminTagGroupResponse = z.infer<typeof AdminTagGroupResponseSchema>;
 export const TagResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
-  kind: OfficialTagKindSchema,
   tagGroup: TagGroupResponseSchema.nullable().optional(),
 });
 export type TagResponse = z.infer<typeof TagResponseSchema>;

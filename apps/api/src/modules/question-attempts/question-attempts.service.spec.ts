@@ -78,7 +78,6 @@ describe('QuestionAttemptsService', () => {
         {
           id: 'tag_1',
           name: '조선',
-          kind: 'OFFICIAL',
           tagGroup: {
             id: 'tag_group_1',
             examId: 'exam_1',

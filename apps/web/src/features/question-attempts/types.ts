@@ -14,7 +14,6 @@ export interface QuestionAttemptTagGroup {
 export interface QuestionAttemptTag {
   id: string;
   name: string;
-  kind: 'OFFICIAL';
   tagGroup?: QuestionAttemptTagGroup | null;
 }
 

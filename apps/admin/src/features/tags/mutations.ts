@@ -3,11 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import {
-  createOfficialTag,
+  createTag,
   createTagGroup,
-  deleteOfficialTag,
+  deleteTag,
   deleteTagGroup,
-  updateOfficialTag,
+  updateTag,
   updateTagGroup,
 } from './api';
 import { tagKeys } from './queries';
@@ -51,8 +51,8 @@ export function useSaveTagMutation(
       if (!input.name) throw new Error('태그 이름을 입력해 주세요.');
       if (!input.examId) throw new Error('시험을 선택해 주세요.');
       return editingTagId
-        ? updateOfficialTag(token, editingTagId, input)
-        : createOfficialTag(token, input);
+        ? updateTag(token, editingTagId, input)
+        : createTag(token, input);
     },
     onSuccess: () => {
       invalidateTags();
@@ -134,7 +134,7 @@ export function useDeleteTagMutation(
 ) {
   const invalidateTags = useInvalidateTags();
   return useMutation({
-    mutationFn: (tagId: string) => deleteOfficialTag(token, tagId),
+    mutationFn: (tagId: string) => deleteTag(token, tagId),
     onSuccess: ({ id }) => {
       invalidateTags();
       onSuccess?.(id);

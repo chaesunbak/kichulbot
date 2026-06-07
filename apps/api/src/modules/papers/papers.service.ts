@@ -343,7 +343,6 @@ export class PapersService {
           question.tags?.map((questionTag) => ({
             id: questionTag.tag.id,
             name: questionTag.tag.name,
-            kind: 'OFFICIAL',
           })) ?? [],
         createdAt: question.createdAt.toISOString(),
         updatedAt: question.updatedAt.toISOString(),

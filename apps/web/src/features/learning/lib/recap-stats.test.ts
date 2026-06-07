@@ -79,7 +79,6 @@ function attempt(
       {
         id: `tag-${tagName}`,
         name: tagName,
-        kind: 'OFFICIAL',
         tagGroup: group,
       },
     ],

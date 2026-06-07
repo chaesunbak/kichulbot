@@ -1,24 +1,24 @@
 import {
   AdminTagGroupResponse,
   AdminTagResponse,
-  CreateOfficialTagRequest,
   CreateTagGroupRequest,
-  DeleteOfficialTagResponse,
-  DeleteOfficialTagResponseSchema,
+  CreateTagRequest,
   DeleteTagGroupResponse,
   DeleteTagGroupResponseSchema,
+  DeleteTagResponse,
+  DeleteTagResponseSchema,
   ListTagGroupsResponse,
   ListTagGroupsResponseSchema,
   ListTagsResponse,
   ListTagsResponseSchema,
-  OfficialTagMutationResponse,
-  OfficialTagMutationResponseSchema,
   TagGroupMutationResponse,
   TagGroupMutationResponseSchema,
   TagGroupResponse,
+  TagMutationResponse,
+  TagMutationResponseSchema,
   TagResponse,
-  UpdateOfficialTagRequest,
   UpdateTagGroupRequest,
+  UpdateTagRequest,
 } from '@kichulbot/api-contract/tags';
 import {
   BadRequestException,
@@ -60,9 +60,7 @@ export class TagsService {
     });
   }
 
-  async createOfficialTag(
-    dto: CreateOfficialTagRequest,
-  ): Promise<OfficialTagMutationResponse> {
+  async createTag(dto: CreateTagRequest): Promise<TagMutationResponse> {
     await this.assertExamExists(dto.examId);
     await this.assertTagGroupAssignable(dto.tagGroupId ?? null, dto.examId);
 
@@ -72,15 +70,15 @@ export class TagsService {
       tagGroupId: dto.tagGroupId ?? null,
     });
 
-    return OfficialTagMutationResponseSchema.parse({
+    return TagMutationResponseSchema.parse({
       tag: this.toResponse(tag, UserRole.ADMIN),
     });
   }
 
-  async updateOfficialTag(
+  async updateTag(
     id: string,
-    dto: UpdateOfficialTagRequest,
-  ): Promise<OfficialTagMutationResponse> {
+    dto: UpdateTagRequest,
+  ): Promise<TagMutationResponse> {
     const existing = await this.tagsRepository.findById(id);
     if (!existing) {
       throw new NotFoundException('태그를 찾을 수 없습니다.');
@@ -101,12 +99,12 @@ export class TagsService {
       tagGroupId: dto.tagGroupId,
     });
 
-    return OfficialTagMutationResponseSchema.parse({
+    return TagMutationResponseSchema.parse({
       tag: this.toResponse(tag, UserRole.ADMIN),
     });
   }
 
-  async deleteOfficialTag(id: string): Promise<DeleteOfficialTagResponse> {
+  async deleteTag(id: string): Promise<DeleteTagResponse> {
     const result = await this.tagsRepository.deleteIfUnused(id);
 
     if (!result.tag) {
@@ -117,7 +115,7 @@ export class TagsService {
       throw new BadRequestException('문항에 연결된 태그는 삭제할 수 없습니다.');
     }
 
-    return DeleteOfficialTagResponseSchema.parse({ id });
+    return DeleteTagResponseSchema.parse({ id });
   }
 
   async listTagGroups(examId?: string): Promise<ListTagGroupsResponse> {
@@ -266,7 +264,6 @@ export class TagsService {
     const response = {
       id: tag.id,
       name: tag.name,
-      kind: 'OFFICIAL' as const,
       tagGroup: tag.tagGroup ? this.toTagGroupBaseResponse(tag.tagGroup) : null,
     };
 

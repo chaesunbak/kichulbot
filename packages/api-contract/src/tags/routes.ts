@@ -1,14 +1,14 @@
 import {
-  CreateOfficialTagRequestSchema,
+  CreateTagRequestSchema,
   CreateTagGroupRequestSchema,
+  DeleteTagResponseSchema,
   DeleteTagGroupResponseSchema,
-  DeleteOfficialTagResponseSchema,
   ListTagGroupsResponseSchema,
   ListTagsResponseSchema,
-  OfficialTagMutationResponseSchema,
+  TagMutationResponseSchema,
   TagGroupMutationResponseSchema,
   UpdateTagGroupRequestSchema,
-  UpdateOfficialTagRequestSchema,
+  UpdateTagRequestSchema,
 } from './dto.js';
 
 export const tagsRoutes = {
@@ -24,23 +24,23 @@ export const tagsRoutes = {
     request: null,
     response: ListTagsResponseSchema,
   },
-  createOfficialTag: {
+  createTag: {
     method: 'POST',
     path: '/tags',
-    request: CreateOfficialTagRequestSchema,
-    response: OfficialTagMutationResponseSchema,
+    request: CreateTagRequestSchema,
+    response: TagMutationResponseSchema,
   },
-  updateOfficialTag: {
+  updateTag: {
     method: 'PATCH',
     path: '/tags/:id',
-    request: UpdateOfficialTagRequestSchema,
-    response: OfficialTagMutationResponseSchema,
+    request: UpdateTagRequestSchema,
+    response: TagMutationResponseSchema,
   },
-  deleteOfficialTag: {
+  deleteTag: {
     method: 'DELETE',
     path: '/tags/:id',
     request: null,
-    response: DeleteOfficialTagResponseSchema,
+    response: DeleteTagResponseSchema,
   },
   listTagGroups: {
     method: 'GET',

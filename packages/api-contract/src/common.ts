@@ -11,9 +11,6 @@ export type UserAuthType = z.infer<typeof UserAuthTypeSchema>;
 export const OAuthProviderSchema = z.enum(['KAKAO']);
 export type OAuthProvider = z.infer<typeof OAuthProviderSchema>;
 
-export const OfficialTagKindSchema = z.literal('OFFICIAL');
-export type OfficialTagKind = z.infer<typeof OfficialTagKindSchema>;
-
 export const QuestionTypeSchema = z.enum(['MULTIPLE_CHOICE', 'WRITTEN']);
 export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 

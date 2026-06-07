@@ -1,8 +1,8 @@
-import { UpdateOfficialTagRequest } from '@kichulbot/api-contract/tags';
+import { UpdateTagRequest } from '@kichulbot/api-contract/tags';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class UpdateOfficialTagDto implements UpdateOfficialTagRequest {
+export class UpdateTagDto implements UpdateTagRequest {
   @ApiProperty({ required: false, example: '조선' })
   @IsOptional()
   @IsString()

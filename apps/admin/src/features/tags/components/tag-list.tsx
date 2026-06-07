@@ -41,12 +41,12 @@ export function TagListPanel({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Tags className="size-4" aria-hidden="true" />
-          공식 태그 목록
+          태그 목록
         </CardTitle>
         <CardDescription>
           {selectedExam
-            ? `${selectedExam.name}에 등록된 공식 태그입니다.`
-            : '시험을 선택하면 등록된 공식 태그를 볼 수 있습니다.'}
+            ? `${selectedExam.name}에 등록된 태그입니다.`
+            : '시험을 선택하면 등록된 태그를 볼 수 있습니다.'}
         </CardDescription>
       </CardHeader>
       <CardContent>

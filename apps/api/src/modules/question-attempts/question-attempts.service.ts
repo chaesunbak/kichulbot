@@ -76,7 +76,6 @@ export class QuestionAttemptsService {
             taggedRevision.question?.tags?.map(({ tag }) => ({
               id: tag.id,
               name: tag.name,
-              kind: 'OFFICIAL' as const,
               tagGroup: tag.tagGroup
                 ? {
                     id: tag.tagGroup.id,

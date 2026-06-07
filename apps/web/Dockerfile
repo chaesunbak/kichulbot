@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM node:22-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
@@ -9,6 +11,8 @@ WORKDIR /app
 
 FROM base AS deps
 
+ARG TARGETPLATFORM
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
@@ -17,9 +21,12 @@ COPY packages/api-contract/package.json ./packages/api-contract/package.json
 COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/utils/package.json ./packages/utils/package.json
 
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-${TARGETPLATFORM},target=/pnpm/store,sharing=locked \
+    pnpm install --frozen-lockfile --prefer-offline --store-dir=/pnpm/store
 
 FROM deps AS builder
+
+ARG TARGETPLATFORM
 
 COPY apps/web ./apps/web
 COPY packages/eslint-config ./packages/eslint-config
@@ -28,7 +35,9 @@ COPY packages/api-contract ./packages/api-contract
 COPY packages/ui ./packages/ui
 COPY packages/utils ./packages/utils
 
-RUN pnpm turbo run build --filter=@kichulbot/web
+RUN --mount=type=cache,id=turbo-web-${TARGETPLATFORM},target=/app/.turbo,sharing=locked \
+    --mount=type=cache,id=next-web-${TARGETPLATFORM},target=/app/apps/web/.next/cache,sharing=locked \
+    pnpm turbo run build --filter=@kichulbot/web
 
 FROM node:22-alpine AS runner
 

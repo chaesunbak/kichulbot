@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM node:22-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
@@ -9,16 +11,20 @@ WORKDIR /app
 
 FROM base AS deps
 
+ARG TARGETPLATFORM
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/api-contract/package.json ./packages/api-contract/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 COPY packages/utils/package.json ./packages/utils/package.json
 
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-${TARGETPLATFORM},target=/pnpm/store,sharing=locked \
+    pnpm install --frozen-lockfile --prefer-offline --store-dir=/pnpm/store
 
 FROM deps AS builder
 
+ARG TARGETPLATFORM
 ENV DATABASE_URL="postgresql://kichulbot:kichulbot@localhost:5432/kichulbot?schema=public"
 
 COPY apps/api ./apps/api
@@ -26,7 +32,8 @@ COPY packages/api-contract ./packages/api-contract
 COPY packages/typescript-config ./packages/typescript-config
 COPY packages/utils ./packages/utils
 
-RUN pnpm turbo run build --filter=@kichulbot/api
+RUN --mount=type=cache,id=turbo-api-${TARGETPLATFORM},target=/app/.turbo,sharing=locked \
+    pnpm turbo run build --filter=@kichulbot/api
 RUN CI=true pnpm prune --prod --ignore-scripts
 
 FROM node:22-alpine AS runner

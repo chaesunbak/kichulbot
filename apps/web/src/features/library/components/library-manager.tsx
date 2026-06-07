@@ -178,7 +178,7 @@ export function LibraryManager({
               type="button"
               variant="ghost"
               size="sm"
-              className="mb-1 -ml-2 text-zinc-500"
+              className="mb-1 -ml-2 text-muted-foreground"
               onClick={() => setSelectedFolderId(parentFolderId)}
             >
               <ChevronLeft />
@@ -244,14 +244,14 @@ export function LibraryManager({
             ))}
           </SelectContent>
         </Select>
-        <p className="shrink-0 text-sm font-medium text-zinc-400">
+        <p className="shrink-0 text-sm font-medium text-muted-foreground">
           {visibleFolders.length + visiblePapers.length}개
         </p>
       </div>
 
       {isEmpty ? (
         <section className="rounded-2xl border px-4 py-14 text-center">
-          <div className="text-zinc-700">비어 있습니다</div>
+          <div className="text-muted-foreground">비어 있습니다</div>
         </section>
       ) : (
         <ul

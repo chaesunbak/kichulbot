@@ -15,7 +15,7 @@ export function KakaoAuthButton({ href, children }: KakaoAuthButtonProps) {
     <Button
       asChild
       className="
-        w-full bg-[#FEE500] text-zinc-950
+        w-full bg-[#FEE500] text-[#181600]
         hover:bg-[#FADA0A]
       "
     >

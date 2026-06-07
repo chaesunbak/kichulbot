@@ -16,7 +16,7 @@ export function ConstructionSection() {
         unoptimized
         className="size-20 object-contain sm:size-30"
       />
-      <p className="text-base font-semibold text-zinc-600">
+      <p className="text-base font-semibold text-muted-foreground">
         기능을 추가중이에요
       </p>
     </section>

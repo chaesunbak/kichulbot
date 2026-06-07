@@ -55,7 +55,9 @@ function OAuthCallbackContent() {
   }, [router, searchParams]);
 
   return (
-    <p className="text-center text-sm text-zinc-500">잠시만 기다려주세요...</p>
+    <p className="text-center text-sm text-muted-foreground">
+      잠시만 기다려주세요...
+    </p>
   );
 }
 
@@ -81,7 +83,7 @@ export default function OAuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-muted-foreground">
           잠시만 기다려주세요...
         </p>
       }

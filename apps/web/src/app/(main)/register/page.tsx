@@ -46,12 +46,12 @@ export default async function RegisterPage({
           </div>
         </div>
       </div>
-      <div className="text-center text-sm text-zinc-500">
+      <div className="text-center text-sm text-muted-foreground">
         이미 계정이 있으신가요?{' '}
         <Link
           href={`/login?next=${encodeURIComponent(nextPath)}`}
           className="
-            text-blue-500
+            text-primary
             hover:underline
           "
         >

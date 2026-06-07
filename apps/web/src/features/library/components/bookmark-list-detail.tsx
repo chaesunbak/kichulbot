@@ -73,7 +73,9 @@ export function BookmarkListDetail({
 
   if (questions.length === 0) {
     return (
-      <p className="mt-6 text-sm text-zinc-500">아직 저장한 문제가 없습니다.</p>
+      <p className="mt-6 text-sm text-muted-foreground">
+        아직 저장한 문제가 없습니다.
+      </p>
     );
   }
 
@@ -95,10 +97,10 @@ export function BookmarkListDetail({
           <li key={question.id} className="rounded-xl border bg-card p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="font-semibold text-zinc-900">
+                <h2 className="font-semibold text-foreground">
                   {question.paper.title} {question.number}번
                 </h2>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {question.paper.examName} · {question.paper.year}학년도
                 </p>
               </div>
@@ -126,8 +128,8 @@ export function BookmarkListDetail({
             ) : (
               <p
                 className="
-                  mt-4 rounded-lg bg-zinc-50 px-4 py-10 text-center text-sm
-                  text-zinc-500
+                  mt-4 rounded-lg bg-muted px-4 py-10 text-center text-sm
+                  text-muted-foreground
                 "
               >
                 문제 이미지가 없습니다.

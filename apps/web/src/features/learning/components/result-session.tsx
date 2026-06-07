@@ -86,7 +86,7 @@ export function ResultSession({
   if (!questions.length || !session.result) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
-        <p className="text-sm text-zinc-500">확인할 결과가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">확인할 결과가 없습니다.</p>
       </div>
     );
   }
@@ -100,10 +100,10 @@ export function ResultSession({
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             {session.paper.title}
           </h1>
-          <div className="flex gap-2 text-sm text-zinc-500">
+          <div className="flex gap-2 text-sm text-muted-foreground">
             <span>
               {formatDate(session.submittedAt ?? session.updatedAt)} 제출
             </span>
@@ -152,7 +152,7 @@ export function ResultSession({
           ))}
           {filteredQuestions.length === 0 && (
             <section className="rounded-lg border bg-card p-6">
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-muted-foreground">
                 이 조건에 해당하는 문항이 없습니다.
               </p>
             </section>
@@ -206,7 +206,7 @@ function ResultNavigatorAside({
         lg:sticky lg:top-24 lg:block
       "
     >
-      <div className="flex items-center text-sm font-semibold text-zinc-900">
+      <div className="flex items-center text-sm font-semibold text-foreground">
         문항목록
       </div>
 
@@ -224,7 +224,7 @@ function ResultNavigatorAside({
       </div>
 
       {filteredQuestions.length === 0 && (
-        <p className="mt-4 text-sm text-zinc-500">
+        <p className="mt-4 text-sm text-muted-foreground">
           이 조건에 해당하는 문항이 없습니다.
         </p>
       )}
@@ -271,7 +271,7 @@ function MobileResultNavigator({
             type="button"
             size="icon-lg"
             className="
-            rounded-lg px-3 shadow-lg shadow-primary/30
+            rounded-lg px-3
             "
             aria-label="문항 네비게이션 열기"
           >
@@ -288,7 +288,7 @@ function MobileResultNavigator({
           "
         >
           <div className="flex items-center justify-between gap-3">
-            <span className="text-base font-semibold text-zinc-900">
+            <span className="text-base font-semibold text-foreground">
               문항 {currentQuestionNumber}/{questions.length}
             </span>
             <Button
@@ -317,7 +317,7 @@ function MobileResultNavigator({
           />
 
           {filteredQuestions.length === 0 && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               이 조건에 해당하는 문항이 없습니다.
             </p>
           )}
@@ -337,7 +337,7 @@ function ResultFilterTabs({
   compact?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-5 overflow-hidden rounded-lg border bg-white">
+    <div className="grid grid-cols-5 overflow-hidden rounded-lg border bg-card">
       {(Object.keys(filterLabels) as ResultFilter[]).map((item) => (
         <Button
           key={item}
@@ -345,10 +345,10 @@ function ResultFilterTabs({
           variant={filter === item ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            'h-9 rounded-none border-r px-2 text-sm font-semibold text-zinc-500 last:border-r-0',
+            'h-9 rounded-none border-r px-2 text-sm font-semibold text-muted-foreground last:border-r-0',
             compact && 'h-8 px-1 text-xs',
             filter === item &&
-              'bg-primary text-white hover:bg-primary hover:text-white',
+              'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
           )}
           onClick={() => onSelectFilter(item)}
         >
@@ -383,10 +383,10 @@ function ResultQuestionNavigator({
             type="button"
             variant={currentId === question.id ? 'default' : 'outline'}
             className={cn(
-              'relative h-12 rounded-lg bg-white text-base font-semibold text-zinc-700',
+              'relative h-12 rounded-lg bg-card text-base font-semibold text-muted-foreground',
               compact && 'h-9 rounded-md text-sm',
               currentId === question.id &&
-                'bg-blue-400 text-white hover:bg-blue-500',
+                'bg-primary text-primary-foreground hover:bg-primary/90',
               currentId !== question.id &&
                 status === 'correct' &&
                 'bg-emerald-50 text-emerald-400 hover:bg-emerald-100 hover:text-emerald-400',
@@ -395,10 +395,10 @@ function ResultQuestionNavigator({
                 'bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-400',
               currentId !== question.id &&
                 status === 'review' &&
-                'bg-blue-50 text-blue-400 hover:bg-blue-100 hover:text-blue-400',
+                'bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary',
               currentId !== question.id &&
                 status === 'omitted' &&
-                'bg-zinc-50 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-400',
+                'bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground',
             )}
             onClick={() => onSelectQuestion(question.id)}
           >
@@ -408,7 +408,8 @@ function ResultQuestionNavigator({
                 className={cn(
                   'absolute top-0.5 right-1.5 size-4 fill-primary text-primary',
                   compact && 'right-1 size-3',
-                  currentId === question.id && 'fill-white text-white',
+                  currentId === question.id &&
+                    'fill-primary-foreground text-primary-foreground',
                 )}
               />
             )}
@@ -441,10 +442,10 @@ function ResultQuestionCard({
         "
       >
         <div className="flex items-center gap-2">
-          <SectionTitle className="text-zinc-950">
+          <SectionTitle className="text-foreground">
             {question.number}번
           </SectionTitle>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             풀이시간 {formatDuration(answer?.spentMilliseconds ?? 0)}
           </p>
         </div>
@@ -505,7 +506,7 @@ function AnswerBlock({
       />
       <div
         className="
-          flex items-center justify-center text-zinc-400
+          flex items-center justify-center text-muted-foreground
           sm:px-1
         "
       >
@@ -541,9 +542,9 @@ function AnswerCompareCard({
         flex min-h-20 flex-col justify-center gap-2 rounded-lg border bg-card p-4
       "
     >
-      <span className="text-xs text-zinc-600">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
 
-      <span className="text-xl/tight font-bold text-zinc-800">{value}</span>
+      <span className="text-xl/tight font-bold text-foreground">{value}</span>
     </div>
   );
 }

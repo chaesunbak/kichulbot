@@ -1,6 +1,14 @@
 @import '@kichulbot/ui/globals.css';
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
   a[href]:not([aria-disabled='true']) {
     @apply rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1;
   }

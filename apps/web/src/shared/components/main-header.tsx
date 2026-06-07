@@ -20,7 +20,7 @@ export default function MainHeader({ user }: Props) {
           mx-auto flex h-16 max-w-5xl items-center justify-between gap-6
         "
       >
-        <Link href="/" className="shrink-0 text-lg font-bold text-zinc-900">
+        <Link href="/" className="shrink-0 text-lg font-bold text-foreground">
           기출봇
         </Link>
         <DesktopNavigation />
@@ -28,9 +28,10 @@ export default function MainHeader({ user }: Props) {
           <Link
             href="/my"
             className="
-              flex shrink-0 items-center gap-2 text-sm font-medium text-zinc-600
+              flex shrink-0 items-center gap-2 text-sm font-medium
+              text-muted-foreground
               transition-colors
-              hover:text-zinc-900
+              hover:text-foreground
             "
           >
             <span
@@ -46,8 +47,9 @@ export default function MainHeader({ user }: Props) {
           <Link
             href="/login"
             className="
-              shrink-0 text-sm font-medium text-zinc-600 transition-colors
-              hover:text-zinc-900
+              shrink-0 text-sm font-medium text-muted-foreground
+              transition-colors
+              hover:text-foreground
             "
           >
             로그인

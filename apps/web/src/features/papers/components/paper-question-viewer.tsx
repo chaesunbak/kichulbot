@@ -66,7 +66,7 @@ export function PaperQuestionViewer({
 
   if (!question) {
     return (
-      <div className="grid h-full place-items-center text-sm text-zinc-500">
+      <div className="grid h-full place-items-center text-sm text-muted-foreground">
         등록된 문항이 없습니다.
       </div>
     );
@@ -91,10 +91,10 @@ export function PaperQuestionViewer({
         "
       >
         <div className="hidden min-w-0 md:block">
-          <div className="truncate text-xs text-zinc-500">
+          <div className="truncate text-xs text-muted-foreground">
             {paper.exam.name}
           </div>
-          <h1 className="truncate text-base font-semibold text-zinc-950">
+          <h1 className="truncate text-base font-semibold text-foreground">
             {paper.title}
           </h1>
         </div>
@@ -126,7 +126,7 @@ export function PaperQuestionViewer({
 
         <span
           className="
-            col-start-2 text-sm font-semibold text-zinc-700 tabular-nums
+            col-start-2 text-sm font-semibold text-muted-foreground tabular-nums
             md:hidden
           "
         >
@@ -221,7 +221,7 @@ export function PaperQuestionViewer({
                 shareHref={shareHref}
                 isAuthenticated={isAuthenticated}
               />
-              <span className="text-sm text-zinc-500">
+              <span className="text-sm text-muted-foreground">
                 {currentIndex + 1} / {questions.length}
               </span>
             </div>
@@ -260,7 +260,7 @@ export function PaperQuestionViewer({
               <div
                 className="
                   grid min-h-28 place-items-center rounded-lg border bg-secondary
-                  px-4 text-center text-sm text-zinc-500
+                  px-4 text-center text-sm text-muted-foreground
                 "
               >
                 정답 확인 버튼을 누르면 정답과 해설을 볼 수 있습니다.
@@ -280,14 +280,14 @@ function QuestionMeta({ question }: { question: PaperQuestion }) {
         <SectionTitle>{question.number}번</SectionTitle>
         <span
           className="
-            rounded-full border px-2 py-0.5 text-xs font-medium text-zinc-500
+            rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground
           "
         >
           {question.points}점
         </span>
       </div>
       {question.recommendedTimeSeconds && (
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="mt-1 text-xs text-muted-foreground">
           권장 풀이시간 {formatDuration(question.recommendedTimeSeconds * 1000)}
         </p>
       )}
@@ -358,12 +358,12 @@ function AnswerPanel({ question }: { question: PaperQuestion }) {
   return (
     <div className="grid gap-3">
       <div className="rounded-lg border bg-card p-4">
-        <span className="text-xs text-zinc-600">정답</span>
-        <div className="mt-2 text-xl/tight font-bold text-zinc-900">
+        <span className="text-xs text-muted-foreground">정답</span>
+        <div className="mt-2 text-xl/tight font-bold text-foreground">
           {formatCorrectAnswer(question)}
         </div>
       </div>
-      <div className="min-h-24 rounded-lg bg-secondary p-4 text-sm text-zinc-600">
+      <div className="min-h-24 rounded-lg bg-secondary p-4 text-sm text-muted-foreground">
         {question.explanation || '등록된 해설이 없습니다.'}
       </div>
     </div>

@@ -20,7 +20,7 @@ export function LocalResultSessionLoader({ id }: { id: string }) {
 
   if (session === undefined) {
     return (
-      <div className="grid h-full place-items-center text-sm text-zinc-500">
+      <div className="grid h-full place-items-center text-sm text-muted-foreground">
         결과를 불러오는 중입니다.
       </div>
     );
@@ -29,10 +29,10 @@ export function LocalResultSessionLoader({ id }: { id: string }) {
   if (!session) {
     return (
       <div className="mx-auto grid max-w-md gap-4 px-4 py-16 text-center">
-        <h1 className="text-xl font-semibold text-zinc-950">
+        <h1 className="text-xl font-semibold text-foreground">
           결과를 찾을 수 없습니다
         </h1>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           브라우저에 저장된 임시 결과가 없거나 삭제되었습니다.
         </p>
         <Button asChild>
@@ -47,7 +47,7 @@ export function LocalResultSessionLoader({ id }: { id: string }) {
       <div
         className="
           mx-auto mt-4 max-w-6xl rounded-lg border bg-card px-4 py-3 text-sm
-          text-zinc-600
+          text-muted-foreground
         "
       >
         로그인하면 앞으로의 풀이 기록과 오답 복습을 저장할 수 있습니다.

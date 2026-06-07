@@ -74,16 +74,16 @@ function SolveModeButton({
       type="button"
       className="
         flex min-h-20 w-full items-center gap-3 rounded-lg border
-        border-zinc-200 bg-white p-4 text-left transition
-        hover:border-zinc-300 hover:bg-zinc-50
-        focus-visible:ring-2 focus-visible:ring-zinc-950
+        bg-card p-4 text-left transition
+        hover:bg-muted
+        focus-visible:ring-2 focus-visible:ring-primary
         focus-visible:ring-offset-2 focus-visible:outline-none
       "
       onClick={onClick}
     >
       <span className="grid gap-1">
-        <span className="text-sm font-medium text-zinc-900">{title}</span>
-        <span className="text-xs/5 text-zinc-500">{description}</span>
+        <span className="text-sm font-medium text-foreground">{title}</span>
+        <span className="text-xs/5 text-muted-foreground">{description}</span>
       </span>
     </button>
   );

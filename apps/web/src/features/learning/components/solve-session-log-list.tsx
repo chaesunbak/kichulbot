@@ -24,7 +24,7 @@ export function SolveSessionLogList({
   emptyMessage,
 }: SolveSessionLogListProps) {
   if (logs.length === 0) {
-    return <div className="text-sm text-zinc-500">{emptyMessage}</div>;
+    return <div className="text-sm text-muted-foreground">{emptyMessage}</div>;
   }
 
   return (

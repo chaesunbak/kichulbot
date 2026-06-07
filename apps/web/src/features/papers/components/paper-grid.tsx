@@ -21,7 +21,9 @@ export function PaperGrid({
   if (papers.length === 0) {
     return (
       <section className="rounded-lg border px-6 py-12 text-center">
-        <p className="text-sm text-zinc-500">조건에 맞는 시험지가 없습니다.</p>
+        <p className="text-sm text-muted-foreground">
+          조건에 맞는 시험지가 없습니다.
+        </p>
       </section>
     );
   }
@@ -40,7 +42,7 @@ export function PaperGrid({
             href={`/resources/${paper.id}`}
             className="
               group block rounded-lg p-2 transition
-              hover:bg-zinc-50
+              hover:bg-muted
             "
             aria-label={`${paper.title} 자세히 보기`}
             onClick={() => {
@@ -55,8 +57,10 @@ export function PaperGrid({
           >
             <PaperCover paper={paper} />
             <div className="mt-3 text-center">
-              <p className="text-sm font-medium text-zinc-900">{paper.title}</p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="text-sm font-medium text-foreground">
+                {paper.title}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 {paper.exam.name} · {formatPaperSession(paper)}
               </p>
             </div>

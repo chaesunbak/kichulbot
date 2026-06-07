@@ -18,7 +18,7 @@ export function FileCard({ libraryPaper }: FileCardProps) {
         className={cn(
           `
             flex min-h-40 gap-5 rounded-2xl border p-5 transition
-            hover:bg-zinc-50
+            hover:bg-muted
           `,
           'md:min-h-56 md:flex-col md:gap-4',
         )}
@@ -39,7 +39,7 @@ export function FileCard({ libraryPaper }: FileCardProps) {
         >
           <h3
             className="
-              line-clamp-2 text-lg/tight font-medium break-keep text-zinc-950
+              line-clamp-2 text-lg/tight font-medium break-keep text-foreground
               md:text-lg
             "
           >
@@ -47,7 +47,7 @@ export function FileCard({ libraryPaper }: FileCardProps) {
           </h3>
           <p
             className="
-              mt-1 truncate text-sm text-zinc-400
+              mt-1 truncate text-sm text-muted-foreground
               md:text-sm
             "
           >
@@ -56,7 +56,7 @@ export function FileCard({ libraryPaper }: FileCardProps) {
           <div
             className="
               mt-auto flex items-end justify-between gap-3 pt-6 text-sm
-              text-zinc-400
+              text-muted-foreground
               md:text-sm
             "
           >

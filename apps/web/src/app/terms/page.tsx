@@ -106,17 +106,19 @@ export default function TermsPage() {
       "
     >
       <header className="mt-8 border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           기출봇 이용약관
         </h1>
-        <p className="mt-3 text-sm text-zinc-500">시행일: 2026년 6월 1일</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          시행일: 2026년 6월 1일
+        </p>
       </header>
 
       <div className="mt-8 space-y-8">
         {sections.map((section) => (
           <section key={section.title}>
             <SectionTitle>{section.title}</SectionTitle>
-            <div className="mt-3 space-y-3 text-sm/7 text-zinc-600">
+            <div className="mt-3 space-y-3 text-sm/7 text-muted-foreground">
               {section.content.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}

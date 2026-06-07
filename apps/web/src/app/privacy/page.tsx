@@ -57,7 +57,7 @@ const sections = [
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-180 border-collapse text-left text-sm">
             <thead>
-              <tr className="border-y bg-zinc-50 text-zinc-900">
+              <tr className="border-y bg-muted text-foreground">
                 <th className="p-3 font-semibold">구분</th>
                 <th className="p-3 font-semibold">처리 항목</th>
                 <th className="p-3 font-semibold">처리 목적</th>
@@ -67,7 +67,7 @@ const sections = [
             <tbody>
               {processingRows.map((row) => (
                 <tr key={row.category} className="border-b">
-                  <td className="p-3 align-top font-medium text-zinc-900">
+                  <td className="p-3 align-top font-medium text-foreground">
                     {row.category}
                   </td>
                   <td className="p-3 align-top">{row.items}</td>
@@ -226,13 +226,15 @@ export default function PrivacyPage() {
       "
     >
       <header className="mt-8 border-b pb-6">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           기출봇 개인정보처리방침
         </h1>
-        <p className="mt-3 text-sm text-zinc-500">시행일: 2026년 6월 1일</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          시행일: 2026년 6월 1일
+        </p>
       </header>
 
-      <div className="mt-8 space-y-8 text-sm/7 text-zinc-600">
+      <div className="mt-8 space-y-8 text-sm/7 text-muted-foreground">
         <p>
           회사는 개인정보 보호법 등 관련 법령을 준수하며, 정보주체의 개인정보를
           안전하게 처리하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.

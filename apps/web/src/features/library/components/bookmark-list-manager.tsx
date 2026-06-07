@@ -64,7 +64,7 @@ export function BookmarkListManager({
         </Button>
       </div>
       {bookmarkLists.length === 0 ? (
-        <p className="mt-5 text-sm text-zinc-500">
+        <p className="mt-5 text-sm text-muted-foreground">
           북마크 리스트가 없습니다. 새 리스트를 만들어 문제를 모아보세요.
         </p>
       ) : (
@@ -80,7 +80,7 @@ export function BookmarkListManager({
                 <Card
                   className="
                     transition
-                    hover:bg-zinc-50
+                    hover:bg-muted
                   "
                 >
                   <CardHeader>

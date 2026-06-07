@@ -381,7 +381,7 @@ export function SolveSession({
 
   if (!question) {
     return (
-      <div className="grid h-full place-items-center text-sm text-zinc-500">
+      <div className="grid h-full place-items-center text-sm text-muted-foreground">
         등록된 문항이 없습니다.
       </div>
     );
@@ -502,7 +502,7 @@ function SolveSessionHeader({
         <div className="min-w-0">
           <h1
             className="
-              mt-0.5 truncate text-base font-semibold text-zinc-950
+              mt-0.5 truncate text-base font-semibold text-foreground
               md:text-lg
             "
           >
@@ -536,7 +536,7 @@ function SolveSessionHeader({
       </div>
       <span
         className="
-          col-start-2 text-sm font-semibold text-zinc-700 tabular-nums
+          col-start-2 text-sm font-semibold text-muted-foreground tabular-nums
           md:hidden
         "
       >
@@ -578,7 +578,7 @@ function SolveSessionHeader({
         <div
           className="
             flex items-center gap-1.5 rounded-lg border p-2 text-sm
-            text-zinc-600
+            text-muted-foreground
             md:gap-2 md:px-3
           "
         >
@@ -587,7 +587,7 @@ function SolveSessionHeader({
         <div
           className="
             flex items-center gap-1.5 rounded-lg border p-2 text-sm
-            text-zinc-600
+            text-muted-foreground
             md:gap-2 md:px-3
           "
         >
@@ -603,7 +603,7 @@ function SolveSessionHeader({
         {submitted ? (
           <span
             className="
-              hidden rounded-lg border px-3 py-2 text-sm text-zinc-500
+              hidden rounded-lg border px-3 py-2 text-sm text-muted-foreground
               sm:inline-flex
             "
           >
@@ -733,7 +733,7 @@ function ElapsedTimeText({
     <div
       ref={textRef}
       className="
-        rounded-lg border px-3 py-2 text-sm text-zinc-600 tabular-nums
+        rounded-lg border px-3 py-2 text-sm text-muted-foreground tabular-nums
       "
     >
       {formatDuration(savedElapsedMilliseconds)}
@@ -797,14 +797,14 @@ function QuestionHeader({
           <SectionTitle>{question.number}번</SectionTitle>
           <span
             className="
-              rounded-full border px-2 py-0.5 text-xs font-medium text-zinc-500
+              rounded-full border px-2 py-0.5 text-xs font-medium text-muted-foreground
             "
           >
             {question.points}점
           </span>
         </div>
         {question.recommendedTimeSeconds && (
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             권장 풀이시간{' '}
             {formatDuration(question.recommendedTimeSeconds * 1000)}
           </p>
@@ -817,7 +817,7 @@ function QuestionHeader({
           shareHref={getQuestionShareHref(paperId, question.number)}
           isAuthenticated={isAuthenticated}
         />
-        <span className="text-sm text-zinc-500">
+        <span className="text-sm text-muted-foreground">
           {currentIndex + 1} / {questionCount}
         </span>
       </div>
@@ -839,7 +839,7 @@ function QuestionImage({ question }: { question: SolveQuestion }) {
         <div
           className="
             grid h-full place-items-center rounded-md bg-card px-4 text-center
-            text-sm text-zinc-500
+            text-sm text-muted-foreground
           "
         >
           문제 이미지가 없습니다.
@@ -1170,7 +1170,7 @@ function QuestionNavigationControls({
             variant="ghost"
             size="sm"
             className="
-              rounded-none text-blue-600 hover:text-blue-700
+              rounded-none text-primary hover:text-primary/80
               focus-visible:relative focus-visible:z-10 focus-visible:ring-inset
             "
             disabled={!canMovePrevious}
@@ -1184,7 +1184,7 @@ function QuestionNavigationControls({
             variant="ghost"
             size="sm"
             className="
-              rounded-none text-blue-600 hover:text-blue-700
+              rounded-none text-primary hover:text-primary/80
               focus-visible:relative focus-visible:z-10 focus-visible:ring-inset
             "
             disabled={!canMoveNext}
@@ -1279,7 +1279,7 @@ function ResultCheckPanel({
             'border-emerald-200 bg-emerald-50 text-emerald-800',
           result?.isCorrect === false &&
             'border-red-200 bg-red-50 text-red-800',
-          result?.isCorrect == null && 'bg-zinc-50 text-zinc-600',
+          result?.isCorrect == null && 'bg-muted text-muted-foreground',
         )}
       >
         <div className="flex items-center gap-2 font-semibold">

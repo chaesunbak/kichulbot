@@ -28,12 +28,12 @@ export function ResultSummarySection({
       "
     >
       <ResultSummaryItem label="점수">
-        <span className="text-xl/tight font-semibold text-zinc-800 lg:text-2xl/tight">
+        <span className="text-xl/tight font-semibold text-foreground lg:text-2xl/tight">
           {score}점
         </span>
         <span
           className="
-            ml-1 text-xs text-zinc-400
+            ml-1 text-xs text-muted-foreground
             lg:text-sm
           "
         >
@@ -43,10 +43,10 @@ export function ResultSummarySection({
       <ResultSummaryItem label="정답률">
         <div className="flex items-center gap-3 lg:gap-4">
           <div className="min-w-0">
-            <div className="text-xl/tight font-bold text-zinc-800 lg:text-2xl/tight">
+            <div className="text-xl/tight font-bold text-foreground lg:text-2xl/tight">
               {accuracyRate}%
             </div>
-            <div className="mt-1 text-xs text-zinc-400 lg:text-sm">
+            <div className="mt-1 text-xs text-muted-foreground lg:text-sm">
               {correctCount} / {totalCount}문항
             </div>
           </div>
@@ -57,15 +57,15 @@ export function ResultSummarySection({
         <span className="text-xl/tight font-bold text-destructive lg:text-2xl/tight">
           {wrongCount}
         </span>
-        <span className="ml-1 text-sm font-semibold text-zinc-700 lg:text-base">
+        <span className="ml-1 text-sm font-semibold text-muted-foreground lg:text-base">
           문항
         </span>
       </ResultSummaryItem>
       <ResultSummaryItem label="미응답">
-        <span className="text-xl/tight font-bold text-zinc-800 lg:text-2xl/tight">
+        <span className="text-xl/tight font-bold text-foreground lg:text-2xl/tight">
           {omittedCount}
         </span>
-        <span className="ml-1 text-sm font-semibold text-zinc-700 lg:text-base">
+        <span className="ml-1 text-sm font-semibold text-muted-foreground lg:text-base">
           문항
         </span>
       </ResultSummaryItem>
@@ -74,7 +74,7 @@ export function ResultSummarySection({
         className="col-span-2 min-h-16 lg:col-span-1 lg:min-h-26"
         inlineMobile
       >
-        <span className="text-xl/tight font-bold text-zinc-800 lg:text-2xl/tight">
+        <span className="text-xl/tight font-bold text-foreground lg:text-2xl/tight">
           {spentTime}
         </span>
       </ResultSummaryItem>
@@ -115,7 +115,7 @@ function ResultSummaryItem({
       >
         <div
           className={`
-            text-xs font-bold text-zinc-600 lg:text-sm
+            text-xs font-bold text-muted-foreground lg:text-sm
             ${inlineMobile ? 'lg:mb-3' : 'mb-2 lg:mb-3'}
           `}
         >
@@ -134,7 +134,7 @@ function AccuracyRing({ value }: { value: number }) {
     <div
       className="grid size-14 shrink-0 place-items-center rounded-full lg:size-14"
       style={{
-        background: `conic-gradient(#ff6b6b ${normalizedValue}%, #e5e7eb 0)`,
+        background: `conic-gradient(var(--primary) ${normalizedValue}%, var(--muted) 0)`,
       }}
       aria-label={`정답률 ${value}%`}
     >

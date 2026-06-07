@@ -17,7 +17,7 @@ export default async function PasswordResetPage({
         <h1 className="text-2xl font-semibold tracking-tight">
           비밀번호 재설정
         </h1>
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           {token
             ? '새 비밀번호를 입력해주세요'
             : '가입한 이메일로 재설정 링크를 보내드립니다'}

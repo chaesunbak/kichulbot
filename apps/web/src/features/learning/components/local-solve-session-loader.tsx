@@ -20,7 +20,7 @@ export function LocalSolveSessionLoader({ id }: { id: string }) {
 
   if (session === undefined) {
     return (
-      <div className="grid h-full place-items-center text-sm text-zinc-500">
+      <div className="grid h-full place-items-center text-sm text-muted-foreground">
         풀이를 불러오는 중입니다.
       </div>
     );
@@ -29,10 +29,10 @@ export function LocalSolveSessionLoader({ id }: { id: string }) {
   if (!session) {
     return (
       <div className="mx-auto grid max-w-md gap-4 px-4 py-16 text-center">
-        <h1 className="text-xl font-semibold text-zinc-950">
+        <h1 className="text-xl font-semibold text-foreground">
           풀이를 찾을 수 없습니다
         </h1>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           브라우저에 저장된 임시 풀이가 없거나 삭제되었습니다.
         </p>
         <Button asChild>

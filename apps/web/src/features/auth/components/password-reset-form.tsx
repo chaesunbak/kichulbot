@@ -77,7 +77,7 @@ function PasswordResetRequestForm() {
   if (sent) {
     return (
       <div className="space-y-4 text-center">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           이메일 계정이 있다면 비밀번호 재설정 링크가 발송됩니다.
         </p>
         <Button asChild variant="outline">

@@ -36,7 +36,7 @@ export function RecentLearningRecordsSection({
       </CardHeader>
       <CardContent>
         {recentLogs.length === 0 ? (
-          <span className="text-sm text-zinc-500">
+          <span className="text-sm text-muted-foreground">
             아직 학습 기록이 없어요.
           </span>
         ) : (

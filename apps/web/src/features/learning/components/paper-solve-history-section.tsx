@@ -29,7 +29,7 @@ export function PaperSolveHistorySection({
     <section className="flex flex-col gap-4">
       <SectionTitle>풀이 기록</SectionTitle>
       {paperLogs.length === 0 ? (
-        <span className="text-sm text-zinc-500">
+        <span className="text-sm text-muted-foreground">
           아직 풀이 기록이 없습니다.
         </span>
       ) : (
@@ -54,7 +54,7 @@ export function PaperSolveHistorySection({
                         {log.submittedAt ? '풀이 완료' : '풀이 중'}
                       </CardDescription>
                       {log.result && (
-                        <p className="mt-1 text-sm text-zinc-500">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {log.result.score}점 · {log.result.correctCount}/
                           {log.result.totalCount} 정답
                         </p>

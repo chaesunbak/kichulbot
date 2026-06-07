@@ -124,10 +124,10 @@ export function QuestionBookmarkButton({
         {!isAuthenticated ? (
           <div className="grid gap-3 p-3">
             <div className="grid gap-1">
-              <p className="text-sm font-medium text-zinc-900">
+              <p className="text-sm font-medium text-foreground">
                 로그인이 필요합니다
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 로그인하면 문항을 북마크 리스트에 저장할 수 있습니다.
               </p>
             </div>
@@ -155,14 +155,14 @@ export function QuestionBookmarkButton({
                   <BookmarkPlus className="mt-0.5" />
                   <span className="grid gap-0.5">
                     <span>{list.name}</span>
-                    <span className="text-xs font-normal text-zinc-500">
+                    <span className="text-xs font-normal text-muted-foreground">
                       저장한 문제 {list.questionCount}개
                     </span>
                   </span>
                 </DropdownMenuItem>
               ))
             ) : (
-              <DropdownMenuItem disabled className="text-zinc-500">
+              <DropdownMenuItem disabled className="text-muted-foreground">
                 북마크 리스트가 없습니다.
               </DropdownMenuItem>
             )}

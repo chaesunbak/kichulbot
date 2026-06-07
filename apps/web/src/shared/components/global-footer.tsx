@@ -4,7 +4,7 @@ export default function GlobalFooter() {
   return (
     <footer
       className="
-      h-60 border-t bg-background px-4 py-8 text-sm text-zinc-500
+      h-60 border-t bg-background px-4 py-8 text-sm text-muted-foreground
     "
     >
       <div
@@ -13,14 +13,14 @@ export default function GlobalFooter() {
           sm:flex-row sm:items-center sm:justify-between
         "
       >
-        <Link href="/" className="font-semibold text-zinc-700">
+        <Link href="/" className="font-semibold text-foreground">
           기출봇
         </Link>
         <nav aria-label="푸터 메뉴" className="flex flex-wrap gap-x-5 gap-y-2">
-          <Link href="/terms" className="hover:text-zinc-900">
+          <Link href="/terms" className="hover:text-foreground">
             이용약관
           </Link>
-          <Link href="/privacy" className="hover:text-zinc-900">
+          <Link href="/privacy" className="hover:text-foreground">
             개인정보처리방침
           </Link>
         </nav>

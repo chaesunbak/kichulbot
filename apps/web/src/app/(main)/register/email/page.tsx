@@ -36,12 +36,12 @@ export default async function EmailRegisterPage({
 
           <EmailRegisterForm />
           <div className="flex flex-col gap-2">
-            <p className="text-center text-sm text-zinc-500">
+            <p className="text-center text-sm text-muted-foreground">
               이미 계정이 있으신가요?{' '}
               <Link
                 href={`/login?next=${encodeURIComponent(nextPath)}`}
                 className="
-                text-blue-500
+                text-primary
                 hover:underline
               "
               >
@@ -49,7 +49,7 @@ export default async function EmailRegisterPage({
               </Link>
             </p>
 
-            <p className="text-center text-sm text-zinc-500">
+            <p className="text-center text-sm text-muted-foreground">
               <Link href={`/register?next=${encodeURIComponent(nextPath)}`}>
                 다른 가입 방식으로 돌아가기
               </Link>

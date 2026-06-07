@@ -88,12 +88,12 @@ function SummaryItem({
     <div
       className={cn('flex flex-col items-center gap-2 text-center', className)}
     >
-      <div className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+      <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="text-2xl font-bold text-zinc-800">{value}</div>
-      <div className="text-xs text-slate-500">{description}</div>
+      <div className="text-2xl font-bold text-foreground">{value}</div>
+      <div className="text-xs text-muted-foreground">{description}</div>
     </div>
   );
 }

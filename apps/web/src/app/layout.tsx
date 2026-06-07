@@ -3,10 +3,10 @@ import './globals.css';
 import { Toaster } from '@kichulbot/ui/components/ui/sonner';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
+import { ThemeProvider } from 'next-themes';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { OverlayProvider } from 'overlay-kit';
 
-import { LegacyAuthStorageCleaner } from '@/features/auth/components/legacy-auth-storage-cleaner';
 import { cn } from '@/shared/lib/utils';
 
 const geistHeading = Geist({ subsets: ['latin'], variable: '--font-heading' });
@@ -28,6 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
+      suppressHydrationWarning
       className={cn(
         'h-full antialiased',
         geistSans.variable,
@@ -38,11 +39,12 @@ export default function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col">
-        <LegacyAuthStorageCleaner />
-        <NuqsAdapter>
-          <OverlayProvider>{children}</OverlayProvider>
-        </NuqsAdapter>
-        <Toaster position="bottom-right" />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <NuqsAdapter>
+            <OverlayProvider>{children}</OverlayProvider>
+          </NuqsAdapter>
+          <Toaster position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

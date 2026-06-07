@@ -19,7 +19,7 @@ export function CompactSolveSessionLogList({
   emptyMessage,
 }: CompactSolveSessionLogListProps) {
   if (logs.length === 0) {
-    return <div className="text-sm text-zinc-500">{emptyMessage}</div>;
+    return <div className="text-sm text-muted-foreground">{emptyMessage}</div>;
   }
 
   return (
@@ -44,7 +44,7 @@ export function CompactSolveSessionLogItem({
         href={getSolveSessionLogHref(log)}
         className="
           block rounded-lg border p-4
-          transition-colors hover:bg-zinc-50
+          transition-colors hover:bg-muted
         "
         aria-label={`${log.paper.title} 학습 기록 보기`}
       >
@@ -55,17 +55,17 @@ export function CompactSolveSessionLogItem({
           "
         >
           <div className="min-w-0 pt-1">
-            <div className="line-clamp-1 text-sm font-semibold text-zinc-900">
+            <div className="line-clamp-1 text-sm font-semibold text-foreground">
               {log.paper.title}
             </div>
-            <div className="mt-1 truncate text-xs text-zinc-500">
+            <div className="mt-1 truncate text-xs text-muted-foreground">
               {formatSolveSessionLogCompactMeta(log)}
             </div>
           </div>
           <div
             className="
               inline-flex h-8 shrink-0 items-center gap-1 rounded-md border px-2.5
-              text-xs font-semibold text-zinc-700
+              text-xs font-semibold text-muted-foreground
             "
           >
             {getSolveSessionLogActionLabel(log)}
@@ -78,7 +78,7 @@ export function CompactSolveSessionLogItem({
             "
           >
             <Progress value={log.progress.percent} className="h-2 min-w-0" />
-            <span className="shrink-0 text-xs text-zinc-500">
+            <span className="shrink-0 text-xs text-muted-foreground">
               {log.progress.percent}%
             </span>
           </div>

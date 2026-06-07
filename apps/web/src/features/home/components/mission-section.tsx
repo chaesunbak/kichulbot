@@ -30,7 +30,7 @@ export function MissionSection() {
             bg-muted px-4 py-8 text-center
           "
         >
-          <span className="text-sm font-medium text-zinc-500">
+          <span className="text-sm font-medium text-muted-foreground">
             아직 미션이 없어요.
           </span>
         </div>

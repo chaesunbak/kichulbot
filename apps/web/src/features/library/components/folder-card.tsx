@@ -44,7 +44,7 @@ export function FolderCard({ folder, count, onOpen }: FolderCardProps) {
         >
           <span
             className="
-              line-clamp-2 text-lg/tight font-medium break-keep text-zinc-950
+              line-clamp-2 text-lg/tight font-medium break-keep text-foreground
               md:text-lg
             "
           >
@@ -52,7 +52,7 @@ export function FolderCard({ folder, count, onOpen }: FolderCardProps) {
           </span>
           <span
             className="
-              mt-3 truncate text-sm text-zinc-400
+              mt-3 truncate text-sm text-muted-foreground
               md:text-sm
             "
           >

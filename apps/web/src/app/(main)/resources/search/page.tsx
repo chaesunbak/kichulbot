@@ -57,7 +57,7 @@ export default async function ResourcesSearchPage({
       <ResourceSearchControls categories={data.categories} exams={data.exams} />
 
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-zinc-700">
+        <p className="text-sm font-medium text-muted-foreground">
           검색 결과 {data.papers.length}개
         </p>
       </div>

@@ -41,9 +41,9 @@ export default async function PaperPage({
           <PaperCover paper={paper} />
         </div>
         <div>
-          <div className="text-sm text-zinc-500">{paper.exam.name}</div>
+          <div className="text-sm text-muted-foreground">{paper.exam.name}</div>
           <PageTitle>{paper.title}</PageTitle>
-          <div className="text-sm text-zinc-500">
+          <div className="text-sm text-muted-foreground">
             {formatPaperSession(paper)} · {paper.questionCount}문항
           </div>
           <PaperActions

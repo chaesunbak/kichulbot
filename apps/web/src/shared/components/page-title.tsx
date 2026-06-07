@@ -7,7 +7,7 @@ type PageTitleProps = ComponentPropsWithoutRef<'div'>;
 export function PageTitle({ className, ...props }: PageTitleProps) {
   return (
     <div
-      className={cn('text-2xl font-semibold text-zinc-900', className)}
+      className={cn('text-2xl font-semibold text-foreground', className)}
       {...props}
     />
   );

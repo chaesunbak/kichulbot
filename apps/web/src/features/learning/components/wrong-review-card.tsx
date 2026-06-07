@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -41,6 +42,7 @@ export function WrongReviewCard({
 
   const chartValue = stats.totalCount > 0 ? stats.accuracyRate : 0;
   const questionCount = initialQuestionSet?.questionCount;
+  const hasWrongQuestions = (questionCount ?? 0) > 0;
 
   return (
     <Card>
@@ -52,12 +54,12 @@ export function WrongReviewCard({
           <div
             className="grid size-16 shrink-0 place-items-center rounded-full"
             style={{
-              background: `conic-gradient(#2563eb ${chartValue * 3.6}deg, #e4e4e7 0deg)`,
+              background: `conic-gradient(var(--primary) ${chartValue * 3.6}deg, var(--muted) 0deg)`,
             }}
             aria-label={`정답률 ${stats.accuracyRate}%`}
             role="img"
           >
-            <div className="grid size-10 place-items-center rounded-full bg-white text-sm font-bold text-blue-700"></div>
+            <div className="grid size-10 place-items-center rounded-full bg-card text-sm font-bold text-primary"></div>
           </div>
           <div className="grid flex-1 grid-cols-4 gap-3">
             <WrongReviewStat label="정답률" value={`${stats.accuracyRate}%`} />
@@ -67,17 +69,25 @@ export function WrongReviewCard({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            disabled={isPending || questionCount === 0}
-            onClick={() => void start()}
-          >
-            {isPending ? '준비 중' : '오답 복습하기'}
-          </Button>
+          {hasWrongQuestions ? (
+            <Button
+              type="button"
+              size="sm"
+              disabled={isPending}
+              onClick={() => void start()}
+            >
+              {isPending ? '준비 중' : '오답 복습하기'}
+            </Button>
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/resources">새 문제 풀기</Link>
+            </Button>
+          )}
         </div>
-        {questionCount === 0 && (
-          <p className="text-xs text-zinc-500">다시 풀 오답이 없습니다.</p>
+        {!hasWrongQuestions && (
+          <p className="text-xs text-muted-foreground">
+            오늘 다시 풀 오답이 없습니다.
+          </p>
         )}
       </CardContent>
     </Card>
@@ -93,8 +103,10 @@ function WrongReviewStat({
 }) {
   return (
     <div className="min-w-0">
-      <div className="truncate text-xs font-medium text-zinc-500">{label}</div>
-      <div className="mt-1 text-lg leading-none font-bold text-zinc-950">
+      <div className="truncate text-xs font-medium text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 text-lg leading-none font-bold text-foreground">
         {value}
       </div>
     </div>

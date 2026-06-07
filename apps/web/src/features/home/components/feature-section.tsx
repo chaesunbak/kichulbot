@@ -99,8 +99,8 @@ const FeatureItem = ({ item }: { item: FeatureSectionItem }) => {
       </span>
       <span
         className="
-          w-full truncate text-center text-sm font-bold text-zinc-500
-          sm:text-left sm:text-base sm:text-zinc-900
+          w-full truncate text-center text-sm font-bold text-muted-foreground
+          sm:text-left sm:text-base sm:text-foreground
         "
       >
         {item.label}

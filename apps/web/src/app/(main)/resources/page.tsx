@@ -68,7 +68,7 @@ export default async function PapersPage() {
 
       {sections.every((section) => section.paperCount === 0) ? (
         <section className="px-6 py-12 text-center">
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             아직 등록된 시험지가 없습니다.
           </p>
         </section>
@@ -105,10 +105,12 @@ function CategoryPaperSectionItem({ section }: CategoryPaperSectionItemProps) {
     <section className="grid gap-4">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-zinc-900">
+          <h2 className="text-lg font-semibold text-foreground">
             {category.name}
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">{paperCount}개 시험지</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {paperCount}개 시험지
+          </p>
         </div>
         <Button asChild variant="outline" size="sm" className="shrink-0">
           <Link href={`/resources/search?categoryId=${category.id}`}>

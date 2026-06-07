@@ -53,8 +53,8 @@ export function DesktopNavigation() {
               isActive
                 ? 'text-primary'
                 : `
-                  text-zinc-500
-                  hover:text-zinc-900
+                  text-muted-foreground
+                  hover:text-foreground
                 `,
             )}
             aria-current={isActive ? 'page' : undefined}
@@ -91,7 +91,7 @@ export function MobileBottomNavigation() {
                   flex min-h-16 flex-col items-center justify-center gap-1 px-1
                   text-[11px] font-medium transition-colors
                 `,
-                isActive ? 'text-zinc-500' : 'text-zinc-400',
+                isActive ? 'text-primary' : 'text-muted-foreground',
               )}
               aria-current={isActive ? 'page' : undefined}
             >

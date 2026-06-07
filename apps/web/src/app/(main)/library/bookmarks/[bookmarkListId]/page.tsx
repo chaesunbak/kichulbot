@@ -31,7 +31,7 @@ export default async function BookmarkListPage({
     <PageContainer>
       <div className="flex items-center gap-4">
         <PageTitle>{bookmarkList.name}</PageTitle>
-        <div className="mt-2 text-sm text-zinc-500">
+        <div className="mt-2 text-sm text-muted-foreground">
           {bookmarkList.questionCount}개
         </div>
       </div>

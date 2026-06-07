@@ -48,9 +48,9 @@ export default async function LibraryPaperPage({
           <PaperCover paper={paper} />
         </div>
         <div>
-          <p className="text-sm text-zinc-500">{folderLabel}</p>
+          <p className="text-sm text-muted-foreground">{folderLabel}</p>
           <PageTitle>{paper.title}</PageTitle>
-          <p className="mt-3 text-sm text-zinc-500">
+          <p className="mt-3 text-sm text-muted-foreground">
             {paper.exam.name} · {formatPaperSession(paper)} ·{' '}
             {paper.questionCount}문항
           </p>

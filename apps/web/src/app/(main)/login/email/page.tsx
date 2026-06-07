@@ -33,12 +33,12 @@ export default async function EmailLoginPage({
           <LoginForm />
 
           <div className="flex flex-col gap-2">
-            <p className="text-center text-sm text-zinc-500">
+            <p className="text-center text-sm text-muted-foreground">
               아직 계정이 없으신가요?{' '}
               <Link
                 href={`/register?next=${encodeURIComponent(nextPath)}`}
                 className="
-                  text-blue-500
+                  text-primary
                   hover:underline
                 "
               >
@@ -46,12 +46,12 @@ export default async function EmailLoginPage({
               </Link>
             </p>
 
-            <p className="text-center text-sm text-zinc-500">
+            <p className="text-center text-sm text-muted-foreground">
               비밀번호를 잊으셨나요?{' '}
               <Link
                 href="/password-reset"
                 className="
-                  text-blue-500
+                  text-primary
                   hover:underline
                 "
               >

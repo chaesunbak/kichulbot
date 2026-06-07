@@ -219,7 +219,7 @@ function QuestionReportDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
-          <label className="grid gap-2 text-sm font-medium text-zinc-900">
+          <label className="grid gap-2 text-sm font-medium text-foreground">
             신고 분류
             <Select
               value={category}
@@ -239,7 +239,7 @@ function QuestionReportDialog({
               </SelectContent>
             </Select>
           </label>
-          <label className="grid gap-2 text-sm font-medium text-zinc-900">
+          <label className="grid gap-2 text-sm font-medium text-foreground">
             신고 내용
             <Textarea
               className="min-h-40"

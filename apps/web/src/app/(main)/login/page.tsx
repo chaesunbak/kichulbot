@@ -27,9 +27,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="flex flex-col gap-4">
           <div className="mb-4 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">로그인</h1>
-            <p className="mt-2 text-sm text-zinc-500">
+            <span className="mt-2 text-sm text-muted-foreground">
               기출봇에 오신 것을 환영합니다
-            </p>
+            </span>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -43,18 +43,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               카카오 계정으로 시작하기
             </KakaoAuthButton>
           </div>
-          <p className="text-center text-sm text-zinc-500">
+          <span className="text-center text-sm text-muted-foreground">
             아직 계정이 없으신가요?{' '}
             <Link
               href={`/register?next=${encodeURIComponent(nextPath)}`}
               className="
-                text-blue-500
+                text-primary
                 hover:underline
               "
             >
               회원가입하기
             </Link>
-          </p>
+          </span>
         </div>
       </div>
     </PageContainer>

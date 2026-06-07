@@ -35,6 +35,8 @@ COPY packages/utils ./packages/utils
 RUN --mount=type=cache,id=turbo-api-${TARGETPLATFORM},target=/app/.turbo,sharing=locked \
     pnpm turbo run build --filter=@kichulbot/api
 RUN CI=true pnpm prune --prod --ignore-scripts
+RUN --mount=type=cache,id=pnpm-${TARGETPLATFORM},target=/pnpm/store,sharing=locked \
+    pnpm install --prod --frozen-lockfile --prefer-offline --store-dir=/pnpm/store --filter=@kichulbot/api... --ignore-scripts
 
 FROM node:22-alpine AS runner
 
@@ -47,6 +49,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/src/infrastructure/database/schema.prisma ./apps/api/src/infrastructure/database/schema.prisma
 COPY --from=builder /app/apps/api/src/infrastructure/generated/prisma ./apps/api/src/infrastructure/generated/prisma

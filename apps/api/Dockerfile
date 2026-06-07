@@ -19,6 +19,8 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 
+ENV DATABASE_URL="postgresql://kichulbot:kichulbot@localhost:5432/kichulbot?schema=public"
+
 COPY apps/api ./apps/api
 COPY packages/api-contract ./packages/api-contract
 COPY packages/typescript-config ./packages/typescript-config

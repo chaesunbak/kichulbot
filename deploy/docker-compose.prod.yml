@@ -68,6 +68,8 @@ services:
     volumes:
       - api_uploads:/app/apps/api/uploads
     networks:
+      # 카카오 OAuth, Resend 등 외부 API 호출을 위해 egress가 가능한 네트워크에도 연결한다.
+      - public
       - internal
 
   postgres:

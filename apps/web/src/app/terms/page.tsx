@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { SectionTitle } from '@/shared/components/section-title';
 
 export const metadata: Metadata = {
-  title: '이용약관 | 기출봇',
+  title: '이용약관',
   description: '기출봇 서비스 이용약관',
 };
 

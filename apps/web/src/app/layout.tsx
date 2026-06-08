@@ -18,8 +18,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '기출봇',
-  description: '기출문제 풀이 기록을 저장하고 약점을 분석해주는 학습 서비스',
+  applicationName: '기출봇',
+  title: {
+    default: '기출봇',
+    template: `%s | 기출봇}`,
+  },
+  keywords: ['기출', '기출문제', '한국사능력검정시험', '한능검'],
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  verification: {
+    other: {
+      'naver-site-verification': '80cca6f686e28e00a8433f3682ce4122562137bf',
+    },
+  },
 };
 
 export default function RootLayout({

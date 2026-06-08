@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { SectionTitle } from '@/shared/components/section-title';
 
 export const metadata: Metadata = {
-  title: '개인정보처리방침 | 기출봇',
+  title: '개인정보처리방침',
   description: '기출봇 개인정보처리방침',
 };
 

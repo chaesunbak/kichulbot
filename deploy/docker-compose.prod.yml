@@ -29,11 +29,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      API_INTERNAL_BASE_URL: http://api:4000/api
-      NEXT_PUBLIC_API_BASE_URL: http://api:4000/api
+      API_INTERNAL_BASE_URL: ${API_INTERNAL_BASE_URL:-http://api:4000/api}
       NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: ${NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN}
       NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST}
     networks:
+      - public
       - internal
 
   admin:

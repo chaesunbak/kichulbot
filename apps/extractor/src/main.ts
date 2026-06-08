@@ -6,7 +6,7 @@ import { basename, extname, join, resolve } from 'node:path';
 
 import type { Job } from 'bullmq';
 import { QueueEvents, Worker } from 'bullmq';
-import pg from 'pg';
+import { Pool } from 'pg';
 
 const QUEUE_NAME = 'paper-import';
 const JOB_NAME = 'extract-paper';
@@ -14,8 +14,6 @@ const DEFAULT_STORAGE_DIR = '/app/apps/api/uploads';
 const DEFAULT_TOOLS_DIR = '/app/apps/extractor/question-extractor';
 const DEFAULT_PYTHON_BIN = '/opt/question-extractor-venv/bin/python';
 const SCRIPT_TIMEOUT_MS = 120_000;
-
-const { Pool } = pg;
 
 type PaperImportJobData = {
   jobId: string;

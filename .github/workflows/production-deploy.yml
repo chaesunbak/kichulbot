@@ -70,6 +70,9 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ${{ matrix.app == 'web' && format('NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN={0}', vars.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN) || '' }}
+            ${{ matrix.app == 'web' && format('NEXT_PUBLIC_POSTHOG_HOST={0}', vars.NEXT_PUBLIC_POSTHOG_HOST) || '' }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
 

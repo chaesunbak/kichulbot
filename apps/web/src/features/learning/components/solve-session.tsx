@@ -41,6 +41,7 @@ import {
   saveLocalSolveSessionAnswer,
   submitLocalSolveSession,
 } from '@/features/learning/lib/local-solve-session';
+import { getResumeQuestionIndex } from '@/features/learning/lib/solve-session-resume';
 import type {
   Answer,
   SolveQuestion,
@@ -66,7 +67,9 @@ export function SolveSession({
     null,
   );
   const [session, setSession] = useState(initialSession);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() =>
+    getResumeQuestionIndex(initialSession),
+  );
   const [answerText, setAnswerText] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [elapsedResetKey, setElapsedResetKey] = useState(0);

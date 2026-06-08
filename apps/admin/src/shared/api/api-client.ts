@@ -24,6 +24,7 @@ type ApiEnvelope<T> =
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api';
+const EMPTY_RESPONSE_STATUSES = new Set([204, 205, 304]);
 
 interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -46,13 +47,23 @@ export async function apiRequest<T>(
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method ?? 'GET',
     headers: {
+      Accept: 'application/json',
       ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
     },
     body,
+    cache: 'no-store',
   });
 
-  const envelope = (await response.json()) as ApiEnvelope<T>;
+  let envelope: ApiEnvelope<T>;
+  try {
+    envelope = await parseApiEnvelope<T>(response);
+  } catch (error) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('admin:unauthorized'));
+    }
+    throw error;
+  }
 
   if (!response.ok || !envelope.success) {
     let message = '요청 처리 중 오류가 발생했습니다.';
@@ -74,4 +85,41 @@ export async function apiRequest<T>(
   }
 
   return parseData(envelope.data);
+}
+
+async function parseApiEnvelope<T>(
+  response: Response,
+): Promise<ApiEnvelope<T>> {
+  if (EMPTY_RESPONSE_STATUSES.has(response.status)) {
+    throw new ApiError(
+      'API 서버에서 응답 본문을 받지 못했습니다. 다시 시도해 주세요.',
+      response.status,
+    );
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  const responseText = await response.text();
+
+  if (!responseText) {
+    throw new ApiError(
+      'API 서버에서 응답 본문을 받지 못했습니다. 다시 시도해 주세요.',
+      response.status,
+    );
+  }
+
+  if (!contentType.includes('application/json')) {
+    throw new ApiError(
+      'API 서버에서 JSON이 아닌 응답을 받았습니다.',
+      response.status,
+    );
+  }
+
+  try {
+    return JSON.parse(responseText) as ApiEnvelope<T>;
+  } catch {
+    throw new ApiError(
+      'API 서버 응답을 해석하지 못했습니다. 다시 시도해 주세요.',
+      response.status,
+    );
+  }
 }

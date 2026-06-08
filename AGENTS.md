@@ -97,6 +97,11 @@ Do
 className="border"
 ```
 
+## Codex
+
+- Do not run package installation, dependency downloads, Docker build/pull, or commands that access external registries in the default sandbox first.
+- Do not arbitrarily sort or format existing lockfiles(`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, etc.).
+
 ## Language
 
 Write commit messages, comments, and test cases in Korean.

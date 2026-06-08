@@ -1,7 +1,0 @@
-BEGIN;
-
-DROP TABLE IF EXISTS "DraftAnswer";
-DROP TABLE IF EXISTS "BookmarkedQuestion";
-DROP TABLE IF EXISTS "BookmarkList";
-
-COMMIT;

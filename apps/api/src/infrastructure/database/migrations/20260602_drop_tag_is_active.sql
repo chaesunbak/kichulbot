@@ -1,3 +1,0 @@
-DROP INDEX IF EXISTS "Tag_isActive_idx";
-
-ALTER TABLE "Tag" DROP COLUMN IF EXISTS "isActive";

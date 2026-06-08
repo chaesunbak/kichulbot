@@ -1,7 +1,5 @@
-import type {
-  AdminTagGroupResponse,
-  TagSelectionMode,
-} from '@kichulbot/api-contract/tags';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import type { AdminTagGroupResponse } from '@kichulbot/api-contract/tags';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -10,7 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import { Field, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
 import {
   Select,
@@ -30,31 +32,30 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { Layers3, Pencil, Plus, Trash2 } from 'lucide-react';
 import * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
 import type { Taxonomy } from '@/shared/types';
 
-import type { TagGroupForm } from '../mutations';
+import { tagGroupFormSchema } from '../schemas';
+import type { TagGroupForm } from '../types';
 
 interface TagGroupPanelProps {
   selectedExam: Taxonomy | null;
   tagGroups: AdminTagGroupResponse[];
   editingTagGroup: AdminTagGroupResponse | null;
-  form: TagGroupForm;
   isLoading: boolean;
   isSubmitting: boolean;
   deletingTagGroupId?: string | null;
   onEdit: (tagGroup: AdminTagGroupResponse) => void;
   onDelete: (tagGroup: AdminTagGroupResponse) => void;
-  onSubmit: () => void;
+  onSubmit: (values: TagGroupForm) => void;
   onCancel: () => void;
-  onFormChange: React.Dispatch<React.SetStateAction<TagGroupForm>>;
 }
 
 export function TagGroupPanel({
   selectedExam,
   tagGroups,
   editingTagGroup,
-  form,
   isLoading,
   isSubmitting,
   deletingTagGroupId,
@@ -62,8 +63,19 @@ export function TagGroupPanel({
   onDelete,
   onSubmit,
   onCancel,
-  onFormChange,
 }: TagGroupPanelProps) {
+  const form = useForm<TagGroupForm>({
+    resolver: standardSchemaResolver(tagGroupFormSchema),
+    defaultValues: getTagGroupFormValues(
+      editingTagGroup,
+      selectedExam?.id ?? '',
+    ),
+  });
+
+  React.useEffect(() => {
+    form.reset(getTagGroupFormValues(editingTagGroup, selectedExam?.id ?? ''));
+  }, [editingTagGroup, form, selectedExam?.id]);
+
   return (
     <div
       className="
@@ -177,80 +189,90 @@ export function TagGroupPanel({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            className="space-y-5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSubmit();
-            }}
-          >
-            <Field>
-              <FieldLabel htmlFor="tag-group-name">그룹 이름</FieldLabel>
-              <Input
-                id="tag-group-name"
-                value={form.name}
-                placeholder="시대"
-                onChange={(event) =>
-                  onFormChange((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel>선택 방식</FieldLabel>
-              <Select
-                value={form.selectionMode}
-                onValueChange={(value) =>
-                  onFormChange((current) => ({
-                    ...current,
-                    selectionMode: value as TagSelectionMode,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SINGLE">단일 선택</SelectItem>
-                  <SelectItem value="MULTIPLE">다중 선택</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="tag-group-sort">정렬 순서</FieldLabel>
-              <Input
-                id="tag-group-sort"
-                type="number"
-                min={0}
-                value={form.sortOrder}
-                onChange={(event) =>
-                  onFormChange((current) => ({
-                    ...current,
-                    sortOrder: Number(event.target.value),
-                  }))
-                }
-              />
-            </Field>
-            <Field
-              className="
-                flex flex-row items-center justify-between rounded-md border
-                px-3 py-2
-              "
-            >
-              <FieldLabel htmlFor="tag-group-active">활성</FieldLabel>
-              <Switch
-                id="tag-group-active"
-                checked={form.isActive}
-                onCheckedChange={(checked) =>
-                  onFormChange((current) => ({
-                    ...current,
-                    isActive: checked,
-                  }))
-                }
-              />
-            </Field>
+          <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+            <Controller
+              name="name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>그룹 이름</FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                    placeholder="시대"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="selectionMode"
+              control={form.control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>선택 방식</FieldLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SINGLE">단일 선택</SelectItem>
+                      <SelectItem value="MULTIPLE">다중 선택</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            />
+            <Controller
+              name="sortOrder"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>정렬 순서</FieldLabel>
+                  <Input
+                    id={field.name}
+                    type="number"
+                    min={0}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    ref={field.ref}
+                    aria-invalid={fieldState.invalid}
+                    onChange={(event) =>
+                      field.onChange(
+                        event.target.value === ''
+                          ? 0
+                          : Number(event.target.value),
+                      )
+                    }
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="isActive"
+              control={form.control}
+              render={({ field }) => (
+                <Field
+                  className="
+                    flex flex-row items-center justify-between rounded-md border
+                    px-3 py-2
+                  "
+                >
+                  <FieldLabel htmlFor={field.name}>활성</FieldLabel>
+                  <Switch
+                    id={field.name}
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </Field>
+              )}
+            />
             <div className="flex gap-2">
               {editingTagGroup && (
                 <Button type="button" variant="outline" onClick={onCancel}>
@@ -266,4 +288,17 @@ export function TagGroupPanel({
       </Card>
     </div>
   );
+}
+
+function getTagGroupFormValues(
+  editingTagGroup: AdminTagGroupResponse | null,
+  examId: string,
+): TagGroupForm {
+  return {
+    examId: editingTagGroup?.examId ?? examId,
+    name: editingTagGroup?.name ?? '',
+    selectionMode: editingTagGroup?.selectionMode ?? 'MULTIPLE',
+    sortOrder: editingTagGroup?.sortOrder ?? 0,
+    isActive: editingTagGroup?.isActive ?? true,
+  };
 }

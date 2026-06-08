@@ -1,3 +1,4 @@
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -7,6 +8,7 @@ import {
 } from '@kichulbot/ui/components/ui/card';
 import { FileText, Loader2, Sparkles } from 'lucide-react';
 import * as React from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 
 import type { Exam } from '@/shared/types';
@@ -15,6 +17,7 @@ import {
   useCreatePaperImportDraftMutation,
   useCreatePaperWithQuestionsMutation,
 } from '../mutations';
+import { importPaperSchema } from '../schemas';
 import type { ImportPaperQuestionValues, ImportPaperValues } from '../types';
 import { ImportPaperFields } from './import-paper-fields';
 
@@ -26,6 +29,8 @@ const importPaperDefaults: ImportPaperValues = {
   isPublished: false,
   layout: 'korean-history',
   variant: 'odd',
+  questionPdf: null,
+  answerPdf: null,
 };
 
 export function ImportPaperForm({
@@ -36,12 +41,13 @@ export function ImportPaperForm({
   exams: Exam[];
 }) {
   const navigate = useNavigate();
-  const [values, setValues] =
-    React.useState<ImportPaperValues>(importPaperDefaults);
-  const [questionPdf, setQuestionPdf] = React.useState<File | null>(null);
-  const [answerPdf, setAnswerPdf] = React.useState<File | null>(null);
+  const form = useForm<ImportPaperValues>({
+    resolver: standardSchemaResolver(importPaperSchema),
+    defaultValues: importPaperDefaults,
+  });
   const [warnings, setWarnings] = React.useState<string[]>([]);
 
+  const values = useWatch({ control: form.control });
   const selectedExam = exams.find((exam) => exam.id === values.examId);
 
   const createMutation = useCreatePaperWithQuestionsMutation({
@@ -53,12 +59,13 @@ export function ImportPaperForm({
     token,
     onSuccess: (draft) => {
       if (!selectedExam) return;
+      const currentValues = form.getValues();
 
       const nextValues: ImportPaperValues = {
-        ...values,
-        title: values.title || draft.paperSuggestion.title || '',
+        ...currentValues,
+        title: currentValues.title || draft.paperSuggestion.title || '',
         questionCount:
-          draft.paperSuggestion.questionCount || values.questionCount,
+          draft.paperSuggestion.questionCount || currentValues.questionCount,
         isPublished: false,
       };
       const nextQuestions: ImportPaperQuestionValues[] = draft.questions.map(
@@ -69,7 +76,11 @@ export function ImportPaperForm({
       );
 
       setWarnings(draft.warnings);
-      setValues(nextValues);
+      form.reset({
+        ...nextValues,
+        questionPdf: currentValues.questionPdf,
+        answerPdf: currentValues.answerPdf,
+      });
       createMutation.mutate({
         values: nextValues,
         exam: selectedExam,
@@ -82,6 +93,14 @@ export function ImportPaperForm({
     draftMutation.isPending || createMutation.isPending || !selectedExam;
 
   const loading = draftMutation.isPending || createMutation.isPending;
+  const submit = form.handleSubmit((submitValues) =>
+    draftMutation.mutate({
+      questionPdf: submitValues.questionPdf,
+      answerPdf: submitValues.answerPdf,
+      layout: submitValues.layout,
+      variant: submitValues.variant,
+    }),
+  );
 
   return (
     <Card>
@@ -91,49 +110,36 @@ export function ImportPaperForm({
           PDF로 문제지 생성
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
-        <ImportPaperFields
-          values={values}
-          exams={exams}
-          selectedExam={selectedExam}
-          onChange={setValues}
-          onQuestionPdfChange={setQuestionPdf}
-          onAnswerPdfChange={setAnswerPdf}
-        />
+      <CardContent>
+        <form className="space-y-5" onSubmit={submit}>
+          <ImportPaperFields
+            control={form.control}
+            exams={exams}
+            selectedExam={selectedExam}
+          />
 
-        <Button
-          className="w-full"
-          type="button"
-          disabled={disabled}
-          onClick={() =>
-            draftMutation.mutate({
-              questionPdf,
-              answerPdf,
-              layout: values.layout,
-              variant: values.variant,
-            })
-          }
-        >
-          {loading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <FileText className="size-4" />
-          )}
-          PDF 추출 후 비공개 문제지 생성
-        </Button>
+          <Button className="w-full" type="submit" disabled={disabled}>
+            {loading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <FileText className="size-4" />
+            )}
+            PDF 추출 후 비공개 문제지 생성
+          </Button>
 
-        {warnings.length > 0 && (
-          <div
-            className="
+          {warnings.length > 0 && (
+            <div
+              className="
               rounded-md border border-amber-300 bg-amber-50 p-3 text-xs
               text-amber-900
             "
-          >
-            {warnings.map((warning) => (
-              <p key={warning}>{warning}</p>
-            ))}
-          </div>
-        )}
+            >
+              {warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          )}
+        </form>
       </CardContent>
     </Card>
   );

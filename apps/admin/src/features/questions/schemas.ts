@@ -1,16 +1,19 @@
+import { CreateQuestionRequestSchema } from '@kichulbot/api-contract/questions';
 import * as z from 'zod';
+
+const questionRequestShape = CreateQuestionRequestSchema.shape;
 
 export const questionSchema = z
   .object({
-    type: z.enum(['MULTIPLE_CHOICE', 'WRITTEN']),
-    number: z.number().int().min(1).max(100),
-    choiceCount: z.number().int().min(2).max(10).optional(),
-    answerChoice: z.number().int().min(1).max(10).optional(),
-    answerText: z.string().max(2000).optional(),
-    explanation: z.string().max(5000).optional(),
-    points: z.number().int().min(1, '배점은 1점 이상이어야 합니다.').max(1000),
-    recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
-    tagIds: z.array(z.string()),
+    type: questionRequestShape.type.unwrap(),
+    number: questionRequestShape.number,
+    choiceCount: questionRequestShape.choiceCount,
+    answerChoice: questionRequestShape.answerChoice,
+    answerText: questionRequestShape.answerText.or(z.literal('')),
+    explanation: questionRequestShape.explanation.or(z.literal('')),
+    points: questionRequestShape.points.unwrap(),
+    recommendedTimeSeconds: questionRequestShape.recommendedTimeSeconds,
+    tagIds: questionRequestShape.tagIds.unwrap(),
   })
   .superRefine(({ type, choiceCount, answerChoice, answerText }, ctx) => {
     if (type === 'MULTIPLE_CHOICE') {
@@ -47,5 +50,3 @@ export const questionSchema = z
       });
     }
   });
-
-export type QuestionValues = z.infer<typeof questionSchema>;

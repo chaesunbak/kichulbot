@@ -14,7 +14,6 @@ import * as React from 'react';
 
 import type { Taxonomy } from '@/shared/types';
 
-import type { TagForm, TagGroupForm } from '../mutations';
 import {
   useDeleteTagGroupMutation,
   useDeleteTagMutation,
@@ -25,15 +24,6 @@ import { tagGroupsQueryOptions, tagsQueryOptions } from '../queries';
 import { TagFormPanel } from './tag-form';
 import { TagGroupPanel } from './tag-group-panel';
 import { TagListPanel } from './tag-list';
-
-const EMPTY_FORM: TagForm = { name: '', examId: '', tagGroupId: null };
-const EMPTY_GROUP_FORM: TagGroupForm = {
-  examId: '',
-  name: '',
-  selectionMode: 'MULTIPLE',
-  sortOrder: 0,
-  isActive: true,
-};
 
 export function TagManager({
   token,
@@ -47,17 +37,11 @@ export function TagManager({
   );
   const [editingTagGroup, setEditingTagGroup] =
     React.useState<AdminTagGroupResponse | null>(null);
-  const [form, setForm] = React.useState<TagForm>(EMPTY_FORM);
-  const [groupForm, setGroupForm] =
-    React.useState<TagGroupForm>(EMPTY_GROUP_FORM);
   const [selectedExamId, setSelectedExamId] = React.useState('');
 
   React.useEffect(() => {
     if (!selectedExamId && exams.length > 0) {
-      const firstExamId = exams[0].id;
-      setSelectedExamId(firstExamId);
-      setForm({ ...EMPTY_FORM, examId: firstExamId });
-      setGroupForm({ ...EMPTY_GROUP_FORM, examId: firstExamId });
+      setSelectedExamId(exams[0].id);
     }
   }, [exams, selectedExamId]);
 
@@ -73,20 +57,16 @@ export function TagManager({
 
   function resetForm() {
     setEditingTag(null);
-    setForm({ ...EMPTY_FORM, examId: selectedExamId, tagGroupId: null });
   }
 
   function resetGroupForm() {
     setEditingTagGroup(null);
-    setGroupForm({ ...EMPTY_GROUP_FORM, examId: selectedExamId });
   }
 
   function selectExam(examId: string) {
     setSelectedExamId(examId);
     setEditingTag(null);
     setEditingTagGroup(null);
-    setForm({ ...EMPTY_FORM, examId, tagGroupId: null });
-    setGroupForm({ ...EMPTY_GROUP_FORM, examId });
   }
 
   const saveMutation = useSaveTagMutation(
@@ -112,22 +92,10 @@ export function TagManager({
 
   function beginEdit(tag: AdminTagResponse) {
     setEditingTag(tag);
-    setForm({
-      name: tag.name,
-      examId: selectedExamId || tag.examId,
-      tagGroupId: tag.tagGroupId,
-    });
   }
 
   function beginEditTagGroup(tagGroup: AdminTagGroupResponse) {
     setEditingTagGroup(tagGroup);
-    setGroupForm({
-      examId: selectedExamId || tagGroup.examId,
-      name: tagGroup.name,
-      selectionMode: tagGroup.selectionMode,
-      sortOrder: tagGroup.sortOrder,
-      isActive: tagGroup.isActive,
-    });
   }
 
   function handleDelete(tag: AdminTagResponse) {
@@ -216,21 +184,18 @@ export function TagManager({
         selectedExam={selectedExam}
         tagGroups={tagGroups}
         editingTag={editingTag}
-        form={form}
         isSubmitting={saveMutation.isPending || !selectedExam}
-        onSubmit={() => {
+        onSubmit={(values) => {
           if (!selectedExamId) return;
-          saveMutation.mutate({ ...form, examId: selectedExamId });
+          saveMutation.mutate({ ...values, examId: selectedExamId });
         }}
         onCancel={resetForm}
-        onFormChange={setForm}
       />
       <div className="lg:col-span-2">
         <TagGroupPanel
           selectedExam={selectedExam}
           tagGroups={tagGroups}
           editingTagGroup={editingTagGroup}
-          form={groupForm}
           isLoading={tagGroupsQuery.isLoading}
           isSubmitting={saveGroupMutation.isPending || !selectedExam}
           deletingTagGroupId={
@@ -240,15 +205,14 @@ export function TagManager({
           }
           onEdit={beginEditTagGroup}
           onDelete={handleDeleteTagGroup}
-          onSubmit={() => {
+          onSubmit={(values) => {
             if (!selectedExamId) return;
             saveGroupMutation.mutate({
-              ...groupForm,
+              ...values,
               examId: selectedExamId,
             });
           }}
           onCancel={resetGroupForm}
-          onFormChange={setGroupForm}
         />
       </div>
     </div>

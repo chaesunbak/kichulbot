@@ -1,4 +1,3 @@
-import type { TagSelectionMode } from '@kichulbot/api-contract/tags';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -11,20 +10,7 @@ import {
   updateTagGroup,
 } from './api';
 import { tagKeys } from './queries';
-
-export interface TagForm {
-  name: string;
-  examId: string;
-  tagGroupId: string | null;
-}
-
-export interface TagGroupForm {
-  examId: string;
-  name: string;
-  selectionMode: TagSelectionMode;
-  sortOrder: number;
-  isActive: boolean;
-}
+import type { TagForm, TagGroupForm } from './types';
 
 function useInvalidateTags() {
   const queryClient = useQueryClient();

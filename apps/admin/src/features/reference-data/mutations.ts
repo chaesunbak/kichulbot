@@ -10,17 +10,7 @@ import {
   updateExam,
 } from './api';
 import { referenceDataKeys } from './queries';
-
-export interface CategoryForm {
-  name: string;
-}
-
-export interface ExamForm extends CategoryForm {
-  slug: string;
-  categoryIds: string[];
-  usesMonth: boolean;
-  usesRound: boolean;
-}
+import type { CategoryForm, ExamForm } from './types';
 
 export function useSaveCategoryMutation(
   token: string,

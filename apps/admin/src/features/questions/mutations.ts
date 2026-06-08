@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { paperKeys } from '@/features/papers/queries';
 
 import { createQuestion, deleteQuestion, updateQuestion } from './api';
-import type { QuestionValues } from './schemas';
+import type { QuestionValues } from './types';
 
 export function useSaveQuestionMutation({
   token,

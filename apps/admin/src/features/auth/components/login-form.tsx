@@ -18,8 +18,9 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { login } from '../api';
-import { loginSchema, type LoginValues } from '../schemas';
+import { loginSchema } from '../schemas';
 import { useAuthStore } from '../store';
+import type { LoginValues } from '../types';
 
 export function LoginForm() {
   const navigate = useNavigate();

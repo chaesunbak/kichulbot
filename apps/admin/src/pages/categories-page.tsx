@@ -6,26 +6,21 @@ import { useAuthStore } from '@/features/auth/store';
 import { CategoriesList } from '@/features/reference-data/components/categories-list';
 import { CategoryFormPanel } from '@/features/reference-data/components/category-form';
 import {
-  type CategoryForm,
   useDeleteCategoryMutation,
   useSaveCategoryMutation,
 } from '@/features/reference-data/mutations';
 import { categoriesQueryOptions } from '@/features/reference-data/queries';
 
-const EMPTY_FORM: CategoryForm = { name: '' };
-
 export function CategoriesPage() {
   const token = useAuthStore((state) => state.token)!;
   const [editingCategory, setEditingCategory] =
     React.useState<AdminTaxonomyResponse | null>(null);
-  const [form, setForm] = React.useState<CategoryForm>(EMPTY_FORM);
   const categories =
     (useQuery(categoriesQueryOptions(token)).data
       ?.categories as AdminTaxonomyResponse[]) ?? [];
 
   function resetForm() {
     setEditingCategory(null);
-    setForm(EMPTY_FORM);
   }
 
   const saveMutation = useSaveCategoryMutation(
@@ -41,7 +36,6 @@ export function CategoriesPage() {
 
   function beginEdit(category: AdminTaxonomyResponse) {
     setEditingCategory(category);
-    setForm({ name: category.name });
   }
 
   function handleDelete(category: AdminTaxonomyResponse) {
@@ -71,13 +65,9 @@ export function CategoriesPage() {
       />
       <CategoryFormPanel
         editingCategory={editingCategory}
-        form={form}
         isSubmitting={saveMutation.isPending}
-        onSubmit={() => {
-          saveMutation.mutate(form);
-        }}
+        onSubmit={(values) => saveMutation.mutate(values)}
         onCancel={resetForm}
-        onFormChange={setForm}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { type AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -7,30 +8,41 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import { Field, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
 import { Plus } from 'lucide-react';
 import * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
-import { type CategoryForm } from '@/features/reference-data/mutations';
+import { categoryFormSchema } from '@/features/reference-data/schemas';
+import type { CategoryForm } from '@/features/reference-data/types';
 
 export interface CategoryFormPanelProps {
   editingCategory: AdminTaxonomyResponse | null;
-  form: CategoryForm;
   isSubmitting: boolean;
-  onSubmit: () => void;
+  onSubmit: (values: CategoryForm) => void;
   onCancel: () => void;
-  onFormChange: React.Dispatch<React.SetStateAction<CategoryForm>>;
 }
 
 export function CategoryFormPanel({
   editingCategory,
-  form,
   isSubmitting,
   onSubmit,
   onCancel,
-  onFormChange,
 }: CategoryFormPanelProps) {
+  const form = useForm<CategoryForm>({
+    resolver: standardSchemaResolver(categoryFormSchema),
+    defaultValues: getCategoryFormValues(editingCategory),
+  });
+
+  React.useEffect(() => {
+    form.reset(getCategoryFormValues(editingCategory));
+  }, [editingCategory, form]);
+
   return (
     <Card>
       <CardHeader>
@@ -43,27 +55,25 @@ export function CategoryFormPanel({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          className="space-y-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit();
-          }}
-        >
-          <Field>
-            <FieldLabel htmlFor="category-name">분류 이름</FieldLabel>
-            <Input
-              id="category-name"
-              value={form.name}
-              onChange={(event) =>
-                onFormChange((current) => ({
-                  ...current,
-                  name: event.target.value,
-                }))
-              }
-              placeholder="수능"
-            />
-          </Field>
+        <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+          <Controller
+            name="name"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>분류 이름</FieldLabel>
+                <Input
+                  {...field}
+                  id={field.name}
+                  aria-invalid={fieldState.invalid}
+                  placeholder="수능"
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
           <div className="flex gap-2">
             {editingCategory && (
               <Button type="button" variant="outline" onClick={onCancel}>
@@ -78,4 +88,12 @@ export function CategoryFormPanel({
       </CardContent>
     </Card>
   );
+}
+
+function getCategoryFormValues(
+  editingCategory: AdminTaxonomyResponse | null,
+): CategoryForm {
+  return {
+    name: editingCategory?.name ?? '',
+  };
 }

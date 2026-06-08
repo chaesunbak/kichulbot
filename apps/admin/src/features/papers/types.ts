@@ -1,22 +1,10 @@
 import type { PaperImportDraftQuestion } from '@kichulbot/api-contract/papers';
 import type * as z from 'zod';
 
-import type { paperSchema } from './schemas';
+import type { importPaperSchema, paperSchema } from './schemas';
 
 export type PaperValues = z.infer<typeof paperSchema>;
-
-export type ImportPaperValues = {
-  title: string;
-  year: number;
-  month?: number;
-  grade?: number;
-  round?: number;
-  examId: string;
-  questionCount: number;
-  isPublished: boolean;
-  layout: string;
-  variant: string;
-};
+export type ImportPaperValues = z.infer<typeof importPaperSchema>;
 
 export type ImportPaperQuestionValues = PaperImportDraftQuestion & {
   excluded: boolean;

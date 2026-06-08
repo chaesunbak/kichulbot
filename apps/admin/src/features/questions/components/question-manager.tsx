@@ -55,7 +55,8 @@ import {
   useDeleteQuestionMutation,
   useSaveQuestionMutation,
 } from '../mutations';
-import { questionSchema, type QuestionValues } from '../schemas';
+import { questionSchema } from '../schemas';
+import type { QuestionValues } from '../types';
 import { QuestionImageField } from './question-image-field';
 import { QuestionList } from './question-list';
 

@@ -1,3 +1,4 @@
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import {
   type AdminExamResponse,
   type AdminTaxonomyResponse,
@@ -11,40 +12,42 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
 import { Checkbox } from '@kichulbot/ui/components/ui/checkbox';
-import { Field, FieldLabel } from '@kichulbot/ui/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+} from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
 import { Plus } from 'lucide-react';
 import * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
-import { type ExamForm } from '@/features/reference-data/mutations';
+import { examFormSchema } from '@/features/reference-data/schemas';
+import type { ExamForm } from '@/features/reference-data/types';
 
 export interface ExamFormPanelProps {
   categories: AdminTaxonomyResponse[];
-  form: ExamForm;
   editingExam: AdminExamResponse | null;
   isSubmitting: boolean;
-  onSubmit: () => void;
+  onSubmit: (values: ExamForm) => void;
   onCancel: () => void;
-  onFormChange: React.Dispatch<React.SetStateAction<ExamForm>>;
 }
 
 export function ExamFormPanel({
   categories,
-  form,
   editingExam,
   isSubmitting,
   onSubmit,
   onCancel,
-  onFormChange,
 }: ExamFormPanelProps) {
-  function toggleCategory(categoryId: string, checked: boolean) {
-    onFormChange((current) => ({
-      ...current,
-      categoryIds: checked
-        ? [...current.categoryIds, categoryId]
-        : current.categoryIds.filter((id) => id !== categoryId),
-    }));
-  }
+  const form = useForm<ExamForm>({
+    resolver: standardSchemaResolver(examFormSchema),
+    defaultValues: getExamFormValues(editingExam),
+  });
+
+  React.useEffect(() => {
+    form.reset(getExamFormValues(editingExam));
+  }, [editingExam, form]);
 
   return (
     <Card>
@@ -58,72 +61,71 @@ export function ExamFormPanel({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          className="space-y-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onSubmit();
-          }}
-        >
-          <Field>
-            <FieldLabel htmlFor="exam-name">시험 이름</FieldLabel>
-            <Input
-              id="exam-name"
-              value={form.name}
-              onChange={(event) =>
-                onFormChange((current) => ({
-                  ...current,
-                  name: event.target.value,
-                }))
-              }
-              placeholder="수능 한국사"
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="exam-slug">시험 슬러그</FieldLabel>
-            <Input
-              id="exam-slug"
-              value={form.slug}
-              onChange={(event) =>
-                onFormChange((current) => ({
-                  ...current,
-                  slug: event.target.value,
-                }))
-              }
-              placeholder="korean-history-advanced"
-            />
-          </Field>
-          <Field>
-            <FieldLabel>분류</FieldLabel>
-            <div className="grid gap-2">
-              {categories.map((category) => (
-                <ToggleRow
-                  key={category.id}
-                  label={category.name}
-                  checked={form.categoryIds.includes(category.id)}
-                  onCheckedChange={(checked) =>
-                    toggleCategory(category.id, checked)
-                  }
-                />
-              ))}
-            </div>
-          </Field>
+        <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
+          <TextField
+            control={form.control}
+            name="name"
+            label="시험 이름"
+            placeholder="수능 한국사"
+          />
+          <TextField
+            control={form.control}
+            name="slug"
+            label="시험 슬러그"
+            placeholder="korean-history-advanced"
+          />
+          <Controller
+            name="categoryIds"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>분류</FieldLabel>
+                <div className="grid gap-2">
+                  {categories.map((category) => {
+                    const checked = field.value.includes(category.id);
+                    return (
+                      <ToggleRow
+                        key={category.id}
+                        label={category.name}
+                        checked={checked}
+                        onCheckedChange={(nextChecked) =>
+                          field.onChange(
+                            nextChecked
+                              ? [...field.value, category.id]
+                              : field.value.filter((id) => id !== category.id),
+                          )
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </Field>
+            )}
+          />
           <Field>
             <FieldLabel>시행 정보</FieldLabel>
             <div className="grid gap-2">
-              <ToggleRow
-                label="시행 월 입력"
-                checked={form.usesMonth}
-                onCheckedChange={(usesMonth) =>
-                  onFormChange((current) => ({ ...current, usesMonth }))
-                }
+              <Controller
+                name="usesMonth"
+                control={form.control}
+                render={({ field }) => (
+                  <ToggleRow
+                    label="시행 월 입력"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
               />
-              <ToggleRow
-                label="시험 회차 입력"
-                checked={form.usesRound}
-                onCheckedChange={(usesRound) =>
-                  onFormChange((current) => ({ ...current, usesRound }))
-                }
+              <Controller
+                name="usesRound"
+                control={form.control}
+                render={({ field }) => (
+                  <ToggleRow
+                    label="시험 회차 입력"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
               />
             </div>
           </Field>
@@ -141,6 +143,47 @@ export function ExamFormPanel({
       </CardContent>
     </Card>
   );
+}
+
+function TextField({
+  control,
+  name,
+  label,
+  placeholder,
+}: {
+  control: ReturnType<typeof useForm<ExamForm>>['control'];
+  name: 'name' | 'slug';
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+          <Input
+            {...field}
+            id={field.name}
+            aria-invalid={fieldState.invalid}
+            placeholder={placeholder}
+          />
+          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+      )}
+    />
+  );
+}
+
+function getExamFormValues(editingExam: AdminExamResponse | null): ExamForm {
+  return {
+    name: editingExam?.name ?? '',
+    slug: editingExam?.slug ?? '',
+    categoryIds: editingExam?.categories.map((category) => category.id) ?? [],
+    usesMonth: editingExam?.usesMonth ?? false,
+    usesRound: editingExam?.usesRound ?? false,
+  };
 }
 
 function ToggleRow({

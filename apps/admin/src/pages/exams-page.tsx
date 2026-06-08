@@ -9,7 +9,6 @@ import { useAuthStore } from '@/features/auth/store';
 import { ExamFormPanel } from '@/features/reference-data/components/exam-form';
 import { ExamsList } from '@/features/reference-data/components/exams-list';
 import {
-  type ExamForm,
   useDeleteExamMutation,
   useSaveExamMutation,
 } from '@/features/reference-data/mutations';
@@ -18,19 +17,10 @@ import {
   examsQueryOptions,
 } from '@/features/reference-data/queries';
 
-const EMPTY_FORM: ExamForm = {
-  name: '',
-  slug: '',
-  categoryIds: [],
-  usesMonth: false,
-  usesRound: false,
-};
-
 export function ExamsPage() {
   const token = useAuthStore((state) => state.token)!;
   const [editingExam, setEditingExam] =
     React.useState<AdminExamResponse | null>(null);
-  const [form, setForm] = React.useState<ExamForm>(EMPTY_FORM);
   const exams =
     (useQuery(examsQueryOptions(token)).data?.exams as AdminExamResponse[]) ??
     [];
@@ -40,7 +30,6 @@ export function ExamsPage() {
 
   function resetForm() {
     setEditingExam(null);
-    setForm(EMPTY_FORM);
   }
 
   const saveMutation = useSaveExamMutation(
@@ -56,13 +45,6 @@ export function ExamsPage() {
 
   function beginEdit(exam: AdminExamResponse) {
     setEditingExam(exam);
-    setForm({
-      name: exam.name,
-      slug: exam.slug,
-      categoryIds: exam.categories.map((category) => category.id),
-      usesMonth: exam.usesMonth,
-      usesRound: exam.usesRound,
-    });
   }
 
   function handleDelete(exam: AdminExamResponse) {
@@ -96,13 +78,9 @@ export function ExamsPage() {
       <ExamFormPanel
         categories={categories}
         editingExam={editingExam}
-        form={form}
         isSubmitting={saveMutation.isPending}
-        onSubmit={() => {
-          saveMutation.mutate(form);
-        }}
+        onSubmit={(values) => saveMutation.mutate(values)}
         onCancel={resetForm}
-        onFormChange={setForm}
       />
     </div>
   );

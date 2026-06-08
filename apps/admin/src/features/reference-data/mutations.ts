@@ -16,6 +16,7 @@ export interface CategoryForm {
 }
 
 export interface ExamForm extends CategoryForm {
+  slug: string;
   categoryIds: string[];
   usesMonth: boolean;
   usesRound: boolean;
@@ -80,12 +81,16 @@ export function useSaveExamMutation(
     mutationFn: (form: ExamForm) => {
       const input = {
         name: form.name.trim(),
+        slug: form.slug.trim(),
         categoryIds: form.categoryIds,
         usesMonth: form.usesMonth,
         usesRound: form.usesRound,
       };
       if (!input.name) {
         throw new Error('시험 이름을 입력해 주세요.');
+      }
+      if (!input.slug) {
+        throw new Error('시험 슬러그를 입력해 주세요.');
       }
       return editingExamId
         ? updateExam(token, editingExamId, input)

@@ -20,6 +20,7 @@ import {
 
 const EMPTY_FORM: ExamForm = {
   name: '',
+  slug: '',
   categoryIds: [],
   usesMonth: false,
   usesRound: false,
@@ -57,6 +58,7 @@ export function ExamsPage() {
     setEditingExam(exam);
     setForm({
       name: exam.name,
+      slug: exam.slug,
       categoryIds: exam.categories.map((category) => category.id),
       usesMonth: exam.usesMonth,
       usesRound: exam.usesRound,

@@ -46,6 +46,12 @@ export type ListCategoriesResponse = z.infer<
 
 export const CreateExamRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   categoryIds: z.array(z.string().min(1)).optional(),
   usesMonth: z.boolean().optional(),
   usesRound: z.boolean().optional(),

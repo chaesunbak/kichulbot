@@ -49,7 +49,7 @@ export class QuestionsRepository {
   findPaper(paperId: string) {
     return this.db.paper.findUnique({
       where: { id: paperId },
-      include: { examSession: true },
+      include: { examSession: { include: { exam: true } } },
     });
   }
 

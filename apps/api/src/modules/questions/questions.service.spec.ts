@@ -101,14 +101,10 @@ describe('QuestionsService', () => {
   });
 
   it('이미지 업로드 파일 내용의 sha256 해시를 문항에 저장한다', async () => {
-    repository.findPaper.mockResolvedValue({
-      id: 'paper_1',
-      questionCount: 20,
-      examSession: { examId: 'exam_1' },
-    } as never);
+    repository.findPaper.mockResolvedValue(makePaper() as never);
     storageService.uploadQuestionImage.mockResolvedValue({
-      objectKey: 'questions/question_1.png',
-      url: 'http://localhost:4000/uploads/questions/question_1.png',
+      objectKey: 'questions/korean-history-advanced/78/001-question_1.png',
+      url: 'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-question_1.png',
     });
     repository.create.mockResolvedValue({
       id: 'question_1',
@@ -145,6 +141,14 @@ describe('QuestionsService', () => {
           '6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
       }),
       [],
+    );
+    expect(storageService.uploadQuestionImage).toHaveBeenCalledWith(
+      image,
+      expect.objectContaining({
+        examSlug: 'korean-history-advanced',
+        paperSlug: '78',
+        questionNumber: 1,
+      }),
     );
     expect(response.question.imageCacheKey).toBe(
       'sha256_6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
@@ -214,3 +218,22 @@ describe('QuestionsService', () => {
     );
   });
 });
+
+function makePaper() {
+  return {
+    id: 'paper_1',
+    questionCount: 20,
+    examSession: {
+      examId: 'exam_1',
+      displayYear: 2026,
+      month: null,
+      grade: null,
+      round: 78,
+      exam: {
+        id: 'exam_1',
+        name: '한국사능력검정시험 심화',
+        slug: 'korean-history-advanced',
+      },
+    },
+  };
+}

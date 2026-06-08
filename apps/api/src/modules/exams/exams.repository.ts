@@ -4,6 +4,7 @@ import { DatabaseService } from '../../infrastructure/database/database.service'
 
 interface ExamCreateData {
   name: string;
+  slug: string;
   categoryIds: string[];
   usesMonth: boolean;
   usesGrade: boolean;
@@ -12,6 +13,7 @@ interface ExamCreateData {
 
 interface ExamUpdateData {
   name?: string;
+  slug?: string;
   categoryIds?: string[];
   usesMonth?: boolean;
   usesGrade?: boolean;
@@ -51,6 +53,7 @@ export class ExamsRepository {
     return this.db.exam.create({
       data: {
         name: data.name,
+        slug: data.slug,
         usesMonth: data.usesMonth,
         usesGrade: data.usesGrade,
         usesRound: data.usesRound,
@@ -69,6 +72,7 @@ export class ExamsRepository {
       where: { id },
       data: {
         name: data.name,
+        slug: data.slug,
         usesMonth: data.usesMonth,
         usesGrade: data.usesGrade,
         usesRound: data.usesRound,

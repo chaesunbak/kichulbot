@@ -5,6 +5,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import {
+  QuestionImagePathContext,
   StorageService,
   StoredObject,
   UploadedMemoryFile,
@@ -37,7 +38,7 @@ export class LocalStorageService extends StorageService {
 
   async uploadQuestionImage(
     file: UploadedMemoryFile,
-    questionId: string,
+    context: QuestionImagePathContext,
   ): Promise<StoredObject> {
     const extension = this.resolveExtension(file);
 
@@ -47,7 +48,7 @@ export class LocalStorageService extends StorageService {
       );
     }
 
-    const objectKey = `questions/${questionId}.${extension}`;
+    const objectKey = this.createQuestionImageObjectKey(context, extension);
     const fullPath = join(this.rootDir, objectKey);
 
     await mkdir(dirname(fullPath), { recursive: true });
@@ -78,5 +79,19 @@ export class LocalStorageService extends StorageService {
       );
     }
     return extension;
+  }
+
+  private createQuestionImageObjectKey(
+    context: QuestionImagePathContext,
+    extension: string,
+  ) {
+    const questionNumber = context.questionNumber.toString().padStart(3, '0');
+
+    return [
+      'questions',
+      context.examSlug,
+      context.paperSlug,
+      `${questionNumber}-${context.questionId}.${extension}`,
+    ].join('/');
   }
 }

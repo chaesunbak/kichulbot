@@ -138,6 +138,7 @@ model PasswordResetToken {
 model Exam {
   id         String         @id @default(cuid())
   name       String
+  slug       String         @unique
   usesMonth  Boolean        @default(false)
   usesGrade  Boolean        @default(false)
   usesRound  Boolean        @default(false)

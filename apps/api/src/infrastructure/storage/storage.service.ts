@@ -15,6 +15,13 @@ export interface StoredObject {
   url: string;
 }
 
+export interface QuestionImagePathContext {
+  questionId: string;
+  examSlug: string;
+  paperSlug: string;
+  questionNumber: number;
+}
+
 /**
  * 파일 스토리지 추상화.
  *
@@ -24,7 +31,7 @@ export interface StoredObject {
 export abstract class StorageService {
   abstract uploadQuestionImage(
     file: UploadedMemoryFile,
-    questionId: string,
+    context: QuestionImagePathContext,
   ): Promise<StoredObject>;
 
   abstract getPublicUrl(objectKey: string): string;

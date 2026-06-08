@@ -11,6 +11,7 @@ export const CategoryResponseSchema = TaxonomyResponseSchema;
 export type CategoryResponse = z.infer<typeof CategoryResponseSchema>;
 
 export const ExamResponseSchema = TaxonomyResponseSchema.extend({
+  slug: z.string(),
   categories: z.array(CategoryResponseSchema),
   usesMonth: z.boolean(),
   usesGrade: z.boolean(),

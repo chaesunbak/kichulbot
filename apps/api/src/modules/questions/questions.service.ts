@@ -34,6 +34,10 @@ type QuestionAnswerInput = {
   answerText?: string;
 };
 
+type QuestionImagePathPaper = NonNullable<
+  Awaited<ReturnType<QuestionsRepository['findPaper']>>
+>;
+
 @Injectable()
 export class QuestionsService {
   constructor(
@@ -73,7 +77,7 @@ export class QuestionsService {
     try {
       const { objectKey, url } = await this.storageService.uploadQuestionImage(
         file,
-        id,
+        this.createQuestionImagePathContext(id, paper, dto.number),
       );
       uploadedObjectKey = objectKey;
       const imageHash = this.createImageHash(file);
@@ -154,7 +158,15 @@ export class QuestionsService {
     };
 
     if (file) {
-      const { url } = await this.storageService.uploadQuestionImage(file, id);
+      const paper = await this.questionsRepository.findPaper(existing.paperId);
+      if (!paper) {
+        throw new BadRequestException('문제지를 찾을 수 없습니다.');
+      }
+      const questionNumber = dto.number ?? existing.number;
+      const { url } = await this.storageService.uploadQuestionImage(
+        file,
+        this.createQuestionImagePathContext(id, paper, questionNumber),
+      );
       data.imageUrl = url;
       data.imageHash = this.createImageHash(file);
       await this.deleteStaleImage(existing.imageUrl, url);
@@ -282,6 +294,35 @@ export class QuestionsService {
 
   private createImageHash(file: UploadedMemoryFile): string {
     return createHash('sha256').update(file.buffer).digest('hex');
+  }
+
+  private createQuestionImagePathContext(
+    questionId: string,
+    paper: QuestionImagePathPaper,
+    questionNumber: number,
+  ) {
+    return {
+      questionId,
+      examSlug: paper.examSession.exam.slug,
+      paperSlug: this.createPaperSlug(paper.examSession),
+      questionNumber,
+    };
+  }
+
+  private createPaperSlug(paper: QuestionImagePathPaper['examSession']) {
+    if (paper.round !== null) {
+      return String(paper.round);
+    }
+
+    const parts = [String(paper.displayYear)];
+    if (paper.month !== null) {
+      parts.push(paper.month.toString().padStart(2, '0'));
+    }
+    if (paper.grade !== null) {
+      parts.push(`grade-${paper.grade}`);
+    }
+
+    return parts.join('-');
   }
 
   private toImageCacheKey(imageHash: string): string {

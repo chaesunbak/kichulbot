@@ -29,6 +29,7 @@ describe('ExamsService', () => {
     expect(response.exams[0]).toEqual({
       id: 'exam_1',
       name: '수능',
+      slug: 'korean-history',
       categories: [{ id: 'category_1', name: '한국사' }],
       usesMonth: true,
       usesGrade: false,
@@ -57,6 +58,7 @@ describe('ExamsService', () => {
 
     await service.createExam({
       name: ' 수능 ',
+      slug: 'korean-history',
       categoryIds: ['category_1', 'category_1', 'category_2'],
       usesMonth: true,
       usesGrade: true,
@@ -65,6 +67,7 @@ describe('ExamsService', () => {
 
     expect(repository.create).toHaveBeenCalledWith({
       name: '수능',
+      slug: 'korean-history',
       categoryIds: ['category_1', 'category_2'],
       usesMonth: true,
       usesGrade: false,
@@ -90,7 +93,11 @@ describe('ExamsService', () => {
     );
 
     await expect(
-      service.createExam({ name: '수능', categoryIds: ['missing_category'] }),
+      service.createExam({
+        name: '수능',
+        slug: 'korean-history',
+        categoryIds: ['missing_category'],
+      }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -128,6 +135,7 @@ function baseExam() {
   return {
     id: 'exam_1',
     name: '수능',
+    slug: 'korean-history',
     usesMonth: true,
     usesGrade: false,
     usesRound: false,

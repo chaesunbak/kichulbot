@@ -95,6 +95,7 @@ const questionSet = {
               exam: {
                 id: 'exam_1',
                 name: '수능',
+                slug: 'korean-history',
                 usesMonth: false,
                 usesGrade: false,
                 usesRound: false,

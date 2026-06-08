@@ -7,6 +7,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import {
+  type QuestionImagePathContext,
   StorageService,
   type StoredObject,
   type UploadedMemoryFile,
@@ -48,7 +49,7 @@ export class S3StorageService extends StorageService {
 
   async uploadQuestionImage(
     file: UploadedMemoryFile,
-    questionId: string,
+    context: QuestionImagePathContext,
   ): Promise<StoredObject> {
     const extension = this.resolveExtension(file);
 
@@ -58,7 +59,7 @@ export class S3StorageService extends StorageService {
       );
     }
 
-    const objectKey = `questions/${questionId}.${extension}`;
+    const objectKey = this.createQuestionImageObjectKey(context, extension);
 
     await this.client.send(
       new PutObjectCommand({
@@ -93,5 +94,19 @@ export class S3StorageService extends StorageService {
       );
     }
     return extension;
+  }
+
+  private createQuestionImageObjectKey(
+    context: QuestionImagePathContext,
+    extension: string,
+  ) {
+    const questionNumber = context.questionNumber.toString().padStart(3, '0');
+
+    return [
+      'questions',
+      context.examSlug,
+      context.paperSlug,
+      `${questionNumber}-${context.questionId}.${extension}`,
+    ].join('/');
   }
 }

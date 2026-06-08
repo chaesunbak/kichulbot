@@ -44,6 +44,13 @@ function createFile(
   };
 }
 
+const questionImagePathContext = {
+  questionId: 'question-id',
+  examSlug: 'korean-history-advanced',
+  paperSlug: '78',
+  questionNumber: 1,
+};
+
 describe('S3StorageService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -56,10 +63,10 @@ describe('S3StorageService', () => {
     const service = new S3StorageService(createConfigService());
 
     await expect(
-      service.uploadQuestionImage(createFile(), 'question-id'),
+      service.uploadQuestionImage(createFile(), questionImagePathContext),
     ).resolves.toEqual({
-      objectKey: 'questions/question-id.png',
-      url: 'https://cdn.example.com/uploads/questions/question-id.png',
+      objectKey: 'questions/korean-history-advanced/78/001-question-id.png',
+      url: 'https://cdn.example.com/uploads/questions/korean-history-advanced/78/001-question-id.png',
     });
 
     const client = jest.mocked(S3Client).mock.results[0].value as {
@@ -76,7 +83,7 @@ describe('S3StorageService', () => {
     });
     expect(PutObjectCommand).toHaveBeenCalledWith({
       Bucket: 'kichulbot',
-      Key: 'questions/question-id.png',
+      Key: 'questions/korean-history-advanced/78/001-question-id.png',
       Body: Buffer.from('test'),
       ContentType: 'image/png',
     });
@@ -115,7 +122,10 @@ describe('S3StorageService', () => {
     const service = new S3StorageService(createConfigService());
 
     await expect(
-      service.uploadQuestionImage(createFile({ mimetype: 'image/gif' }), 'id'),
+      service.uploadQuestionImage(
+        createFile({ mimetype: 'image/gif' }),
+        questionImagePathContext,
+      ),
     ).rejects.toThrow(
       'png, jpg, jpeg, webp 형식의 이미지만 업로드할 수 있습니다.',
     );
@@ -127,7 +137,7 @@ describe('S3StorageService', () => {
     await expect(
       service.uploadQuestionImage(
         createFile({ size: 5 * 1024 * 1024 + 1 }),
-        'id',
+        questionImagePathContext,
       ),
     ).rejects.toThrow('이미지 크기는 5MB 이하만 업로드할 수 있습니다.');
   });

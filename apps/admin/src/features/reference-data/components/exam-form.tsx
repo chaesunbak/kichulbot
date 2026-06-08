@@ -80,6 +80,20 @@ export function ExamFormPanel({
             />
           </Field>
           <Field>
+            <FieldLabel htmlFor="exam-slug">시험 슬러그</FieldLabel>
+            <Input
+              id="exam-slug"
+              value={form.slug}
+              onChange={(event) =>
+                onFormChange((current) => ({
+                  ...current,
+                  slug: event.target.value,
+                }))
+              }
+              placeholder="korean-history-advanced"
+            />
+          </Field>
+          <Field>
             <FieldLabel>분류</FieldLabel>
             <div className="grid gap-2">
               {categories.map((category) => (

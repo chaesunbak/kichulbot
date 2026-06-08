@@ -51,6 +51,7 @@ export class ExamsService {
     const exam = await this.examsRepository
       .create({
         name: dto.name.trim(),
+        slug: dto.slug.trim(),
         categoryIds,
         usesMonth: dto.usesMonth ?? false,
         usesGrade: false,
@@ -81,6 +82,7 @@ export class ExamsService {
     const exam = await this.examsRepository
       .update(id, {
         name: dto.name?.trim(),
+        slug: dto.slug?.trim(),
         categoryIds,
         usesMonth: dto.usesMonth,
         usesGrade: false,
@@ -118,6 +120,7 @@ export class ExamsService {
     const response = {
       id: exam.id,
       name: exam.name,
+      slug: exam.slug,
       categories: exam.categories.map(({ category }) => ({
         id: category.id,
         name: category.name,
@@ -162,6 +165,12 @@ export class ExamsService {
       error.code === 'P2003'
     ) {
       return new BadRequestException('분류를 찾을 수 없습니다.');
+    }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      return new BadRequestException('이미 사용 중인 시험 슬러그입니다.');
     }
     return error;
   }

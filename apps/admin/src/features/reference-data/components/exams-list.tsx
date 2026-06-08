@@ -60,6 +60,9 @@ export function ExamsList({
                 <TableRow key={exam.id}>
                   <TableCell>
                     <div className="font-medium">{exam.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {exam.slug}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">

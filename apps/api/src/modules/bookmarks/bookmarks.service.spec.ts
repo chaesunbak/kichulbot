@@ -14,6 +14,7 @@ const now = new Date('2026-05-31T00:00:00.000Z');
 const exam = {
   id: 'exam_1',
   name: '수능',
+  slug: 'korean-history',
   usesMonth: false,
   usesGrade: false,
   usesRound: false,

@@ -56,12 +56,12 @@ export class ReviewService {
     studyDateInput?: string,
   ): Promise<GetWrongQuestionSetResponse> {
     const studyDate = await this.resolveStudyDate(userId, studyDateInput);
-    const questionSet = await this.reviewRepository.findByStudyDate(
+    const questionSet = await this.reviewRepository.regenerate(
       userId,
       studyDate,
     );
     return GetWrongQuestionSetResponseSchema.parse({
-      questionSet: questionSet ? this.toResponse(questionSet) : null,
+      questionSet: this.toResponse(questionSet),
     });
   }
 

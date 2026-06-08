@@ -34,8 +34,10 @@ export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
   @Get()
-  @ApiOperation({ summary: '날짜별 오답 세트 조회' })
-  @ApiOkResponse({ description: 'studyDate 기준 오답 세트를 반환합니다.' })
+  @ApiOperation({ summary: '날짜별 최신 오답 세트 조회' })
+  @ApiOkResponse({
+    description: 'studyDate 기준 최신 오답 세트를 생성 또는 갱신해 반환합니다.',
+  })
   getByStudyDate(
     @CurrentUser() user: RequestUser,
     @Query('studyDate') studyDate?: string,

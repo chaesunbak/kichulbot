@@ -343,12 +343,26 @@ export function SolveSession({
         duration_milliseconds: durationMilliseconds,
         authenticated: !isLocalSession,
       });
-      setMessage('결과 페이지로 이동 중입니다.');
-      router.replace(
-        isLocalSession
-          ? `/results/local/${session.id}`
-          : `/results/${session.id}`,
+      setMessage('제출이 완료되었습니다.');
+      const resultPath = isLocalSession
+        ? `/results/local/${session.id}`
+        : `/results/${session.id}`;
+      const shouldViewResult = await overlay.openAsync<boolean>(
+        ({ isOpen, close, unmount }) => (
+          <ConfirmDialog
+            isOpen={isOpen}
+            title="제출이 완료되었습니다"
+            description="채점 결과를 바로 확인할 수 있습니다."
+            cancelLabel="홈으로"
+            confirmLabel="확인하기"
+            onCancel={() => close(false)}
+            onConfirm={() => close(true)}
+            onExit={unmount}
+          />
+        ),
       );
+
+      router.replace(shouldViewResult ? resultPath : '/');
     } catch {
       setIsFinishing(false);
       showFailureMessage('풀이를 제출하지 못했습니다.');

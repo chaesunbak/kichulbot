@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  formatDate,
   formatDuration,
   formatRelativeDate,
   formatSolveMode,
@@ -34,5 +35,12 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate('2026-06-07T11:50:00.000Z')).toBe('10분 전');
     expect(formatRelativeDate('2026-06-07T09:00:00.000Z')).toBe('3시간 전');
     expect(formatRelativeDate('2026-06-05T12:00:00.000Z')).toBe('2일 전');
+  });
+});
+
+describe('formatDate', () => {
+  it('잘못된 날짜 값은 대체 문구로 표시한다', () => {
+    expect(formatDate('')).toBe('날짜 없음');
+    expect(formatDate('invalid-date')).toBe('날짜 없음');
   });
 });

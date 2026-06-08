@@ -4,6 +4,7 @@ import { getCachedUser } from '@/features/auth/server';
 import { getSolveSession } from '@/features/learning/api/server';
 import { SolveSession } from '@/features/learning/components/solve-session';
 import type { SolveSession as SolveSessionData } from '@/features/learning/types';
+import { ApiError } from '@/shared/api/server';
 
 export default async function SolvePage({
   params,
@@ -17,8 +18,13 @@ export default async function SolvePage({
   let session: SolveSessionData;
   try {
     session = await getSolveSession(id);
-  } catch {
-    notFound();
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      notFound();
+    }
+
+    console.error('풀이 세션을 불러오지 못했습니다.', { id, error });
+    throw error;
   }
 
   if (session.submittedAt) redirect(`/results/${session.id}`);

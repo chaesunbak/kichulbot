@@ -32,6 +32,9 @@ const envSchema = Joi.object({
   STORAGE_DRIVER: Joi.string().valid('local', 'r2').messages({
     'any.only': 'STORAGE_DRIVER must be either local or r2',
   }),
+  REDIS_URL: Joi.string().trim().uri().optional().messages({
+    'string.uri': 'REDIS_URL must be a valid URL',
+  }),
   R2_ENDPOINT: Joi.when('STORAGE_DRIVER', {
     is: 'r2',
     then: requiredUrl('R2_ENDPOINT'),

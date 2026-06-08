@@ -32,6 +32,9 @@ jobs:
           - app: admin
             dockerfile: apps/admin/Dockerfile
             image: kichulbot-admin
+          - app: extractor
+            dockerfile: apps/extractor/Dockerfile
+            image: kichulbot-extractor
 
     steps:
       - name: 소스 체크아웃

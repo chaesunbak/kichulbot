@@ -67,6 +67,13 @@ enum TagSelectionMode {
   MULTIPLE
 }
 
+enum PaperImportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id                      String                 @id @default(cuid())
   email                   String?                @unique
@@ -88,6 +95,25 @@ model User {
   reviewedQuestionReports QuestionReport[]       @relation("QuestionReportReviewer")
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
+}
+
+model PaperImportJob {
+  id              String               @id @default(cuid())
+  status          PaperImportJobStatus @default(PENDING)
+  questionPdfPath String
+  questionPdfName String
+  answerPdfPath   String
+  answerPdfName   String
+  resultJsonPath  String?
+  errorMessage    String?
+  inputOptions    Json
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  startedAt       DateTime?
+  completedAt     DateTime?
+  failedAt        DateTime?
+
+  @@index([status, createdAt])
 }
 
 model OAuthAccount {

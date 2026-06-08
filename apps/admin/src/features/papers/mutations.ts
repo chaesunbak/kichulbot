@@ -1,3 +1,4 @@
+import type { PaperImportDraftResponse } from '@kichulbot/api-contract/papers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -9,6 +10,7 @@ import {
   createPaperWithQuestions,
   deletePaper,
   updatePaperPublished,
+  waitForPaperImportDraft,
 } from './api';
 import {
   toCreatePaperInput,
@@ -43,9 +45,7 @@ export function useCreatePaperImportDraftMutation({
   onSuccess,
 }: {
   token: string;
-  onSuccess: (
-    draft: Awaited<ReturnType<typeof createPaperImportDraft>>,
-  ) => void;
+  onSuccess: (draft: PaperImportDraftResponse) => void;
 }) {
   return useMutation({
     mutationFn: ({
@@ -67,7 +67,7 @@ export function useCreatePaperImportDraftMutation({
         answerPdf,
         layout,
         variant,
-      });
+      }).then(({ job }) => waitForPaperImportDraft(token, job.id));
     },
     onSuccess: (draft) => {
       onSuccess(draft);

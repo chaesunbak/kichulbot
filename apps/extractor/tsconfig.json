@@ -1,0 +1,10 @@
+{
+  "extends": "@kichulbot/typescript-config/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node"],
+    "noImplicitAny": true
+  },
+  "include": ["src/**/*.ts"]
+}

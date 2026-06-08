@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   UploadedFiles,
   UseGuards,
@@ -57,6 +59,12 @@ export class PaperImportDraftsController {
       answerPdf: this.getSingleFile(files, 'answerPdf', '답지 PDF'),
       options: body,
     });
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'PDF 추출 작업 상태 조회' })
+  getDraftJob(@Param('id') id: string) {
+    return this.paperImportDraftsService.getDraftJob(id);
   }
 
   private assertAllowedFields(files: UploadedMemoryFile[]) {

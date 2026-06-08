@@ -84,6 +84,36 @@ export type PaperImportDraftResponse = z.infer<
   typeof PaperImportDraftResponseSchema
 >;
 
+export const PaperImportJobStatusSchema = z.enum([
+  'PENDING',
+  'PROCESSING',
+  'COMPLETED',
+  'FAILED',
+]);
+export type PaperImportJobStatus = z.infer<typeof PaperImportJobStatusSchema>;
+
+export const CreatePaperImportJobResponseSchema = z.object({
+  job: z.object({
+    id: z.string(),
+    status: PaperImportJobStatusSchema,
+  }),
+});
+export type CreatePaperImportJobResponse = z.infer<
+  typeof CreatePaperImportJobResponseSchema
+>;
+
+export const PaperImportJobResponseSchema = z.object({
+  job: z.object({
+    id: z.string(),
+    status: PaperImportJobStatusSchema,
+    errorMessage: z.string().nullable(),
+    result: PaperImportDraftResponseSchema.nullable(),
+  }),
+});
+export type PaperImportJobResponse = z.infer<
+  typeof PaperImportJobResponseSchema
+>;
+
 export const UpdatePaperRequestSchema = z.object({
   isPublished: z.boolean(),
 });

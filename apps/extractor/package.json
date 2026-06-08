@@ -1,0 +1,26 @@
+{
+  "name": "@kichulbot/extractor",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/main.js",
+    "dev": "tsx watch src/main.ts",
+    "lint": "eslint \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "bullmq": "^5.65.1",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "@kichulbot/eslint-config": "workspace:*",
+    "@kichulbot/typescript-config": "workspace:*",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.20.0",
+    "eslint": "^9.39.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.60.0"
+  }
+}

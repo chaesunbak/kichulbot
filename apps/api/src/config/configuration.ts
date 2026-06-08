@@ -61,4 +61,7 @@ export default () => ({
       publicBaseUrl: process.env.R2_PUBLIC_BASE_URL,
     },
   },
+  redis: {
+    url: process.env.REDIS_URL ?? 'redis://localhost:6379',
+  },
 });

@@ -1,12 +1,13 @@
 import {
   CreatePaperRequestSchema,
   CreatePaperResponseSchema,
+  CreatePaperImportJobResponseSchema,
   DeletePaperResponseSchema,
   ListPapersResponseSchema,
   ListPapersQuerySchema,
   GetPaperResponseSchema,
   ListPaperQuestionsResponseSchema,
-  PaperImportDraftResponseSchema,
+  PaperImportJobResponseSchema,
   UpdatePaperRequestSchema,
   UpdatePaperResponseSchema,
 } from './dto.js';
@@ -28,7 +29,13 @@ export const papersRoutes = {
     method: 'POST',
     path: '/paper-import-drafts',
     request: null,
-    response: PaperImportDraftResponseSchema,
+    response: CreatePaperImportJobResponseSchema,
+  },
+  getPaperImportDraft: {
+    method: 'GET',
+    path: '/paper-import-drafts/:id',
+    request: null,
+    response: PaperImportJobResponseSchema,
   },
   getPaper: {
     method: 'GET',

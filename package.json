@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.8.1",
   "scripts": {
-    "db:up": "docker compose -f docker-compose.dev.yml up --wait -d postgres",
+    "db:up": "docker compose -f docker-compose.dev.yml up --wait -d postgres redis",
     "db:down": "docker compose -f docker-compose.dev.yml down",
     "db:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up --wait -d postgres",
     "db:sync": "pnpm --filter @kichulbot/api prisma:sync",

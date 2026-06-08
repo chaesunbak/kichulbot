@@ -1,9 +1,11 @@
 import {
   AdminPaperResponseSchema,
+  CreatePaperImportJobResponseSchema,
   CreatePaperResponseSchema,
   type CreatePaperWithQuestionsRequest,
   DeletePaperResponseSchema,
   PaperImportDraftResponseSchema,
+  PaperImportJobResponseSchema,
   UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
 import * as z from 'zod';
@@ -70,13 +72,49 @@ export async function createPaperImportDraft(
 
   return apiRequest(
     '/paper-import-drafts',
-    PaperImportDraftResponseSchema.parse,
+    CreatePaperImportJobResponseSchema.parse,
     {
       method: 'POST',
       token,
       body: formData,
     },
   );
+}
+
+export async function fetchPaperImportDraftJob(token: string, jobId: string) {
+  return apiRequest(
+    `/paper-import-drafts/${jobId}`,
+    PaperImportJobResponseSchema.parse,
+    { token },
+  );
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function waitForPaperImportDraft(
+  token: string,
+  jobId: string,
+  options = { intervalMs: 2_000, timeoutMs: 300_000 },
+) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < options.timeoutMs) {
+    const response = await fetchPaperImportDraftJob(token, jobId);
+    const { job } = response;
+
+    if (job.status === 'COMPLETED' && job.result) {
+      return PaperImportDraftResponseSchema.parse(job.result);
+    }
+    if (job.status === 'FAILED') {
+      throw new Error(job.errorMessage ?? 'PDF 추출에 실패했습니다.');
+    }
+
+    await sleep(options.intervalMs);
+  }
+
+  throw new Error('PDF 추출 시간이 초과되었습니다.');
 }
 
 export async function createPaperWithQuestions(

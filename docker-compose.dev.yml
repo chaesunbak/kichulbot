@@ -17,5 +17,33 @@ services:
       timeout: 3s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: kichulbot-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '6379:6379'
+
+  extractor:
+    build:
+      context: .
+      dockerfile: apps/extractor/Dockerfile
+    container_name: kichulbot-extractor
+    restart: unless-stopped
+    profiles:
+      - extractor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://kichulbot:kichulbot@postgres:5432/kichulbot?schema=public
+      REDIS_URL: redis://redis:6379
+      PAPER_IMPORT_STORAGE_DIR: /app/apps/api/uploads
+    volumes:
+      - ./apps/api/uploads:/app/apps/api/uploads
+
 volumes:
   postgres_data:

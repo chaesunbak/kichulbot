@@ -7,7 +7,7 @@
 ## Setup
 
 ```bash
-cd tools/question-extractor
+cd apps/extractor/question-extractor
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

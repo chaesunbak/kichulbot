@@ -1,4 +1,5 @@
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
+import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import {
   Card,
@@ -7,25 +8,40 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@kichulbot/ui/components/ui/select';
 import { ImageIcon, Pencil } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
 
 export function QuestionList({
   questions,
+  tags,
+  isLoadingTags,
+  addingTagQuestionId,
   editingQuestionId,
   onEdit,
+  onAddTag,
 }: {
   questions: AdminPaperQuestionResponse[];
+  tags: TagResponse[];
+  isLoadingTags: boolean;
+  addingTagQuestionId: string | null;
   editingQuestionId: string | null;
   onEdit: (question: AdminPaperQuestionResponse) => void;
+  onAddTag: (question: AdminPaperQuestionResponse, tagId: string) => void;
 }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">등록 문항</CardTitle>
         <CardDescription>
-          문항을 선택하면 번호, 정답, 태그와 이미지를 수정할 수 있습니다.
+          태그가 없는 문항은 목록에서 바로 태그를 추가할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -105,18 +121,19 @@ export function QuestionList({
                   </div>
                   <Pencil className="size-4 text-muted-foreground" />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {question.tags.length === 0 ? (
-                    <span className="text-xs text-muted-foreground">
-                      태그 없음
-                    </span>
-                  ) : (
-                    question.tags.map((tag) => (
-                      <Badge key={tag.id} variant="secondary">
-                        {tag.name}
-                      </Badge>
-                    ))
-                  )}
+                <div className="mt-3 flex flex-wrap items-center gap-1">
+                  {question.tags.map((tag) => (
+                    <Badge key={tag.id} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ))}
+                  <QuestionTagSelect
+                    question={question}
+                    tags={tags}
+                    isLoading={isLoadingTags}
+                    isPending={addingTagQuestionId === question.id}
+                    onAddTag={onAddTag}
+                  />
                 </div>
               </div>
             ))}
@@ -125,6 +142,69 @@ export function QuestionList({
       </CardContent>
     </Card>
   );
+}
+
+function QuestionTagSelect({
+  question,
+  tags,
+  isLoading,
+  isPending,
+  onAddTag,
+}: {
+  question: AdminPaperQuestionResponse;
+  tags: TagResponse[];
+  isLoading: boolean;
+  isPending: boolean;
+  onAddTag: (question: AdminPaperQuestionResponse, tagId: string) => void;
+}) {
+  const selectedTagIds = new Set(question.tags.map((tag) => tag.id));
+  const availableTags = tags.filter((tag) => !selectedTagIds.has(tag.id));
+
+  if (isLoading) {
+    return (
+      <span className="text-xs text-muted-foreground">태그 불러오는 중</span>
+    );
+  }
+
+  if (availableTags.length === 0) {
+    return (
+      <span className="text-xs text-muted-foreground">
+        추가 가능한 태그 없음
+      </span>
+    );
+  }
+
+  return (
+    <div
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <Select
+        value=""
+        disabled={isPending}
+        onValueChange={(tagId) => onAddTag(question, tagId)}
+      >
+        <SelectTrigger
+          className="h-8 w-[160px] text-xs"
+          aria-label={`${question.number}번 문항 태그 추가`}
+        >
+          <SelectValue placeholder={isPending ? '추가 중' : '태그 선택'} />
+        </SelectTrigger>
+        <SelectContent>
+          {availableTags.map((tag) => (
+            <SelectItem key={tag.id} value={tag.id}>
+              {formatTagOption(tag)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function formatTagOption(tag: TagResponse) {
+  if (!tag.tagGroup) return tag.name;
+  return `${tag.tagGroup.name} · ${tag.name}`;
 }
 
 function getAnswerSummary(question: AdminPaperQuestionResponse) {

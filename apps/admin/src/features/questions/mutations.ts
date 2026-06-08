@@ -72,3 +72,54 @@ export function useDeleteQuestionMutation({
       ),
   });
 }
+
+export function useUpdateQuestionTagsMutation({
+  token,
+  paperId,
+  onSuccess,
+}: {
+  token: string;
+  paperId: string;
+  onSuccess: (question: AdminPaperQuestionResponse) => void;
+}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      question,
+      tagIds,
+    }: {
+      question: AdminPaperQuestionResponse;
+      tagIds: string[];
+    }) =>
+      updateQuestion(token, question.id, {
+        ...toQuestionValues(question),
+        tagIds,
+      }),
+    onSuccess: ({ question }) => {
+      queryClient.invalidateQueries({ queryKey: paperKeys.detail(paperId) });
+      queryClient.invalidateQueries({ queryKey: paperKeys.lists() });
+      onSuccess(question);
+      toast.success('태그를 추가했습니다.');
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : '태그 추가에 실패했습니다.',
+      ),
+  });
+}
+
+function toQuestionValues(
+  question: AdminPaperQuestionResponse,
+): QuestionValues {
+  return {
+    type: question.type,
+    number: question.number,
+    choiceCount: question.choiceCount ?? undefined,
+    answerChoice: question.answerChoice ?? undefined,
+    answerText: question.answerText ?? '',
+    explanation: question.explanation ?? '',
+    points: question.points,
+    recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
+    tagIds: question.tags.map((tag) => tag.id),
+  };
+}

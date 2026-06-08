@@ -1,5 +1,6 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
+import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -54,6 +55,7 @@ import { useQuestionImage } from '../hooks/use-question-image';
 import {
   useDeleteQuestionMutation,
   useSaveQuestionMutation,
+  useUpdateQuestionTagsMutation,
 } from '../mutations';
 import { questionSchema } from '../schemas';
 import type { QuestionValues } from '../types';
@@ -187,6 +189,15 @@ export function QuestionManager({
       beginCreate(nextQuestions);
     },
   });
+  const updateQuestionTagsMutation = useUpdateQuestionTagsMutation({
+    token,
+    paperId,
+    onSuccess: (question) => {
+      if (editingQuestionId === question.id) {
+        resetFormForQuestion(question);
+      }
+    },
+  });
 
   const deleteQuestionMutation = useDeleteQuestionMutation({
     token,
@@ -221,6 +232,25 @@ export function QuestionManager({
     if (shouldDelete) {
       deleteQuestionMutation.mutate(question.id);
     }
+  }
+
+  function handleAddQuestionTag(
+    question: AdminPaperQuestionResponse,
+    tagId: string,
+  ) {
+    const tag = selectableTags.find((item) => item.id === tagId);
+    if (!tag) return;
+
+    const questionTags = mergeTags(selectableTags, question.tags);
+    updateQuestionTagsMutation.mutate({
+      question,
+      tagIds: getNextTagIds(
+        question.tags.map((item) => item.id),
+        tag,
+        questionTags,
+        true,
+      ),
+    });
   }
 
   if (paperQuery.isLoading) {
@@ -286,8 +316,16 @@ export function QuestionManager({
       >
         <QuestionList
           questions={questions}
+          tags={selectableTags}
+          isLoadingTags={tagsQuery.isLoading}
+          addingTagQuestionId={
+            updateQuestionTagsMutation.isPending
+              ? (updateQuestionTagsMutation.variables?.question.id ?? null)
+              : null
+          }
           editingQuestionId={editingQuestionId}
           onEdit={beginEdit}
+          onAddTag={handleAddQuestionTag}
         />
 
         <div ref={formCardRef}>
@@ -502,11 +540,12 @@ export function QuestionManager({
                                     checked={checked}
                                     onCheckedChange={(nextChecked) =>
                                       field.onChange(
-                                        nextChecked
-                                          ? [...field.value, tag.id]
-                                          : field.value.filter(
-                                              (tagId) => tagId !== tag.id,
-                                            ),
+                                        getNextTagIds(
+                                          field.value,
+                                          tag,
+                                          selectableTags,
+                                          nextChecked === true,
+                                        ),
                                       )
                                     }
                                   />
@@ -614,4 +653,32 @@ function findNextQuestionNumber(
     }
   }
   return questionCount;
+}
+
+function getNextTagIds(
+  currentTagIds: string[],
+  selectedTag: TagResponse,
+  tags: TagResponse[],
+  checked: boolean,
+) {
+  if (!checked) {
+    return currentTagIds.filter((tagId) => tagId !== selectedTag.id);
+  }
+
+  const selectedTagIds = new Set(currentTagIds);
+  const tagGroup = selectedTag.tagGroup;
+  if (tagGroup?.selectionMode === 'SINGLE') {
+    tags
+      .filter((tag) => tag.tagGroup?.id === tagGroup.id)
+      .forEach((tag) => selectedTagIds.delete(tag.id));
+  }
+
+  selectedTagIds.add(selectedTag.id);
+  return [...selectedTagIds];
+}
+
+function mergeTags(...tagGroups: TagResponse[][]) {
+  const tags = new Map<string, TagResponse>();
+  tagGroups.flat().forEach((tag) => tags.set(tag.id, tag));
+  return [...tags.values()];
 }

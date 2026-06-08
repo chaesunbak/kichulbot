@@ -1,66 +1,73 @@
-const REQUIRED_ENV_KEYS = [
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'RESEND_API_KEY',
-  'RESEND_FROM_EMAIL',
-] as const;
+import * as Joi from 'joi';
 
-function assertPresent(config: Record<string, unknown>, key: string) {
-  const value = config[key];
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new Error(`${key} environment variable is required`);
-  }
+function requiredString(key: string) {
+  return Joi.string()
+    .trim()
+    .required()
+    .messages({
+      'any.required': `${key} environment variable is required`,
+      'string.empty': `${key} environment variable is required`,
+    });
 }
 
-function assertPort(value: unknown) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-
-  const port = Number(value);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT must be an integer between 1 and 65535');
-  }
+function requiredUrl(key: string) {
+  return requiredString(key)
+    .uri()
+    .messages({
+      'string.uri': `${key} must be a valid URL`,
+    });
 }
 
-function assertUrl(config: Record<string, unknown>, key: string) {
-  const value = config[key];
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new Error(`${key} environment variable is required`);
-  }
-
-  try {
-    new URL(value);
-  } catch {
-    throw new Error(`${key} must be a valid URL`);
-  }
-}
-
-function assertStorage(config: Record<string, unknown>) {
-  const driver = config.STORAGE_DRIVER ?? 'local';
-
-  if (driver !== 'local' && driver !== 'r2') {
-    throw new Error('STORAGE_DRIVER must be either local or r2');
-  }
-
-  if (driver !== 'r2') {
-    return;
-  }
-
-  assertUrl(config, 'R2_ENDPOINT');
-  assertPresent(config, 'R2_ACCESS_KEY_ID');
-  assertPresent(config, 'R2_SECRET_ACCESS_KEY');
-  assertPresent(config, 'R2_BUCKET');
-  assertUrl(config, 'R2_PUBLIC_BASE_URL');
-}
+const envSchema = Joi.object({
+  DATABASE_URL: requiredString('DATABASE_URL'),
+  JWT_SECRET: requiredString('JWT_SECRET'),
+  RESEND_API_KEY: requiredString('RESEND_API_KEY'),
+  RESEND_FROM_EMAIL: requiredString('RESEND_FROM_EMAIL'),
+  PORT: Joi.number().integer().min(1).max(65535).empty('').messages({
+    'number.base': 'PORT must be an integer between 1 and 65535',
+    'number.integer': 'PORT must be an integer between 1 and 65535',
+    'number.min': 'PORT must be an integer between 1 and 65535',
+    'number.max': 'PORT must be an integer between 1 and 65535',
+  }),
+  STORAGE_DRIVER: Joi.string().valid('local', 'r2').messages({
+    'any.only': 'STORAGE_DRIVER must be either local or r2',
+  }),
+  R2_ENDPOINT: Joi.when('STORAGE_DRIVER', {
+    is: 'r2',
+    then: requiredUrl('R2_ENDPOINT'),
+    otherwise: Joi.any().optional(),
+  }),
+  R2_ACCESS_KEY_ID: Joi.when('STORAGE_DRIVER', {
+    is: 'r2',
+    then: requiredString('R2_ACCESS_KEY_ID'),
+    otherwise: Joi.any().optional(),
+  }),
+  R2_SECRET_ACCESS_KEY: Joi.when('STORAGE_DRIVER', {
+    is: 'r2',
+    then: requiredString('R2_SECRET_ACCESS_KEY'),
+    otherwise: Joi.any().optional(),
+  }),
+  R2_BUCKET: Joi.when('STORAGE_DRIVER', {
+    is: 'r2',
+    then: requiredString('R2_BUCKET'),
+    otherwise: Joi.any().optional(),
+  }),
+  R2_PUBLIC_BASE_URL: Joi.when('STORAGE_DRIVER', {
+    is: 'r2',
+    then: requiredUrl('R2_PUBLIC_BASE_URL'),
+    otherwise: Joi.any().optional(),
+  }),
+}).unknown(true);
 
 export function validateEnvironment(config: Record<string, unknown>) {
-  for (const key of REQUIRED_ENV_KEYS) {
-    assertPresent(config, key);
-  }
+  const { error } = envSchema.validate(config, {
+    abortEarly: true,
+    allowUnknown: true,
+  });
 
-  assertPort(config.PORT);
-  assertStorage(config);
+  if (error) {
+    throw new Error(error.details[0]?.message ?? error.message);
+  }
 
   return config;
 }

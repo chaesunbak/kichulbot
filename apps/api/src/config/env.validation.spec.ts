@@ -12,6 +12,22 @@ describe('validateEnvironment', () => {
     expect(validateEnvironment({ ...baseConfig })).toEqual(baseConfig);
   });
 
+  it('빈 PORT는 설정하지 않은 값으로 취급한다', () => {
+    const config = { ...baseConfig, PORT: '' };
+
+    expect(validateEnvironment(config)).toEqual(config);
+  });
+
+  it('로컬 스토리지 드라이버는 R2 환경 변수 형식을 검증하지 않는다', () => {
+    const config = {
+      ...baseConfig,
+      STORAGE_DRIVER: 'local',
+      R2_ENDPOINT: 'not-url',
+    };
+
+    expect(validateEnvironment(config)).toEqual(config);
+  });
+
   it('알 수 없는 스토리지 드라이버를 거부한다', () => {
     expect(() =>
       validateEnvironment({ ...baseConfig, STORAGE_DRIVER: 'memory' }),

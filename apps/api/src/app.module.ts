@@ -1,12 +1,14 @@
-import { randomUUID } from 'node:crypto';
-import { IncomingMessage, ServerResponse } from 'node:http';
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 
+import {
+  getRequestId,
+  serializeRequest,
+  serializeResponse,
+} from './common/logger/pino-http';
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
 import { HealthController } from './health.controller';
@@ -25,19 +27,6 @@ import { QuestionsModule } from './modules/questions/questions.module';
 import { ReviewModule } from './modules/review/review.module';
 import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
 import { TagsModule } from './modules/tags/tags.module';
-
-function getRequestId(
-  request: IncomingMessage,
-  response: ServerResponse<IncomingMessage>,
-) {
-  const header = request.headers['x-request-id'];
-  const requestId = Array.isArray(header) ? header[0] : header;
-  const id = requestId?.trim() || randomUUID();
-
-  response.setHeader('X-Request-Id', id);
-
-  return id;
-}
 
 @Module({
   imports: [
@@ -72,6 +61,15 @@ function getRequestId(
             request.url === '/api/health' || request.url === '/health',
         },
         genReqId: getRequestId,
+        serializers: {
+          req: serializeRequest,
+          res: serializeResponse,
+        },
+        customLogLevel: (_request, response, error) => {
+          if (error || response.statusCode >= 500) return 'error';
+          if (response.statusCode >= 400) return 'warn';
+          return 'info';
+        },
         redact: [
           'req.headers.authorization',
           'req.headers.cookie',

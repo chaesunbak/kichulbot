@@ -1,16 +1,23 @@
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Card, CardContent } from '@kichulbot/ui/components/ui/card';
 import { Progress } from '@kichulbot/ui/components/ui/progress';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Tag } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 export function QuestionProgress({
   registered,
+  tagged,
   total,
 }: {
   registered: number;
+  tagged: number;
   total: number;
 }) {
   const isComplete = registered >= total;
+  const isTagComplete = registered > 0 && tagged >= registered;
+  const registrationPercentage = getPercentage(registered, total);
+  const tagPercentage = getPercentage(tagged, registered);
+
   return (
     <Card className="mb-5">
       <CardContent className="py-5">
@@ -28,8 +35,59 @@ export function QuestionProgress({
             </Badge>
           )}
         </div>
-        <Progress value={Math.min(100, (registered / total) * 100)} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <ProgressMetric
+            label="문항 등록"
+            value={`${registered}/${total}문항`}
+            percentage={registrationPercentage}
+          />
+          <ProgressMetric
+            label="태그 부착"
+            value={`${tagged}/${registered}문항`}
+            percentage={tagPercentage}
+            badge={
+              isTagComplete ? (
+                <Badge variant="secondary">
+                  <Tag className="size-3" />
+                  태그 완료
+                </Badge>
+              ) : null
+            }
+          />
+        </div>
       </CardContent>
     </Card>
   );
+}
+
+function ProgressMetric({
+  label,
+  value,
+  percentage,
+  badge,
+}: {
+  label: string;
+  value: string;
+  percentage: number;
+  badge?: ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {value} · {Math.round(percentage)}%
+          </span>
+          {badge}
+        </div>
+      </div>
+      <Progress value={percentage} />
+    </div>
+  );
+}
+
+function getPercentage(value: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.min(100, (value / total) * 100);
 }

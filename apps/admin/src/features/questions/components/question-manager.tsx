@@ -109,6 +109,9 @@ export function QuestionManager({
     return [...tags.values()];
   }, [editingQuestion, tagsQuery.data?.tags]);
   const registeredQuestionCount = paper?.registeredQuestionCount ?? 0;
+  const taggedQuestionCount = questions.filter(
+    (question) => question.tags.length > 0,
+  ).length;
   const questionCount = paper?.questionCount ?? 20;
   const isComplete = registeredQuestionCount >= questionCount;
 
@@ -305,6 +308,7 @@ export function QuestionManager({
       />
       <QuestionProgress
         registered={registeredQuestionCount}
+        tagged={taggedQuestionCount}
         total={questionCount}
       />
 

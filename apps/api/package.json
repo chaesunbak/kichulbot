@@ -15,7 +15,7 @@
     "test:watch": "jest --watch",
     "test:cov": "prisma generate && jest --coverage",
     "prisma:generate": "prisma generate",
-    "prisma:migrate:deploy": "prisma migrate deploy --schema src/infrastructure/database/schema.prisma",
+    "prisma:migrate:deploy": "prisma migrate deploy --config prisma.config.ts --schema src/infrastructure/database/schema.prisma",
     "prisma:push": "prisma db push --accept-data-loss",
     "prisma:sync": "prisma db push --accept-data-loss && prisma generate",
     "seed": "prisma db seed"

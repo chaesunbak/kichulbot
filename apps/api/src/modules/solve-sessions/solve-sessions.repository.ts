@@ -5,6 +5,7 @@ import { DatabaseService } from '../../infrastructure/database/database.service'
 import {
   AnswerMode,
   AttemptOutcome,
+  GradingPolicy,
   Prisma,
   QuestionRevision,
   QuestionSetKind,
@@ -320,8 +321,18 @@ export class SolveSessionsRepository {
     if (!answer || !this.hasAnswer(answer)) return AttemptOutcome.OMITTED;
     const isCorrect =
       question.type === 'MULTIPLE_CHOICE'
-        ? answer.answerChoice === question.answerChoice
+        ? this.isCorrectChoice(question, answer.answerChoice)
         : answer.answerText?.trim() === question.answerText?.trim();
     return isCorrect ? AttemptOutcome.CORRECT : AttemptOutcome.INCORRECT;
+  }
+
+  private isCorrectChoice(
+    question: Pick<QuestionRevision, 'gradingPolicy' | 'answerChoice'>,
+    answerChoice?: number | null,
+  ) {
+    if (question.gradingPolicy === GradingPolicy.ANY_CHOICE) {
+      return answerChoice != null;
+    }
+    return answerChoice === question.answerChoice;
   }
 }

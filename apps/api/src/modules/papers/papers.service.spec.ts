@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import type {
   Category,
@@ -94,6 +98,7 @@ describe('PapersService', () => {
   beforeEach(() => {
     repository = {
       create: jest.fn(),
+      countQuestionAttempts: jest.fn().mockResolvedValue(0),
       delete: jest.fn(),
       findMany: jest.fn(),
       findById: jest.fn(),
@@ -334,5 +339,24 @@ describe('PapersService', () => {
     expect(storageService.deleteObject).toHaveBeenCalledWith(
       'questions/question_1.png',
     );
+  });
+
+  it('풀이 기록이 있는 시험지 삭제를 거부한다', async () => {
+    repository.findById.mockResolvedValue(paper() as never);
+    repository.countQuestionAttempts.mockResolvedValue(1);
+
+    let error: unknown;
+    try {
+      await service.deletePaper('paper_1');
+    } catch (caughtError) {
+      error = caughtError;
+    }
+
+    expect(error).toBeInstanceOf(ConflictException);
+    expect((error as Error).message).toBe(
+      '풀이 기록이 있는 문제지는 삭제할 수 없습니다.',
+    );
+    expect(repository.delete).not.toHaveBeenCalled();
+    expect(storageService.deleteObject).not.toHaveBeenCalled();
   });
 });

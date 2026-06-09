@@ -26,6 +26,7 @@ import {
 import {
   AnswerMode,
   AttemptOutcome,
+  GradingPolicy,
   Prisma,
   QuestionSetKind,
   QuestionType,
@@ -404,6 +405,7 @@ export class SolveSessionsService {
           recommendedTimeSeconds: item.questionRevision.recommendedTimeSeconds,
           isBookmarked: false,
           result: {
+            gradingPolicy: item.questionRevision.gradingPolicy,
             answerChoice: item.questionRevision.answerChoice,
             answerText: item.questionRevision.answerText,
             explanation: item.questionRevision.explanation,
@@ -435,6 +437,7 @@ export class SolveSessionsService {
   ): QuestionResultResponse {
     return {
       answerChoice: question.answerChoice,
+      gradingPolicy: question.gradingPolicy,
       answerText: question.answerText,
       explanation: question.explanation,
       isCorrect: gradedAnswer?.outcome === AttemptOutcome.CORRECT,
@@ -564,9 +567,19 @@ export class SolveSessionsService {
     if (!draft || !this.hasAnswer(draft)) return AttemptOutcome.OMITTED;
     const isCorrect =
       question.type === QuestionType.MULTIPLE_CHOICE
-        ? draft.answerChoice === question.answerChoice
+        ? this.isCorrectChoice(question, draft.answerChoice)
         : draft.answerText?.trim() === question.answerText?.trim();
     return isCorrect ? AttemptOutcome.CORRECT : AttemptOutcome.INCORRECT;
+  }
+
+  private isCorrectChoice(
+    question: Pick<StoredRevision, 'gradingPolicy' | 'answerChoice'>,
+    answerChoice?: number | null,
+  ) {
+    if (question.gradingPolicy === GradingPolicy.ANY_CHOICE) {
+      return answerChoice != null;
+    }
+    return answerChoice === question.answerChoice;
   }
 
   private hasAnswer(

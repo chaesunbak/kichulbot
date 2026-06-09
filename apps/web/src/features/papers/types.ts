@@ -23,6 +23,7 @@ export interface PaperQuestion {
   imageUrl: string;
   imageCacheKey: string;
   choiceCount: number | null;
+  gradingPolicy: 'EXACT' | 'ANY_CHOICE';
   answerChoice: number | null;
   answerText: string | null;
   explanation: string | null;

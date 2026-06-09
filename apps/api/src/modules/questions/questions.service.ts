@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import {
+  GradingPolicy,
   Prisma,
   QuestionType,
 } from '../../infrastructure/database/prisma-client';
@@ -25,11 +26,12 @@ import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsRepository } from './questions.repository';
 
 type QuestionWithTags = Prisma.QuestionGetPayload<{
-  include: { tags: { include: { tag: true } } };
+  include: { tags: { include: { tag: { include: { tagGroup: true } } } } };
 }>;
 
 type QuestionAnswerInput = {
   choiceCount?: number;
+  gradingPolicy?: GradingPolicy;
   answerChoice?: number;
   answerText?: string;
 };
@@ -70,6 +72,11 @@ export class QuestionsService {
       tagIds,
       paper.examSession.examId,
     );
+    const recommendedTagIds = dto.recommendedTagIds ?? [];
+    await this.tagsService.assertTagsAssignable(
+      recommendedTagIds,
+      paper.examSession.examId,
+    );
 
     const id = randomUUID();
     let uploadedObjectKey: string | null = null;
@@ -89,8 +96,13 @@ export class QuestionsService {
           number: dto.number,
           ...answerData,
           explanation: dto.explanation?.trim() || null,
+          rawText: dto.rawText?.trim() || null,
+          promptText: dto.promptText?.trim() || null,
+          passageText: dto.passageText?.trim() || null,
+          choiceTexts: this.normalizeChoiceTexts(dto.choiceTexts),
           points: dto.points ?? 5,
           recommendedTimeSeconds: dto.recommendedTimeSeconds,
+          recommendedTagIds,
           imageUrl: url,
           imageHash,
         },
@@ -124,7 +136,7 @@ export class QuestionsService {
     );
 
     const paper =
-      dto.number || dto.tagIds
+      dto.number || dto.tagIds || dto.recommendedTagIds
         ? await this.questionsRepository.findPaper(existing.paperId)
         : null;
 
@@ -146,6 +158,16 @@ export class QuestionsService {
       );
     }
 
+    if (dto.recommendedTagIds) {
+      if (!paper) {
+        throw new BadRequestException('문제지를 찾을 수 없습니다.');
+      }
+      await this.tagsService.assertTagsAssignable(
+        dto.recommendedTagIds,
+        paper.examSession.examId,
+      );
+    }
+
     const data: Prisma.QuestionUncheckedUpdateInput = {
       number: dto.number,
       ...answerData,
@@ -153,8 +175,23 @@ export class QuestionsService {
         dto.explanation === undefined
           ? undefined
           : dto.explanation.trim() || null,
+      rawText:
+        dto.rawText === undefined ? undefined : dto.rawText.trim() || null,
+      promptText:
+        dto.promptText === undefined
+          ? undefined
+          : dto.promptText.trim() || null,
+      passageText:
+        dto.passageText === undefined
+          ? undefined
+          : dto.passageText.trim() || null,
+      choiceTexts:
+        dto.choiceTexts === undefined
+          ? undefined
+          : this.normalizeChoiceTexts(dto.choiceTexts),
       points: dto.points,
       recommendedTimeSeconds: dto.recommendedTimeSeconds,
+      recommendedTagIds: dto.recommendedTagIds,
     };
 
     if (file) {
@@ -205,18 +242,28 @@ export class QuestionsService {
         (existing?.type === QuestionType.MULTIPLE_CHOICE
           ? existing.choiceCount
           : null);
+      const gradingPolicy =
+        input.gradingPolicy ??
+        (existing?.type === QuestionType.MULTIPLE_CHOICE
+          ? existing.gradingPolicy
+          : GradingPolicy.EXACT);
       const answerChoice =
         input.answerChoice ??
         (existing?.type === QuestionType.MULTIPLE_CHOICE
           ? existing.answerChoice
           : null);
 
-      if (choiceCount === null || answerChoice === null) {
+      if (choiceCount === null) {
         throw new BadRequestException(
-          '객관식 문항은 선택지 개수와 정답 번호를 입력해주세요.',
+          '객관식 문항은 선택지 개수를 입력해주세요.',
         );
       }
-      if (answerChoice > choiceCount) {
+      if (gradingPolicy === GradingPolicy.EXACT && answerChoice === null) {
+        throw new BadRequestException(
+          '객관식 문항은 정답 번호를 입력해주세요.',
+        );
+      }
+      if (answerChoice !== null && answerChoice > choiceCount) {
         throw new BadRequestException(
           '정답 번호는 선택지 개수를 넘을 수 없습니다.',
         );
@@ -225,7 +272,9 @@ export class QuestionsService {
       return {
         type,
         choiceCount,
-        answerChoice,
+        gradingPolicy,
+        answerChoice:
+          gradingPolicy === GradingPolicy.ANY_CHOICE ? null : answerChoice,
         answerText: null,
       };
     }
@@ -241,6 +290,7 @@ export class QuestionsService {
     return {
       type,
       choiceCount: null,
+      gradingPolicy: GradingPolicy.EXACT,
       answerChoice: null,
       answerText,
     };
@@ -346,17 +396,38 @@ export class QuestionsService {
       imageUrl: question.imageUrl,
       imageCacheKey: this.toImageCacheKey(question.imageHash),
       choiceCount: question.choiceCount,
+      gradingPolicy: question.gradingPolicy,
       answerChoice: question.answerChoice,
       answerText: question.answerText,
       explanation: question.explanation,
+      rawText: question.rawText,
+      promptText: question.promptText,
+      passageText: question.passageText,
+      choiceTexts: question.choiceTexts,
       points: question.points,
       recommendedTimeSeconds: question.recommendedTimeSeconds,
+      recommendedTagIds: question.recommendedTagIds,
       tags: question.tags.map((questionTag) => ({
         id: questionTag.tag.id,
         name: questionTag.tag.name,
+        keywords: questionTag.tag.keywords,
+        tagGroup: questionTag.tag.tagGroup
+          ? {
+              id: questionTag.tag.tagGroup.id,
+              examId: questionTag.tag.tagGroup.examId,
+              name: questionTag.tag.tagGroup.name,
+              selectionMode: questionTag.tag.tagGroup.selectionMode,
+              sortOrder: questionTag.tag.tagGroup.sortOrder,
+              isActive: questionTag.tag.tagGroup.isActive,
+            }
+          : null,
       })),
       createdAt: question.createdAt.toISOString(),
       updatedAt: question.updatedAt.toISOString(),
     };
+  }
+
+  private normalizeChoiceTexts(choiceTexts?: string[]) {
+    return choiceTexts?.map((text) => text.trim()).filter(Boolean) ?? [];
   }
 }

@@ -20,6 +20,7 @@ import {
 import { TaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -48,7 +49,7 @@ type PaperWithRelations = Paper & {
       revisions?: QuestionRevision[];
       tags?: Array<
         Prisma.QuestionTagGetPayload<{
-          include: { tag: true };
+          include: { tag: { include: { tagGroup: true } } };
         }>
       >;
     }
@@ -125,12 +126,18 @@ export class PapersService {
             number: question.number,
             type: question.type,
             choiceCount: question.choiceCount ?? undefined,
+            gradingPolicy: question.gradingPolicy,
             answerChoice: question.answerChoice ?? undefined,
             answerText: question.answerText ?? undefined,
             explanation: question.explanation ?? undefined,
+            rawText: question.rawText ?? undefined,
+            promptText: question.promptText ?? undefined,
+            passageText: question.passageText ?? undefined,
+            choiceTexts: question.choiceTexts,
             points: question.points,
             recommendedTimeSeconds:
               question.recommendedTimeSeconds ?? undefined,
+            recommendedTagIds: question.recommendedTagIds,
             tagIds: question.tagIds,
           },
           image,
@@ -248,11 +255,17 @@ export class PapersService {
           imageUrl: question.imageUrl,
           imageCacheKey: this.toImageCacheKey(question.imageHash),
           choiceCount: question.choiceCount,
+          gradingPolicy: revision?.gradingPolicy ?? question.gradingPolicy,
           answerChoice: revision?.answerChoice ?? question.answerChoice,
           answerText: revision?.answerText ?? question.answerText,
           explanation: revision?.explanation ?? question.explanation,
+          rawText: revision?.rawText ?? question.rawText,
+          promptText: revision?.promptText ?? question.promptText,
+          passageText: revision?.passageText ?? question.passageText,
+          choiceTexts: revision?.choiceTexts ?? question.choiceTexts,
           points: question.points,
           recommendedTimeSeconds: question.recommendedTimeSeconds,
+          recommendedTagIds: question.recommendedTagIds,
           isBookmarked: bookmarkedQuestionIds.has(question.id),
         };
       }),
@@ -281,6 +294,14 @@ export class PapersService {
     const paper = await this.papersRepository.findById(id);
     if (!paper) {
       throw new NotFoundException('문제지를 찾을 수 없습니다.');
+    }
+
+    const questionAttemptCount =
+      await this.papersRepository.countQuestionAttempts(id);
+    if (questionAttemptCount > 0) {
+      throw new ConflictException(
+        '풀이 기록이 있는 문제지는 삭제할 수 없습니다.',
+      );
     }
 
     await this.papersRepository.delete(id);
@@ -334,15 +355,32 @@ export class PapersService {
         imageUrl: question.imageUrl,
         imageCacheKey: this.toImageCacheKey(question.imageHash),
         choiceCount: question.choiceCount,
+        gradingPolicy: question.gradingPolicy,
         answerChoice: question.answerChoice,
         answerText: question.answerText,
         explanation: question.explanation,
+        rawText: question.rawText,
+        promptText: question.promptText,
+        passageText: question.passageText,
+        choiceTexts: question.choiceTexts,
         points: question.points,
         recommendedTimeSeconds: question.recommendedTimeSeconds,
+        recommendedTagIds: question.recommendedTagIds,
         tags:
           question.tags?.map((questionTag) => ({
             id: questionTag.tag.id,
             name: questionTag.tag.name,
+            keywords: questionTag.tag.keywords,
+            tagGroup: questionTag.tag.tagGroup
+              ? {
+                  id: questionTag.tag.tagGroup.id,
+                  examId: questionTag.tag.tagGroup.examId,
+                  name: questionTag.tag.tagGroup.name,
+                  selectionMode: questionTag.tag.tagGroup.selectionMode,
+                  sortOrder: questionTag.tag.tagGroup.sortOrder,
+                  isActive: questionTag.tag.tagGroup.isActive,
+                }
+              : null,
           })) ?? [],
         createdAt: question.createdAt.toISOString(),
         updatedAt: question.updatedAt.toISOString(),

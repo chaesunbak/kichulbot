@@ -26,6 +26,11 @@ enum QuestionType {
   WRITTEN
 }
 
+enum GradingPolicy {
+  EXACT
+  ANY_CHOICE
+}
+
 enum AnswerMode {
   ONE_BY_ONE
   EXAM
@@ -233,6 +238,7 @@ model ExamSession {
 model Tag {
   id         String        @id @default(cuid())
   name       String
+  keywords   String[]      @default([])
   examId     String
   tagGroupId String?
   exam       Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
@@ -268,11 +274,17 @@ model Question {
   imageUrl               String
   imageHash              String
   choiceCount            Int?
+  rawText                String?
+  promptText             String?
+  passageText            String?
+  choiceTexts            String[]           @default([])
+  gradingPolicy          GradingPolicy      @default(EXACT)
   answerChoice           Int?
   answerText             String?
   explanation            String?
   points                 Int                @default(5)
   recommendedTimeSeconds Int?
+  recommendedTagIds      String[]           @default([])
   paper                  Paper              @relation(fields: [paperId], references: [id], onDelete: Cascade)
   revisions              QuestionRevision[]
   tags                   QuestionTag[]
@@ -293,6 +305,11 @@ model QuestionRevision {
   imageUrl               String
   imageHash              String
   choiceCount            Int?
+  rawText                String?
+  promptText             String?
+  passageText            String?
+  choiceTexts            String[]           @default([])
+  gradingPolicy          GradingPolicy      @default(EXACT)
   answerChoice           Int?
   answerText             String?
   explanation            String?

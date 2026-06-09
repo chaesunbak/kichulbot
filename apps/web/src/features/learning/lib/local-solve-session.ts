@@ -223,6 +223,9 @@ function isCorrectAnswer(
   answer?: Pick<Answer, 'answerChoice' | 'answerText'>,
 ) {
   if (!answer || !hasAnswer(answer)) return false;
+  if (answerKey.gradingPolicy === 'ANY_CHOICE') {
+    return answer.answerChoice !== null;
+  }
   if (answerKey.answerChoice !== null) {
     return answer.answerChoice === answerKey.answerChoice;
   }

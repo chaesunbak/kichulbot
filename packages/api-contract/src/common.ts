@@ -14,6 +14,9 @@ export type OAuthProvider = z.infer<typeof OAuthProviderSchema>;
 export const QuestionTypeSchema = z.enum(['MULTIPLE_CHOICE', 'WRITTEN']);
 export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 
+export const GradingPolicySchema = z.enum(['EXACT', 'ANY_CHOICE']);
+export type GradingPolicy = z.infer<typeof GradingPolicySchema>;
+
 export const AnswerModeSchema = z.enum(['ONE_BY_ONE', 'EXAM']);
 export type AnswerMode = z.infer<typeof AnswerModeSchema>;
 

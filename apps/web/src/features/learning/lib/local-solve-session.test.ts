@@ -57,6 +57,7 @@ const baseSession = {
         recommendedTimeSeconds: null,
         isBookmarked: false,
         result: {
+          gradingPolicy: 'EXACT',
           answerChoice: 2,
           answerText: null,
           explanation: '2번이 정답입니다.',
@@ -75,6 +76,7 @@ const baseSession = {
         recommendedTimeSeconds: null,
         isBookmarked: false,
         result: {
+          gradingPolicy: 'EXACT',
           answerChoice: null,
           answerText: '정답',
           explanation: null,
@@ -93,6 +95,7 @@ const baseSession = {
         recommendedTimeSeconds: null,
         isBookmarked: false,
         result: {
+          gradingPolicy: 'EXACT',
           answerChoice: 4,
           answerText: null,
           explanation: null,
@@ -225,6 +228,46 @@ describe('saveLocalSolveSessionAnswer', () => {
     expect(response.answer.spentMilliseconds).toBe(3500);
     expect(response.answer.isCorrect).toBe(true);
   });
+
+  it('모든 선택지가 정답인 객관식은 선택한 답안을 정답으로 채점한다', async () => {
+    mockedClientApi.get.mockResolvedValue({
+      session: {
+        ...baseSession,
+        paper: {
+          ...baseSession.paper,
+          questions: [
+            {
+              ...baseSession.paper.questions[0],
+              result: {
+                gradingPolicy: 'ANY_CHOICE',
+                answerChoice: null,
+                answerText: null,
+                explanation: '모든 선택지를 정답으로 처리합니다.',
+                isCorrect: null,
+              },
+            },
+          ],
+        },
+      },
+    });
+    const session = await createLocalSolveSession({
+      paperId: 'paper-1',
+      mode: 'ONE_BY_ONE',
+    });
+
+    const response = saveLocalSolveSessionAnswer({
+      sessionId: session.id,
+      questionId: 'question-1',
+      payload: { answerChoice: 5 },
+    });
+
+    expect(response.answer.isCorrect).toBe(true);
+    expect(response.result).toMatchObject({
+      gradingPolicy: 'ANY_CHOICE',
+      answerChoice: null,
+      isCorrect: true,
+    });
+  });
 });
 
 describe('submitLocalSolveSession', () => {
@@ -262,18 +305,21 @@ describe('submitLocalSolveSession', () => {
       submitted.paper.questions.map((question) => question.result),
     ).toEqual([
       {
+        gradingPolicy: 'EXACT',
         answerChoice: 2,
         answerText: null,
         explanation: '2번이 정답입니다.',
         isCorrect: true,
       },
       {
+        gradingPolicy: 'EXACT',
         answerChoice: null,
         answerText: '정답',
         explanation: null,
         isCorrect: true,
       },
       {
+        gradingPolicy: 'EXACT',
         answerChoice: 4,
         answerText: null,
         explanation: null,

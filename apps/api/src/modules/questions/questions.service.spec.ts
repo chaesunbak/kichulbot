@@ -1,6 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 
-import { QuestionType } from '../../infrastructure/database/prisma-client';
+import {
+  GradingPolicy,
+  QuestionType,
+} from '../../infrastructure/database/prisma-client';
 import type { StorageService } from '../../infrastructure/storage/storage.service';
 import type { TagsService } from '../tags/tags.service';
 import type { QuestionsRepository } from './questions.repository';
@@ -64,6 +67,7 @@ describe('QuestionsService', () => {
       paperId: 'paper_1',
       type: QuestionType.MULTIPLE_CHOICE,
       choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
       answerChoice: 1,
       answerText: null,
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
@@ -100,6 +104,55 @@ describe('QuestionsService', () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
+  it('모든 선택지가 정답인 객관식은 정답 번호 없이 생성한다', async () => {
+    repository.findPaper.mockResolvedValue(makePaper() as never);
+    storageService.uploadQuestionImage.mockResolvedValue({
+      objectKey: 'questions/korean-history-advanced/78/001-question_1.png',
+      url: 'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-question_1.png',
+    });
+    repository.create.mockResolvedValue({
+      id: 'question_1',
+      paperId: 'paper_1',
+      number: 1,
+      type: QuestionType.MULTIPLE_CHOICE,
+      choiceCount: 5,
+      gradingPolicy: GradingPolicy.ANY_CHOICE,
+      rawText: null,
+      promptText: null,
+      passageText: null,
+      choiceTexts: [],
+      answerChoice: null,
+      answerText: null,
+      explanation: null,
+      points: 5,
+      recommendedTimeSeconds: null,
+      recommendedTagIds: [],
+      imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+      imageHash: 'legacy_question_1',
+      tags: [],
+      createdAt: new Date('2026-05-31T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-31T00:00:00.000Z'),
+    });
+
+    await service.createQuestion(
+      {
+        paperId: 'paper_1',
+        number: 1,
+        choiceCount: 5,
+        gradingPolicy: GradingPolicy.ANY_CHOICE,
+      },
+      image,
+    );
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gradingPolicy: GradingPolicy.ANY_CHOICE,
+        answerChoice: null,
+      }),
+      [],
+    );
+  });
+
   it('이미지 업로드 파일 내용의 sha256 해시를 문항에 저장한다', async () => {
     repository.findPaper.mockResolvedValue(makePaper() as never);
     storageService.uploadQuestionImage.mockResolvedValue({
@@ -112,11 +165,17 @@ describe('QuestionsService', () => {
       number: 1,
       type: QuestionType.MULTIPLE_CHOICE,
       choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
+      rawText: null,
+      promptText: null,
+      passageText: null,
+      choiceTexts: [],
       answerChoice: 2,
       answerText: null,
       explanation: null,
       points: 5,
       recommendedTimeSeconds: null,
+      recommendedTagIds: [],
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
       imageHash:
         '6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
@@ -155,6 +214,61 @@ describe('QuestionsService', () => {
     );
   });
 
+  it('문항 원문과 선지 텍스트를 문항 생성 데이터에 저장한다', async () => {
+    repository.findPaper.mockResolvedValue(makePaper() as never);
+    storageService.uploadQuestionImage.mockResolvedValue({
+      objectKey: 'questions/korean-history-advanced/78/001-question_1.png',
+      url: 'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-question_1.png',
+    });
+    repository.create.mockResolvedValue({
+      id: 'question_1',
+      paperId: 'paper_1',
+      number: 1,
+      type: QuestionType.MULTIPLE_CHOICE,
+      choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
+      rawText: '1. 문항 전체 텍스트',
+      promptText: '1. 문항 발문',
+      passageText: '문항 지문',
+      choiceTexts: ['① 첫 번째', '② 두 번째'],
+      answerChoice: 2,
+      answerText: null,
+      explanation: null,
+      points: 5,
+      recommendedTimeSeconds: null,
+      recommendedTagIds: [],
+      imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
+      imageHash: 'legacy_question_1',
+      tags: [],
+      createdAt: new Date('2026-05-31T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-31T00:00:00.000Z'),
+    });
+
+    await service.createQuestion(
+      {
+        paperId: 'paper_1',
+        number: 1,
+        choiceCount: 5,
+        answerChoice: 2,
+        rawText: ' 1. 문항 전체 텍스트 ',
+        promptText: ' 1. 문항 발문 ',
+        passageText: ' 문항 지문 ',
+        choiceTexts: ['① 첫 번째', ' ', '② 두 번째'],
+      },
+      image,
+    );
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rawText: '1. 문항 전체 텍스트',
+        promptText: '1. 문항 발문',
+        passageText: '문항 지문',
+        choiceTexts: ['① 첫 번째', '② 두 번째'],
+      }),
+      [],
+    );
+  });
+
   it('문항을 서술형으로 바꾸면 객관식 필드를 비운다', async () => {
     repository.findById.mockResolvedValue({
       id: 'question_1',
@@ -162,6 +276,7 @@ describe('QuestionsService', () => {
       number: 1,
       type: QuestionType.MULTIPLE_CHOICE,
       choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
       answerChoice: 2,
       answerText: null,
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
@@ -174,11 +289,17 @@ describe('QuestionsService', () => {
       number: 1,
       type: QuestionType.WRITTEN,
       choiceCount: null,
+      gradingPolicy: GradingPolicy.EXACT,
+      rawText: null,
+      promptText: null,
+      passageText: null,
+      choiceTexts: [],
       answerChoice: null,
       answerText: '모범답안',
       explanation: null,
       points: 5,
       recommendedTimeSeconds: null,
+      recommendedTagIds: [],
       imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
       imageHash: 'legacy_question_1',
       tags: [],
@@ -197,8 +318,17 @@ describe('QuestionsService', () => {
         number: undefined,
         type: QuestionType.WRITTEN,
         choiceCount: null,
+        gradingPolicy: GradingPolicy.EXACT,
         answerChoice: null,
         answerText: '모범답안',
+        explanation: undefined,
+        rawText: undefined,
+        promptText: undefined,
+        passageText: undefined,
+        choiceTexts: undefined,
+        points: undefined,
+        recommendedTimeSeconds: undefined,
+        recommendedTagIds: undefined,
       },
       undefined,
     );

@@ -39,6 +39,16 @@ type QuestionManifest = {
   questions?: Array<{
     number: number;
     image: string;
+    textLayer?: {
+      text: string;
+      promptText?: string;
+      passageText?: string;
+      choiceTexts?: string[];
+      lines: Array<{
+        text: string;
+        box: [number, number, number, number];
+      }>;
+    };
   }>;
 };
 
@@ -234,14 +244,20 @@ async function toResponse(
           answerChoice: answer?.answer_index ?? null,
           answerText: null,
           explanation: null,
+          rawText: question.textLayer?.text?.trim() || null,
+          promptText: question.textLayer?.promptText?.trim() || null,
+          passageText: question.textLayer?.passageText?.trim() || null,
+          choiceTexts: question.textLayer?.choiceTexts ?? [],
           points: answer?.points ?? 5,
           recommendedTimeSeconds: null,
+          recommendedTagIds: [],
           tagIds: [],
           image: {
             filename: basename(question.image),
             mimeType: resolveMimeType(question.image),
             base64: image.toString('base64'),
           },
+          textLayer: question.textLayer ?? null,
         };
       }),
   );

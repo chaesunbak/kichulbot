@@ -11,6 +11,7 @@ type AttemptQuestionRevisionWithTags = {
       tag: {
         id: string;
         name: string;
+        keywords: string[];
         tagGroup: {
           id: string;
           examId: string;
@@ -76,6 +77,7 @@ export class QuestionAttemptsService {
             taggedRevision.question?.tags?.map(({ tag }) => ({
               id: tag.id,
               name: tag.name,
+              keywords: tag.keywords,
               tagGroup: tag.tagGroup
                 ? {
                     id: tag.tagGroup.id,

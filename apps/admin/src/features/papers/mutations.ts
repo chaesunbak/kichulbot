@@ -53,11 +53,13 @@ export function useCreatePaperImportDraftMutation({
       answerPdf,
       layout,
       variant,
+      examId,
     }: {
       questionPdf: File | null;
       answerPdf: File | null;
       layout: string;
       variant: string;
+      examId: string;
     }) => {
       if (!questionPdf || !answerPdf) {
         throw new Error('문제 PDF와 답지 PDF를 모두 선택해 주세요.');
@@ -67,6 +69,7 @@ export function useCreatePaperImportDraftMutation({
         answerPdf,
         layout,
         variant,
+        examId,
       }).then(({ job }) => waitForPaperImportDraft(token, job.id));
     },
     onSuccess: (draft) => {

@@ -1,6 +1,6 @@
 import { UpdateTagRequest } from '@kichulbot/api-contract/tags';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateTagDto implements UpdateTagRequest {
   @ApiProperty({ required: false, example: '조선' })
@@ -8,6 +8,16 @@ export class UpdateTagDto implements UpdateTagRequest {
   @IsString()
   @MaxLength(50)
   name?: string;
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    example: ['광종', '노비안검법'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  keywords?: string[];
 
   @ApiProperty({ required: false, example: 'clx0000000000000000000000' })
   @IsOptional()

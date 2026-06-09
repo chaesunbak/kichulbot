@@ -160,6 +160,7 @@ function makeTag() {
     examId: 'exam_1',
     tagGroupId: null,
     tagGroup: null,
+    keywords: [],
     createdAt: now,
     updatedAt: now,
     _count: { questions: 0 },

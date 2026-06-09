@@ -54,6 +54,7 @@ export function TagListPanel({
           <TableHeader>
             <TableRow>
               <TableHead>태그</TableHead>
+              <TableHead>키워드</TableHead>
               <TableHead>그룹</TableHead>
               <TableHead>문항</TableHead>
               <TableHead>
@@ -71,6 +72,11 @@ export function TagListPanel({
                 <TableRow key={tag.id}>
                   <TableCell>
                     <div className="font-medium">{tag.name}</div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {tag.keywords.length > 0 ? tag.keywords.join(', ') : '-'}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-muted-foreground">
@@ -114,7 +120,7 @@ export function TagListPanel({
             {tags.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={5}
                   className="h-28 text-center text-sm text-muted-foreground"
                 >
                   {isLoading

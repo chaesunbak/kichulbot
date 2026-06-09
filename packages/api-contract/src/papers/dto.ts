@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { QuestionTypeSchema } from '../common.js';
+import { GradingPolicySchema, QuestionTypeSchema } from '../common.js';
 import {
   AdminPaperResponseSchema,
   PaperQuestionResponseSchema,
@@ -22,11 +22,17 @@ export const CreatePaperQuestionRequestSchema = z.object({
   number: z.number().int().min(1).max(100),
   type: QuestionTypeSchema.default('MULTIPLE_CHOICE'),
   choiceCount: z.number().int().min(2).max(10).nullable().optional(),
+  gradingPolicy: GradingPolicySchema.default('EXACT'),
   answerChoice: z.number().int().min(1).max(10).nullable().optional(),
   answerText: z.string().nullable().optional(),
   explanation: z.string().nullable().optional(),
+  rawText: z.string().nullable().optional(),
+  promptText: z.string().nullable().optional(),
+  passageText: z.string().nullable().optional(),
+  choiceTexts: z.array(z.string()).default([]),
   points: z.number().int().min(1).max(100),
   recommendedTimeSeconds: z.number().int().min(1).nullable().optional(),
+  recommendedTagIds: z.array(z.string()).default([]),
   tagIds: z.array(z.string()).default([]),
   imageFileName: z.string().min(1),
 });
@@ -54,17 +60,40 @@ export const PaperImportDraftImageSchema = z.object({
 });
 export type PaperImportDraftImage = z.infer<typeof PaperImportDraftImageSchema>;
 
+export const PaperImportDraftQuestionTextLayerSchema = z.object({
+  text: z.string(),
+  promptText: z.string().optional(),
+  passageText: z.string().optional(),
+  choiceTexts: z.array(z.string()).default([]),
+  lines: z.array(
+    z.object({
+      text: z.string(),
+      box: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+    }),
+  ),
+});
+export type PaperImportDraftQuestionTextLayer = z.infer<
+  typeof PaperImportDraftQuestionTextLayerSchema
+>;
+
 export const PaperImportDraftQuestionSchema = z.object({
   number: z.number().int(),
   type: QuestionTypeSchema,
   choiceCount: z.number().int().nullable(),
+  gradingPolicy: GradingPolicySchema.default('EXACT'),
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
   explanation: z.string().nullable(),
+  rawText: z.string().nullable().optional(),
+  promptText: z.string().nullable().optional(),
+  passageText: z.string().nullable().optional(),
+  choiceTexts: z.array(z.string()).default([]),
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
+  recommendedTagIds: z.array(z.string()).default([]),
   tagIds: z.array(z.string()),
   image: PaperImportDraftImageSchema,
+  textLayer: PaperImportDraftQuestionTextLayerSchema.nullable().optional(),
 });
 export type PaperImportDraftQuestion = z.infer<
   typeof PaperImportDraftQuestionSchema

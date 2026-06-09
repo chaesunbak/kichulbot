@@ -66,6 +66,7 @@ export class TagsService {
 
     const tag = await this.tagsRepository.create({
       name: dto.name.trim(),
+      keywords: this.normalizeKeywords(dto.keywords),
       examId: dto.examId,
       tagGroupId: dto.tagGroupId ?? null,
     });
@@ -95,6 +96,10 @@ export class TagsService {
 
     const tag = await this.tagsRepository.update(id, {
       name: dto.name?.trim(),
+      keywords:
+        dto.keywords === undefined
+          ? undefined
+          : this.normalizeKeywords(dto.keywords),
       examId: dto.examId,
       tagGroupId: dto.tagGroupId,
     });
@@ -264,6 +269,7 @@ export class TagsService {
     const response = {
       id: tag.id,
       name: tag.name,
+      keywords: tag.keywords,
       tagGroup: tag.tagGroup ? this.toTagGroupBaseResponse(tag.tagGroup) : null,
     };
 
@@ -279,5 +285,13 @@ export class TagsService {
       createdAt: tag.createdAt.toISOString(),
       updatedAt: tag.updatedAt.toISOString(),
     };
+  }
+
+  private normalizeKeywords(keywords?: string[]) {
+    return [
+      ...new Set(
+        (keywords ?? []).map((keyword) => keyword.trim()).filter(Boolean),
+      ),
+    ];
   }
 }

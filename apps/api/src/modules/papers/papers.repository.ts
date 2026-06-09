@@ -76,7 +76,7 @@ export class PapersRepository {
               orderBy: { revision: 'desc' },
               take: 1,
             },
-            tags: { include: { tag: true } },
+            tags: { include: { tag: { include: { tagGroup: true } } } },
           },
         },
       },
@@ -111,6 +111,16 @@ export class PapersRepository {
       where: { id },
       data,
       include: this.paperIncludes(),
+    });
+  }
+
+  countQuestionAttempts(id: string) {
+    return this.db.questionAttempt.count({
+      where: {
+        questionRevision: {
+          question: { paperId: id },
+        },
+      },
     });
   }
 

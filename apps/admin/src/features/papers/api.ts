@@ -58,6 +58,7 @@ export interface CreatePaperImportDraftInput {
   answerPdf: File;
   layout: string;
   variant: string;
+  examId: string;
 }
 
 export async function createPaperImportDraft(
@@ -69,6 +70,7 @@ export async function createPaperImportDraft(
   formData.append('answerPdf', input.answerPdf);
   formData.append('layout', input.layout);
   formData.append('variant', input.variant);
+  formData.append('examId', input.examId);
 
   return apiRequest(
     '/paper-import-drafts',

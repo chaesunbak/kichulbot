@@ -9,6 +9,7 @@ import type {
 import {
   AnswerMode,
   AttemptOutcome,
+  GradingPolicy,
   QuestionSetKind,
   QuestionType,
 } from '../../infrastructure/database/prisma-client';
@@ -47,11 +48,17 @@ const question = {
   imageUrl: 'http://localhost:4000/uploads/questions/question_1.png',
   imageHash: 'legacy_question_1',
   choiceCount: 5,
+  gradingPolicy: GradingPolicy.EXACT,
+  rawText: null,
+  promptText: null,
+  passageText: null,
+  choiceTexts: [],
   answerChoice: 3,
   answerText: null,
   explanation: '3번이 정답입니다.',
   points: 5,
   recommendedTimeSeconds: 60,
+  recommendedTagIds: [],
   createdAt: now,
   updatedAt: now,
 } satisfies Question;
@@ -76,6 +83,11 @@ const questionRevision = {
   imageUrl: question.imageUrl,
   imageHash: question.imageHash,
   choiceCount: question.choiceCount,
+  gradingPolicy: question.gradingPolicy,
+  rawText: question.rawText,
+  promptText: question.promptText,
+  passageText: question.passageText,
+  choiceTexts: question.choiceTexts,
   answerChoice: question.answerChoice,
   answerText: question.answerText,
   explanation: question.explanation,
@@ -318,6 +330,50 @@ describe('SolveSessionsService', () => {
     expect(response.answer.isCorrect).toBe(true);
     expect(response.result).toMatchObject({
       answerChoice: 3,
+      isCorrect: true,
+    });
+  });
+
+  it('모든 선택지가 정답인 객관식은 선택한 답안을 정답으로 채점한다', async () => {
+    repository.findById.mockResolvedValue({
+      ...session,
+      mode: AnswerMode.ONE_BY_ONE,
+      paper: null,
+      sourceSet: {
+        id: 'daily_wrong_1',
+        kind: QuestionSetKind.DAILY_WRONG,
+        ownerUserId: session.userId,
+        title: '2026년 6월 1일 오늘의 오답',
+        createdAt: now,
+        updatedAt: now,
+      },
+      items: [
+        {
+          ...sessionItem,
+          questionRevision: {
+            ...questionRevision,
+            gradingPolicy: GradingPolicy.ANY_CHOICE,
+            answerChoice: null,
+          },
+        },
+      ],
+    });
+    repository.saveAnswer.mockResolvedValue({
+      draft: { ...correctDraft, answerChoice: 5 },
+      attempt: null,
+    });
+
+    const response = await service.saveAnswer(
+      'user_1',
+      session.id,
+      question.id,
+      { answerChoice: 5 },
+    );
+
+    expect(response.answer.isCorrect).toBe(true);
+    expect(response.result).toMatchObject({
+      gradingPolicy: GradingPolicy.ANY_CHOICE,
+      answerChoice: null,
       isCorrect: true,
     });
   });

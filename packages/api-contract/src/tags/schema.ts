@@ -24,6 +24,7 @@ export type AdminTagGroupResponse = z.infer<typeof AdminTagGroupResponseSchema>;
 export const TagResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
+  keywords: z.array(z.string()),
   tagGroup: TagGroupResponseSchema.nullable().optional(),
 });
 export type TagResponse = z.infer<typeof TagResponseSchema>;

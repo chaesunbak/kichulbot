@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 
 import { QuestionType } from '../../../infrastructure/database/prisma-client';
+import { GradingPolicy } from '../../../infrastructure/database/prisma-client';
 import { toStringArray } from './transforms';
 
 export class UpdateQuestionDto implements UpdateQuestionRequest {
@@ -37,6 +38,11 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @Max(10)
   choiceCount?: number;
 
+  @ApiProperty({ required: false, enum: GradingPolicy })
+  @IsOptional()
+  @IsEnum(GradingPolicy)
+  gradingPolicy?: GradingPolicy;
+
   @ApiProperty({ required: false, example: 3 })
   @IsOptional()
   @Type(() => Number)
@@ -57,6 +63,31 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @MaxLength(5000)
   explanation?: string;
 
+  @ApiProperty({ required: false, example: '문항 전체 텍스트' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20000)
+  rawText?: string;
+
+  @ApiProperty({ required: false, example: '문항 발문 텍스트' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20000)
+  promptText?: string;
+
+  @ApiProperty({ required: false, example: '문항 지문 텍스트' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20000)
+  passageText?: string;
+
+  @ApiProperty({ required: false, type: [String] })
+  @IsOptional()
+  @Transform(toStringArray)
+  @IsArray()
+  @IsString({ each: true })
+  choiceTexts?: string[];
+
   @ApiProperty({ required: false, example: 5 })
   @IsOptional()
   @Type(() => Number)
@@ -72,6 +103,17 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @Min(1)
   @Max(3600)
   recommendedTimeSeconds?: number;
+
+  @ApiProperty({
+    required: false,
+    type: [String],
+    description: '추천 태그 id 목록. 실제 태그로 연결되지는 않습니다.',
+  })
+  @IsOptional()
+  @Transform(toStringArray)
+  @IsArray()
+  @IsString({ each: true })
+  recommendedTagIds?: string[];
 
   @ApiProperty({
     required: false,

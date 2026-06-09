@@ -31,6 +31,7 @@ export function useSaveTagMutation(
     mutationFn: (form: TagForm) => {
       const input = {
         name: form.name.trim(),
+        keywords: form.keywords,
         examId: form.examId,
         tagGroupId: form.tagGroupId,
       };

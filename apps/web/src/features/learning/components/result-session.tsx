@@ -606,6 +606,7 @@ function formatUserAnswer(question: SolveQuestion, answer?: Answer) {
 
 function formatCorrectAnswer(result: QuestionResult | null) {
   if (!result) return '채점 결과 없음';
+  if (result.gradingPolicy === 'ANY_CHOICE') return '모든 선택지';
   return result.answerChoice
     ? `${result.answerChoice}번`
     : (result.answerText ?? '등록된 정답 없음');

@@ -1,4 +1,4 @@
-import type { QuestionType } from '@kichulbot/api-contract';
+import type { GradingPolicy, QuestionType } from '@kichulbot/api-contract';
 import {
   DeleteQuestionResponseSchema,
   QuestionMutationResponseSchema,
@@ -10,11 +10,13 @@ interface QuestionInput {
   number: number;
   type: QuestionType;
   choiceCount?: number;
+  gradingPolicy: GradingPolicy;
   answerChoice?: number;
   answerText?: string;
   explanation?: string;
   points: number;
   recommendedTimeSeconds?: number;
+  recommendedTagIds?: string[];
   tagIds: string[];
   image?: File;
 }
@@ -38,6 +40,7 @@ function toQuestionFormData(
   if (input.choiceCount !== undefined) {
     formData.append('choiceCount', String(input.choiceCount));
   }
+  formData.append('gradingPolicy', input.gradingPolicy);
   if (input.answerChoice !== undefined) {
     formData.append('answerChoice', String(input.answerChoice));
   }
@@ -54,6 +57,9 @@ function toQuestionFormData(
       String(input.recommendedTimeSeconds),
     );
   }
+  input.recommendedTagIds?.forEach((tagId) =>
+    formData.append('recommendedTagIds', tagId),
+  );
   input.tagIds.forEach((tagId) => formData.append('tagIds', tagId));
   if (input.image) {
     formData.append('image', input.image);

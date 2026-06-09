@@ -45,7 +45,6 @@ export function ImportPaperForm({
     resolver: standardSchemaResolver(importPaperSchema),
     defaultValues: importPaperDefaults,
   });
-  const [warnings, setWarnings] = React.useState<string[]>([]);
 
   const values = useWatch({ control: form.control });
   const selectedExam = exams.find((exam) => exam.id === values.examId);
@@ -75,7 +74,6 @@ export function ImportPaperForm({
         }),
       );
 
-      setWarnings(draft.warnings);
       form.reset({
         ...nextValues,
         questionPdf: currentValues.questionPdf,
@@ -99,6 +97,7 @@ export function ImportPaperForm({
       answerPdf: submitValues.answerPdf,
       layout: submitValues.layout,
       variant: submitValues.variant,
+      examId: submitValues.examId,
     }),
   );
 
@@ -126,19 +125,6 @@ export function ImportPaperForm({
             )}
             PDF 추출 후 비공개 문제지 생성
           </Button>
-
-          {warnings.length > 0 && (
-            <div
-              className="
-              rounded-md border border-amber-300 bg-amber-50 p-3 text-xs
-              text-amber-900
-            "
-            >
-              {warnings.map((warning) => (
-                <p key={warning}>{warning}</p>
-              ))}
-            </div>
-          )}
         </form>
       </CardContent>
     </Card>

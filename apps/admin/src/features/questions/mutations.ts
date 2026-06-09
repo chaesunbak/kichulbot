@@ -115,11 +115,13 @@ function toQuestionValues(
     type: question.type,
     number: question.number,
     choiceCount: question.choiceCount ?? undefined,
+    gradingPolicy: question.gradingPolicy ?? 'EXACT',
     answerChoice: question.answerChoice ?? undefined,
     answerText: question.answerText ?? '',
     explanation: question.explanation ?? '',
     points: question.points,
     recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
+    recommendedTagIds: question.recommendedTagIds,
     tagIds: question.tags.map((tag) => tag.id),
   };
 }

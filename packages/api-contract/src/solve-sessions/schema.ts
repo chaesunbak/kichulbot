@@ -1,12 +1,14 @@
 import * as z from 'zod';
 import {
   AnswerModeSchema,
+  GradingPolicySchema,
   IsoDateStringSchema,
   QuestionTypeSchema,
 } from '../common.js';
 import { PaperResponseSchema } from '../papers/schema.js';
 
 export const QuestionResultResponseSchema = z.object({
+  gradingPolicy: GradingPolicySchema,
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
   explanation: z.string().nullable(),

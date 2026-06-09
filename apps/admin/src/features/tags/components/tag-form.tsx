@@ -3,6 +3,7 @@ import type {
   AdminTagGroupResponse,
   AdminTagResponse,
 } from '@kichulbot/api-contract/tags';
+import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -24,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kichulbot/ui/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
@@ -93,6 +94,26 @@ export function TagFormPanel({
             )}
           />
           <Controller
+            name="keywords"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>추천 키워드</FieldLabel>
+                <KeywordInput
+                  id={field.name}
+                  keywords={field.value}
+                  aria-invalid={fieldState.invalid}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  onChange={field.onChange}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          <Controller
             name="tagGroupId"
             control={form.control}
             render={({ field }) => (
@@ -142,7 +163,89 @@ function getTagFormValues(
 ): TagForm {
   return {
     name: editingTag?.name ?? '',
+    keywords: editingTag?.keywords ?? [],
     examId: editingTag?.examId ?? examId,
     tagGroupId: editingTag?.tagGroupId ?? null,
   };
+}
+
+interface KeywordInputProps {
+  id: string;
+  keywords: string[];
+  'aria-invalid'?: boolean;
+  onBlur: () => void;
+  onChange: (keywords: string[]) => void;
+}
+
+const KeywordInput = React.forwardRef<HTMLInputElement, KeywordInputProps>(
+  function KeywordInput(
+    { id, keywords, 'aria-invalid': ariaInvalid, onBlur, onChange },
+    ref,
+  ) {
+    const [draftKeyword, setDraftKeyword] = React.useState('');
+
+    function addKeyword() {
+      const keyword = draftKeyword.trim();
+      if (!keyword) return;
+      onChange(uniqueKeywords([...keywords, keyword]));
+      setDraftKeyword('');
+    }
+
+    function removeKeyword(keyword: string) {
+      onChange(keywords.filter((item) => item !== keyword));
+    }
+
+    return (
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <Input
+            id={id}
+            value={draftKeyword}
+            aria-invalid={ariaInvalid}
+            placeholder="광종"
+            onBlur={onBlur}
+            ref={ref}
+            onChange={(event) => setDraftKeyword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return;
+              event.preventDefault();
+              addKeyword();
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="추천 키워드 추가"
+            onClick={addKeyword}
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+        {keywords.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword) => (
+              <Badge key={keyword} variant="secondary" className="h-7 gap-1">
+                {keyword}
+                <button
+                  type="button"
+                  className="rounded-sm text-muted-foreground hover:text-foreground"
+                  aria-label={`${keyword} 키워드 제거`}
+                  onClick={() => removeKeyword(keyword)}
+                >
+                  <X className="size-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
+function uniqueKeywords(keywords: string[]) {
+  return [
+    ...new Set(keywords.map((keyword) => keyword.trim()).filter(Boolean)),
+  ];
 }

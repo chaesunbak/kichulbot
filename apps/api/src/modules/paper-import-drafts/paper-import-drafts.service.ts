@@ -5,6 +5,7 @@ import { extname, join } from 'node:path';
 import {
   CreatePaperImportJobResponse,
   CreatePaperImportJobResponseSchema,
+  PaperImportDraftResponse,
   PaperImportDraftResponseSchema,
   PaperImportJobResponse,
   PaperImportJobResponseSchema,
@@ -146,13 +147,16 @@ export class PaperImportDraftsService implements OnModuleDestroy {
 
     const result =
       job.status === 'COMPLETED' && job.resultJsonPath
-        ? PaperImportDraftResponseSchema.parse(
-            JSON.parse(
-              await readFile(
-                this.resolveStoragePath(job.resultJsonPath),
-                'utf8',
-              ),
-            ) as unknown,
+        ? await this.withRecommendedTags(
+            PaperImportDraftResponseSchema.parse(
+              JSON.parse(
+                await readFile(
+                  this.resolveStoragePath(job.resultJsonPath),
+                  'utf8',
+                ),
+              ) as unknown,
+            ),
+            this.resolveExamId(job.inputOptions),
           )
         : null;
 
@@ -170,6 +174,70 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     return join(this.importRootDir, '..', relativePath);
   }
 
+  private async withRecommendedTags(
+    result: PaperImportDraftResponse,
+    examId: string | null,
+  ): Promise<PaperImportDraftResponse> {
+    if (!examId) return result;
+
+    const tags = await this.database.tag.findMany({
+      where: {
+        examId,
+        keywords: { isEmpty: false },
+      },
+      select: {
+        id: true,
+        keywords: true,
+      },
+    });
+    if (tags.length === 0) return result;
+
+    return {
+      ...result,
+      questions: result.questions.map((question) => ({
+        ...question,
+        recommendedTagIds: this.matchRecommendedTagIds(
+          [
+            question.rawText,
+            question.promptText,
+            question.passageText,
+            ...question.choiceTexts,
+          ].join('\n'),
+          tags,
+        ),
+      })),
+    };
+  }
+
+  private matchRecommendedTagIds(
+    text: string,
+    tags: Array<{ id: string; keywords: string[] }>,
+  ) {
+    const haystack = this.normalizeForKeywordMatch(text);
+    if (!haystack) return [];
+
+    return tags
+      .filter((tag) =>
+        tag.keywords.some((keyword) => {
+          const normalizedKeyword = this.normalizeForKeywordMatch(keyword);
+          return (
+            Boolean(normalizedKeyword) && haystack.includes(normalizedKeyword)
+          );
+        }),
+      )
+      .map((tag) => tag.id);
+  }
+
+  private normalizeForKeywordMatch(value: string) {
+    return value.toLowerCase().replace(/\s+/g, '');
+  }
+
+  private resolveExamId(inputOptions: unknown) {
+    if (!inputOptions || typeof inputOptions !== 'object') return null;
+    const examId = (inputOptions as { examId?: unknown }).examId;
+    return typeof examId === 'string' && examId.trim() ? examId.trim() : null;
+  }
+
   private resolveOptions(options: Record<string, string | undefined>) {
     const dpi = Number(options.dpi ?? DEFAULT_DPI);
     const quality = Number(options.quality ?? DEFAULT_QUALITY);
@@ -179,6 +247,7 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       dpi: Number.isFinite(dpi) ? dpi : DEFAULT_DPI,
       imageFormat: options.imageFormat || DEFAULT_IMAGE_FORMAT,
       quality: Number.isFinite(quality) ? quality : DEFAULT_QUALITY,
+      examId: options.examId?.trim() || null,
     };
   }
 

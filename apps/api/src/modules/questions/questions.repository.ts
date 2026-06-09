@@ -151,6 +151,11 @@ export class QuestionsRepository {
       question.imageHash !== revision.imageHash ||
       question.imageUrl !== revision.imageUrl ||
       question.choiceCount !== revision.choiceCount ||
+      question.rawText !== revision.rawText ||
+      question.promptText !== revision.promptText ||
+      question.passageText !== revision.passageText ||
+      !this.sameStringArray(question.choiceTexts, revision.choiceTexts) ||
+      question.gradingPolicy !== revision.gradingPolicy ||
       question.answerChoice !== revision.answerChoice ||
       question.answerText !== revision.answerText ||
       question.points !== revision.points
@@ -166,6 +171,10 @@ export class QuestionsRepository {
       where: { id },
       data: {
         explanation: question.explanation,
+        rawText: question.rawText,
+        promptText: question.promptText,
+        passageText: question.passageText,
+        choiceTexts: question.choiceTexts,
         recommendedTimeSeconds: question.recommendedTimeSeconds,
       },
     });
@@ -179,6 +188,11 @@ export class QuestionsRepository {
       imageUrl: question.imageUrl,
       imageHash: question.imageHash,
       choiceCount: question.choiceCount,
+      rawText: question.rawText,
+      promptText: question.promptText,
+      passageText: question.passageText,
+      choiceTexts: question.choiceTexts,
+      gradingPolicy: question.gradingPolicy,
       answerChoice: question.answerChoice,
       answerText: question.answerText,
       explanation: question.explanation,
@@ -189,7 +203,14 @@ export class QuestionsRepository {
 
   private questionIncludes() {
     return {
-      tags: { include: { tag: true } },
+      tags: { include: { tag: { include: { tagGroup: true } } } },
     } satisfies Prisma.QuestionInclude;
+  }
+
+  private sameStringArray(left: string[], right: string[]) {
+    return (
+      left.length === right.length &&
+      left.every((value, index) => value === right[index])
+    );
   }
 }

@@ -7,7 +7,7 @@
     "db:down": "docker compose -f docker-compose.dev.yml down",
     "db:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up --wait -d postgres",
     "db:sync": "pnpm --filter @kichulbot/api prisma:sync",
-    "dev": "pnpm db:up && pnpm db:sync && turbo run dev --filter=@kichulbot/api --filter=@kichulbot/web --filter=@kichulbot/admin",
+    "dev": "pnpm db:up && pnpm db:sync && turbo run dev --filter=@kichulbot/api --filter=@kichulbot/web --filter=@kichulbot/admin --filter=@kichulbot/extractor",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",

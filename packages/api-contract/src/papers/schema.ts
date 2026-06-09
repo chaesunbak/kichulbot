@@ -1,5 +1,9 @@
 import * as z from 'zod';
-import { IsoDateStringSchema, QuestionTypeSchema } from '../common.js';
+import {
+  GradingPolicySchema,
+  IsoDateStringSchema,
+  QuestionTypeSchema,
+} from '../common.js';
 import { TagResponseSchema } from '../tags/schema.js';
 import { TaxonomyResponseSchema } from '../taxonomy/schema.js';
 
@@ -10,11 +14,17 @@ export const QuestionResponseSchema = z.object({
   imageUrl: z.string().url(),
   imageCacheKey: z.string().min(1),
   choiceCount: z.number().int().nullable(),
+  gradingPolicy: GradingPolicySchema,
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
   explanation: z.string().nullable(),
+  rawText: z.string().nullable(),
+  promptText: z.string().nullable(),
+  passageText: z.string().nullable(),
+  choiceTexts: z.array(z.string()),
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
+  recommendedTagIds: z.array(z.string()),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });
@@ -48,11 +58,17 @@ export const PaperQuestionResponseSchema = z.object({
   imageUrl: z.string().url(),
   imageCacheKey: z.string().min(1),
   choiceCount: z.number().int().nullable(),
+  gradingPolicy: GradingPolicySchema,
   answerChoice: z.number().int().nullable(),
   answerText: z.string().nullable(),
   explanation: z.string().nullable(),
+  rawText: z.string().nullable(),
+  promptText: z.string().nullable(),
+  passageText: z.string().nullable(),
+  choiceTexts: z.array(z.string()),
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
+  recommendedTagIds: z.array(z.string()),
   isBookmarked: z.boolean(),
 });
 export type PaperQuestionResponse = z.infer<typeof PaperQuestionResponseSchema>;

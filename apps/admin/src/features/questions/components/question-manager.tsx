@@ -66,11 +66,13 @@ const DEFAULT_QUESTION: QuestionValues = {
   type: 'MULTIPLE_CHOICE',
   number: 1,
   choiceCount: 5,
+  gradingPolicy: 'EXACT',
   answerChoice: 1,
   answerText: '',
   explanation: '',
   points: 5,
   recommendedTimeSeconds: undefined,
+  recommendedTagIds: [],
   tagIds: [],
 };
 
@@ -120,6 +122,7 @@ export function QuestionManager({
     defaultValues: DEFAULT_QUESTION,
   });
   const questionType = questionForm.watch('type');
+  const gradingPolicy = questionForm.watch('gradingPolicy');
   const editingQuestionIndex = questions.findIndex(
     (question) => question.id === editingQuestionId,
   );
@@ -138,11 +141,13 @@ export function QuestionManager({
         type: question.type,
         number: question.number,
         choiceCount: question.choiceCount ?? undefined,
+        gradingPolicy: question.gradingPolicy ?? 'EXACT',
         answerChoice: question.answerChoice ?? undefined,
         answerText: question.answerText ?? '',
         explanation: question.explanation ?? '',
         points: question.points,
         recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
+        recommendedTagIds: question.recommendedTagIds,
         tagIds: question.tags.map((tag) => tag.id),
       });
     },
@@ -416,6 +421,9 @@ export function QuestionManager({
                       {...imageField}
                       existingImageUrl={editingQuestion?.imageUrl}
                     />
+                    {editingQuestion && (
+                      <ExtractedQuestionText question={editingQuestion} />
+                    )}
                     <div
                       className="
                         grid gap-3
@@ -461,17 +469,64 @@ export function QuestionManager({
                     </div>
 
                     {questionType === 'MULTIPLE_CHOICE' ? (
-                      <div className="grid grid-cols-2 gap-3">
+                      <div
+                        className="
+                          grid gap-3
+                          sm:grid-cols-3
+                        "
+                      >
                         <NumberField
                           control={questionForm.control}
                           name="choiceCount"
                           label="선택지"
                         />
-                        <NumberField
+                        <Controller
+                          name="gradingPolicy"
                           control={questionForm.control}
-                          name="answerChoice"
-                          label="정답"
+                          render={({ field }) => (
+                            <Field>
+                              <FieldLabel htmlFor={field.name}>
+                                채점 방식
+                              </FieldLabel>
+                              <Select
+                                name={field.name}
+                                value={field.value}
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  if (value === 'ANY_CHOICE') {
+                                    questionForm.setValue(
+                                      'answerChoice',
+                                      undefined,
+                                      { shouldValidate: true },
+                                    );
+                                  }
+                                }}
+                              >
+                                <SelectTrigger
+                                  id={field.name}
+                                  className="w-full"
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="EXACT">
+                                    정답 번호 지정
+                                  </SelectItem>
+                                  <SelectItem value="ANY_CHOICE">
+                                    정답없음
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </Field>
+                          )}
                         />
+                        {gradingPolicy === 'EXACT' && (
+                          <NumberField
+                            control={questionForm.control}
+                            name="answerChoice"
+                            label="정답"
+                          />
+                        )}
                       </div>
                     ) : (
                       <Controller
@@ -529,6 +584,23 @@ export function QuestionManager({
                       render={({ field }) => (
                         <Field>
                           <FieldLabel>태그</FieldLabel>
+                          {editingQuestion && (
+                            <RecommendedTagButtons
+                              question={editingQuestion}
+                              tags={selectableTags}
+                              selectedTagIds={field.value}
+                              onApply={(tag) =>
+                                field.onChange(
+                                  getNextTagIds(
+                                    field.value,
+                                    tag,
+                                    selectableTags,
+                                    true,
+                                  ),
+                                )
+                              }
+                            />
+                          )}
                           <div className="grid grid-cols-2 gap-2">
                             {selectableTags.map((tag) => {
                               const checked = field.value.includes(tag.id);
@@ -643,6 +715,138 @@ function NumberField({
         </Field>
       )}
     />
+  );
+}
+
+function ExtractedQuestionText({
+  question,
+}: {
+  question: AdminPaperQuestionResponse;
+}) {
+  const hasText =
+    Boolean(question.rawText) ||
+    Boolean(question.promptText) ||
+    Boolean(question.passageText) ||
+    question.choiceTexts.length > 0;
+
+  if (!hasText) {
+    return (
+      <section className="rounded-md border border-dashed p-4">
+        <p className="text-sm font-medium">추출 텍스트</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          저장된 PDF 텍스트가 없습니다.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-md border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-medium">추출 텍스트</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            PDF 텍스트 레이어에서 문항별로 저장된 내용입니다.
+          </p>
+        </div>
+        {question.choiceTexts.length > 0 && (
+          <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
+            선지 {question.choiceTexts.length}개
+          </span>
+        )}
+      </div>
+
+      <div className="mt-4 grid gap-4">
+        {question.promptText && (
+          <TextBlock title="발문" text={question.promptText} />
+        )}
+        {question.passageText && (
+          <TextBlock title="지문" text={question.passageText} />
+        )}
+        {question.choiceTexts.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">선지</p>
+            <ol className="mt-2 grid gap-2">
+              {question.choiceTexts.map((choiceText, index) => (
+                <li
+                  key={`${choiceText}-${index}`}
+                  className="
+                    rounded-md border bg-muted/20 px-3 py-2 text-sm/6
+                     whitespace-pre-wrap
+                  "
+                >
+                  {choiceText}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+        {question.rawText && (
+          <TextBlock title="전체 원문" text={question.rawText} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TextBlock({ title, text }: { title: string; text: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground">{title}</p>
+      <pre
+        className="
+          mt-2 max-h-72 overflow-auto rounded-md border bg-muted/20 px-3 py-2
+          font-sans text-sm/6 whitespace-pre-wrap
+        "
+      >
+        {text}
+      </pre>
+    </div>
+  );
+}
+
+function RecommendedTagButtons({
+  question,
+  tags,
+  selectedTagIds,
+  onApply,
+}: {
+  question: AdminPaperQuestionResponse;
+  tags: TagResponse[];
+  selectedTagIds: string[];
+  onApply: (tag: TagResponse) => void;
+}) {
+  const selectedTagIdSet = new Set(selectedTagIds);
+  const recommendedTags = question.recommendedTagIds.reduce<TagResponse[]>(
+    (items, tagId) => {
+      const tag = tags.find((item) => item.id === tagId);
+      if (tag && !selectedTagIdSet.has(tag.id)) {
+        items.push(tag);
+      }
+      return items;
+    },
+    [],
+  );
+
+  if (recommendedTags.length === 0) return null;
+
+  return (
+    <div className="mb-3 space-y-2 rounded-md border border-dashed p-3">
+      <p className="text-xs font-medium text-muted-foreground">추천 태그</p>
+      <div className="flex flex-wrap gap-2">
+        {recommendedTags.map((tag) => (
+          <Button
+            key={tag.id}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onApply(tag)}
+          >
+            {tag.name}
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 }
 

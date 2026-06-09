@@ -39,9 +39,11 @@ except ImportError:
     pdfplumber = None
     pdfium = None
 
-
 # ── 검출/크롭 파라미터 (대부분 자동 산출되지만 안전장치로 둔다) ──────────────
 MARKER_RE = re.compile(r"^\d{1,2}\.$")           # "1.", "12." 같은 문항 번호
+CHOICE_MARKER_RE = re.compile(r"^[①②③④⑤⑥⑦⑧⑨⑩]")
+CHOICE_MARKER_SPLIT_RE = re.compile(r"(?=[①②③④⑤⑥⑦⑧⑨⑩])")
+POINT_LABEL_RE = re.compile(r"\[\d+점\]")
 MARKER_SIZE_RANGE = (11.5, 14.5)                 # 문항 번호 글자 크기(pt) 허용 범위
 HEADER_GUARD_Y = 150                             # 이 위(y<)는 머리말로 간주, 마커 무시
 FOOTER_GUARD_Y = 1078                            # 이 아래(y>=)는 꼬리말로 간주, 본문 제외
@@ -84,6 +86,10 @@ KOREAN_HISTORY_CENTER_GAP = 8
 KOREAN_HISTORY_ROW_THRESHOLD = 246
 KOREAN_HISTORY_ROW_MIN_RATIO = 0.012
 KOREAN_HISTORY_MIN_SEGMENT_HEIGHT = 18
+KOREAN_HISTORY_MIN_PROMPT_HEIGHT = 3
+KOREAN_HISTORY_DETACHED_PROMPT_GAP = 120
+KOREAN_HISTORY_CONTINUATION_GAP = 14
+KOREAN_HISTORY_MARKER_DARK_PIXELS = 300
 KOREAN_HISTORY_MERGE_GAP = 34
 KOREAN_HISTORY_EXPECTED_QUESTIONS = 50
 KOREAN_HISTORY_FALLBACK_MERGE_GAPS = (28, 24, 20, 16)
@@ -129,6 +135,129 @@ def content_blocks(page):
     for im in page.images:
         out.append((im["x0"], im["top"], im["x1"], im["bottom"], True))
     return out
+
+
+def extract_words_in_box(page, box):
+    """문항 크롭 박스 안에 중심점이 들어오는 PDF 텍스트 단어를 반환한다."""
+    x0, y0, x1, y1 = box
+    words = []
+    for word in page.extract_words(use_text_flow=False):
+        cx = (word["x0"] + word["x1"]) / 2
+        cy = (word["top"] + word["bottom"]) / 2
+        if x0 <= cx <= x1 and y0 <= cy <= y1:
+            words.append(word)
+    return words
+
+
+def group_words_into_text_lines(words, line_threshold=3.5):
+    """PDF 단어 좌표를 사람이 읽는 순서의 줄 단위 텍스트로 묶는다."""
+    lines = []
+    for word in sorted(words, key=lambda w: (w["top"], w["x0"])):
+        center = (word["top"] + word["bottom"]) / 2
+        line = next(
+            (item for item in lines if abs(item["center"] - center) <= line_threshold),
+            None,
+        )
+        if line is None:
+            line = {
+                "center": center,
+                "words": [],
+            }
+            lines.append(line)
+        else:
+            count = len(line["words"])
+            line["center"] = (line["center"] * count + center) / (count + 1)
+        line["words"].append(word)
+
+    out = []
+    for line in sorted(lines, key=lambda item: item["center"]):
+        line_words = sorted(line["words"], key=lambda w: w["x0"])
+        text = " ".join(w["text"] for w in line_words).strip()
+        if not text:
+            continue
+        out.append({
+            "text": text,
+            "box": [
+                round(min(w["x0"] for w in line_words), 1),
+                round(min(w["top"] for w in line_words), 1),
+                round(max(w["x1"] for w in line_words), 1),
+                round(max(w["bottom"] for w in line_words), 1),
+            ],
+        })
+    return out
+
+
+def extract_text_layer(page, box):
+    """문항 영역의 PDF 텍스트 레이어를 API 응답용 구조로 변환한다."""
+    lines = group_words_into_text_lines(extract_words_in_box(page, box))
+    text = "\n".join(line["text"] for line in lines)
+    choice_segments = []
+    for index, line in enumerate(lines):
+        parts = [
+            part.strip()
+            for part in CHOICE_MARKER_SPLIT_RE.split(line["text"])
+            if part.strip()
+        ]
+        for part_index, part in enumerate(parts):
+            if CHOICE_MARKER_RE.match(part):
+                choice_segments.append({
+                    "line_index": index,
+                    "part_index": part_index,
+                    "text": part,
+                })
+    choice_start_index = (
+        choice_segments[-5]["line_index"]
+        if len(choice_segments) >= 5
+        else None
+    )
+    if choice_start_index is None:
+        prompt_text, passage_text = split_prompt_and_passage(lines)
+        choice_texts = []
+    else:
+        prompt_text, passage_text = split_prompt_and_passage(
+            lines[:choice_start_index],
+        )
+        choice_texts = []
+        for line_index, line in enumerate(lines[choice_start_index:], start=choice_start_index):
+            parts = [
+                part.strip()
+                for part in CHOICE_MARKER_SPLIT_RE.split(line["text"])
+                if part.strip()
+            ]
+            if line_index == choice_start_index:
+                start_part_index = choice_segments[-5]["part_index"]
+                parts = parts[start_part_index:]
+            if parts and CHOICE_MARKER_RE.match(parts[0]):
+                choice_texts.extend(parts)
+            elif choice_texts:
+                choice_texts[-1] = f"{choice_texts[-1]}\n{line['text']}"
+            else:
+                choice_texts.append(line["text"])
+        choice_texts = choice_texts[:5]
+    return {
+        "text": text,
+        "lines": lines,
+        "promptText": prompt_text,
+        "passageText": passage_text,
+        "choiceTexts": choice_texts,
+    }
+
+
+def split_prompt_and_passage(lines):
+    """선지 앞 텍스트를 발문과 지문으로 나눈다."""
+    if not lines:
+        return "", ""
+
+    prompt_end_index = 0
+    for index, line in enumerate(lines):
+        line_text = line["text"]
+        prompt_end_index = index
+        if POINT_LABEL_RE.search(line_text) or "?" in line_text:
+            break
+
+    prompt_text = "\n".join(line["text"] for line in lines[:prompt_end_index + 1])
+    passage_text = "\n".join(line["text"] for line in lines[prompt_end_index + 1:])
+    return prompt_text, passage_text
 
 
 def find_divider(pdf, center):
@@ -268,9 +397,21 @@ def save_crop(crop, path, image_options):
     raise ValueError(f"지원하지 않는 이미지 형식: {fmt}")
 
 
-def extract(pdf_path, out_dir, forms, dpi, image_options=None, layout=DEFAULT_LAYOUT):
+def extract(
+    pdf_path,
+    out_dir,
+    forms,
+    dpi,
+    image_options=None,
+    layout=DEFAULT_LAYOUT,
+):
     if layout == "korean-history":
-        return extract_korean_history(pdf_path, out_dir, dpi, image_options=image_options)
+        return extract_korean_history(
+            pdf_path,
+            out_dir,
+            dpi,
+            image_options=image_options,
+        )
     if layout != "csat":
         raise ValueError(f"지원하지 않는 문제지 형식: {layout}")
     ensure_dependencies()
@@ -344,6 +485,7 @@ def extract(pdf_path, out_dir, forms, dpi, image_options=None, layout=DEFAULT_LA
                     "height_px": crop.height,
                     "bbox_pt": [round(box[0], 1), round(box[1], 1), round(box[2], 1), round(box[3], 1)],
                     "has_figure": slab_has_figure(page, box),
+                    "textLayer": extract_text_layer(page, box),
                 })
 
         manifest["questions"].sort(key=lambda q: (q["form"] or "", q["number"]))
@@ -418,18 +560,75 @@ def detect_korean_history_segments(pil, page_index, scale, merge_gap_pt=KOREAN_H
                 groups[-1][1] = y
 
         min_height = KOREAN_HISTORY_MIN_SEGMENT_HEIGHT * scale
-        for top, bottom in groups:
+        min_prompt_height = KOREAN_HISTORY_MIN_PROMPT_HEIGHT * scale
+        prompt_gap = KOREAN_HISTORY_DETACHED_PROMPT_GAP * scale
+        for index, (top, bottom) in enumerate(groups):
             if bottom - top + 1 < min_height:
                 continue
+            segment_top = top
+            previous_index = index - 1
+            while previous_index >= 0:
+                previous_top, previous_bottom = groups[previous_index]
+                previous_height = previous_bottom - previous_top + 1
+                previous_gap = segment_top - previous_bottom
+                if previous_height >= min_height or previous_height < min_prompt_height:
+                    break
+                if previous_gap > prompt_gap:
+                    break
+                segment_top = previous_top
+                previous_index -= 1
             segments.append({
                 "column": col,
                 "x0": x0_pt,
                 "x1": x1_pt,
-                "y0": max(body_top, top / scale - TOP_PAD),
+                "y0": max(body_top, segment_top / scale - TOP_PAD),
                 "y1": min(footer, bottom / scale + BOTTOM_PAD),
             })
 
-    return sorted(segments, key=lambda s: (0 if s["column"] == "L" else 1, s["y0"]))
+    return merge_korean_history_continuations(
+        pil,
+        sorted(segments, key=lambda s: (0 if s["column"] == "L" else 1, s["y0"])),
+        scale,
+    )
+
+
+def segment_has_question_marker(pil, segment, scale):
+    """문항 시작을 나타내는 왼쪽 상단 번호 마커가 있는지 픽셀 밀도로 추정한다."""
+    x0 = max(0, round(segment["x0"] * scale))
+    y0 = max(0, round(segment["y0"] * scale))
+    x1 = min(pil.width, x0 + round(58 * scale))
+    y1 = min(pil.height, y0 + round(34 * scale))
+    if x1 <= x0 or y1 <= y0:
+        return False
+
+    crop = pil.crop((x0, y0, x1, y1))
+    pixels = crop.load()
+    dark_pixels = 0
+    for y in range(crop.height):
+        for x in range(crop.width):
+            r, g, b = pixels[x, y]
+            if r < 110 and g < 110 and b < 110:
+                dark_pixels += 1
+                if dark_pixels >= KOREAN_HISTORY_MARKER_DARK_PIXELS:
+                    return True
+    return False
+
+
+def merge_korean_history_continuations(pil, segments, scale):
+    """같은 문항의 선지/자료가 짧은 조각으로 분리된 경우 직전 문항에 붙인다."""
+    merged = []
+    for segment in segments:
+        previous = merged[-1] if merged else None
+        if (
+            previous
+            and previous["column"] == segment["column"]
+            and 0 <= segment["y0"] - previous["y1"] <= KOREAN_HISTORY_CONTINUATION_GAP
+            and not segment_has_question_marker(pil, segment, scale)
+        ):
+            previous["y1"] = max(previous["y1"], segment["y1"])
+            continue
+        merged.append(dict(segment))
+    return merged
 
 
 def detect_korean_history_page_segments(rendered_pages, scale):
@@ -463,6 +662,52 @@ def detect_korean_history_page_segments(rendered_pages, scale):
     return best_segments, best_gap
 
 
+def detect_korean_history_markers(plumb):
+    """한능검 문항 번호 마커를 PDF 텍스트 좌표에서 찾는다."""
+    markers = {}
+    for pi, page in enumerate(plumb.pages):
+        page_width = page.width
+        center = page_width / 2.0
+        body_top = korean_history_body_top(pi)
+        footer = min(KOREAN_HISTORY_FOOTER_GUARD_Y, page.height)
+
+        for word in page.extract_words():
+            if not MARKER_RE.match(word["text"]):
+                continue
+            if word["top"] < body_top - 8 or word["top"] >= footer:
+                continue
+
+            number = int(word["text"][:-1])
+            if not 1 <= number <= KOREAN_HISTORY_EXPECTED_QUESTIONS:
+                continue
+
+            col = "L" if word["x0"] < center else "R"
+            markers[number] = {
+                "page": pi,
+                "column": col,
+                "top": word["top"],
+                "bottom": word["bottom"],
+            }
+
+    return markers
+
+
+def expand_box_to_question_marker(box, marker, page_index, footer):
+    """이미지 덩어리 위에 따로 놓인 발문이 잘리지 않도록 상단을 보정한다."""
+    if marker is None or marker["page"] != page_index:
+        return box
+
+    x0, y0, x1, y1 = box
+    marker_top = max(korean_history_body_top(page_index), marker["top"] - TOP_PAD)
+    marker_bottom = min(footer, marker["bottom"] + BOTTOM_PAD)
+    return (
+        x0,
+        min(y0, marker_top),
+        x1,
+        max(y1, marker_bottom),
+    )
+
+
 def crop_has_color(crop):
     """한능검 이미지 PDF용 느슨한 그림/컬러 자료 포함 추정값."""
     sample_step = max(1, min(crop.width, crop.height) // 240)
@@ -479,9 +724,15 @@ def crop_has_color(crop):
     return bool(sampled and colored / sampled > 0.03)
 
 
-def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
+def extract_korean_history(
+    pdf_path,
+    out_dir,
+    dpi,
+    image_options=None,
+):
     ensure_dependencies()
     image_options = image_options or ImageOptions()
+    plumb = pdfplumber.open(pdf_path)
     render_doc = pdfium.PdfDocument(pdf_path)
     Path(out_dir).mkdir(parents=True, exist_ok=True)
 
@@ -503,16 +754,19 @@ def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
             for pi in range(len(render_doc))
         ]
         page_segments, merge_gap = detect_korean_history_page_segments(rendered_pages, scale)
+        markers = detect_korean_history_markers(plumb)
 
         for pi, pil in enumerate(rendered_pages):
+            page = plumb.pages[pi]
+            footer = min(KOREAN_HISTORY_FOOTER_GUARD_Y, page.height)
             segments = page_segments[pi]
             for segment in segments:
-                box = (
+                box = expand_box_to_question_marker((
                     segment["x0"],
                     segment["y0"],
                     segment["x1"],
                     segment["y1"],
-                )
+                ), markers.get(question_number), pi, footer)
                 px = (
                     max(0, round(box[0] * scale)),
                     max(0, round(box[1] * scale)),
@@ -533,6 +787,7 @@ def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
                     "height_px": crop.height,
                     "bbox_pt": [round(v, 1) for v in box],
                     "has_figure": crop_has_color(crop),
+                    "textLayer": extract_text_layer(page, box),
                 })
                 question_number += 1
 
@@ -553,6 +808,7 @@ def extract_korean_history(pdf_path, out_dir, dpi, image_options=None):
         print(f"  manifest: {Path(out_dir) / 'manifest.json'}")
         return manifest
     finally:
+        plumb.close()
         render_doc.close()
 
 
@@ -651,7 +907,14 @@ def main():
     args = ap.parse_args()
     layout, variant, image_options = resolve_cli_options(args)
     out_dir = output_dir_for_pdf(args.pdf, args.out)
-    extract(args.pdf, out_dir, [variant], args.dpi, image_options=image_options, layout=layout)
+    extract(
+        args.pdf,
+        out_dir,
+        [variant],
+        args.dpi,
+        image_options=image_options,
+        layout=layout,
+    )
 
 
 if __name__ == "__main__":

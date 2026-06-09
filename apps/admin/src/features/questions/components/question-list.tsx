@@ -121,12 +121,23 @@ export function QuestionList({
                   </div>
                   <Pencil className="size-4 text-muted-foreground" />
                 </div>
+                {question.rawText && (
+                  <p
+                    className="
+                      mt-3 line-clamp-3 rounded-md border bg-muted/20 px-3 py-2
+                      text-xs/5 text-muted-foreground
+                    "
+                  >
+                    {question.rawText}
+                  </p>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-1">
                   {question.tags.map((tag) => (
                     <Badge key={tag.id} variant="secondary">
                       {tag.name}
                     </Badge>
                   ))}
+                  <RecommendedTagBadges question={question} tags={tags} />
                   <QuestionTagSelect
                     question={question}
                     tags={tags}
@@ -141,6 +152,32 @@ export function QuestionList({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function RecommendedTagBadges({
+  question,
+  tags,
+}: {
+  question: AdminPaperQuestionResponse;
+  tags: TagResponse[];
+}) {
+  const selectedTagIds = new Set(question.tags.map((tag) => tag.id));
+  const recommendedTags = question.recommendedTagIds
+    .map((tagId) => tags.find((tag) => tag.id === tagId))
+    .filter((tag): tag is TagResponse => Boolean(tag))
+    .filter((tag) => !selectedTagIds.has(tag.id));
+
+  if (recommendedTags.length === 0) return null;
+
+  return (
+    <>
+      {recommendedTags.map((tag) => (
+        <Badge key={tag.id} variant="outline">
+          추천 {tag.name}
+        </Badge>
+      ))}
+    </>
   );
 }
 
@@ -185,7 +222,7 @@ function QuestionTagSelect({
         onValueChange={(tagId) => onAddTag(question, tagId)}
       >
         <SelectTrigger
-          className="h-8 w-[160px] text-xs"
+          className="h-8 w-40 text-xs"
           aria-label={`${question.number}번 문항 태그 추가`}
         >
           <SelectValue placeholder={isPending ? '추가 중' : '태그 선택'} />
@@ -208,6 +245,12 @@ function formatTagOption(tag: TagResponse) {
 }
 
 function getAnswerSummary(question: AdminPaperQuestionResponse) {
+  if (
+    question.type === 'MULTIPLE_CHOICE' &&
+    question.gradingPolicy === 'ANY_CHOICE'
+  ) {
+    return `정답없음 · 선택지 ${question.choiceCount ?? '-'}개`;
+  }
   return question.type === 'MULTIPLE_CHOICE'
     ? `정답 ${question.answerChoice ?? '-'}번 · 선택지 ${question.choiceCount ?? '-'}개`
     : `모범답안 ${question.answerText ?? '-'}`;

@@ -1326,6 +1326,7 @@ function ResultCheckPanel({
 
 function formatCorrectAnswer(result: SolveQuestion['result']) {
   if (!result) return '확인 전';
+  if (result.gradingPolicy === 'ANY_CHOICE') return '모든 선택지';
   return result.answerChoice
     ? `${result.answerChoice}번`
     : (result.answerText ?? '등록된 정답 없음');

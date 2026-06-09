@@ -13,6 +13,7 @@ export type ListTagsResponse = z.infer<typeof ListTagsResponseSchema>;
 
 export const CreateTagRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),
+  keywords: z.array(z.string().trim().min(1).max(50)).optional(),
   examId: z.string().min(1),
   tagGroupId: z.string().min(1).nullable().optional(),
 });

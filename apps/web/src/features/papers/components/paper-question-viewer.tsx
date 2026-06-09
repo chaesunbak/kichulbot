@@ -417,6 +417,7 @@ function QuestionListDropdown({
 
 function formatCorrectAnswer(question: PaperQuestion) {
   if (question.type === 'MULTIPLE_CHOICE') {
+    if (question.gradingPolicy === 'ANY_CHOICE') return '모든 선택지';
     return question.answerChoice
       ? `${question.answerChoice}번`
       : '등록된 정답 없음';

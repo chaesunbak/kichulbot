@@ -28,6 +28,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -365,7 +366,7 @@ def ensure_dependencies():
 
 def output_dir_for_pdf(pdf_path, out_root):
     """PDF 파일명 기준으로 겹치지 않는 출력 폴더를 만든다."""
-    stem = Path(pdf_path).stem
+    stem = unicodedata.normalize("NFC", Path(pdf_path).stem)
     safe_stem = re.sub(r"[^0-9A-Za-z가-힣._-]+", "_", stem).strip("._-")
     return Path(out_root) / (safe_stem or "pdf")
 

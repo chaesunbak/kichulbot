@@ -15,6 +15,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 try:
@@ -34,9 +35,18 @@ CIRCLED_ANSWERS = {
     "⑤": 5,
 }
 
+ANSWER_INDEXES = {
+    **CIRCLED_ANSWERS,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+}
+
 ANSWER_ROW_RE = re.compile(
     r"(?<!\d)(?P<number>\d{1,3})\s+"
-    r"(?P<answer>[①②③④⑤])\s+"
+    r"(?P<answer>[①②③④⑤1-5])\s+"
     r"(?P<points>\d{1,2})(?!\d)"
 )
 
@@ -47,7 +57,7 @@ def ensure_dependencies():
 
 
 def output_dir_for_pdf(pdf_path, out_root):
-    stem = Path(pdf_path).stem
+    stem = unicodedata.normalize("NFC", Path(pdf_path).stem)
     safe_stem = re.sub(r"[^0-9A-Za-z가-힣._-]+", "_", stem).strip("._-")
     return Path(out_root) / (safe_stem or "pdf")
 
@@ -60,7 +70,7 @@ def parse_answer_text(text, page_number):
         answers.append({
             "number": number,
             "answer": answer,
-            "answer_index": CIRCLED_ANSWERS[answer],
+            "answer_index": ANSWER_INDEXES[answer],
             "points": int(match.group("points")),
             "page": page_number,
         })

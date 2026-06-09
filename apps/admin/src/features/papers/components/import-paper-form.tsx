@@ -9,16 +9,12 @@ import {
 import { FileText, Loader2, Sparkles } from 'lucide-react';
 import * as React from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { useNavigate } from 'react-router';
 
 import type { Exam } from '@/shared/types';
 
-import {
-  useCreatePaperImportDraftMutation,
-  useCreatePaperWithQuestionsMutation,
-} from '../mutations';
+import { useCreatePaperImportDraftMutation } from '../mutations';
 import { importPaperSchema } from '../schemas';
-import type { ImportPaperQuestionValues, ImportPaperValues } from '../types';
+import type { ImportPaperValues } from '../types';
 import { ImportPaperFields } from './import-paper-fields';
 
 const importPaperDefaults: ImportPaperValues = {
@@ -40,7 +36,6 @@ export function ImportPaperForm({
   token: string;
   exams: Exam[];
 }) {
-  const navigate = useNavigate();
   const form = useForm<ImportPaperValues>({
     resolver: standardSchemaResolver(importPaperSchema),
     defaultValues: importPaperDefaults,
@@ -49,56 +44,22 @@ export function ImportPaperForm({
   const values = useWatch({ control: form.control });
   const selectedExam = exams.find((exam) => exam.id === values.examId);
 
-  const createMutation = useCreatePaperWithQuestionsMutation({
-    token,
-    onSuccess: (paperId) => navigate(`/papers/${paperId}`),
-  });
+  const draftMutation = useCreatePaperImportDraftMutation({ token });
 
-  const draftMutation = useCreatePaperImportDraftMutation({
-    token,
-    onSuccess: (draft) => {
-      if (!selectedExam) return;
-      const currentValues = form.getValues();
+  const disabled = draftMutation.isPending || !selectedExam;
 
-      const nextValues: ImportPaperValues = {
-        ...currentValues,
-        title: currentValues.title || draft.paperSuggestion.title || '',
-        questionCount:
-          draft.paperSuggestion.questionCount || currentValues.questionCount,
-        isPublished: false,
-      };
-      const nextQuestions: ImportPaperQuestionValues[] = draft.questions.map(
-        (question) => ({
-          ...question,
-          excluded: false,
-        }),
-      );
-
-      form.reset({
-        ...nextValues,
-        questionPdf: currentValues.questionPdf,
-        answerPdf: currentValues.answerPdf,
-      });
-      createMutation.mutate({
-        values: nextValues,
-        exam: selectedExam,
-        questions: nextQuestions,
-      });
-    },
-  });
-
-  const disabled =
-    draftMutation.isPending || createMutation.isPending || !selectedExam;
-
-  const loading = draftMutation.isPending || createMutation.isPending;
+  const loading = draftMutation.isPending;
   const submit = form.handleSubmit((submitValues) =>
-    draftMutation.mutate({
-      questionPdf: submitValues.questionPdf,
-      answerPdf: submitValues.answerPdf,
-      layout: submitValues.layout,
-      variant: submitValues.variant,
-      examId: submitValues.examId,
-    }),
+    selectedExam
+      ? draftMutation.mutate({
+          questionPdf: submitValues.questionPdf,
+          answerPdf: submitValues.answerPdf,
+          values: submitValues,
+          exam: selectedExam,
+          layout: submitValues.layout,
+          variant: submitValues.variant,
+        })
+      : undefined,
   );
 
   return (
@@ -123,7 +84,7 @@ export function ImportPaperForm({
             ) : (
               <FileText className="size-4" />
             )}
-            PDF 추출 후 비공개 문제지 생성
+            PDF 가져오기 작업 시작
           </Button>
         </form>
       </CardContent>

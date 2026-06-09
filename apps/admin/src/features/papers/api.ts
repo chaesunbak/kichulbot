@@ -4,8 +4,7 @@ import {
   CreatePaperResponseSchema,
   type CreatePaperWithQuestionsRequest,
   DeletePaperResponseSchema,
-  PaperImportDraftResponseSchema,
-  PaperImportJobResponseSchema,
+  ListPaperImportJobsResponseSchema,
   UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
 import * as z from 'zod';
@@ -56,9 +55,16 @@ export async function createPaper(token: string, input: CreatePaperInput) {
 export interface CreatePaperImportDraftInput {
   questionPdf: File;
   answerPdf: File;
+  title: string;
+  year: number;
+  month?: number;
+  grade?: number;
+  round?: number;
+  examId: string;
+  questionCount: number;
+  isPublished: boolean;
   layout: string;
   variant: string;
-  examId: string;
 }
 
 export async function createPaperImportDraft(
@@ -68,9 +74,16 @@ export async function createPaperImportDraft(
   const formData = new FormData();
   formData.append('questionPdf', input.questionPdf);
   formData.append('answerPdf', input.answerPdf);
+  formData.append('title', input.title);
+  formData.append('year', String(input.year));
+  if (input.month !== undefined) formData.append('month', String(input.month));
+  if (input.grade !== undefined) formData.append('grade', String(input.grade));
+  if (input.round !== undefined) formData.append('round', String(input.round));
+  formData.append('examId', input.examId);
+  formData.append('questionCount', String(input.questionCount));
+  formData.append('isPublished', String(input.isPublished));
   formData.append('layout', input.layout);
   formData.append('variant', input.variant);
-  formData.append('examId', input.examId);
 
   return apiRequest(
     '/paper-import-drafts',
@@ -83,40 +96,12 @@ export async function createPaperImportDraft(
   );
 }
 
-export async function fetchPaperImportDraftJob(token: string, jobId: string) {
+export async function fetchPaperImportDraftJobs(token: string) {
   return apiRequest(
-    `/paper-import-drafts/${jobId}`,
-    PaperImportJobResponseSchema.parse,
+    '/paper-import-drafts',
+    ListPaperImportJobsResponseSchema.parse,
     { token },
   );
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export async function waitForPaperImportDraft(
-  token: string,
-  jobId: string,
-  options = { intervalMs: 2_000, timeoutMs: 300_000 },
-) {
-  const startedAt = Date.now();
-
-  while (Date.now() - startedAt < options.timeoutMs) {
-    const response = await fetchPaperImportDraftJob(token, jobId);
-    const { job } = response;
-
-    if (job.status === 'COMPLETED' && job.result) {
-      return PaperImportDraftResponseSchema.parse(job.result);
-    }
-    if (job.status === 'FAILED') {
-      throw new Error(job.errorMessage ?? 'PDF 추출에 실패했습니다.');
-    }
-
-    await sleep(options.intervalMs);
-  }
-
-  throw new Error('PDF 추출 시간이 초과되었습니다.');
 }
 
 export async function createPaperWithQuestions(

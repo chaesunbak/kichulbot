@@ -48,6 +48,18 @@ export type CreatePaperWithQuestionsRequest = z.infer<
   typeof CreatePaperWithQuestionsRequestSchema
 >;
 
+export const CreatePaperImportJobRequestSchema =
+  CreatePaperRequestSchema.extend({
+    layout: z.string().min(1).default('korean-history'),
+    variant: z.string().min(1).default('odd'),
+    dpi: z.number().int().min(72).max(600).optional(),
+    imageFormat: z.string().min(1).default('webp'),
+    quality: z.number().int().min(1).max(100).optional(),
+  });
+export type CreatePaperImportJobRequest = z.infer<
+  typeof CreatePaperImportJobRequestSchema
+>;
+
 export const CreatePaperResponseSchema = z.object({
   paper: AdminPaperResponseSchema,
 });
@@ -125,6 +137,7 @@ export const CreatePaperImportJobResponseSchema = z.object({
   job: z.object({
     id: z.string(),
     status: PaperImportJobStatusSchema,
+    paperId: z.string().nullable().optional(),
   }),
 });
 export type CreatePaperImportJobResponse = z.infer<
@@ -135,12 +148,27 @@ export const PaperImportJobResponseSchema = z.object({
   job: z.object({
     id: z.string(),
     status: PaperImportJobStatusSchema,
+    questionPdfName: z.string().optional(),
+    answerPdfName: z.string().optional(),
+    paperTitle: z.string().optional(),
+    paperId: z.string().nullable().optional(),
     errorMessage: z.string().nullable(),
     result: PaperImportDraftResponseSchema.nullable(),
+    createdAt: z.string().optional(),
+    startedAt: z.string().nullable().optional(),
+    completedAt: z.string().nullable().optional(),
+    failedAt: z.string().nullable().optional(),
   }),
 });
 export type PaperImportJobResponse = z.infer<
   typeof PaperImportJobResponseSchema
+>;
+
+export const ListPaperImportJobsResponseSchema = z.object({
+  jobs: z.array(PaperImportJobResponseSchema.shape.job),
+});
+export type ListPaperImportJobsResponse = z.infer<
+  typeof ListPaperImportJobsResponseSchema
 >;
 
 export const UpdatePaperRequestSchema = z.object({

@@ -105,6 +105,8 @@ model User {
 model PaperImportJob {
   id              String               @id @default(cuid())
   status          PaperImportJobStatus @default(PENDING)
+  paperId         String?
+  paperInput      Json?
   questionPdfPath String
   questionPdfName String
   answerPdfPath   String
@@ -119,6 +121,7 @@ model PaperImportJob {
   failedAt        DateTime?
 
   @@index([status, createdAt])
+  @@index([paperId])
 }
 
 model OAuthAccount {

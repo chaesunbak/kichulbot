@@ -1,4 +1,3 @@
-import type { PaperImportDraftResponse } from '@kichulbot/api-contract/papers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -10,7 +9,6 @@ import {
   createPaperWithQuestions,
   deletePaper,
   updatePaperPublished,
-  waitForPaperImportDraft,
 } from './api';
 import {
   toCreatePaperInput,
@@ -42,24 +40,25 @@ export function useCreatePaperMutation(token: string) {
 
 export function useCreatePaperImportDraftMutation({
   token,
-  onSuccess,
 }: {
   token: string;
-  onSuccess: (draft: PaperImportDraftResponse) => void;
 }) {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       questionPdf,
       answerPdf,
+      values,
+      exam,
       layout,
       variant,
-      examId,
     }: {
       questionPdf: File | null;
       answerPdf: File | null;
+      values: ImportPaperValues;
+      exam: Exam;
       layout: string;
       variant: string;
-      examId: string;
     }) => {
       if (!questionPdf || !answerPdf) {
         throw new Error('문제 PDF와 답지 PDF를 모두 선택해 주세요.');
@@ -67,14 +66,23 @@ export function useCreatePaperImportDraftMutation({
       return createPaperImportDraft(token, {
         questionPdf,
         answerPdf,
+        title: values.title,
+        year: values.year,
+        month: exam.usesMonth ? values.month : undefined,
+        grade: exam.usesGrade ? values.grade : undefined,
+        round: exam.usesRound ? values.round : undefined,
+        examId: values.examId,
+        questionCount: values.questionCount,
+        isPublished: values.isPublished,
         layout,
         variant,
-        examId,
-      }).then(({ job }) => waitForPaperImportDraft(token, job.id));
+      });
     },
-    onSuccess: (draft) => {
-      onSuccess(draft);
-      toast.success(`${draft.questions.length}개 문항 초안을 추출했습니다.`);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: paperKeys.importJobs() });
+      toast.success(
+        'PDF 가져오기 작업을 시작했습니다. 완료되면 문제지 목록에 표시됩니다.',
+      );
     },
     onError: (error) =>
       toast.error(

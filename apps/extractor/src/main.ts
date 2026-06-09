@@ -1,9 +1,22 @@
 import { spawn } from 'node:child_process';
+import { createHash, randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  unlink,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, extname, join, resolve } from 'node:path';
+import { basename, dirname, extname, join, resolve } from 'node:path';
 
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import type { Job } from 'bullmq';
 import { QueueEvents, Worker } from 'bullmq';
 import { Pool } from 'pg';
@@ -13,7 +26,7 @@ const JOB_NAME = 'extract-paper';
 const DEFAULT_STORAGE_DIR = '/app/apps/api/uploads';
 const DEFAULT_TOOLS_DIR = '/app/apps/extractor/question-extractor';
 const DEFAULT_PYTHON_BIN = '/opt/question-extractor-venv/bin/python';
-const SCRIPT_TIMEOUT_MS = 120_000;
+const SCRIPT_TIMEOUT_MS = 300_000;
 
 type PaperImportJobData = {
   jobId: string;
@@ -25,6 +38,18 @@ type InputOptions = {
   dpi?: number;
   imageFormat?: string;
   quality?: number;
+  examId?: string;
+};
+
+type PaperInput = {
+  title: string;
+  examId: string;
+  year: number;
+  month?: number | null;
+  grade?: number | null;
+  round?: number | null;
+  questionCount?: number;
+  isPublished?: boolean;
 };
 
 type PaperImportJobRow = {
@@ -33,6 +58,7 @@ type PaperImportJobRow = {
   questionPdfName: string;
   answerPdfPath: string;
   inputOptions: InputOptions;
+  paperInput: PaperInput;
 };
 
 type QuestionManifest = {
@@ -51,6 +77,10 @@ type QuestionManifest = {
     };
   }>;
 };
+
+type QuestionManifestQuestion = NonNullable<
+  QuestionManifest['questions']
+>[number];
 
 type AnswerManifest = {
   answers?: Array<{
@@ -73,6 +103,44 @@ function storageRoot() {
   return process.env.PAPER_IMPORT_STORAGE_DIR ?? DEFAULT_STORAGE_DIR;
 }
 
+function publicBaseUrl() {
+  if (storageDriver() === 'r2') {
+    return requiredEnv('R2_PUBLIC_BASE_URL').replace(/\/+$/, '');
+  }
+
+  return (
+    process.env.STORAGE_PUBLIC_BASE_URL ?? 'http://localhost:4000/uploads'
+  ).replace(/\/+$/, '');
+}
+
+function storageDriver() {
+  return process.env.STORAGE_DRIVER ?? 'local';
+}
+
+function requiredEnv(name: string) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} 환경 변수가 필요합니다.`);
+  }
+  return value;
+}
+
+let s3Client: S3Client | null = null;
+
+function getS3Client() {
+  if (s3Client) return s3Client;
+
+  s3Client = new S3Client({
+    region: 'auto',
+    endpoint: requiredEnv('R2_ENDPOINT'),
+    credentials: {
+      accessKeyId: requiredEnv('R2_ACCESS_KEY_ID'),
+      secretAccessKey: requiredEnv('R2_SECRET_ACCESS_KEY'),
+    },
+  });
+  return s3Client;
+}
+
 function toolsDir() {
   const configured =
     process.env.QUESTION_EXTRACTOR_TOOLS_DIR ?? DEFAULT_TOOLS_DIR;
@@ -90,6 +158,15 @@ function storagePath(relativePath: string) {
   return join(storageRoot(), relativePath);
 }
 
+function safeStem(path: string) {
+  const stem = basename(path, '.pdf').normalize('NFC');
+  return (
+    stem
+      .replace(/[^0-9A-Za-z가-힣._-]+/g, '_')
+      .replace(/^[._-]+|[._-]+$/g, '') || 'pdf'
+  );
+}
+
 async function loadImportJob(id: string) {
   const result = await database.query<PaperImportJobRow>(
     `
@@ -98,7 +175,8 @@ async function loadImportJob(id: string) {
       "questionPdfPath",
       "questionPdfName",
       "answerPdfPath",
-      "inputOptions"
+      "inputOptions",
+      "paperInput"
     FROM "PaperImportJob"
     WHERE "id" = $1
     `,
@@ -128,18 +206,18 @@ async function markProcessing(id: string) {
   );
 }
 
-async function markCompleted(id: string, resultJsonPath: string) {
+async function markCompleted(id: string, paperId: string) {
   await database.query(
     `
     UPDATE "PaperImportJob"
     SET
       "status" = 'COMPLETED',
-      "resultJsonPath" = $2,
+      "paperId" = $2,
       "completedAt" = NOW(),
       "updatedAt" = NOW()
     WHERE "id" = $1
     `,
-    [id, resultJsonPath],
+    [id, paperId],
   );
 }
 
@@ -177,7 +255,7 @@ async function markPendingRetry(id: string, error: unknown) {
 function runPython(scriptPath: string, args: string[]) {
   return new Promise<void>((resolvePromise, reject) => {
     const child = spawn(pythonBin(), [scriptPath, ...args], {
-      stdio: ['ignore', 'ignore', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stderr = '';
     const timeout = setTimeout(() => {
@@ -185,8 +263,12 @@ function runPython(scriptPath: string, args: string[]) {
       reject(new Error('PDF 추출 시간이 초과되었습니다.'));
     }, SCRIPT_TIMEOUT_MS);
 
+    child.stdout.on('data', (chunk: Buffer) => {
+      process.stdout.write(chunk);
+    });
     child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString();
+      process.stderr.write(chunk);
     });
     child.on('error', (error) => {
       clearTimeout(timeout);
@@ -209,79 +291,394 @@ async function readJson<T>(path: string): Promise<T> {
   return JSON.parse(await readFile(path, 'utf8')) as T;
 }
 
-function resolveMimeType(path: string) {
-  const extension = extname(path).toLowerCase();
+function normalizeForKeywordMatch(value: string) {
+  return value.toLowerCase().replace(/\s+/g, '');
+}
+
+async function loadRecommendedTags(examId: string) {
+  const result = await database.query<{ id: string; keywords: string[] }>(
+    `
+    SELECT "id", "keywords"
+    FROM "Tag"
+    WHERE "examId" = $1
+      AND cardinality("keywords") > 0
+    `,
+    [examId],
+  );
+  return result.rows;
+}
+
+function matchRecommendedTagIds(
+  question: QuestionManifestQuestion,
+  tags: Array<{ id: string; keywords: string[] }>,
+) {
+  const textLayer = question.textLayer;
+  const haystack = normalizeForKeywordMatch(
+    [
+      textLayer?.text,
+      textLayer?.promptText,
+      textLayer?.passageText,
+      ...(textLayer?.choiceTexts ?? []),
+    ].join('\n'),
+  );
+  if (!haystack) return [];
+
+  return tags
+    .filter((tag) =>
+      tag.keywords.some((keyword) => {
+        const normalizedKeyword = normalizeForKeywordMatch(keyword);
+        return (
+          Boolean(normalizedKeyword) && haystack.includes(normalizedKeyword)
+        );
+      }),
+    )
+    .map((tag) => tag.id);
+}
+
+function createPaperSlug(paperInput: PaperInput) {
+  if (paperInput.round != null) {
+    return String(paperInput.round);
+  }
+
+  const parts = [String(paperInput.year)];
+  if (paperInput.month != null) {
+    parts.push(paperInput.month.toString().padStart(2, '0'));
+  }
+  if (paperInput.grade != null) {
+    parts.push(`grade-${paperInput.grade}`);
+  }
+
+  return parts.join('-');
+}
+
+function createQuestionObjectKey(
+  examSlug: string,
+  paperSlug: string,
+  questionNumber: number,
+  questionId: string,
+  imageName: string,
+) {
+  const extension = extname(imageName).replace(/^\./, '') || 'webp';
+  return [
+    'questions',
+    examSlug,
+    paperSlug,
+    `${questionNumber.toString().padStart(3, '0')}-${questionId}.${extension}`,
+  ].join('/');
+}
+
+function resolveContentType(imageName: string) {
+  const extension = extname(imageName).toLowerCase();
   if (extension === '.png') return 'image/png';
   if (extension === '.jpg' || extension === '.jpeg') return 'image/jpeg';
   return 'image/webp';
 }
 
-async function toResponse(
+async function uploadQuestionImage(
+  sourcePath: string,
+  objectKey: string,
+  imageName: string,
+  copiedObjectKeys: string[],
+) {
+  if (storageDriver() === 'r2') {
+    await getS3Client().send(
+      new PutObjectCommand({
+        Bucket: requiredEnv('R2_BUCKET'),
+        Key: objectKey,
+        Body: await readFile(sourcePath),
+        ContentType: resolveContentType(imageName),
+      }),
+    );
+  } else {
+    const destinationPath = storagePath(objectKey);
+    await mkdir(dirname(destinationPath), { recursive: true });
+    await copyFile(sourcePath, destinationPath);
+  }
+  copiedObjectKeys.push(objectKey);
+}
+
+async function cleanupCopiedImages(objectKeys: string[]) {
+  if (storageDriver() === 'r2') {
+    await Promise.all(
+      objectKeys.map((objectKey) =>
+        getS3Client()
+          .send(
+            new DeleteObjectCommand({
+              Bucket: requiredEnv('R2_BUCKET'),
+              Key: objectKey,
+            }),
+          )
+          .catch(() => undefined),
+      ),
+    );
+    return;
+  }
+
+  await Promise.all(
+    objectKeys.map((objectKey) =>
+      unlink(storagePath(objectKey)).catch(() => undefined),
+    ),
+  );
+}
+
+async function createPaperFromExtraction(
+  importJob: PaperImportJobRow,
   manifest: QuestionManifest,
   answerManifest: AnswerManifest,
   questionDir: string,
-  sourceName: string,
 ) {
+  const questions = [...(manifest.questions ?? [])].sort(
+    (a, b) => a.number - b.number,
+  );
+  if (questions.length === 0) {
+    throw new Error('추출된 문항이 없습니다.');
+  }
+  if (
+    importJob.paperInput.questionCount &&
+    questions.length > importJob.paperInput.questionCount
+  ) {
+    throw new Error('추출된 문항 수는 문제지 문항 수를 넘을 수 없습니다.');
+  }
+
   const answers = new Map(
     (answerManifest.answers ?? []).map((answer) => [answer.number, answer]),
   );
-  const warnings = [...(answerManifest.warnings ?? [])];
-  const questions = await Promise.all(
-    [...(manifest.questions ?? [])]
-      .sort((a, b) => a.number - b.number)
-      .map(async (question) => {
-        const answer = answers.get(question.number);
-        if (!answer) {
-          warnings.push(`${question.number}번 문항의 답안을 찾지 못했습니다.`);
-        }
-        const imagePath = join(questionDir, question.image);
-        const image = await readFile(imagePath);
+  const missingAnswerNumbers = questions
+    .filter((question) => !answers.has(question.number))
+    .map((question) => question.number);
+  if (missingAnswerNumbers.length > 0) {
+    throw new Error(
+      `답안을 찾지 못한 문항이 있습니다: ${missingAnswerNumbers.join(', ')}`,
+    );
+  }
 
-        return {
-          number: question.number,
-          type: 'MULTIPLE_CHOICE',
-          choiceCount: 5,
-          answerChoice: answer?.answer_index ?? null,
-          answerText: null,
-          explanation: null,
-          rawText: question.textLayer?.text?.trim() || null,
-          promptText: question.textLayer?.promptText?.trim() || null,
-          passageText: question.textLayer?.passageText?.trim() || null,
-          choiceTexts: question.textLayer?.choiceTexts ?? [],
-          points: answer?.points ?? 5,
-          recommendedTimeSeconds: null,
-          recommendedTagIds: [],
-          tagIds: [],
-          image: {
-            filename: basename(question.image),
-            mimeType: resolveMimeType(question.image),
-            base64: image.toString('base64'),
-          },
-          textLayer: question.textLayer ?? null,
-        };
-      }),
+  const paperInput = importJob.paperInput;
+  const examResult = await database.query<{ id: string; slug: string }>(
+    `
+    SELECT "id", "slug"
+    FROM "Exam"
+    WHERE "id" = $1
+    `,
+    [paperInput.examId],
+  );
+  const exam = examResult.rows[0];
+  if (!exam) {
+    throw new Error(`시험을 찾을 수 없습니다: ${paperInput.examId}`);
+  }
+
+  const copiedObjectKeys: string[] = [];
+  const paperSlug = createPaperSlug(paperInput);
+  const tags = await loadRecommendedTags(paperInput.examId);
+  const preparedQuestions = await Promise.all(
+    questions.map(async (question) => {
+      const answer = answers.get(question.number);
+      if (!answer) {
+        throw new Error(`${question.number}번 문항의 답안을 찾지 못했습니다.`);
+      }
+
+      const questionId = randomUUID();
+      const sourcePath = join(questionDir, question.image);
+      const image = await readFile(sourcePath);
+      const objectKey = createQuestionObjectKey(
+        exam.slug,
+        paperSlug,
+        question.number,
+        questionId,
+        question.image,
+      );
+      await uploadQuestionImage(
+        sourcePath,
+        objectKey,
+        question.image,
+        copiedObjectKeys,
+      );
+
+      return {
+        id: questionId,
+        number: question.number,
+        imageUrl: `${publicBaseUrl()}/${objectKey}`,
+        imageHash: createHash('sha256').update(image).digest('hex'),
+        answerChoice: answer.answer_index ?? null,
+        points: answer.points ?? 5,
+        rawText: question.textLayer?.text?.trim() || null,
+        promptText: question.textLayer?.promptText?.trim() || null,
+        passageText: question.textLayer?.passageText?.trim() || null,
+        choiceTexts: question.textLayer?.choiceTexts ?? [],
+        recommendedTagIds: matchRecommendedTagIds(question, tags),
+      };
+    }),
   );
 
-  return {
-    paperSuggestion: {
-      title: sourceName.replace(/\.pdf$/i, ''),
-      questionCount: questions.length,
-    },
-    warnings,
-    questions,
-  };
+  try {
+    const paperId = await database.connect().then(async (client) => {
+      try {
+        await client.query('BEGIN');
+        const sessionKey = [
+          paperInput.examId,
+          paperInput.year,
+          paperInput.month ?? '-',
+          paperInput.grade ?? '-',
+          paperInput.round ?? '-',
+        ].join(':');
+        const sessionResult = await client.query<{ id: string }>(
+          `
+            INSERT INTO "ExamSession"
+              ("id", "key", "examId", "displayYear", "month", "grade", "round", "createdAt", "updatedAt")
+            VALUES
+              ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            ON CONFLICT ("key") DO UPDATE SET "key" = EXCLUDED."key"
+            RETURNING "id"
+            `,
+          [
+            randomUUID(),
+            sessionKey,
+            paperInput.examId,
+            paperInput.year,
+            paperInput.month ?? null,
+            paperInput.grade ?? null,
+            paperInput.round ?? null,
+          ],
+        );
+        const examSessionId = sessionResult.rows[0]?.id;
+        if (!examSessionId) {
+          throw new Error('시험 세션을 생성하지 못했습니다.');
+        }
+
+        const questionSetId = randomUUID();
+        await client.query(
+          `
+            INSERT INTO "QuestionSet"
+              ("id", "kind", "title", "createdAt", "updatedAt")
+            VALUES
+              ($1, 'OFFICIAL_PAPER', $2, NOW(), NOW())
+            `,
+          [questionSetId, paperInput.title],
+        );
+
+        const nextPaperId = randomUUID();
+        await client.query(
+          `
+            INSERT INTO "Paper"
+              ("id", "title", "questionCount", "isPublished", "examSessionId", "questionSetId", "createdAt", "updatedAt")
+            VALUES
+              ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            `,
+          [
+            nextPaperId,
+            paperInput.title,
+            paperInput.questionCount ?? preparedQuestions.length,
+            paperInput.isPublished ?? false,
+            examSessionId,
+            questionSetId,
+          ],
+        );
+
+        for (const question of preparedQuestions) {
+          await client.query(
+            `
+              INSERT INTO "Question"
+                (
+                  "id", "paperId", "number", "type", "imageUrl", "imageHash",
+                  "choiceCount", "rawText", "promptText", "passageText", "choiceTexts",
+                  "gradingPolicy", "answerChoice", "answerText", "explanation", "points",
+                  "recommendedTimeSeconds", "recommendedTagIds", "createdAt", "updatedAt"
+                )
+              VALUES
+                (
+                  $1, $2, $3, 'MULTIPLE_CHOICE', $4, $5,
+                  5, $6, $7, $8, $9::text[],
+                  'EXACT', $10, NULL, NULL, $11,
+                  NULL, $12::text[], NOW(), NOW()
+                )
+              `,
+            [
+              question.id,
+              nextPaperId,
+              question.number,
+              question.imageUrl,
+              question.imageHash,
+              question.rawText,
+              question.promptText,
+              question.passageText,
+              question.choiceTexts,
+              question.answerChoice,
+              question.points,
+              question.recommendedTagIds,
+            ],
+          );
+
+          const revisionId = randomUUID();
+          await client.query(
+            `
+              INSERT INTO "QuestionRevision"
+                (
+                  "id", "questionId", "revision", "type", "imageUrl", "imageHash",
+                  "choiceCount", "rawText", "promptText", "passageText", "choiceTexts",
+                  "gradingPolicy", "answerChoice", "answerText", "explanation", "points",
+                  "recommendedTimeSeconds", "createdAt"
+                )
+              VALUES
+                (
+                  $1, $2, 1, 'MULTIPLE_CHOICE', $3, $4,
+                  5, $5, $6, $7, $8::text[],
+                  'EXACT', $9, NULL, NULL, $10,
+                  NULL, NOW()
+                )
+              `,
+            [
+              revisionId,
+              question.id,
+              question.imageUrl,
+              question.imageHash,
+              question.rawText,
+              question.promptText,
+              question.passageText,
+              question.choiceTexts,
+              question.answerChoice,
+              question.points,
+            ],
+          );
+
+          await client.query(
+            `
+              INSERT INTO "QuestionSetItem"
+                ("questionSetId", "questionRevisionId", "position", "createdAt")
+              VALUES
+                ($1, $2, $3, NOW())
+              `,
+            [questionSetId, revisionId, question.number],
+          );
+        }
+
+        await client.query('COMMIT');
+        return nextPaperId;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    });
+
+    return paperId;
+  } catch (error) {
+    await cleanupCopiedImages(copiedObjectKeys);
+    throw error;
+  }
 }
 
 async function processImportJob(importJob: PaperImportJobRow) {
   const workDir = await mkdtemp(join(tmpdir(), 'kichulbot-paper-import-'));
 
   try {
+    console.log(`PDF 가져오기 작업을 시작합니다: ${importJob.id}`);
     const questionOutRoot = join(workDir, 'question-output');
     const answerOutRoot = join(workDir, 'answer-output');
     const questionScript = join(toolsDir(), 'extract_questions.py');
     const answerScript = join(toolsDir(), 'extract_answers.py');
     const options = importJob.inputOptions;
 
+    console.log(`문제 PDF 추출을 시작합니다: ${importJob.questionPdfName}`);
     await runPython(questionScript, [
       storagePath(importJob.questionPdfPath),
       '--layout',
@@ -297,19 +694,23 @@ async function processImportJob(importJob: PaperImportJobRow) {
       '--out',
       questionOutRoot,
     ]);
+    console.log(`문제 PDF 추출을 완료했습니다: ${importJob.questionPdfName}`);
+
+    console.log(`답안 PDF 추출을 시작합니다: ${importJob.id}`);
     await runPython(answerScript, [
       storagePath(importJob.answerPdfPath),
       '--out',
       answerOutRoot,
     ]);
+    console.log(`답안 PDF 추출을 완료했습니다: ${importJob.id}`);
 
     const questionDir = join(
       questionOutRoot,
-      basename(storagePath(importJob.questionPdfPath), '.pdf'),
+      safeStem(storagePath(importJob.questionPdfPath)),
     );
     const answerDir = join(
       answerOutRoot,
-      basename(storagePath(importJob.answerPdfPath), '.pdf'),
+      safeStem(storagePath(importJob.answerPdfPath)),
     );
     const manifest = await readJson<QuestionManifest>(
       join(questionDir, 'manifest.json'),
@@ -317,25 +718,20 @@ async function processImportJob(importJob: PaperImportJobRow) {
     const answers = await readJson<AnswerManifest>(
       join(answerDir, 'answers.json'),
     );
-    const response = await toResponse(
+    console.log(
+      `문제지 생성을 시작합니다: job=${importJob.id}, questions=${manifest.questions?.length ?? 0}, answers=${answers.answers?.length ?? 0}`,
+    );
+    const paperId = await createPaperFromExtraction(
+      importJob,
       manifest,
       answers,
       questionDir,
-      importJob.questionPdfName,
     );
-    const resultJsonPath = join(
-      'paper-import-jobs',
-      importJob.id,
-      'result.json',
+    console.log(
+      `문제지 생성을 완료했습니다: job=${importJob.id}, paper=${paperId}`,
     );
 
-    await writeFile(
-      storagePath(resultJsonPath),
-      JSON.stringify(response, null, 2),
-      'utf8',
-    );
-
-    return resultJsonPath;
+    return paperId;
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }
@@ -349,8 +745,8 @@ async function handleJob(job: Job<PaperImportJobData>) {
 
   try {
     const importJob = await loadImportJob(jobId);
-    const resultJsonPath = await processImportJob(importJob);
-    await markCompleted(jobId, resultJsonPath);
+    const paperId = await processImportJob(importJob);
+    await markCompleted(jobId, paperId);
   } catch (error) {
     const maxAttempts = job.opts.attempts ?? 1;
     const currentAttempt = job.attemptsMade + 1;

@@ -3,8 +3,12 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 import {
+  CreatePaperImportJobRequest,
+  CreatePaperImportJobRequestSchema,
   CreatePaperImportJobResponse,
   CreatePaperImportJobResponseSchema,
+  ListPaperImportJobsResponse,
+  ListPaperImportJobsResponseSchema,
   PaperImportDraftResponse,
   PaperImportDraftResponseSchema,
   PaperImportJobResponse,
@@ -25,9 +29,6 @@ import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service
 
 const DEFAULT_LAYOUT = 'korean-history';
 const DEFAULT_VARIANT = 'odd';
-const DEFAULT_DPI = 216;
-const DEFAULT_IMAGE_FORMAT = 'webp';
-const DEFAULT_QUALITY = 82;
 const QUEUE_NAME = 'paper-import';
 const JOB_NAME = 'extract-paper';
 
@@ -35,6 +36,20 @@ type CreateDraftInput = {
   questionPdf?: UploadedMemoryFile;
   answerPdf?: UploadedMemoryFile;
   options: Record<string, string | undefined>;
+};
+
+type PaperImportJobRow = {
+  id: string;
+  status: string;
+  questionPdfName: string;
+  answerPdfName: string;
+  paperId: string | null;
+  paperInput: unknown;
+  errorMessage: string | null;
+  createdAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  failedAt: Date | null;
 };
 
 @Injectable()
@@ -74,7 +89,7 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     this.assertPdf(questionPdf, '문제 PDF');
     this.assertPdf(answerPdf, '답지 PDF');
 
-    const options = this.resolveOptions(input.options);
+    const paperInput = this.parsePaperInput(input.options);
     const jobId = randomUUID();
     const jobDir = join(this.importRootDir, jobId);
     const questionPdfPath = join('paper-import-jobs', jobId, 'questions.pdf');
@@ -93,7 +108,8 @@ export class PaperImportDraftsService implements OnModuleDestroy {
         questionPdfName: questionPdf.originalname,
         answerPdfPath,
         answerPdfName: answerPdf.originalname,
-        inputOptions: options,
+        inputOptions: this.toExtractorOptions(paperInput),
+        paperInput,
       },
     });
 
@@ -133,7 +149,19 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       job: {
         id: job.id,
         status: job.status,
+        paperId: job.paperId,
       },
+    });
+  }
+
+  async listDraftJobs(): Promise<ListPaperImportJobsResponse> {
+    const jobs = await this.database.paperImportJob.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    return ListPaperImportJobsResponseSchema.parse({
+      jobs: jobs.map((job) => this.toJobResponse(job)),
     });
   }
 
@@ -147,26 +175,18 @@ export class PaperImportDraftsService implements OnModuleDestroy {
 
     const result =
       job.status === 'COMPLETED' && job.resultJsonPath
-        ? await this.withRecommendedTags(
-            PaperImportDraftResponseSchema.parse(
-              JSON.parse(
-                await readFile(
-                  this.resolveStoragePath(job.resultJsonPath),
-                  'utf8',
-                ),
-              ) as unknown,
-            ),
-            this.resolveExamId(job.inputOptions),
+        ? PaperImportDraftResponseSchema.parse(
+            JSON.parse(
+              await readFile(
+                this.resolveStoragePath(job.resultJsonPath),
+                'utf8',
+              ),
+            ) as unknown,
           )
         : null;
 
     return PaperImportJobResponseSchema.parse({
-      job: {
-        id: job.id,
-        status: job.status,
-        errorMessage: job.errorMessage,
-        result,
-      },
+      job: this.toJobResponse(job, result),
     });
   }
 
@@ -174,81 +194,67 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     return join(this.importRootDir, '..', relativePath);
   }
 
-  private async withRecommendedTags(
-    result: PaperImportDraftResponse,
-    examId: string | null,
-  ): Promise<PaperImportDraftResponse> {
-    if (!examId) return result;
-
-    const tags = await this.database.tag.findMany({
-      where: {
-        examId,
-        keywords: { isEmpty: false },
-      },
-      select: {
-        id: true,
-        keywords: true,
-      },
-    });
-    if (tags.length === 0) return result;
-
-    return {
-      ...result,
-      questions: result.questions.map((question) => ({
-        ...question,
-        recommendedTagIds: this.matchRecommendedTagIds(
-          [
-            question.rawText,
-            question.promptText,
-            question.passageText,
-            ...question.choiceTexts,
-          ].join('\n'),
-          tags,
-        ),
-      })),
-    };
-  }
-
-  private matchRecommendedTagIds(
-    text: string,
-    tags: Array<{ id: string; keywords: string[] }>,
-  ) {
-    const haystack = this.normalizeForKeywordMatch(text);
-    if (!haystack) return [];
-
-    return tags
-      .filter((tag) =>
-        tag.keywords.some((keyword) => {
-          const normalizedKeyword = this.normalizeForKeywordMatch(keyword);
-          return (
-            Boolean(normalizedKeyword) && haystack.includes(normalizedKeyword)
-          );
-        }),
-      )
-      .map((tag) => tag.id);
-  }
-
-  private normalizeForKeywordMatch(value: string) {
-    return value.toLowerCase().replace(/\s+/g, '');
-  }
-
-  private resolveExamId(inputOptions: unknown) {
-    if (!inputOptions || typeof inputOptions !== 'object') return null;
-    const examId = (inputOptions as { examId?: unknown }).examId;
-    return typeof examId === 'string' && examId.trim() ? examId.trim() : null;
-  }
-
-  private resolveOptions(options: Record<string, string | undefined>) {
-    const dpi = Number(options.dpi ?? DEFAULT_DPI);
-    const quality = Number(options.quality ?? DEFAULT_QUALITY);
-    return {
+  private parsePaperInput(
+    options: Record<string, string | undefined>,
+  ): CreatePaperImportJobRequest {
+    const result = CreatePaperImportJobRequestSchema.safeParse({
+      ...options,
+      year: Number(options.year),
+      month: options.month ? Number(options.month) : undefined,
+      grade: options.grade ? Number(options.grade) : undefined,
+      round: options.round ? Number(options.round) : undefined,
+      questionCount: options.questionCount
+        ? Number(options.questionCount)
+        : undefined,
+      isPublished: options.isPublished === 'true',
+      dpi: options.dpi ? Number(options.dpi) : undefined,
+      quality: options.quality ? Number(options.quality) : undefined,
       layout: options.layout || DEFAULT_LAYOUT,
       variant: options.variant || DEFAULT_VARIANT,
-      dpi: Number.isFinite(dpi) ? dpi : DEFAULT_DPI,
-      imageFormat: options.imageFormat || DEFAULT_IMAGE_FORMAT,
-      quality: Number.isFinite(quality) ? quality : DEFAULT_QUALITY,
-      examId: options.examId?.trim() || null,
+    });
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+    return result.data;
+  }
+
+  private toExtractorOptions(paperInput: CreatePaperImportJobRequest) {
+    return {
+      layout: paperInput.layout,
+      variant: paperInput.variant,
+      dpi: paperInput.dpi ?? 216,
+      imageFormat: paperInput.imageFormat,
+      quality: paperInput.quality ?? 82,
+      examId: paperInput.examId,
     };
+  }
+
+  private toJobResponse(
+    job: PaperImportJobRow,
+    result: PaperImportDraftResponse | null = null,
+  ) {
+    return {
+      id: job.id,
+      status: job.status,
+      questionPdfName: job.questionPdfName,
+      answerPdfName: job.answerPdfName,
+      paperTitle: this.resolvePaperTitle(job.paperInput),
+      paperId: job.paperId,
+      errorMessage: job.errorMessage,
+      result,
+      createdAt: job.createdAt.toISOString(),
+      startedAt: job.startedAt?.toISOString() ?? null,
+      completedAt: job.completedAt?.toISOString() ?? null,
+      failedAt: job.failedAt?.toISOString() ?? null,
+    };
+  }
+
+  private resolvePaperTitle(paperInput: unknown) {
+    if (!paperInput || typeof paperInput !== 'object') return undefined;
+    const title = (paperInput as { title?: unknown }).title;
+    return typeof title === 'string' ? title : undefined;
   }
 
   private assertPdf(file: UploadedMemoryFile, label: string) {

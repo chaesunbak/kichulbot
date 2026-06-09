@@ -17,14 +17,20 @@ import { BookOpen } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/store';
 import { CreatePaperForm } from '@/features/papers/components/create-paper-form';
 import { ImportPaperForm } from '@/features/papers/components/import-paper-form';
+import { PaperImportJobsList } from '@/features/papers/components/paper-import-jobs-list';
 import { PapersSummary } from '@/features/papers/components/papers-summary';
 import { PapersTable } from '@/features/papers/components/papers-table';
-import { papersQueryOptions } from '@/features/papers/queries';
+import {
+  paperImportJobsQueryOptions,
+  papersQueryOptions,
+} from '@/features/papers/queries';
 import { examsQueryOptions } from '@/features/reference-data/queries';
 
 export function PapersPage() {
   const token = useAuthStore((state) => state.token)!;
-  const papers = useQuery(papersQueryOptions(token)).data?.papers ?? [];
+  const papersQuery = useQuery(papersQueryOptions(token));
+  const papers = papersQuery.data?.papers ?? [];
+  const importJobsQuery = useQuery(paperImportJobsQueryOptions(token));
   const exams = useQuery(examsQueryOptions(token)).data?.exams ?? [];
   return (
     <div
@@ -52,7 +58,17 @@ export function PapersPage() {
           <TabsTrigger value="manual">수동</TabsTrigger>
         </TabsList>
         <TabsContent value="pdf">
-          <ImportPaperForm token={token} exams={exams} />
+          <div className="space-y-4">
+            <ImportPaperForm token={token} exams={exams} />
+            <PaperImportJobsList
+              jobs={importJobsQuery.data?.jobs ?? []}
+              isFetching={importJobsQuery.isFetching}
+              onRefresh={() => {
+                importJobsQuery.refetch();
+                papersQuery.refetch();
+              }}
+            />
+          </div>
         </TabsContent>
         <TabsContent value="manual">
           <CreatePaperForm token={token} exams={exams} />

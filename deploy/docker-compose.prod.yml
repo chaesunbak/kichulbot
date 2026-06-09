@@ -96,9 +96,18 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_URL: redis://redis:6379
       PAPER_IMPORT_STORAGE_DIR: /app/apps/api/uploads
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_PUBLIC_BASE_URL: https://${API_DOMAIN}/uploads
+      R2_ENDPOINT: ${R2_ENDPOINT:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET: ${R2_BUCKET:-}
+      R2_PUBLIC_BASE_URL: ${R2_PUBLIC_BASE_URL:-}
     volumes:
       - api_uploads:/app/apps/api/uploads
     networks:
+      # R2 업로드를 위해 외부 egress가 가능한 네트워크에도 연결한다.
+      - public
       - internal
 
   redis:

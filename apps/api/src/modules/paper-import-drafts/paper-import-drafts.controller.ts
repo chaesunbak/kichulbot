@@ -61,6 +61,12 @@ export class PaperImportDraftsController {
     });
   }
 
+  @Get()
+  @ApiOperation({ summary: 'PDF 가져오기 작업 목록 조회' })
+  listDraftJobs() {
+    return this.paperImportDraftsService.listDraftJobs();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'PDF 추출 작업 상태 조회' })
   getDraftJob(@Param('id') id: string) {

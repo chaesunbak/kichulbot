@@ -1,38 +1,41 @@
-import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@kichulbot/ui/components/ui/dialog';
-import { Expand } from 'lucide-react';
+import * as React from 'react';
 
 interface QuestionImagePreviewDialogProps {
   imageUrl: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onExit: () => void;
   title: string;
-  triggerClassName?: string;
 }
 
 export function QuestionImagePreviewDialog({
   imageUrl,
+  isOpen,
+  onClose,
+  onExit,
   title,
-  triggerClassName,
 }: QuestionImagePreviewDialogProps) {
+  React.useEffect(() => {
+    if (isOpen) return;
+
+    const timeoutId = window.setTimeout(onExit, 120);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen, onExit]);
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          className={triggerClassName}
-        >
-          <Expand className="size-4" aria-hidden="true" />
-          크게보기
-        </Button>
-      </DialogTrigger>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

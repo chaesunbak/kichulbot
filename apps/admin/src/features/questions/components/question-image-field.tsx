@@ -5,7 +5,7 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import { Scissors, Upload } from 'lucide-react';
+import { Expand, Scissors, Upload } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import type * as React from 'react';
 
@@ -58,6 +58,20 @@ export function QuestionImageField({
         onApply={select}
         onClose={close}
         onExit={unmount}
+      />
+    ));
+  }
+  async function openPreviewDialog() {
+    const imageUrl = previewUrl ?? existingImageUrl;
+    if (!imageUrl) return;
+
+    await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+      <QuestionImagePreviewDialog
+        imageUrl={imageUrl}
+        isOpen={isOpen}
+        onClose={close}
+        onExit={unmount}
+        title="문제 이미지 크게보기"
       />
     ));
   }
@@ -125,10 +139,15 @@ export function QuestionImageField({
             <Scissors className="size-4" aria-hidden="true" />
             자르기
           </Button>
-          <QuestionImagePreviewDialog
-            imageUrl={previewUrl ?? existingImageUrl ?? ''}
-            title="문제 이미지 크게보기"
-          />
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void openPreviewDialog()}
+          >
+            <Expand className="size-4" aria-hidden="true" />
+            크게보기
+          </Button>
         </div>
       ) : null}
       <FieldDescription>

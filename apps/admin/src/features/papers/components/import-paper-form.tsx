@@ -43,24 +43,35 @@ export function ImportPaperForm({
 
   const values = useWatch({ control: form.control });
   const selectedExam = exams.find((exam) => exam.id === values.examId);
+  const [fieldsResetKey, resetFields] = React.useReducer((key) => key + 1, 0);
 
   const draftMutation = useCreatePaperImportDraftMutation({ token });
 
   const disabled = draftMutation.isPending || !selectedExam;
 
   const loading = draftMutation.isPending;
-  const submit = form.handleSubmit((submitValues) =>
-    selectedExam
-      ? draftMutation.mutate({
-          questionPdf: submitValues.questionPdf,
-          answerPdf: submitValues.answerPdf,
-          values: submitValues,
-          exam: selectedExam,
-          layout: submitValues.layout,
-          variant: submitValues.variant,
-        })
-      : undefined,
-  );
+  const submit = form.handleSubmit((submitValues) => {
+    if (!selectedExam) {
+      return;
+    }
+
+    draftMutation.mutate(
+      {
+        questionPdf: submitValues.questionPdf,
+        answerPdf: submitValues.answerPdf,
+        values: submitValues,
+        exam: selectedExam,
+        layout: submitValues.layout,
+        variant: submitValues.variant,
+      },
+      {
+        onSuccess: () => {
+          form.reset(importPaperDefaults);
+          resetFields();
+        },
+      },
+    );
+  });
 
   return (
     <Card>
@@ -73,6 +84,7 @@ export function ImportPaperForm({
       <CardContent>
         <form className="space-y-5" onSubmit={submit}>
           <ImportPaperFields
+            key={fieldsResetKey}
             control={form.control}
             exams={exams}
             selectedExam={selectedExam}

@@ -681,16 +681,107 @@ def detect_korean_history_markers(plumb):
             number = int(word["text"][:-1])
             if not 1 <= number <= KOREAN_HISTORY_EXPECTED_QUESTIONS:
                 continue
+            if number in markers:
+                continue
 
             col = "L" if word["x0"] < center else "R"
             markers[number] = {
                 "page": pi,
                 "column": col,
+                "x0": word["x0"],
+                "x1": word["x1"],
                 "top": word["top"],
                 "bottom": word["bottom"],
             }
 
     return markers
+
+
+def has_complete_korean_history_markers(markers):
+    """PDF 텍스트 레이어에서 1~50번 마커가 모두 잡혔는지 확인한다."""
+    return set(markers) == set(range(1, KOREAN_HISTORY_EXPECTED_QUESTIONS + 1))
+
+
+def find_korean_history_content_bottom(pil, segment, scale, fallback_bottom):
+    """마커 슬랩 안에서 실제 콘텐츠가 끝나는 y 좌표를 이미지 밀도로 찾는다."""
+    x0 = max(0, round(segment["x0"] * scale))
+    x1 = min(pil.width, round(segment["x1"] * scale))
+    y0 = max(0, round(segment["y0"] * scale))
+    y1 = min(pil.height, round(segment["limit"] * scale))
+    if x1 <= x0 or y1 <= y0:
+        return fallback_bottom
+
+    pix = pil.load()
+    min_count = max(8, round((x1 - x0) * KOREAN_HISTORY_ROW_MIN_RATIO))
+    content_bottom = None
+
+    for y in range(y0, y1):
+        count = 0
+        for x in range(x0, x1):
+            if is_korean_history_content_pixel(pix[x, y]):
+                count += 1
+        if count >= min_count:
+            content_bottom = y / scale
+
+    if content_bottom is None:
+        return fallback_bottom
+    return max(fallback_bottom, content_bottom)
+
+
+def detect_korean_history_marker_page_segments(plumb, rendered_pages, markers, scale):
+    """문항 번호 마커를 절대 경계로 삼아 한능검 문항 박스를 만든다."""
+    if not has_complete_korean_history_markers(markers):
+        return None
+
+    page_segments = [[] for _ in rendered_pages]
+    by_page_column = {}
+    for number, marker in markers.items():
+        key = (marker["page"], marker["column"])
+        by_page_column.setdefault(key, []).append((number, marker))
+
+    for (page_index, column), items in by_page_column.items():
+        page = plumb.pages[page_index]
+        pil = rendered_pages[page_index]
+        footer = min(KOREAN_HISTORY_FOOTER_GUARD_Y, page.height)
+        x0, x1 = korean_history_column_bounds(page.width)[column]
+        items.sort(key=lambda item: item[1]["top"])
+
+        for index, (number, marker) in enumerate(items):
+            next_marker = items[index + 1][1] if index + 1 < len(items) else None
+            y0 = max(korean_history_body_top(page_index), marker["top"] - TOP_PAD)
+            limit = footer
+            if next_marker is not None:
+                limit = min(limit, next_marker["top"] - TOP_PAD)
+
+            fallback_bottom = min(footer, marker["bottom"] + BOTTOM_PAD)
+            content_bottom = find_korean_history_content_bottom(
+                pil,
+                {
+                    "x0": x0,
+                    "x1": x1,
+                    "y0": y0,
+                    "limit": limit,
+                },
+                scale,
+                fallback_bottom,
+            )
+            y1 = min(footer, limit, content_bottom + BOTTOM_PAD)
+            if y1 <= y0:
+                y1 = min(footer, limit, fallback_bottom)
+
+            page_segments[page_index].append({
+                "number": number,
+                "column": column,
+                "x0": x0,
+                "x1": x1,
+                "y0": y0,
+                "y1": y1,
+            })
+
+    for segments in page_segments:
+        segments.sort(key=lambda s: (0 if s["column"] == "L" else 1, s["y0"]))
+
+    return page_segments
 
 
 def expand_box_to_question_marker(box, marker, page_index, footer):
@@ -754,20 +845,32 @@ def extract_korean_history(
             render_doc[pi].render(scale=scale).to_pil().convert("RGB")
             for pi in range(len(render_doc))
         ]
-        page_segments, merge_gap = detect_korean_history_page_segments(rendered_pages, scale)
         markers = detect_korean_history_markers(plumb)
+        page_segments = detect_korean_history_marker_page_segments(
+            plumb,
+            rendered_pages,
+            markers,
+            scale,
+        )
+        if page_segments is None:
+            page_segments, merge_gap = detect_korean_history_page_segments(rendered_pages, scale)
+            segment_source = "이미지 밀도"
+        else:
+            merge_gap = None
+            segment_source = "문항 번호 마커"
 
         for pi, pil in enumerate(rendered_pages):
             page = plumb.pages[pi]
             footer = min(KOREAN_HISTORY_FOOTER_GUARD_Y, page.height)
             segments = page_segments[pi]
             for segment in segments:
+                number = segment.get("number", question_number)
                 box = expand_box_to_question_marker((
                     segment["x0"],
                     segment["y0"],
                     segment["x1"],
                     segment["y1"],
-                ), markers.get(question_number), pi, footer)
+                ), markers.get(number), pi, footer)
                 px = (
                     max(0, round(box[0] * scale)),
                     max(0, round(box[1] * scale)),
@@ -775,11 +878,11 @@ def extract_korean_history(
                     min(pil.height, round(box[3] * scale)),
                 )
                 crop = pil.crop(px)
-                fname = f"q{question_number:02d}.{image_options.extension}"
+                fname = f"q{number:02d}.{image_options.extension}"
                 fpath = Path(out_dir) / fname
                 save_crop(crop, fpath, image_options)
                 manifest["questions"].append({
-                    "number": question_number,
+                    "number": number,
                     "form": None,
                     "page": pi + 1,
                     "column": segment["column"],
@@ -790,7 +893,9 @@ def extract_korean_history(
                     "has_figure": crop_has_color(crop),
                     "textLayer": extract_text_layer(page, box),
                 })
-                question_number += 1
+                question_number = max(question_number, number + 1)
+
+        manifest["questions"].sort(key=lambda q: q["number"])
 
         with open(Path(out_dir) / "manifest.json", "w", encoding="utf-8") as f:
             json.dump(manifest, f, ensure_ascii=False, indent=2)
@@ -801,10 +906,12 @@ def extract_korean_history(
             page_counts[question["page"]] = page_counts.get(question["page"], 0) + 1
 
         print(f"✓ {total}개 문항 이미지 추출 완료 → {out_dir}/")
+        print(f"  한능검 경계 기준={segment_source}")
         print("  한능검 이미지 기반 레이아웃: " + ", ".join(
             f"{page}p={count}개" for page, count in sorted(page_counts.items())
         ))
-        print(f"  문항 병합 간격={merge_gap}pt")
+        if merge_gap is not None:
+            print(f"  문항 병합 간격={merge_gap}pt")
         print(f"  이미지 형식={image_options.image_format}, DPI={dpi}")
         print(f"  manifest: {Path(out_dir) / 'manifest.json'}")
         return manifest

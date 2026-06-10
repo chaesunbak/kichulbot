@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef } from 'react';
 
 import { ApiError, completeOAuthSessionApi } from '@/features/auth/api/client';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
+import { rememberRecentLogin } from '@/features/auth/lib/recent-login';
 
 const OAUTH_NEXT_COOKIE_NAME = 'kichulbot_oauth_next';
 
@@ -38,6 +39,7 @@ function OAuthCallbackContent() {
           nickname: user.nickname,
         });
         posthog.capture('user_logged_in', { method: 'kakao' });
+        rememberRecentLogin({ method: 'kakao', email: user.email });
         router.replace(takeOAuthNextPath());
         router.refresh();
       })

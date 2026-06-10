@@ -13,13 +13,14 @@ export function KakaoAuthButton({ href, children }: KakaoAuthButtonProps) {
   return (
     <Button
       asChild
+      size="lg"
       className="
-        w-full bg-[#FEE500] text-[#181600]
+        h-14 w-full rounded-full bg-[#FEE500] px-5 text-base text-[#181600]
         hover:bg-[#FADA0A]
       "
     >
       <a href={href} onClick={() => posthog.capture('kakao_login_clicked')}>
-        <KakaoIcon className="size-4" data-icon="inline-start" />
+        <KakaoIcon className="size-5" />
         {children}
       </a>
     </Button>

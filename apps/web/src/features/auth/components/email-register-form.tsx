@@ -24,6 +24,7 @@ import {
   registerWithEmailApi,
   requestEmailVerificationApi,
 } from '@/features/auth/api/client';
+import { rememberRecentLogin } from '@/features/auth/lib/recent-login';
 import { emailRegisterSchema } from '@/features/auth/schemas';
 import type { EmailRegisterFormValues } from '@/features/auth/types';
 
@@ -219,6 +220,7 @@ export function EmailRegisterForm() {
       });
       posthog.identify(user.id, { email: user.email, nickname: user.nickname });
       posthog.capture('user_registered', { method: 'email' });
+      rememberRecentLogin({ method: 'email', email: user.email ?? email });
       router.push('/');
       router.refresh();
     } catch (error) {

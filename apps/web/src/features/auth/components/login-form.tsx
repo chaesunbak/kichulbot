@@ -18,6 +18,7 @@ import { useForm } from 'react-hook-form';
 
 import { ApiError, loginWithEmailApi } from '@/features/auth/api/client';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
+import { rememberRecentLogin } from '@/features/auth/lib/recent-login';
 import { loginSchema } from '@/features/auth/schemas';
 import type { LoginFormValues } from '@/features/auth/types';
 
@@ -48,6 +49,7 @@ export function LoginForm() {
       });
       posthog.identify(user.id, { email: user.email, nickname: user.nickname });
       posthog.capture('user_logged_in', { method: 'email' });
+      rememberRecentLogin({ method: 'email', email: user.email ?? email });
       router.push(normalizeNextPath(searchParams.get('next')));
       router.refresh();
     } catch (error) {

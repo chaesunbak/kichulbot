@@ -1,9 +1,7 @@
-import { Button } from '@kichulbot/ui/components/ui/button';
-import { Mail } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { KakaoAuthButton } from '@/features/auth/components/kakao-auth-button';
+import { LoginMethodActions } from '@/features/auth/components/login-method-actions';
 import { getKakaoAuthStartPath } from '@/features/auth/lib/kakao-auth';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { getCachedUser } from '@/features/auth/server';
@@ -32,17 +30,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </span>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <Button asChild size="lg" variant="outline">
-              <Link href={`/login/email?next=${encodeURIComponent(nextPath)}`}>
-                <Mail className="size-4" />
-                이메일로 로그인하기
-              </Link>
-            </Button>
-            <KakaoAuthButton href={getKakaoAuthStartPath('login', nextPath)}>
-              카카오 계정으로 시작하기
-            </KakaoAuthButton>
-          </div>
+          <LoginMethodActions
+            emailHref={`/login/email?next=${encodeURIComponent(nextPath)}`}
+            kakaoHref={getKakaoAuthStartPath('login', nextPath)}
+          />
           <span className="text-center text-sm text-muted-foreground">
             아직 계정이 없으신가요?{' '}
             <Link

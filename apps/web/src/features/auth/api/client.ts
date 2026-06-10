@@ -66,9 +66,9 @@ export async function registerWithEmailApi(body: {
 }
 
 export async function completeOAuthSessionApi(
-  accessToken: string,
+  code: string,
 ): Promise<AuthResult> {
-  return clientApi.post<AuthResult>('/api/auth/oauth/session', { accessToken });
+  return clientApi.post<AuthResult>('/api/auth/oauth/session', { code });
 }
 
 export async function logoutApi(): Promise<void> {

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 
-import type { AuthUser } from '@/features/auth/types';
-import { serverApi } from '@/shared/api/server';
+import { ApiError, serverApi } from '@/shared/api/server';
+import type { AuthResponse } from '@/shared/lib/route-helpers';
 import {
   authErrorResponse,
   authSuccessResponse,
@@ -19,21 +19,23 @@ export async function POST(request: NextRequest) {
     return authErrorResponse(400, 'Invalid request body');
   }
 
-  const accessToken =
+  const code =
     body && typeof body === 'object'
-      ? (body as Record<string, unknown>).accessToken
+      ? (body as Record<string, unknown>).code
       : null;
-  if (typeof accessToken !== 'string' || !accessToken.trim()) {
-    return authErrorResponse(400, 'accessToken이 필요합니다.');
+  if (typeof code !== 'string' || !code.trim()) {
+    return authErrorResponse(400, 'OAuth 인증 코드가 필요합니다.');
   }
 
   try {
-    const res = await serverApi.get<{ data: { user: AuthUser } }>(
-      '/me',
-      accessToken,
-    );
-    return authSuccessResponse(res.data.user, accessToken);
-  } catch {
+    const res = await serverApi.post<AuthResponse>('/auth/oauth/exchange', {
+      code,
+    });
+    return authSuccessResponse(res.data.user, res.data.accessToken);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return authErrorResponse(err.status, err.message);
+    }
     return authErrorResponse(401, 'OAuth 인증 정보가 유효하지 않습니다.');
   }
 }

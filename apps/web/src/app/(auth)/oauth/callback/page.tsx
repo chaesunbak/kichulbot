@@ -18,20 +18,20 @@ function OAuthCallbackContent() {
     if (started.current) return;
     started.current = true;
 
-    const accessToken = searchParams.get('accessToken');
+    const code = searchParams.get('code');
     const oauthStatus = searchParams.get('oauth');
 
-    if (!accessToken && oauthStatus === 'connected') {
+    if (!code && oauthStatus === 'connected') {
       router.replace('/my/settings?oauth=connected');
       return;
     }
 
-    if (!accessToken) {
+    if (!code) {
       router.replace('/login?oauth=failed');
       return;
     }
 
-    completeOAuthSessionApi(accessToken)
+    completeOAuthSessionApi(code)
       .then(({ user }) => {
         posthog.identify(user.id, {
           email: user.email,

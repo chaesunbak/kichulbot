@@ -28,7 +28,6 @@ export default function GlobalError({
               <Image
                 src={constructionImage}
                 alt="공사중"
-                unoptimized
                 className="mx-auto size-24 object-contain sm:size-32"
               />
               <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">

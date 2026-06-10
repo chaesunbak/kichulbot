@@ -90,7 +90,6 @@ const FeatureItem = ({ item }: { item: FeatureSectionItem }) => {
           alt=""
           width={56}
           height={56}
-          unoptimized
           className="
             size-8 object-contain
             sm:size-8

@@ -13,7 +13,6 @@ export function ConstructionSection() {
       <Image
         src={constructionImage}
         alt="공사중"
-        unoptimized
         className="size-20 object-contain sm:size-30"
       />
       <p className="text-base font-semibold text-muted-foreground">

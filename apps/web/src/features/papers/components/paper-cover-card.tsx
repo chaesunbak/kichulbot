@@ -47,7 +47,7 @@ export function PaperCover({
   paper: Paper;
   className?: string;
 }) {
-  const palette = coverPalettes[hash(paper.exam.id) % coverPalettes.length];
+  const palette = coverPalettes[hash(paper.id) % coverPalettes.length];
 
   return (
     <div

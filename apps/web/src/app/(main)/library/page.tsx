@@ -7,13 +7,12 @@ import { LibraryManager } from '@/features/library/components/library-manager';
 import { PageContainer } from '@/shared/components/page-container';
 
 export default async function LibraryPage() {
-  const user = await getCachedUser();
-  if (!user) redirect('/login?next=/library');
-
-  const [library, bookmarkLists] = await Promise.all([
+  const [user, library, bookmarkLists] = await Promise.all([
+    getCachedUser(),
     getLibrary(),
     getBookmarkLists(),
   ]);
+  if (!user) redirect('/login?next=/library');
 
   return (
     <PageContainer>

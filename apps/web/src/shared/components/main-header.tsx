@@ -1,13 +1,12 @@
 import Link from 'next/link';
 
-import type { AuthUser } from '@/features/auth/types';
 import { DesktopNavigation } from '@/shared/components/main-navigation';
 
 interface Props {
-  user: AuthUser | null;
+  isAuthenticated: boolean;
 }
 
-export default function MainHeader({ user }: Props) {
+export default function MainHeader({ isAuthenticated }: Props) {
   return (
     <header
       className="
@@ -24,9 +23,10 @@ export default function MainHeader({ user }: Props) {
           기출봇
         </Link>
         <DesktopNavigation />
-        {user ? (
+        {isAuthenticated ? (
           <Link
             href="/my"
+            aria-label="마이페이지"
             className="
               flex shrink-0 items-center gap-2 text-sm font-medium
               text-muted-foreground
@@ -40,7 +40,7 @@ export default function MainHeader({ user }: Props) {
                 lg:inline
               "
             >
-              {user.nickname ?? user.email ?? '내 계정'}
+              내 계정
             </span>
           </Link>
         ) : (

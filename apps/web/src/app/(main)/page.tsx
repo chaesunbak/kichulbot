@@ -1,7 +1,7 @@
 import { FeatureSection } from '@/features/home/components/feature-section';
 import { MissionSection } from '@/features/home/components/mission-section';
 import { RecentLearningRecordsSection } from '@/features/home/components/recent-learning-records-section';
-import { getSolveSessionLogs } from '@/features/learning/api/server';
+import { getSolveSessionLogPage } from '@/features/learning/api/server';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server';
 import { StreakSection } from '@/features/question-attempts/components/streak-section';
 import {
@@ -13,9 +13,9 @@ import { PageContainer } from '@/shared/components/page-container';
 export default async function HomePage() {
   const currentWeek = getCurrentWeekRange();
   const streakRange = getRecentStreakRange();
-  const [questionAttempts, solveSessionLogs] = await Promise.all([
+  const [questionAttempts, solveSessionLogPage] = await Promise.all([
     getQuestionAttempts(streakRange.from, currentWeek.to),
-    getSolveSessionLogs(),
+    getSolveSessionLogPage({ limit: 4 }),
   ]);
 
   return (
@@ -28,7 +28,7 @@ export default async function HomePage() {
           lg:grid-cols-[minmax(0,1fr)_22rem]
         "
       >
-        <RecentLearningRecordsSection logs={solveSessionLogs} />
+        <RecentLearningRecordsSection logs={solveSessionLogPage.logs} />
         <MissionSection />
       </div>
     </PageContainer>

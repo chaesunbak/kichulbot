@@ -8,6 +8,7 @@ import {
   createPaperImportDraft,
   createPaperWithQuestions,
   deletePaper,
+  updatePaperMetadata,
   updatePaperPublished,
 } from './api';
 import {
@@ -20,6 +21,7 @@ import type {
   ImportPaperQuestionValues,
   ImportPaperValues,
   PaperValues,
+  UpdatePaperMetadataValues,
 } from './types';
 
 export function useCreatePaperMutation(token: string) {
@@ -148,6 +150,25 @@ export function useUpdatePaperPublishedMutation(
         error instanceof Error
           ? error.message
           : '공개 상태 변경에 실패했습니다.',
+      ),
+  });
+}
+
+export function useUpdatePaperMetadataMutation(token: string, paperId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (values: UpdatePaperMetadataValues) =>
+      updatePaperMetadata(token, paperId, values),
+    onSuccess: ({ paper }) => {
+      queryClient.setQueryData(paperKeys.detail(paperId), { paper });
+      queryClient.invalidateQueries({ queryKey: paperKeys.lists() });
+      toast.success('문제지 정보를 수정했습니다.');
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : '문제지 정보 수정에 실패했습니다.',
       ),
   });
 }

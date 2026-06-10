@@ -26,6 +26,19 @@ export const paperSchema = paperBaseSchema.omit({ isPublished: true }).extend({
   isPublished: z.enum(['false', 'true']),
 });
 
+export const updatePaperMetadataSchema = z.object({
+  title: z
+    .string()
+    .min(2, '문제지 제목을 입력해 주세요.')
+    .max(100, '문제지 제목은 100자 이하여야 합니다.'),
+  year: z
+    .number()
+    .int('연도는 정수로 입력해 주세요.')
+    .min(1994, '1994년 이후 연도를 입력해 주세요.')
+    .max(2100, '2100년 이하 연도를 입력해 주세요.'),
+  round: z.number().int('회차는 정수로 입력해 주세요.').min(1).optional(),
+});
+
 export const importPaperSchema = paperBaseSchema.extend({
   isPublished: z.boolean(),
   layout: z.enum(['korean-history', 'csat']),

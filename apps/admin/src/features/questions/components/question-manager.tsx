@@ -46,6 +46,7 @@ import { PaperDetailHeader } from '@/features/papers/components/paper-detail-hea
 import { QuestionProgress } from '@/features/papers/components/question-progress';
 import {
   useDeletePaperMutation,
+  useUpdatePaperMetadataMutation,
   useUpdatePaperPublishedMutation,
 } from '@/features/papers/mutations';
 import { paperQueryOptions } from '@/features/papers/queries';
@@ -220,6 +221,10 @@ export function QuestionManager({
     token,
     paperId,
   );
+  const updatePaperMetadataMutation = useUpdatePaperMetadataMutation(
+    token,
+    paperId,
+  );
   const deletePaperMutation = useDeletePaperMutation(token, paperId, () =>
     navigate('/'),
   );
@@ -305,7 +310,11 @@ export function QuestionManager({
       <PaperDetailHeader
         paper={paper}
         isUpdating={updatePaperPublishedMutation.isPending}
+        isUpdatingMetadata={updatePaperMetadataMutation.isPending}
         isDeleting={deletePaperMutation.isPending}
+        onUpdateMetadata={(values, options) =>
+          updatePaperMetadataMutation.mutate(values, options)
+        }
         onPublishedChange={(checked) =>
           updatePaperPublishedMutation.mutate(checked)
         }

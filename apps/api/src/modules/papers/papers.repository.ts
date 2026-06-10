@@ -17,6 +17,15 @@ interface CreatePaperInput {
   isPublished: boolean;
 }
 
+interface UpdatePaperInput {
+  title?: string;
+  displayYear?: number;
+  month?: number | null;
+  grade?: number | null;
+  round?: number | null;
+  isPublished?: boolean;
+}
+
 @Injectable()
 export class PapersRepository {
   constructor(private readonly db: DatabaseService) {}
@@ -106,11 +115,60 @@ export class PapersRepository {
     return items.map((item) => item.questionRevision.questionId);
   }
 
-  update(id: string, data: Prisma.PaperUncheckedUpdateInput) {
-    return this.db.paper.update({
-      where: { id },
-      data,
-      include: this.paperIncludes(),
+  update(id: string, data: UpdatePaperInput) {
+    return this.db.$transaction(async (tx) => {
+      const paper = await tx.paper.findUniqueOrThrow({
+        where: { id },
+        include: { examSession: true },
+      });
+      const { displayYear, month, grade, round, ...paperData } = data;
+      const shouldUpdateSession =
+        displayYear !== undefined ||
+        month !== undefined ||
+        grade !== undefined ||
+        round !== undefined;
+
+      let examSessionId: string | undefined;
+      if (shouldUpdateSession) {
+        const nextSession = {
+          examId: paper.examSession.examId,
+          displayYear: displayYear ?? paper.examSession.displayYear,
+          month: month ?? paper.examSession.month,
+          grade: grade ?? paper.examSession.grade,
+          round: round ?? paper.examSession.round,
+        };
+        const key = [
+          nextSession.examId,
+          nextSession.displayYear,
+          nextSession.month,
+          nextSession.grade,
+          nextSession.round,
+        ]
+          .map((value) => value ?? '-')
+          .join(':');
+        const session = await tx.examSession.upsert({
+          where: { key },
+          create: { key, ...nextSession },
+          update: {},
+        });
+        examSessionId = session.id;
+      }
+
+      if (paperData.title !== undefined) {
+        await tx.questionSet.update({
+          where: { id: paper.questionSetId },
+          data: { title: paperData.title },
+        });
+      }
+
+      return tx.paper.update({
+        where: { id },
+        data: {
+          ...paperData,
+          ...(examSessionId ? { examSessionId } : {}),
+        },
+        include: this.paperIncludes(),
+      });
     });
   }
 

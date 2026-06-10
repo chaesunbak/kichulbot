@@ -14,6 +14,7 @@ import {
   ListPapersResponse,
   ListPapersResponseSchema,
   PaperResponse,
+  UpdatePaperRequestSchema,
   UpdatePaperResponse,
   UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
@@ -276,14 +277,31 @@ export class PapersService {
     id: string,
     dto: UpdatePaperDto,
   ): Promise<UpdatePaperResponse> {
+    const parsedDto = this.parseUpdatePaperRequest(dto);
     const paper = await this.papersRepository.findById(id);
     if (!paper) {
       throw new NotFoundException('문제지를 찾을 수 없습니다.');
     }
 
-    const updated = await this.papersRepository.update(id, {
-      isPublished: dto.isPublished,
-    });
+    const nextSession = {
+      month: paper.examSession.month,
+      grade: paper.examSession.grade,
+      round:
+        parsedDto.round !== undefined
+          ? parsedDto.round
+          : paper.examSession.round,
+    };
+    this.assertSessionFields(paper.examSession.exam, nextSession);
+
+    const updateInput: Parameters<PapersRepository['update']>[1] = {};
+    if (parsedDto.title !== undefined) updateInput.title = parsedDto.title;
+    if (parsedDto.year !== undefined) updateInput.displayYear = parsedDto.year;
+    if (parsedDto.round !== undefined) updateInput.round = parsedDto.round;
+    if (parsedDto.isPublished !== undefined) {
+      updateInput.isPublished = parsedDto.isPublished;
+    }
+
+    const updated = await this.papersRepository.update(id, updateInput);
 
     return UpdatePaperResponseSchema.parse({
       paper: this.toPaperResponse(updated, UserRole.ADMIN),
@@ -431,6 +449,16 @@ export class PapersService {
     }
 
     const result = CreatePaperWithQuestionsRequestSchema.safeParse(parsed);
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+    return result.data;
+  }
+
+  private parseUpdatePaperRequest(input: unknown) {
+    const result = UpdatePaperRequestSchema.safeParse(input);
     if (!result.success) {
       throw new BadRequestException(
         result.error.issues.map((issue) => issue.message),

@@ -171,9 +171,16 @@ export type ListPaperImportJobsResponse = z.infer<
   typeof ListPaperImportJobsResponseSchema
 >;
 
-export const UpdatePaperRequestSchema = z.object({
-  isPublished: z.boolean(),
-});
+export const UpdatePaperRequestSchema = z
+  .object({
+    title: z.string().min(1).max(100).optional(),
+    year: z.number().int().min(1994).max(2100).optional(),
+    round: z.number().int().min(1).nullable().optional(),
+    isPublished: z.boolean().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: '수정할 문제지 정보를 입력해 주세요.',
+  });
 export type UpdatePaperRequest = z.infer<typeof UpdatePaperRequestSchema>;
 
 export const UpdatePaperResponseSchema = z.object({

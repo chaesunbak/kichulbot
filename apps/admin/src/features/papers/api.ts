@@ -136,6 +136,28 @@ export async function updatePaperPublished(
   );
 }
 
+export interface UpdatePaperMetadataInput {
+  title: string;
+  year: number;
+  round?: number;
+}
+
+export async function updatePaperMetadata(
+  token: string,
+  paperId: string,
+  input: UpdatePaperMetadataInput,
+) {
+  return apiRequest(
+    `/exam-papers/${paperId}`,
+    UpdatePaperResponseSchema.parse,
+    {
+      method: 'PATCH',
+      token,
+      body: input,
+    },
+  );
+}
+
 export async function deletePaper(token: string, paperId: string) {
   return apiRequest(
     `/exam-papers/${paperId}`,

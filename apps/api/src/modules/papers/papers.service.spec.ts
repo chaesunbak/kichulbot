@@ -323,6 +323,46 @@ describe('PapersService', () => {
     expect(response.paper).toMatchObject({ id: 'paper_1', isPublished: true });
   });
 
+  it('관리자는 문제지 제목과 시행연도, 회차를 수정할 수 있다', async () => {
+    const roundExam = { ...exam, usesRound: true };
+    const roundSession = {
+      ...examSession,
+      key: 'exam_1:2025:-:-:75',
+      round: 75,
+      exam: roundExam,
+    };
+    repository.findById.mockResolvedValue(
+      paper({ examSession: roundSession } as never) as never,
+    );
+    repository.update.mockResolvedValue(
+      paper({
+        title: '2026학년도 수능 한국사',
+        examSession: {
+          ...roundSession,
+          displayYear: 2026,
+          round: 76,
+        },
+      } as never),
+    );
+
+    const response = await service.updatePaper('paper_1', {
+      title: '2026학년도 수능 한국사',
+      year: 2026,
+      round: 76,
+    });
+
+    expect(repository.update).toHaveBeenCalledWith('paper_1', {
+      title: '2026학년도 수능 한국사',
+      displayYear: 2026,
+      round: 76,
+    });
+    expect(response.paper).toMatchObject({
+      title: '2026학년도 수능 한국사',
+      year: 2026,
+      round: 76,
+    });
+  });
+
   it('시험지와 저장된 문항 이미지를 함께 삭제한다', async () => {
     repository.findById.mockResolvedValue({
       ...paper(),

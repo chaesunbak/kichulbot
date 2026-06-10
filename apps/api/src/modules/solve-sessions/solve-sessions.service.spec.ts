@@ -59,6 +59,7 @@ const question = {
   points: 5,
   recommendedTimeSeconds: 60,
   recommendedTagIds: [],
+  recommendedTagMatches: [],
   createdAt: now,
   updatedAt: now,
 } satisfies Question;

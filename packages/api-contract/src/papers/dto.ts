@@ -33,6 +33,14 @@ export const CreatePaperQuestionRequestSchema = z.object({
   points: z.number().int().min(1).max(100),
   recommendedTimeSeconds: z.number().int().min(1).nullable().optional(),
   recommendedTagIds: z.array(z.string()).default([]),
+  recommendedTagMatches: z
+    .array(
+      z.object({
+        tagId: z.string().min(1),
+        keywords: z.array(z.string().trim().min(1)),
+      }),
+    )
+    .default([]),
   tagIds: z.array(z.string()).default([]),
   imageFileName: z.string().min(1),
 });
@@ -103,6 +111,14 @@ export const PaperImportDraftQuestionSchema = z.object({
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
   recommendedTagIds: z.array(z.string()).default([]),
+  recommendedTagMatches: z
+    .array(
+      z.object({
+        tagId: z.string(),
+        keywords: z.array(z.string()),
+      }),
+    )
+    .default([]),
   tagIds: z.array(z.string()),
   image: PaperImportDraftImageSchema,
   textLayer: PaperImportDraftQuestionTextLayerSchema.nullable().optional(),

@@ -5,6 +5,7 @@ import {
   IsArray,
   IsEnum,
   IsInt,
+  IsObject,
   IsOptional,
   IsString,
   Max,
@@ -114,6 +115,16 @@ export class UpdateQuestionDto implements UpdateQuestionRequest {
   @IsArray()
   @IsString({ each: true })
   recommendedTagIds?: string[];
+
+  @ApiProperty({
+    required: false,
+    type: [Object],
+    description: '추천 태그가 매칭된 키워드 목록입니다.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsObject({ each: true })
+  recommendedTagMatches?: UpdateQuestionRequest['recommendedTagMatches'];
 
   @ApiProperty({
     required: false,

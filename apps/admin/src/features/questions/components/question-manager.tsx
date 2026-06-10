@@ -880,20 +880,63 @@ function RecommendedTagButtons({
     <div className="mb-3 space-y-2 rounded-md border border-dashed p-3">
       <p className="text-xs font-medium text-muted-foreground">추천 태그</p>
       <div className="flex flex-wrap gap-2">
-        {recommendedTags.map((tag) => (
-          <Button
-            key={tag.id}
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onApply(tag)}
-          >
-            {tag.name}
-          </Button>
-        ))}
+        {recommendedTags.map((tag) => {
+          const matchedKeywords = getRecommendedTagKeywords(question, tag);
+
+          return (
+            <Button
+              key={tag.id}
+              className="h-auto items-start py-2 text-left"
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onApply(tag)}
+            >
+              <span className="flex min-w-0 flex-col gap-1">
+                <span>{tag.name}</span>
+                {matchedKeywords.length > 0 && (
+                  <span className="max-w-56 truncate text-xs font-normal text-muted-foreground">
+                    근거: {matchedKeywords.join(', ')}
+                  </span>
+                )}
+              </span>
+            </Button>
+          );
+        })}
       </div>
     </div>
   );
+}
+
+function getRecommendedTagKeywords(
+  question: AdminPaperQuestionResponse,
+  tag: TagResponse,
+) {
+  const savedMatch = question.recommendedTagMatches.find(
+    (match) => match.tagId === tag.id,
+  );
+  if (savedMatch && savedMatch.keywords.length > 0) {
+    return savedMatch.keywords;
+  }
+
+  const haystack = normalizeForKeywordMatch(
+    [
+      question.rawText,
+      question.promptText,
+      question.passageText,
+      ...question.choiceTexts,
+    ].join('\n'),
+  );
+  if (!haystack) return [];
+
+  return tag.keywords.filter((keyword) => {
+    const normalizedKeyword = normalizeForKeywordMatch(keyword);
+    return Boolean(normalizedKeyword) && haystack.includes(normalizedKeyword);
+  });
+}
+
+function normalizeForKeywordMatch(value: string) {
+  return value.toLowerCase().replace(/\s+/g, '');
 }
 
 function isEditableKeyTarget(target: EventTarget | null) {

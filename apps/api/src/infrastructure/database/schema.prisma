@@ -288,6 +288,7 @@ model Question {
   points                 Int                @default(5)
   recommendedTimeSeconds Int?
   recommendedTagIds      String[]           @default([])
+  recommendedTagMatches  Json               @default("[]")
   paper                  Paper              @relation(fields: [paperId], references: [id], onDelete: Cascade)
   revisions              QuestionRevision[]
   tags                   QuestionTag[]

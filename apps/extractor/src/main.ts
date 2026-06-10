@@ -308,7 +308,7 @@ async function loadRecommendedTags(examId: string) {
   return result.rows;
 }
 
-function matchRecommendedTagIds(
+function matchRecommendedTags(
   question: QuestionManifestQuestion,
   tags: Array<{ id: string; keywords: string[] }>,
 ) {
@@ -324,15 +324,16 @@ function matchRecommendedTagIds(
   if (!haystack) return [];
 
   return tags
-    .filter((tag) =>
-      tag.keywords.some((keyword) => {
+    .map((tag) => ({
+      tagId: tag.id,
+      keywords: tag.keywords.filter((keyword) => {
         const normalizedKeyword = normalizeForKeywordMatch(keyword);
         return (
           Boolean(normalizedKeyword) && haystack.includes(normalizedKeyword)
         );
       }),
-    )
-    .map((tag) => tag.id);
+    }))
+    .filter((match) => match.keywords.length > 0);
 }
 
 function createPaperSlug(paperInput: PaperInput) {
@@ -493,6 +494,8 @@ async function createPaperFromExtraction(
         copiedObjectKeys,
       );
 
+      const recommendedTagMatches = matchRecommendedTags(question, tags);
+
       return {
         id: questionId,
         number: question.number,
@@ -504,7 +507,8 @@ async function createPaperFromExtraction(
         promptText: question.textLayer?.promptText?.trim() || null,
         passageText: question.textLayer?.passageText?.trim() || null,
         choiceTexts: question.textLayer?.choiceTexts ?? [],
-        recommendedTagIds: matchRecommendedTagIds(question, tags),
+        recommendedTagIds: recommendedTagMatches.map((match) => match.tagId),
+        recommendedTagMatches,
       };
     }),
   );
@@ -581,14 +585,14 @@ async function createPaperFromExtraction(
                   "id", "paperId", "number", "type", "imageUrl", "imageHash",
                   "choiceCount", "rawText", "promptText", "passageText", "choiceTexts",
                   "gradingPolicy", "answerChoice", "answerText", "explanation", "points",
-                  "recommendedTimeSeconds", "recommendedTagIds", "createdAt", "updatedAt"
+                  "recommendedTimeSeconds", "recommendedTagIds", "recommendedTagMatches", "createdAt", "updatedAt"
                 )
               VALUES
                 (
                   $1, $2, $3, 'MULTIPLE_CHOICE', $4, $5,
                   5, $6, $7, $8, $9::text[],
                   'EXACT', $10, NULL, NULL, $11,
-                  NULL, $12::text[], NOW(), NOW()
+                  NULL, $12::text[], $13::jsonb, NOW(), NOW()
                 )
               `,
             [
@@ -604,6 +608,7 @@ async function createPaperFromExtraction(
               question.answerChoice,
               question.points,
               question.recommendedTagIds,
+              JSON.stringify(question.recommendedTagMatches),
             ],
           );
 

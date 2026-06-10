@@ -17,6 +17,12 @@ export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 export const GradingPolicySchema = z.enum(['EXACT', 'ANY_CHOICE']);
 export type GradingPolicy = z.infer<typeof GradingPolicySchema>;
 
+export const RecommendedTagMatchSchema = z.object({
+  tagId: z.string(),
+  keywords: z.array(z.string()),
+});
+export type RecommendedTagMatch = z.infer<typeof RecommendedTagMatchSchema>;
+
 export const AnswerModeSchema = z.enum(['ONE_BY_ONE', 'EXAM']);
 export type AnswerMode = z.infer<typeof AnswerModeSchema>;
 

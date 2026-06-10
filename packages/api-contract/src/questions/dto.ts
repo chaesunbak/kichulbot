@@ -19,6 +19,14 @@ export const CreateQuestionRequestSchema = z
     points: z.number().int().min(1).max(1000).optional(),
     recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
     recommendedTagIds: z.array(z.string().min(1)).optional(),
+    recommendedTagMatches: z
+      .array(
+        z.object({
+          tagId: z.string().min(1),
+          keywords: z.array(z.string().trim().min(1)),
+        }),
+      )
+      .optional(),
     tagIds: z.array(z.string().min(1)).optional(),
   })
   .superRefine(
@@ -70,6 +78,14 @@ export const UpdateQuestionRequestSchema = z.object({
   points: z.number().int().min(1).max(1000).optional(),
   recommendedTimeSeconds: z.number().int().min(1).max(3600).optional(),
   recommendedTagIds: z.array(z.string().min(1)).optional(),
+  recommendedTagMatches: z
+    .array(
+      z.object({
+        tagId: z.string().min(1),
+        keywords: z.array(z.string().trim().min(1)),
+      }),
+    )
+    .optional(),
   tagIds: z.array(z.string().min(1)).optional(),
 });
 export type UpdateQuestionRequest = z.infer<typeof UpdateQuestionRequestSchema>;

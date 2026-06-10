@@ -139,6 +139,7 @@ export class PapersService {
             recommendedTimeSeconds:
               question.recommendedTimeSeconds ?? undefined,
             recommendedTagIds: question.recommendedTagIds,
+            recommendedTagMatches: question.recommendedTagMatches,
             tagIds: question.tagIds,
           },
           image,
@@ -267,6 +268,9 @@ export class PapersService {
           points: question.points,
           recommendedTimeSeconds: question.recommendedTimeSeconds,
           recommendedTagIds: question.recommendedTagIds,
+          recommendedTagMatches: toRecommendedTagMatches(
+            question.recommendedTagMatches,
+          ),
           isBookmarked: bookmarkedQuestionIds.has(question.id),
         };
       }),
@@ -384,6 +388,9 @@ export class PapersService {
         points: question.points,
         recommendedTimeSeconds: question.recommendedTimeSeconds,
         recommendedTagIds: question.recommendedTagIds,
+        recommendedTagMatches: toRecommendedTagMatches(
+          question.recommendedTagMatches,
+        ),
         tags:
           question.tags?.map((questionTag) => ({
             id: questionTag.tag.id,
@@ -519,4 +526,25 @@ export class PapersService {
         .catch(() => undefined);
     }
   }
+}
+
+function toRecommendedTagMatches(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const tagId = (item as { tagId?: unknown }).tagId;
+      const keywords = (item as { keywords?: unknown }).keywords;
+      if (typeof tagId !== 'string' || !Array.isArray(keywords)) return null;
+      return {
+        tagId,
+        keywords: keywords.filter(
+          (keyword): keyword is string => typeof keyword === 'string',
+        ),
+      };
+    })
+    .filter(
+      (item): item is { tagId: string; keywords: string[] } => item !== null,
+    );
 }

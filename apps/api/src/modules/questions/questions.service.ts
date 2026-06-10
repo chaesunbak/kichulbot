@@ -103,6 +103,7 @@ export class QuestionsService {
           points: dto.points ?? 5,
           recommendedTimeSeconds: dto.recommendedTimeSeconds,
           recommendedTagIds,
+          recommendedTagMatches: dto.recommendedTagMatches ?? [],
           imageUrl: url,
           imageHash,
         },
@@ -192,6 +193,7 @@ export class QuestionsService {
       points: dto.points,
       recommendedTimeSeconds: dto.recommendedTimeSeconds,
       recommendedTagIds: dto.recommendedTagIds,
+      recommendedTagMatches: dto.recommendedTagMatches,
     };
 
     if (file) {
@@ -407,6 +409,9 @@ export class QuestionsService {
       points: question.points,
       recommendedTimeSeconds: question.recommendedTimeSeconds,
       recommendedTagIds: question.recommendedTagIds,
+      recommendedTagMatches: toRecommendedTagMatches(
+        question.recommendedTagMatches,
+      ),
       tags: question.tags.map((questionTag) => ({
         id: questionTag.tag.id,
         name: questionTag.tag.name,
@@ -430,4 +435,25 @@ export class QuestionsService {
   private normalizeChoiceTexts(choiceTexts?: string[]) {
     return choiceTexts?.map((text) => text.trim()).filter(Boolean) ?? [];
   }
+}
+
+function toRecommendedTagMatches(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const tagId = (item as { tagId?: unknown }).tagId;
+      const keywords = (item as { keywords?: unknown }).keywords;
+      if (typeof tagId !== 'string' || !Array.isArray(keywords)) return null;
+      return {
+        tagId,
+        keywords: keywords.filter(
+          (keyword): keyword is string => typeof keyword === 'string',
+        ),
+      };
+    })
+    .filter(
+      (item): item is { tagId: string; keywords: string[] } => item !== null,
+    );
 }

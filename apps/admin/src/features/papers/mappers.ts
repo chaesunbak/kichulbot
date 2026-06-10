@@ -53,6 +53,7 @@ export function toCreatePaperWithQuestionsInput(
       points: question.points,
       recommendedTimeSeconds: question.recommendedTimeSeconds,
       recommendedTagIds: question.recommendedTagIds,
+      recommendedTagMatches: question.recommendedTagMatches,
       tagIds: question.tagIds,
       imageFileName: question.image.filename,
     })),

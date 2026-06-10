@@ -3,6 +3,7 @@ import {
   GradingPolicySchema,
   IsoDateStringSchema,
   QuestionTypeSchema,
+  RecommendedTagMatchSchema,
 } from '../common.js';
 import { TagResponseSchema } from '../tags/schema.js';
 
@@ -25,6 +26,7 @@ export const AdminQuestionResponseSchema = z.object({
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
   recommendedTagIds: z.array(z.string()),
+  recommendedTagMatches: z.array(RecommendedTagMatchSchema).default([]),
   tags: z.array(TagResponseSchema),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,

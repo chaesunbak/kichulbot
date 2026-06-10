@@ -3,6 +3,7 @@ import {
   GradingPolicySchema,
   IsoDateStringSchema,
   QuestionTypeSchema,
+  RecommendedTagMatchSchema,
 } from '../common.js';
 import { TagResponseSchema } from '../tags/schema.js';
 import { TaxonomyResponseSchema } from '../taxonomy/schema.js';
@@ -25,6 +26,7 @@ export const QuestionResponseSchema = z.object({
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
   recommendedTagIds: z.array(z.string()),
+  recommendedTagMatches: z.array(RecommendedTagMatchSchema).default([]),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });
@@ -69,6 +71,7 @@ export const PaperQuestionResponseSchema = z.object({
   points: z.number().int(),
   recommendedTimeSeconds: z.number().int().nullable(),
   recommendedTagIds: z.array(z.string()),
+  recommendedTagMatches: z.array(RecommendedTagMatchSchema).default([]),
   isBookmarked: z.boolean(),
 });
 export type PaperQuestionResponse = z.infer<typeof PaperQuestionResponseSchema>;

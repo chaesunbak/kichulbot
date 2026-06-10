@@ -181,6 +181,38 @@ export function QuestionManager({
     resetFormForQuestion(question);
   }
 
+  const moveToQuestion = React.useCallback(
+    (direction: 'previous' | 'next') => {
+      const targetQuestion =
+        direction === 'previous' ? previousQuestion : nextQuestion;
+      if (!targetQuestion) return;
+
+      resetFormForQuestion(targetQuestion);
+    },
+    [nextQuestion, previousQuestion, resetFormForQuestion],
+  );
+
+  React.useEffect(() => {
+    if (!editingQuestion) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (isEditableKeyTarget(event.target)) return;
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        moveToQuestion('previous');
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        moveToQuestion('next');
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingQuestion, moveToQuestion]);
+
   const saveQuestionMutation = useSaveQuestionMutation({
     token,
     paperId,
@@ -364,38 +396,14 @@ export function QuestionManager({
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {editingQuestion && (
-                    <>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={!previousQuestion}
-                        onClick={() =>
-                          previousQuestion && beginEdit(previousQuestion)
-                        }
-                      >
-                        <ChevronLeft className="size-4" aria-hidden="true" />
-                        이전문제
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={!nextQuestion}
-                        onClick={() => nextQuestion && beginEdit(nextQuestion)}
-                      >
-                        다음문제
-                        <ChevronRight className="size-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => beginCreate()}
-                      >
-                        <Plus className="size-4" aria-hidden="true" />새 문항
-                      </Button>
-                    </>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => beginCreate()}
+                    >
+                      <Plus className="size-4" aria-hidden="true" />새 문항
+                    </Button>
                   )}
                 </div>
               </div>
@@ -672,6 +680,35 @@ export function QuestionManager({
                       {editingQuestion ? '문항 수정' : '문항 등록'}
                     </Button>
                   </div>
+                  {editingQuestion && (
+                    <div
+                      className="
+                        grid gap-2
+                        sm:grid-cols-2
+                      "
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!previousQuestion}
+                        aria-keyshortcuts="ArrowLeft"
+                        onClick={() => moveToQuestion('previous')}
+                      >
+                        <ChevronLeft className="size-4" aria-hidden="true" />
+                        이전문항
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!nextQuestion}
+                        aria-keyshortcuts="ArrowRight"
+                        onClick={() => moveToQuestion('next')}
+                      >
+                        다음문항
+                        <ChevronRight className="size-4" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  )}
                 </form>
               )}
             </CardContent>
@@ -856,6 +893,19 @@ function RecommendedTagButtons({
         ))}
       </div>
     </div>
+  );
+}
+
+function isEditableKeyTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  const tagName = target.tagName.toLowerCase();
+  return (
+    target.isContentEditable ||
+    tagName === 'input' ||
+    tagName === 'textarea' ||
+    tagName === 'select' ||
+    target.closest('[role="combobox"]') !== null
   );
 }
 

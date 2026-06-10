@@ -7,6 +7,7 @@ export type JwtUser = {
   sub: string;
   role: UserRole;
   authType: UserAuthType;
+  tokenVersion: number;
 };
 
 export type RequestUser = {

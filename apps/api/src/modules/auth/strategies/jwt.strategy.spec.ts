@@ -44,12 +44,14 @@ describe('JwtStrategy', () => {
         sub: 'user_1',
         role: UserRole.USER,
         authType: UserAuthType.EMAIL,
+        tokenVersion: 0,
       }),
     ).resolves.toEqual(requestUser);
     expect(authService.validateJwtPayload).toHaveBeenCalledWith({
       sub: 'user_1',
       role: UserRole.USER,
       authType: UserAuthType.EMAIL,
+      tokenVersion: 0,
     });
   });
 
@@ -72,6 +74,7 @@ describe('JwtStrategy', () => {
         sub: 'missing_user',
         role: UserRole.USER,
         authType: UserAuthType.EMAIL,
+        tokenVersion: 0,
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });

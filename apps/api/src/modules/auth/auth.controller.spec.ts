@@ -30,6 +30,7 @@ describe('AuthController', () => {
       login: jest.fn(),
       getMe: jest.fn(),
       handleKakaoCallback: jest.fn(),
+      exchangeOAuthCode: jest.fn(),
     } as unknown as jest.Mocked<AuthService>;
 
     controller = new AuthController(authService);
@@ -106,6 +107,19 @@ describe('AuthController', () => {
       password: 'new-password123',
     });
   });
+
+  it('OAuth 일회용 code 교환 요청을 인증 서비스에 위임한다', async () => {
+    authService.exchangeOAuthCode.mockResolvedValue({
+      user: { ...serializedUser, email: 'student@example.com' },
+      accessToken: 'token',
+    });
+
+    await controller.exchangeOAuthCode({ code: 'oauth-code' });
+
+    expect(authService.exchangeOAuthCode).toHaveBeenCalledWith({
+      code: 'oauth-code',
+    });
+  });
 });
 
 describe('MeController', () => {
@@ -117,7 +131,6 @@ describe('MeController', () => {
       getMe: jest.fn(),
       updateMe: jest.fn(),
       listAuthConnections: jest.fn(),
-      linkKakao: jest.fn(),
       deleteMe: jest.fn(),
     } as unknown as jest.Mocked<AuthService>;
 

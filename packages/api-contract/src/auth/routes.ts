@@ -13,7 +13,7 @@ import {
   AuthResponseSchema,
   MeResponseSchema,
   AuthConnectionsResponseSchema,
-  KakaoOAuthProfileRequestSchema,
+  OAuthCodeExchangeRequestSchema,
 } from './dto.js';
 
 export const authRoutes = {
@@ -53,6 +53,12 @@ export const authRoutes = {
     request: ConfirmEmailVerificationRequestSchema,
     response: EmailVerificationConfirmResponseSchema,
   },
+  exchangeOAuthCode: {
+    method: 'POST',
+    path: '/auth/oauth/exchange',
+    request: OAuthCodeExchangeRequestSchema,
+    response: AuthResponseSchema,
+  },
   me: {
     method: 'GET',
     path: '/me',
@@ -63,12 +69,6 @@ export const authRoutes = {
     method: 'GET',
     path: '/me/auth-connections',
     request: null,
-    response: AuthConnectionsResponseSchema,
-  },
-  linkKakao: {
-    method: 'POST',
-    path: '/me/auth-connections/kakao',
-    request: KakaoOAuthProfileRequestSchema,
     response: AuthConnectionsResponseSchema,
   },
   deleteMe: {

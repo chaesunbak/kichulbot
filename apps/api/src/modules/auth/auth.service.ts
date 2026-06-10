@@ -43,6 +43,7 @@ import {
   EmailVerificationDto,
   KakaoOAuthProfileDto,
   LoginDto,
+  OAuthCodeExchangeDto,
   PasswordResetConfirmDto,
   PasswordResetDto,
   RegisterDto,
@@ -216,15 +217,28 @@ export class AuthService {
   async handleKakaoCallback(profile: KakaoOAuthProfileDto, state: string) {
     const payload = await this.verifyOAuthState(state);
     if (payload.mode === 'link') {
-      if (!payload.userId) {
+      if (!payload.userId || typeof payload.tokenVersion !== 'number') {
         throw new UnauthorizedException('계정 연결 인증 정보가 필요합니다.');
       }
-      await this.linkKakao(payload.userId, profile);
+      await this.linkKakao(payload.userId, payload.tokenVersion, profile);
       return this.redirectUrl('connected', undefined, payload.redirectUrl);
     }
 
     const response = await this.loginWithKakao(profile);
-    return this.redirectUrl('login', response.accessToken, payload.redirectUrl);
+    const code = await this.issueOAuthAuthorizationCode(response.user.id);
+    return this.redirectUrl('login', { code }, payload.redirectUrl);
+  }
+
+  async exchangeOAuthCode(dto: OAuthCodeExchangeDto): Promise<AuthResponse> {
+    const authorizationCode =
+      await this.usersRepository.consumeOAuthAuthorizationCode(
+        this.hashOAuthAuthorizationCode(dto.code),
+      );
+    if (!authorizationCode?.user) {
+      throw new UnauthorizedException('OAuth 인증 코드가 유효하지 않습니다.');
+    }
+
+    return this.toAuthResponse(authorizationCode.user);
   }
 
   async loginWithKakao(profile: KakaoOAuthProfileDto) {
@@ -275,12 +289,16 @@ export class AuthService {
     );
   }
 
-  async linkKakao(
+  private async linkKakao(
     userId: string,
+    tokenVersion: number,
     profile: KakaoOAuthProfileDto,
   ): Promise<AuthConnectionsResponse> {
     const user = await this.usersRepository.findById(userId);
     if (!user) {
+      throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
+    }
+    if (user.tokenVersion !== tokenVersion) {
       throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
     }
 
@@ -337,7 +355,7 @@ export class AuthService {
 
   async validateJwtPayload(payload: JwtUser) {
     const user = await this.usersRepository.findById(payload.sub);
-    if (!user) {
+    if (!user || user.tokenVersion !== payload.tokenVersion) {
       throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
     }
 
@@ -357,6 +375,7 @@ export class AuthService {
         sub: user.id,
         role: user.role,
         authType: user.authType,
+        tokenVersion: user.tokenVersion,
       } satisfies JwtUser,
       {
         secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
@@ -370,6 +389,7 @@ export class AuthService {
       const payload = await this.jwtService.verifyAsync<{
         mode: 'login' | 'link';
         userId?: string;
+        tokenVersion?: number;
         redirectUrl?: string;
       }>(state, {
         secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
@@ -382,13 +402,13 @@ export class AuthService {
 
   private redirectUrl(
     status: string,
-    accessToken?: string,
+    params: { code?: string } = {},
     redirectUrl = this.configService.getOrThrow<string>('auth.webRedirectUrl'),
   ) {
     const url = new URL(redirectUrl);
     url.searchParams.set('oauth', status);
-    if (accessToken) {
-      url.searchParams.set('accessToken', accessToken);
+    if (params.code) {
+      url.searchParams.set('code', params.code);
     }
     return url.toString();
   }
@@ -420,6 +440,21 @@ export class AuthService {
 
   private hashPasswordResetToken(token: string) {
     return createHash('sha256').update(token).digest('hex');
+  }
+
+  private async issueOAuthAuthorizationCode(userId: string) {
+    const code = randomBytes(32).toString('base64url');
+    await this.usersRepository.expireOAuthAuthorizationCodes(userId);
+    await this.usersRepository.createOAuthAuthorizationCode({
+      userId,
+      codeHash: this.hashOAuthAuthorizationCode(code),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+    return code;
+  }
+
+  private hashOAuthAuthorizationCode(code: string) {
+    return createHash('sha256').update(code).digest('hex');
   }
 
   private passwordResetUrl(token: string) {

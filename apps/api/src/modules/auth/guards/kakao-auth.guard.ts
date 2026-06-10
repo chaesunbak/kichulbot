@@ -8,6 +8,7 @@ type OAuthMode = 'login' | 'link';
 type OAuthState = {
   mode: OAuthMode;
   userId?: string;
+  tokenVersion?: number;
   redirectUrl?: string;
 };
 
@@ -23,10 +24,15 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
   getAuthenticateOptions(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
     const mode = this.getMode(request);
-    const userId = this.getUserId(request);
+    const authUser = this.getAuthenticatedUser(request);
     const redirectUrl = this.getRedirectUrl(request);
     const state = this.jwtService.sign(
-      { mode, userId, redirectUrl } satisfies OAuthState,
+      {
+        mode,
+        userId: authUser?.userId,
+        tokenVersion: authUser?.tokenVersion,
+        redirectUrl,
+      } satisfies OAuthState,
       {
         secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
         expiresIn: '10m',
@@ -46,20 +52,23 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
     return mode === 'link' ? mode : 'login';
   }
 
-  private getUserId(request: Request) {
+  private getAuthenticatedUser(request: Request) {
     const authorization = request.headers.authorization;
     if (!authorization?.startsWith('Bearer ')) {
       return undefined;
     }
 
     try {
-      const payload = this.jwtService.verify<{ sub: string }>(
-        authorization.slice('Bearer '.length),
-        {
-          secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
-        },
-      );
-      return payload.sub;
+      const payload = this.jwtService.verify<{
+        sub: string;
+        tokenVersion?: number;
+      }>(authorization.slice('Bearer '.length), {
+        secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
+      });
+      if (typeof payload.tokenVersion !== 'number') {
+        return undefined;
+      }
+      return { userId: payload.sub, tokenVersion: payload.tokenVersion };
     } catch {
       return undefined;
     }

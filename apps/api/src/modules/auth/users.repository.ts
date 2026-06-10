@@ -126,7 +126,7 @@ export class UsersRepository {
   updatePassword(userId: string, passwordHash: string) {
     return this.db.user.update({
       where: { id: userId },
-      data: { passwordHash },
+      data: { passwordHash, tokenVersion: { increment: 1 } },
       include: { oauthAccounts: true },
     });
   }
@@ -257,6 +257,44 @@ export class UsersRepository {
     return this.db.passwordResetToken.update({
       where: { id },
       data: { usedAt: new Date() },
+    });
+  }
+
+  expireOAuthAuthorizationCodes(userId: string) {
+    return this.db.oAuthAuthorizationCode.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+  }
+
+  createOAuthAuthorizationCode(data: {
+    userId: string;
+    codeHash: string;
+    expiresAt: Date;
+  }) {
+    return this.db.oAuthAuthorizationCode.create({ data });
+  }
+
+  consumeOAuthAuthorizationCode(codeHash: string, now = new Date()) {
+    return this.db.$transaction(async (tx) => {
+      const result = await tx.oAuthAuthorizationCode.updateMany({
+        where: {
+          codeHash,
+          usedAt: null,
+          expiresAt: { gt: now },
+        },
+        data: { usedAt: now },
+      });
+      if (result.count !== 1) return null;
+
+      return tx.oAuthAuthorizationCode.findUnique({
+        where: { codeHash },
+        include: {
+          user: {
+            include: { oauthAccounts: true },
+          },
+        },
+      });
     });
   }
 

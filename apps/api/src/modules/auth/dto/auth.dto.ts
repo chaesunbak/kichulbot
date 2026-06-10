@@ -9,6 +9,7 @@ import {
   KakaoOAuthProfileRequest,
   LoginRequest,
   MeResponse,
+  OAuthCodeExchangeRequest,
   PasswordResetConfirmRequest,
   PasswordResetConfirmResponse,
   PasswordResetIssueResponse,
@@ -187,6 +188,15 @@ export class KakaoOAuthProfileDto implements KakaoOAuthProfileRequest {
   @IsOptional()
   @IsObject()
   rawProfile?: Record<string, unknown> | null;
+}
+
+export class OAuthCodeExchangeDto implements OAuthCodeExchangeRequest {
+  @ApiProperty({
+    description: 'OAuth 콜백에서 전달받은 일회용 인증 코드입니다.',
+  })
+  @IsString()
+  @MinLength(1)
+  code: string;
 }
 
 export class UpdateMeDto implements UpdateMeRequest {

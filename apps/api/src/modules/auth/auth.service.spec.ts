@@ -21,6 +21,7 @@ function user(overrides: Partial<TestUser> = {}): TestUser {
     id: 'user_1',
     email: 'student@example.com',
     passwordHash: null,
+    tokenVersion: 0,
     nickname: null,
     timezone: 'Asia/Seoul',
     authType: UserAuthType.EMAIL,
@@ -61,6 +62,9 @@ describe('AuthService', () => {
       createPasswordResetToken: jest.fn(),
       findUsablePasswordResetToken: jest.fn(),
       markPasswordResetTokenUsed: jest.fn(),
+      expireOAuthAuthorizationCodes: jest.fn(),
+      createOAuthAuthorizationCode: jest.fn(),
+      consumeOAuthAuthorizationCode: jest.fn(),
       isUniqueConstraintError: jest.fn(),
     } as unknown as jest.Mocked<UsersRepository>;
 
@@ -167,7 +171,7 @@ describe('AuthService', () => {
     );
   });
 
-  it('카카오 콜백은 state의 모바일 redirectUrl로 access token을 전달한다', async () => {
+  it('카카오 콜백은 state의 모바일 redirectUrl로 일회용 code를 전달한다', async () => {
     jwtService.verifyAsync.mockResolvedValue({
       mode: 'login',
       redirectUrl: 'kichulbot://oauth/callback',
@@ -180,19 +184,64 @@ describe('AuthService', () => {
         authType: UserAuthType.OAUTH,
       }),
     );
+    usersRepository.expireOAuthAuthorizationCodes.mockResolvedValue({
+      count: 0,
+    });
+    usersRepository.createOAuthAuthorizationCode.mockResolvedValue(
+      {} as Awaited<
+        ReturnType<UsersRepository['createOAuthAuthorizationCode']>
+      >,
+    );
+
+    const redirectUrl = await service.handleKakaoCallback(
+      {
+        providerAccountId: '12345',
+        providerEmail: 'student@example.com',
+        providerNickname: '학생',
+        rawProfile: null,
+      },
+      'oauth-state',
+    );
+    const url = new URL(redirectUrl);
+
+    expect(url.protocol).toBe('kichulbot:');
+    expect(url.searchParams.get('oauth')).toBe('login');
+    expect(url.searchParams.get('accessToken')).toBeNull();
+    expect(url.searchParams.get('code')).toEqual(expect.any(String));
+    expect(usersRepository.createOAuthAuthorizationCode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user_1',
+        codeHash: expect.any(String),
+        expiresAt: expect.any(Date),
+      }),
+    );
+  });
+
+  it('OAuth 일회용 code를 access token으로 교환한다', async () => {
+    usersRepository.consumeOAuthAuthorizationCode.mockResolvedValue({
+      id: 'code_1',
+      userId: 'user_1',
+      codeHash: 'code-hash',
+      expiresAt: new Date(Date.now() + 60_000),
+      usedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
+      user: user({
+        email: 'student@example.com',
+        authType: UserAuthType.OAUTH,
+      }),
+    });
 
     await expect(
-      service.handleKakaoCallback(
-        {
-          providerAccountId: '12345',
-          providerEmail: 'student@example.com',
-          providerNickname: '학생',
-          rawProfile: null,
-        },
-        'oauth-state',
-      ),
-    ).resolves.toBe(
-      'kichulbot://oauth/callback?oauth=login&accessToken=access-token',
+      service.exchangeOAuthCode({ code: 'oauth-code' }),
+    ).resolves.toMatchObject({
+      accessToken: 'access-token',
+      user: {
+        id: 'user_1',
+      },
+    });
+    expect(usersRepository.consumeOAuthAuthorizationCode).toHaveBeenCalledWith(
+      expect.any(String),
     );
   });
 
@@ -399,6 +448,19 @@ describe('AuthService', () => {
     expect(usersRepository.markPasswordResetTokenUsed).toHaveBeenCalledWith(
       'reset_1',
     );
+  });
+
+  it('JWT tokenVersion이 사용자와 다르면 인증을 거부한다', async () => {
+    usersRepository.findById.mockResolvedValue(user({ tokenVersion: 2 }));
+
+    await expect(
+      service.validateJwtPayload({
+        sub: 'user_1',
+        role: UserRole.USER,
+        authType: UserAuthType.EMAIL,
+        tokenVersion: 1,
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('현재 사용자 닉네임을 수정한다', async () => {

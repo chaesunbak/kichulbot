@@ -32,9 +32,9 @@ import {
   EmailVerificationConfirmResponseDto,
   EmailVerificationDto,
   EmailVerificationIssueResponseDto,
-  KakaoOAuthProfileDto,
   LoginDto,
   MeResponseDto,
+  OAuthCodeExchangeDto,
   PasswordResetConfirmDto,
   PasswordResetConfirmResponseDto,
   PasswordResetDto,
@@ -153,6 +153,21 @@ export class AuthController {
     );
     return { url };
   }
+
+  @Post('oauth/exchange')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'OAuth 일회용 코드 교환' })
+  @ApiCreatedResponse({
+    description: 'OAuth 일회용 코드를 access token으로 교환합니다.',
+    type: AuthResponseDto,
+  })
+  @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
+  @ApiUnauthorizedResponse({
+    description: 'OAuth 인증 코드가 유효하지 않습니다.',
+  })
+  exchangeOAuthCode(@Body() dto: OAuthCodeExchangeDto) {
+    return this.authService.exchangeOAuthCode(dto);
+  }
 }
 
 @ApiTags('me')
@@ -201,21 +216,6 @@ export class MeController {
   })
   authConnections(@CurrentUser() user: RequestUser) {
     return this.authService.listAuthConnections(user.id);
-  }
-
-  @Post('auth-connections/kakao')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '내 계정에 카카오 계정 연결' })
-  @ApiCreatedResponse({
-    description: '카카오 계정을 현재 사용자에게 연결합니다.',
-    type: AuthConnectionsResponseDto,
-  })
-  linkKakao(
-    @CurrentUser() user: RequestUser,
-    @Body() dto: KakaoOAuthProfileDto,
-  ) {
-    return this.authService.linkKakao(user.id, dto);
   }
 
   @Delete()

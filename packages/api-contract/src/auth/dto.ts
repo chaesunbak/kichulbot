@@ -72,6 +72,13 @@ export type KakaoOAuthProfileRequest = z.infer<
   typeof KakaoOAuthProfileRequestSchema
 >;
 
+export const OAuthCodeExchangeRequestSchema = z.object({
+  code: z.string().min(1),
+});
+export type OAuthCodeExchangeRequest = z.infer<
+  typeof OAuthCodeExchangeRequestSchema
+>;
+
 export const AuthResponseSchema = z.object({
   user: UserResponseSchema,
   accessToken: z.string().min(1),

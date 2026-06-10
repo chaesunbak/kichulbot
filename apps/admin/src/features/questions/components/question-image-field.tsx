@@ -1,14 +1,17 @@
+import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
   FieldDescription,
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import { Upload } from 'lucide-react';
+import { Scissors, Upload } from 'lucide-react';
+import { overlay } from 'overlay-kit';
 import type * as React from 'react';
 
 import { cn } from '@/shared/lib/utils';
 
+import { QuestionImageCropDialog } from './question-image-crop-dialog';
 import { QuestionImagePreviewDialog } from './question-image-preview-dialog';
 
 interface QuestionImageFieldProps {
@@ -24,6 +27,7 @@ interface QuestionImageFieldProps {
 
 export function QuestionImageField({
   existingImageUrl,
+  image,
   inputKey,
   isDragging,
   previewUrl,
@@ -42,6 +46,22 @@ export function QuestionImageField({
     const image = event.dataTransfer.files[0];
     if (image) select(image);
   }
+  async function openCropDialog() {
+    const imageUrl = previewUrl ?? existingImageUrl;
+    if (!imageUrl) return;
+
+    await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+      <QuestionImageCropDialog
+        imageUrl={imageUrl}
+        fileName={image?.name ?? getImageFileName(imageUrl)}
+        isOpen={isOpen}
+        onApply={select}
+        onClose={close}
+        onExit={unmount}
+      />
+    ));
+  }
+
   return (
     <Field>
       <FieldLabel htmlFor="question-image">문제 이미지</FieldLabel>
@@ -95,7 +115,16 @@ export function QuestionImageField({
         )}
       </label>
       {previewUrl || existingImageUrl ? (
-        <div className="mt-2 flex justify-end">
+        <div className="mt-2 flex justify-end gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => void openCropDialog()}
+          >
+            <Scissors className="size-4" aria-hidden="true" />
+            자르기
+          </Button>
           <QuestionImagePreviewDialog
             imageUrl={previewUrl ?? existingImageUrl ?? ''}
             title="문제 이미지 크게보기"
@@ -109,4 +138,14 @@ export function QuestionImageField({
       </FieldDescription>
     </Field>
   );
+}
+
+function getImageFileName(imageUrl: string) {
+  try {
+    const url = new URL(imageUrl, window.location.href);
+    const fileName = url.pathname.split('/').filter(Boolean).at(-1);
+    return fileName ? decodeURIComponent(fileName) : 'question-image.webp';
+  } catch {
+    return 'question-image.webp';
+  }
 }

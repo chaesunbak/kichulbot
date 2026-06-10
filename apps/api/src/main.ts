@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 
@@ -32,7 +33,12 @@ async function bootstrap() {
   // 로컬 스토리지 드라이버에서는 업로드된 문제 이미지를 /uploads 로 정적 제공한다.
   if (configService.get<string>('storage.driver') === 'local') {
     const localDir = configService.getOrThrow<string>('storage.local.dir');
-    app.useStaticAssets(localDir, { prefix: '/uploads/' });
+    app.useStaticAssets(localDir, {
+      prefix: '/uploads/',
+      setHeaders: (response: Response) => {
+        response.setHeader('Access-Control-Allow-Origin', '*');
+      },
+    });
   }
 
   app.setGlobalPrefix('api');

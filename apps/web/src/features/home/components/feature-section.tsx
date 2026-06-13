@@ -16,40 +16,40 @@ interface FeatureSectionItem {
   iconSrc: StaticImageData;
 }
 
-export function FeatureSection() {
-  const featureItems = [
-    {
-      href: '/library',
-      label: '내 서재',
-      iconSrc: libraryIcon,
-    },
-    {
-      href: '/resources',
-      label: '시험지 풀이',
-      iconSrc: paperIcon,
-    },
-    {
-      href: '/resources/search',
-      label: '시험지 검색',
-      iconSrc: searchIcon,
-    },
-    {
-      href: '/recap',
-      label: '오답 복습',
-      iconSrc: recapIcon,
-    },
-    {
-      href: '/library',
-      label: '북마크',
-      iconSrc: bookmarkIcon,
-    },
-    {
-      href: '/report',
-      label: '학습 분석',
-      iconSrc: reportIcon,
-    },
-  ] satisfies FeatureSectionItem[];
+const featureItems = [
+  {
+    href: '/library',
+    label: '내 서재',
+    iconSrc: libraryIcon,
+  },
+  {
+    href: '/resources',
+    label: '시험지 풀이',
+    iconSrc: paperIcon,
+  },
+  {
+    href: '/resources/search',
+    label: '시험지 검색',
+    iconSrc: searchIcon,
+  },
+  {
+    href: '/recap',
+    label: '오답 복습',
+    iconSrc: recapIcon,
+  },
+  {
+    href: '/library',
+    label: '북마크',
+    iconSrc: bookmarkIcon,
+  },
+  {
+    href: '/report',
+    label: '학습 분석',
+    iconSrc: reportIcon,
+  },
+] satisfies FeatureSectionItem[];
 
+export function FeatureSection() {
   return (
     <Card>
       <CardContent>

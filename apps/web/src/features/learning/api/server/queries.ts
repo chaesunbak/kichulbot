@@ -1,3 +1,5 @@
+import { ApiError } from '@kichulbot/api-contract';
+
 import { getToken } from '@/features/auth/server';
 import type {
   DailyWrongQuestionSet,
@@ -6,7 +8,7 @@ import type {
   SolveSessionLogPage,
   SolveSessionLogStatus,
 } from '@/features/learning/types';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 
 export const getSolveSession = async (id: string): Promise<SolveSession> => {
   const token = await getToken();

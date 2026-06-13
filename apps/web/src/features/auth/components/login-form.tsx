@@ -1,6 +1,7 @@
 'use client';
 
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { ApiError } from '@kichulbot/api-contract';
 import { PasswordInput } from '@kichulbot/ui/components/password-input';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -16,7 +17,7 @@ import posthog from 'posthog-js';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { ApiError, loginWithEmailApi } from '@/features/auth/api/client';
+import { loginWithEmailApi } from '@/features/auth/api/client/mutations';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { rememberRecentLogin } from '@/features/auth/lib/recent-login';
 import { loginSchema } from '@/features/auth/schemas';

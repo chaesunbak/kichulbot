@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
-import { getSolveSessionLogs } from '@/features/learning/api/server';
+import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import type { LibraryFolder } from '@/features/learning/types';
-import { getLibrary } from '@/features/library/api/server';
+import { getLibrary } from '@/features/library/api/server/queries';
 import { LibraryPaperActions } from '@/features/library/components/library-paper-actions';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';

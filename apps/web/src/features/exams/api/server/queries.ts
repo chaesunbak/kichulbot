@@ -1,6 +1,8 @@
+import { ApiError } from '@kichulbot/api-contract';
+
 import { getToken } from '@/features/auth/server';
 import type { Category, Exam } from '@/features/exams/types';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 
 export type { Category, Exam } from '@/features/exams/types';
 

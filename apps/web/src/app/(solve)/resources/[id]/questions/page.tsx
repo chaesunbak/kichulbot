@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
-import { getPaperQuestions } from '@/features/papers/api/server';
+import { getPaperQuestions } from '@/features/papers/api/server/queries';
 import { PaperQuestionViewer } from '@/features/papers/components/paper-question-viewer';
 
 export default async function PaperQuestionsPage({

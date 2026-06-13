@@ -1,4 +1,6 @@
-import { ApiError, serverApi } from '@/shared/api/server';
+import { ApiError } from '@kichulbot/api-contract';
+
+import { serverApi } from '@/shared/api/server';
 import {
   authErrorResponse,
   rejectCrossOriginRequest,

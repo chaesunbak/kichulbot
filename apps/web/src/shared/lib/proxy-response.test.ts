@@ -1,6 +1,6 @@
+import { ApiError } from '@kichulbot/api-contract';
 import { describe, expect, it } from 'vitest';
 
-import { ApiError } from '@/shared/api/server';
 import { proxyErrorResponse } from '@/shared/lib/proxy-response';
 
 describe('proxyErrorResponse', () => {

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
-import { getQuestionAttempts } from '@/features/question-attempts/api/server';
+import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { StreakSummaryCard } from '@/features/question-attempts/components/streak-summary-card';
 import {
   getCurrentWeekRange,

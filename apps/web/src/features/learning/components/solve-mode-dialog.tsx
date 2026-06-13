@@ -9,7 +9,7 @@ import {
 } from '@kichulbot/ui/components/ui/dialog';
 import { type ReactNode, useEffect } from 'react';
 
-import type { SolveMode } from '@/features/learning/api/client';
+import type { SolveMode } from '@/features/learning/types';
 
 export function SolveModeDialog({
   isOpen,

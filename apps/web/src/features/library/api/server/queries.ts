@@ -1,10 +1,12 @@
+import { ApiError } from '@kichulbot/api-contract';
+
 import { getToken } from '@/features/auth/server';
 import type {
   BookmarkList,
   BookmarkListSummary,
   Library,
 } from '@/features/learning/types';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 
 export const getLibrary = async (): Promise<Library> => {
   const token = await getToken();

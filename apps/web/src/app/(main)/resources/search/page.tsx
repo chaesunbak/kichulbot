@@ -1,5 +1,5 @@
-import { getCategories, getExams } from '@/features/exams/api/server';
-import { getPapers } from '@/features/papers/api/server';
+import { getCategories, getExams } from '@/features/exams/api/server/queries';
+import { getPapers } from '@/features/papers/api/server/queries';
 import { PaperGrid } from '@/features/papers/components/paper-grid';
 import { ResourceSearchControls } from '@/features/papers/components/resource-search-controls';
 import { loadResourceSearchParams } from '@/features/papers/lib/resource-search-params';

@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
 import type { BookmarkList } from '@/features/learning/types';
-import { getBookmarkList } from '@/features/library/api/server';
+import { getBookmarkList } from '@/features/library/api/server/queries';
 import { BookmarkListDetail } from '@/features/library/components/bookmark-list-detail';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';

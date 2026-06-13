@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
-import { getSolveSessionLogs } from '@/features/learning/api/server';
+import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
-import { getPaper, type Paper } from '@/features/papers/api/server';
+import { getPaper, type Paper } from '@/features/papers/api/server/queries';
 import { PaperActions } from '@/features/papers/components/paper-actions';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { PaperViewTracker } from '@/features/papers/components/paper-view-tracker';

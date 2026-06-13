@@ -1,8 +1,8 @@
 import { FeatureSection } from '@/features/home/components/feature-section';
 import { MissionSection } from '@/features/home/components/mission-section';
 import { RecentLearningRecordsSection } from '@/features/home/components/recent-learning-records-section';
-import { getSolveSessionLogPage } from '@/features/learning/api/server';
-import { getQuestionAttempts } from '@/features/question-attempts/api/server';
+import { getSolveSessionLogPage } from '@/features/learning/api/server/queries';
+import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { StreakSection } from '@/features/question-attempts/components/streak-section';
 import {
   getCurrentWeekRange,

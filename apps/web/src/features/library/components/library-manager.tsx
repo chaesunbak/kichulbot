@@ -36,7 +36,7 @@ import {
   createLibraryFolder,
   deleteLibraryFolder,
   renameLibraryFolder,
-} from '@/features/library/api/client';
+} from '@/features/library/api/client/mutations';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
 import { SectionTitle } from '@/shared/components/section-title';

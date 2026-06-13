@@ -1,13 +1,8 @@
 import type {
   BookmarkListSummary,
-  Library,
   LibraryFolder,
 } from '@/features/learning/types';
 import { clientApi } from '@/shared/api/client';
-
-export async function getLibrary(): Promise<Library> {
-  return clientApi.get<Library>('/api/me/library');
-}
 
 export async function createBookmarkList(
   name: string,
@@ -17,13 +12,6 @@ export async function createBookmarkList(
     { name },
   );
   return body.bookmarkList;
-}
-
-export async function getBookmarkLists(): Promise<BookmarkListSummary[]> {
-  const body = await clientApi.get<{
-    bookmarkLists: BookmarkListSummary[];
-  }>('/api/me/question-lists');
-  return body.bookmarkLists;
 }
 
 export async function addQuestionToBookmarkList({

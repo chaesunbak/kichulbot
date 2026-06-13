@@ -1,5 +1,6 @@
 'use client';
 
+import { ApiError } from '@kichulbot/api-contract';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +19,7 @@ import { useRouter } from 'next/navigation';
 import type { MouseEvent } from 'react';
 import { useState } from 'react';
 
-import { ApiError, deleteAccountApi } from '@/features/auth/api/client';
+import { deleteAccountApi } from '@/features/auth/api/client/mutations';
 
 export function DeleteAccountButton() {
   const router = useRouter();

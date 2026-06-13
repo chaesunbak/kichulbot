@@ -1,8 +1,9 @@
+import { ApiError } from '@kichulbot/api-contract';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { COOKIE_NAME } from '@/features/auth/server';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 import {
   authErrorResponse,
   rejectCrossOriginRequest,

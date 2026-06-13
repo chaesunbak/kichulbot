@@ -14,7 +14,7 @@ import {
   getSolveSessionLogPage,
   getSolveSessionLogs,
   getTodayWrongQuestions,
-} from '@/features/learning/api/server';
+} from '@/features/learning/api/server/queries';
 import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
 import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
 import { getTodayStats } from '@/features/learning/lib/recap-stats';

@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { createLatestWrongQuestionSolveSession } from '@/features/learning/api/client';
+import { createLatestWrongQuestionSolveSession } from '@/features/learning/api/client/mutations';
 import type { WrongReviewStats } from '@/features/learning/lib/recap-stats';
 import type { DailyWrongQuestionSet } from '@/features/learning/types';
 

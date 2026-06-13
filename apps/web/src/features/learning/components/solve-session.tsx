@@ -29,7 +29,7 @@ import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import {
   saveSolveSessionAnswer,
   submitSolveSession,
-} from '@/features/learning/api/client';
+} from '@/features/learning/api/client/mutations';
 import { QuestionActions } from '@/features/learning/components/question-actions';
 import { QuestionReportMenuItem } from '@/features/learning/components/question-report-button';
 import {

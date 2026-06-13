@@ -14,7 +14,7 @@ import { overlay } from 'overlay-kit';
 import { useState } from 'react';
 
 import type { BookmarkListSummary } from '@/features/learning/types';
-import { createBookmarkList as createBookmarkListApi } from '@/features/library/api/client';
+import { createBookmarkList as createBookmarkListApi } from '@/features/library/api/client/mutations';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
 import { SectionTitle } from '@/shared/components/section-title';
 

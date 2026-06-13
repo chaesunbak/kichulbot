@@ -7,14 +7,11 @@ import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
 import { useState } from 'react';
 
-import {
-  createBookmarkListSolveSession,
-  type SolveMode,
-} from '@/features/learning/api/client';
+import { createBookmarkListSolveSession } from '@/features/learning/api/client/mutations';
 import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
 import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
-import type { BookmarkList } from '@/features/learning/types';
-import { removeQuestionFromBookmarkList } from '@/features/library/api/client';
+import type { BookmarkList, SolveMode } from '@/features/learning/types';
+import { removeQuestionFromBookmarkList } from '@/features/library/api/client/mutations';
 
 export function BookmarkListDetail({
   initialList,

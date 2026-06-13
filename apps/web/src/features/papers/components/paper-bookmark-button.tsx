@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
 import { useState } from 'react';
 
-import { addExamPaperToLibrary } from '@/features/papers/api/client';
+import { addExamPaperToLibrary } from '@/features/papers/api/client/mutations';
 
 const MIN_ADDING_DURATION_MS = 400;
 

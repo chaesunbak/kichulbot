@@ -1,7 +1,8 @@
+import { ApiError } from '@kichulbot/api-contract';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ServerApiModule from '@/shared/api/server';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 import { proxyAuthenticatedRequest } from '@/shared/lib/authenticated-proxy';
 
 const auth = vi.hoisted(() => ({

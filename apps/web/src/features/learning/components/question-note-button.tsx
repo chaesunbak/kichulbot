@@ -16,10 +16,8 @@ import { usePathname } from 'next/navigation';
 import { overlay } from 'overlay-kit';
 import { useEffect, useState } from 'react';
 
-import {
-  getQuestionNote,
-  saveQuestionNote,
-} from '@/features/learning/api/client';
+import { saveQuestionNote } from '@/features/learning/api/client/mutations';
+import { getQuestionNote } from '@/features/learning/api/client/queries';
 import { LoginRequiredDialog } from '@/features/learning/components/login-required-dialog';
 import { cn } from '@/shared/lib/utils';
 

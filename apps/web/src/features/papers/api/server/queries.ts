@@ -1,6 +1,8 @@
+import { ApiError } from '@kichulbot/api-contract';
+
 import { getToken } from '@/features/auth/server';
 import type { Paper, PaperQuestion } from '@/features/papers/types';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 
 export type { Paper, Taxonomy } from '@/features/papers/types';
 

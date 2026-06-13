@@ -1,6 +1,7 @@
 'use client';
 
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { ApiError } from '@kichulbot/api-contract';
 import { PasswordInput } from '@kichulbot/ui/components/password-input';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -19,11 +20,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import {
-  ApiError,
   confirmEmailVerificationApi,
   registerWithEmailApi,
   requestEmailVerificationApi,
-} from '@/features/auth/api/client';
+} from '@/features/auth/api/client/mutations';
 import { rememberRecentLogin } from '@/features/auth/lib/recent-login';
 import { emailRegisterSchema } from '@/features/auth/schemas';
 import type { EmailRegisterFormValues } from '@/features/auth/types';

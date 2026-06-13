@@ -1,10 +1,10 @@
+import { ApiError } from '@kichulbot/api-contract';
 import { notFound, redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
-import { getSolveSession } from '@/features/learning/api/server';
+import { getSolveSession } from '@/features/learning/api/server/queries';
 import { ResultSession } from '@/features/learning/components/result-session';
 import type { SolveSession } from '@/features/learning/types';
-import { ApiError } from '@/shared/api/server';
 
 export default async function ResultPage({
   params,

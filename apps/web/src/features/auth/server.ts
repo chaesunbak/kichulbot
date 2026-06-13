@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 
-import { getCurrentUser } from '@/features/auth/api/server';
+import { getCurrentUser } from '@/features/auth/api/server/queries';
 import type { AuthUser } from '@/features/auth/types';
 
 export const COOKIE_NAME = 'kichulbot_token';

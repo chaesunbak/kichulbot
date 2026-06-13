@@ -23,12 +23,12 @@ import { overlay } from 'overlay-kit';
 import posthog from 'posthog-js';
 import { useState } from 'react';
 
-import { createSolveSession } from '@/features/learning/api/client';
+import { createSolveSession } from '@/features/learning/api/client/mutations';
 import type { LibraryFolder } from '@/features/learning/types';
 import {
   moveLibraryPaper,
   removeLibraryPaper,
-} from '@/features/library/api/client';
+} from '@/features/library/api/client/mutations';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 
 const ROOT_FOLDER_VALUE = '__root__';

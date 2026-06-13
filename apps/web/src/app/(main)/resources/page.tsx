@@ -3,8 +3,11 @@ import { Input } from '@kichulbot/ui/components/ui/input';
 import { ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
 
-import { type Category, getCategories } from '@/features/exams/api/server';
-import { getPapers, type Paper } from '@/features/papers/api/server';
+import {
+  type Category,
+  getCategories,
+} from '@/features/exams/api/server/queries';
+import { getPapers, type Paper } from '@/features/papers/api/server/queries';
 import { PaperGrid } from '@/features/papers/components/paper-grid';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';

@@ -1,10 +1,11 @@
 'use client';
 
+import { ApiError } from '@kichulbot/api-contract';
 import { useRouter, useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
 import { Suspense, useEffect, useRef } from 'react';
 
-import { ApiError, completeOAuthSessionApi } from '@/features/auth/api/client';
+import { completeOAuthSessionApi } from '@/features/auth/api/client/mutations';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { rememberRecentLogin } from '@/features/auth/lib/recent-login';
 

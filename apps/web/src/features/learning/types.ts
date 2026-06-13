@@ -34,6 +34,7 @@ export type QuestionResult = QuestionResultResponse;
 export type Answer = AnswerResponse;
 export type SolveSessionResult = SolveSessionResultResponse;
 export type SolveSession = SolveSessionResponse;
+export type SolveMode = 'ONE_BY_ONE' | 'EXAM';
 export type SolveSessionLog = SolveSessionLogResponse;
 export type { SolveSessionLogStatus };
 export type SolveSessionLogPage = ListSolveSessionLogsResponse;

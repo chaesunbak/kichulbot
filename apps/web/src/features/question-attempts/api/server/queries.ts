@@ -1,6 +1,8 @@
+import { ApiError } from '@kichulbot/api-contract';
+
 import { getToken } from '@/features/auth/server';
 import type { QuestionAttempt } from '@/features/question-attempts/types';
-import { ApiError, serverApi } from '@/shared/api/server';
+import { serverApi } from '@/shared/api/server';
 
 export const getQuestionAttempts = async (
   from: string,

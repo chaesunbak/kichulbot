@@ -1,14 +1,14 @@
 import { redirect } from 'next/navigation';
 
 import { getCachedUser } from '@/features/auth/server';
-import { getSolveSessionLogs } from '@/features/learning/api/server';
+import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { RecapTrendSection } from '@/features/learning/components/recap-trend-section';
 import {
   getRecapTrendPoints,
   getRecapWeaknessGroups,
 } from '@/features/learning/lib/recap-stats';
 import type { SolveSessionLog } from '@/features/learning/types';
-import { getQuestionAttempts } from '@/features/question-attempts/api/server';
+import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { getRecentStreakRange } from '@/features/question-attempts/lib/streak-date';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';

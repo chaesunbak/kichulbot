@@ -1,6 +1,7 @@
 'use client';
 
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
+import { ApiError } from '@kichulbot/api-contract';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Field,
@@ -14,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { ApiError, updateProfileApi } from '@/features/auth/api/client';
+import { updateProfileApi } from '@/features/auth/api/client/mutations';
 import { updateProfileSchema } from '@/features/auth/schemas';
 import type { UpdateProfileFormValues } from '@/features/auth/types';
 

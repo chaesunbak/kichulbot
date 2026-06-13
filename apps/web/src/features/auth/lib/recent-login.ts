@@ -1,3 +1,5 @@
+import { isRecord } from '@/shared/lib/is-record';
+
 export type RecentLoginMethod = 'email' | 'kakao';
 
 export interface RecentLoginRecord {
@@ -85,8 +87,4 @@ export function parseRecentLoginRecord(
 function getRecentLoginStorage(): RecentLoginStorage | null {
   if (typeof window === 'undefined') return null;
   return window.localStorage;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }

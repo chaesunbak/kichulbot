@@ -20,8 +20,8 @@ import type { BookmarkListSummary } from '@/features/learning/types';
 import {
   addQuestionToBookmarkList,
   createBookmarkList as createBookmarkListApi,
-  getBookmarkLists,
-} from '@/features/library/api/client';
+} from '@/features/library/api/client/mutations';
+import { getBookmarkLists } from '@/features/library/api/client/queries';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
 import { cn } from '@/shared/lib/utils';
 

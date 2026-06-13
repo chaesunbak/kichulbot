@@ -8,12 +8,10 @@ import { overlay } from 'overlay-kit';
 import posthog from 'posthog-js';
 import { useState } from 'react';
 
-import {
-  createSolveSession,
-  type SolveMode,
-} from '@/features/learning/api/client';
+import { createSolveSession } from '@/features/learning/api/client/mutations';
 import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
 import { createLocalSolveSession } from '@/features/learning/lib/local-solve-session';
+import type { SolveMode } from '@/features/learning/types';
 
 export function PaperSolveButton({
   paperId,

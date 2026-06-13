@@ -82,26 +82,3 @@ export async function deleteAccountApi(): Promise<void> {
 export async function updateProfileApi(nickname: string): Promise<AuthResult> {
   return clientApi.patch<AuthResult>('/api/me', { nickname });
 }
-
-export async function listAuthConnectionsApi(): Promise<{
-  connections: Array<{
-    provider: 'KAKAO';
-    providerEmail: string | null;
-    providerNickname: string | null;
-    lastLoginAt: string | null;
-    createdAt: string;
-  }>;
-}> {
-  return clientApi.get('/api/me/auth-connections');
-}
-
-function assertOkResponse(response: unknown): { ok: true } {
-  if (!isRecord(response) || response.ok !== true) {
-    throw new ApiError(500, '서버 응답이 올바르지 않습니다.');
-  }
-  return { ok: true };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}

@@ -4,11 +4,10 @@ import type {
   QuestionNote,
   QuestionReportCategory,
   QuestionResult,
+  SolveMode,
   SolveSession,
 } from '@/features/learning/types';
 import { clientApi } from '@/shared/api/client';
-
-export type SolveMode = 'ONE_BY_ONE' | 'EXAM';
 
 export async function createSolveSession({
   paperId,
@@ -100,15 +99,6 @@ export async function submitSolveSession(
     `/api/me/solve-sessions/${sessionId}/submissions`,
   );
   return body.session;
-}
-
-export async function getQuestionNote(
-  questionId: string,
-): Promise<QuestionNote | null> {
-  const body = await clientApi.get<{ note: QuestionNote | null }>(
-    `/api/me/question-notes/${questionId}`,
-  );
-  return body.note;
 }
 
 export async function saveQuestionNote({

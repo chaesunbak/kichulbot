@@ -19,8 +19,8 @@ import {
   useDeleteTagMutation,
   useSaveTagGroupMutation,
   useSaveTagMutation,
-} from '../mutations';
-import { tagGroupsQueryOptions, tagsQueryOptions } from '../queries';
+} from '../api/server/mutations';
+import { tagGroupsQueryOptions, tagsQueryOptions } from '../api/server/queries';
 import { TagFormPanel } from './tag-form';
 import { TagGroupPanel } from './tag-group-panel';
 import { TagListPanel } from './tag-list';

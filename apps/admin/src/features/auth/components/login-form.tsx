@@ -17,7 +17,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
-import { login } from '../api';
+import { login } from '../api/client/mutations';
 import { loginSchema } from '../schemas';
 import { useAuthStore } from '../store';
 import type { LoginValues } from '../types';

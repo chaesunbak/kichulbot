@@ -1,13 +1,4 @@
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    readonly code?: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
+import { ApiError } from '@kichulbot/api-contract';
 
 type ApiEnvelope<T> =
   | {
@@ -78,8 +69,8 @@ export async function apiRequest<T>(
       window.dispatchEvent(new Event('admin:unauthorized'));
     }
     throw new ApiError(
-      message,
       response.status,
+      message,
       !envelope.success ? envelope.error.code : undefined,
     );
   }
@@ -92,8 +83,8 @@ async function parseApiEnvelope<T>(
 ): Promise<ApiEnvelope<T>> {
   if (EMPTY_RESPONSE_STATUSES.has(response.status)) {
     throw new ApiError(
-      'API 서버에서 응답 본문을 받지 못했습니다. 다시 시도해 주세요.',
       response.status,
+      'API 서버에서 응답 본문을 받지 못했습니다. 다시 시도해 주세요.',
     );
   }
 
@@ -102,15 +93,15 @@ async function parseApiEnvelope<T>(
 
   if (!responseText) {
     throw new ApiError(
-      'API 서버에서 응답 본문을 받지 못했습니다. 다시 시도해 주세요.',
       response.status,
+      'API 서버에서 응답 본문을 받지 못했습니다. 다시 시도해 주세요.',
     );
   }
 
   if (!contentType.includes('application/json')) {
     throw new ApiError(
-      'API 서버에서 JSON이 아닌 응답을 받았습니다.',
       response.status,
+      'API 서버에서 JSON이 아닌 응답을 받았습니다.',
     );
   }
 
@@ -118,8 +109,8 @@ async function parseApiEnvelope<T>(
     return JSON.parse(responseText) as ApiEnvelope<T>;
   } catch {
     throw new ApiError(
-      'API 서버 응답을 해석하지 못했습니다. 다시 시도해 주세요.',
       response.status,
+      'API 서버 응답을 해석하지 못했습니다. 다시 시도해 주세요.',
     );
   }
 }

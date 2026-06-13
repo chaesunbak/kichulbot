@@ -42,22 +42,22 @@ import * as React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router';
 
-import { PaperDetailHeader } from '@/features/papers/components/paper-detail-header';
-import { QuestionProgress } from '@/features/papers/components/question-progress';
 import {
   useDeletePaperMutation,
   useUpdatePaperMetadataMutation,
   useUpdatePaperPublishedMutation,
-} from '@/features/papers/mutations';
-import { paperQueryOptions } from '@/features/papers/queries';
-import { tagsQueryOptions } from '@/features/tags/queries';
+} from '@/features/papers/api/server/mutations';
+import { paperQueryOptions } from '@/features/papers/api/server/queries';
+import { PaperDetailHeader } from '@/features/papers/components/paper-detail-header';
+import { QuestionProgress } from '@/features/papers/components/question-progress';
+import { tagsQueryOptions } from '@/features/tags/api/server/queries';
 
-import { useQuestionImage } from '../hooks/use-question-image';
 import {
   useDeleteQuestionMutation,
   useSaveQuestionMutation,
   useUpdateQuestionTagsMutation,
-} from '../mutations';
+} from '../api/server/mutations';
+import { useQuestionImage } from '../hooks/use-question-image';
 import { questionSchema } from '../schemas';
 import type { QuestionValues } from '../types';
 import { QuestionImageField } from './question-image-field';

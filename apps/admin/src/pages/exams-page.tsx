@@ -6,16 +6,16 @@ import { useQuery } from '@tanstack/react-query';
 import * as React from 'react';
 
 import { useAuthStore } from '@/features/auth/store';
-import { ExamFormPanel } from '@/features/reference-data/components/exam-form';
-import { ExamsList } from '@/features/reference-data/components/exams-list';
 import {
   useDeleteExamMutation,
   useSaveExamMutation,
-} from '@/features/reference-data/mutations';
+} from '@/features/reference-data/api/server/mutations';
 import {
   categoriesQueryOptions,
   examsQueryOptions,
-} from '@/features/reference-data/queries';
+} from '@/features/reference-data/api/server/queries';
+import { ExamFormPanel } from '@/features/reference-data/components/exam-form';
+import { ExamsList } from '@/features/reference-data/components/exams-list';
 
 export function ExamsPage() {
   const token = useAuthStore((state) => state.token)!;

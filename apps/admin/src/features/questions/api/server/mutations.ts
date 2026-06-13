@@ -2,10 +2,14 @@ import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers'
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { paperKeys } from '@/features/papers/queries';
+import { paperKeys } from '@/features/papers/api/server/queries';
 
-import { createQuestion, deleteQuestion, updateQuestion } from './api';
-import type { QuestionValues } from './types';
+import type { QuestionValues } from '../../types';
+import {
+  createQuestion,
+  deleteQuestion,
+  updateQuestion,
+} from '../client/mutations';
 
 export function useSaveQuestionMutation({
   token,

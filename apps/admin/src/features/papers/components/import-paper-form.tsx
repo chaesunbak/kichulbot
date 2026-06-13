@@ -12,7 +12,7 @@ import { useForm, useWatch } from 'react-hook-form';
 
 import type { Exam } from '@/shared/types';
 
-import { useCreatePaperImportDraftMutation } from '../mutations';
+import { useCreatePaperImportDraftMutation } from '../api/server/mutations';
 import { importPaperSchema } from '../schemas';
 import type { ImportPaperValues } from '../types';
 import { ImportPaperFields } from './import-paper-fields';

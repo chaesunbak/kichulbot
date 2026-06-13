@@ -1,6 +1,10 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchPaper, fetchPaperImportDraftJobs, fetchPapers } from './api';
+import {
+  fetchPaper,
+  fetchPaperImportDraftJobs,
+  fetchPapers,
+} from '../client/queries';
 
 export const paperKeys = {
   all: ['papers'] as const,

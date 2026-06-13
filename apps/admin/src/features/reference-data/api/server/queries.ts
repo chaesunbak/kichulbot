@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchCategories, fetchExams } from './api';
+import { fetchCategories, fetchExams } from '../client/queries';
 
 export const referenceDataKeys = {
   all: ['reference-data'] as const,

@@ -15,16 +15,16 @@ import { useQuery } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/store';
+import {
+  paperImportJobsQueryOptions,
+  papersQueryOptions,
+} from '@/features/papers/api/server/queries';
 import { CreatePaperForm } from '@/features/papers/components/create-paper-form';
 import { ImportPaperForm } from '@/features/papers/components/import-paper-form';
 import { PaperImportJobsList } from '@/features/papers/components/paper-import-jobs-list';
 import { PapersSummary } from '@/features/papers/components/papers-summary';
 import { PapersTable } from '@/features/papers/components/papers-table';
-import {
-  paperImportJobsQueryOptions,
-  papersQueryOptions,
-} from '@/features/papers/queries';
-import { examsQueryOptions } from '@/features/reference-data/queries';
+import { examsQueryOptions } from '@/features/reference-data/api/server/queries';
 
 export function PapersPage() {
   const token = useAuthStore((state) => state.token)!;

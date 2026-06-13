@@ -1,13 +1,13 @@
+import { ApiError } from '@kichulbot/api-contract';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import React from 'react';
 import { Navigate } from 'react-router';
 import { toast } from 'sonner';
 
-import { ApiError } from '@/shared/api/api-client';
 import { Layout } from '@/shared/components/layout';
 
-import { meQueryOptions } from '../queries';
+import { meQueryOptions } from '../api/server/queries';
 import { useAuthStore } from '../store';
 
 export function ProtectedAdminLayout() {

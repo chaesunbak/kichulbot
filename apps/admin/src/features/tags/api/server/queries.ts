@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchAdminTags, fetchTagGroups, fetchTags } from './api';
+import { fetchAdminTags, fetchTagGroups, fetchTags } from '../client/queries';
 
 export const tagKeys = {
   all: ['tags'] as const,

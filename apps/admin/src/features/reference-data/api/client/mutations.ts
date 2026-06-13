@@ -9,15 +9,9 @@ import {
   DeleteCategoryResponseSchema,
   DeleteExamResponseSchema,
   ExamMutationResponseSchema,
-  ListCategoriesResponseSchema,
-  ListExamsResponseSchema,
 } from '@kichulbot/api-contract/taxonomy';
 
 import { apiRequest } from '@/shared/api/api-client';
-
-export async function fetchExams(token: string) {
-  return apiRequest('/exams', ListExamsResponseSchema.parse, { token });
-}
 
 export async function createExam(token: string, input: CreateExamRequest) {
   return apiRequest('/exams', ExamMutationResponseSchema.parse, {
@@ -43,12 +37,6 @@ export async function deleteExam(token: string, examId: string) {
   return apiRequest(`/exams/${examId}`, DeleteExamResponseSchema.parse, {
     token,
     method: 'DELETE',
-  });
-}
-
-export async function fetchCategories(token: string) {
-  return apiRequest('/categories', ListCategoriesResponseSchema.parse, {
-    token,
   });
 }
 

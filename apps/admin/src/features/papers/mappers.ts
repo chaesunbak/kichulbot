@@ -1,6 +1,6 @@
 import type { CreatePaperWithQuestionsRequest } from '@kichulbot/api-contract/papers';
 
-import type { CreatePaperInput } from './api';
+import type { CreatePaperInput } from './api/client/mutations';
 import type {
   ImportPaperQuestionValues,
   ImportPaperValues,

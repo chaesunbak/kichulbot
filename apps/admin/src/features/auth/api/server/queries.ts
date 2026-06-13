@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchMe } from './api';
+import { fetchMe } from '../client/queries';
 
 export const authKeys = {
   all: ['auth'] as const,

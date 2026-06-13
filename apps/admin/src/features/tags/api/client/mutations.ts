@@ -7,22 +7,11 @@ import type {
 import {
   DeleteTagGroupResponseSchema,
   DeleteTagResponseSchema,
-  ListTagGroupsResponseSchema,
-  ListTagsResponseSchema,
   TagGroupMutationResponseSchema,
   TagMutationResponseSchema,
 } from '@kichulbot/api-contract/tags';
 
 import { apiRequest } from '@/shared/api/api-client';
-
-export async function fetchTags(token: string, examId?: string) {
-  const query = examId ? `?examId=${encodeURIComponent(examId)}` : '';
-  return apiRequest(`/tags${query}`, ListTagsResponseSchema.parse, { token });
-}
-
-export async function fetchAdminTags(token: string) {
-  return apiRequest('/tags', ListTagsResponseSchema.parse, { token });
-}
 
 export async function createTag(token: string, input: CreateTagRequest) {
   return apiRequest('/tags', TagMutationResponseSchema.parse, {
@@ -48,13 +37,6 @@ export async function deleteTag(token: string, tagId: string) {
   return apiRequest(`/tags/${tagId}`, DeleteTagResponseSchema.parse, {
     token,
     method: 'DELETE',
-  });
-}
-
-export async function fetchTagGroups(token: string, examId?: string) {
-  const query = examId ? `?examId=${encodeURIComponent(examId)}` : '';
-  return apiRequest(`/tag-groups${query}`, ListTagGroupsResponseSchema.parse, {
-    token,
   });
 }
 

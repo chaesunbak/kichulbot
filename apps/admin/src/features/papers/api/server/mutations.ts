@@ -4,25 +4,25 @@ import { toast } from 'sonner';
 import type { Exam } from '@/shared/types';
 
 import {
+  toCreatePaperInput,
+  toCreatePaperQuestionImages,
+  toCreatePaperWithQuestionsInput,
+} from '../../mappers';
+import type {
+  ImportPaperQuestionValues,
+  ImportPaperValues,
+  PaperValues,
+  UpdatePaperMetadataValues,
+} from '../../types';
+import {
   createPaper,
   createPaperImportDraft,
   createPaperWithQuestions,
   deletePaper,
   updatePaperMetadata,
   updatePaperPublished,
-} from './api';
-import {
-  toCreatePaperInput,
-  toCreatePaperQuestionImages,
-  toCreatePaperWithQuestionsInput,
-} from './mappers';
+} from '../client/mutations';
 import { paperKeys } from './queries';
-import type {
-  ImportPaperQuestionValues,
-  ImportPaperValues,
-  PaperValues,
-  UpdatePaperMetadataValues,
-} from './types';
 
 export function useCreatePaperMutation(token: string) {
   const queryClient = useQueryClient();

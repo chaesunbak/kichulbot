@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import * as React from 'react';
 
 import { useAuthStore } from '@/features/auth/store';
-import { CategoriesList } from '@/features/reference-data/components/categories-list';
-import { CategoryFormPanel } from '@/features/reference-data/components/category-form';
 import {
   useDeleteCategoryMutation,
   useSaveCategoryMutation,
-} from '@/features/reference-data/mutations';
-import { categoriesQueryOptions } from '@/features/reference-data/queries';
+} from '@/features/reference-data/api/server/mutations';
+import { categoriesQueryOptions } from '@/features/reference-data/api/server/queries';
+import { CategoriesList } from '@/features/reference-data/components/categories-list';
+import { CategoryFormPanel } from '@/features/reference-data/components/category-form';
 
 export function CategoriesPage() {
   const token = useAuthStore((state) => state.token)!;

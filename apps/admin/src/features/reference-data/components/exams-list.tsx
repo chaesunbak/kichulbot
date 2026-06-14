@@ -77,6 +77,9 @@ export function ExamsList({
                     <div className="flex flex-wrap gap-1">
                       {exam.usesMonth && <Badge variant="outline">월</Badge>}
                       {exam.usesRound && <Badge variant="outline">회차</Badge>}
+                      {exam.isMockExamAvailable && (
+                        <Badge variant="secondary">모의고사</Badge>
+                      )}
                       {!exam.usesMonth && !exam.usesRound && (
                         <span className="text-xs text-muted-foreground">
                           연도만

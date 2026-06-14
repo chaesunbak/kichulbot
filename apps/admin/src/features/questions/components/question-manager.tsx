@@ -109,7 +109,7 @@ export function QuestionManager({
       (tagsQuery.data?.tags ?? []).map((tag) => [tag.id, tag]),
     );
     editingQuestion?.tags.forEach((tag) => tags.set(tag.id, tag));
-    return [...tags.values()];
+    return sortTags([...tags.values()]);
   }, [editingQuestion, tagsQuery.data?.tags]);
   const registeredQuestionCount = paper?.registeredQuestionCount ?? 0;
   const taggedQuestionCount = questions.filter(
@@ -990,5 +990,18 @@ function getNextTagIds(
 function mergeTags(...tagGroups: TagResponse[][]) {
   const tags = new Map<string, TagResponse>();
   tagGroups.flat().forEach((tag) => tags.set(tag.id, tag));
-  return [...tags.values()];
+  return sortTags([...tags.values()]);
+}
+
+function sortTags(tags: TagResponse[]) {
+  return [...tags].sort(compareTags);
+}
+
+function compareTags(left: TagResponse, right: TagResponse) {
+  return (
+    (left.tagGroup?.sortOrder ?? 0) - (right.tagGroup?.sortOrder ?? 0) ||
+    (left.tagGroup?.name ?? '').localeCompare(right.tagGroup?.name ?? '') ||
+    left.sortOrder - right.sortOrder ||
+    left.name.localeCompare(right.name)
+  );
 }

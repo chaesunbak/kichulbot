@@ -141,6 +141,34 @@ export function TagFormPanel({
               </Field>
             )}
           />
+          <Controller
+            name="sortOrder"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor={field.name}>정렬 순서</FieldLabel>
+                <Input
+                  id={field.name}
+                  type="number"
+                  min={0}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  aria-invalid={fieldState.invalid}
+                  onChange={(event) =>
+                    field.onChange(
+                      event.target.value === ''
+                        ? 0
+                        : Number(event.target.value),
+                    )
+                  }
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
           <div className="flex gap-2">
             {editingTag && (
               <Button type="button" variant="outline" onClick={onCancel}>
@@ -166,6 +194,7 @@ function getTagFormValues(
     keywords: editingTag?.keywords ?? [],
     examId: editingTag?.examId ?? examId,
     tagGroupId: editingTag?.tagGroupId ?? null,
+    sortOrder: editingTag?.sortOrder ?? 0,
   };
 }
 

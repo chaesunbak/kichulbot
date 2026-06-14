@@ -82,9 +82,15 @@ export function useSaveExamMutation(
       if (!input.slug) {
         throw new Error('시험 슬러그를 입력해 주세요.');
       }
-      return editingExamId
-        ? updateExam(token, editingExamId, input)
-        : createExam(token, input);
+      if (!editingExamId) {
+        return createExam(token, input);
+      }
+      return updateExam(token, editingExamId, {
+        ...input,
+        mockExamQuestionCount: form.mockExamQuestionCount,
+        eraTagGroupId: form.eraTagGroupId,
+        mockExamBlueprintItems: form.mockExamBlueprintItems,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: referenceDataKeys.all });

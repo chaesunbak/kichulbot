@@ -16,6 +16,10 @@ import {
 } from '@/features/reference-data/api/server/queries';
 import { ExamFormPanel } from '@/features/reference-data/components/exam-form';
 import { ExamsList } from '@/features/reference-data/components/exams-list';
+import {
+  tagGroupsQueryOptions,
+  tagsQueryOptions,
+} from '@/features/tags/api/server/queries';
 
 export function ExamsPage() {
   const token = useAuthStore((state) => state.token)!;
@@ -27,6 +31,16 @@ export function ExamsPage() {
   const categories =
     (useQuery(categoriesQueryOptions(token)).data
       ?.categories as AdminTaxonomyResponse[]) ?? [];
+  const tagGroups =
+    useQuery({
+      ...tagGroupsQueryOptions(token, editingExam?.id),
+      enabled: !!editingExam,
+    }).data?.tagGroups ?? [];
+  const tags =
+    useQuery({
+      ...tagsQueryOptions(token, editingExam?.id),
+      enabled: !!editingExam,
+    }).data?.tags ?? [];
 
   function resetForm() {
     setEditingExam(null);
@@ -77,6 +91,8 @@ export function ExamsPage() {
       />
       <ExamFormPanel
         categories={categories}
+        tagGroups={tagGroups}
+        tags={tags}
         editingExam={editingExam}
         isSubmitting={saveMutation.isPending}
         onSubmit={(values) => saveMutation.mutate(values)}

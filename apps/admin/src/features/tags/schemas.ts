@@ -9,6 +9,7 @@ export const tagFormSchema = CreateTagRequestSchema.extend({
   keywords: z.array(z.string().trim().min(1).max(50)),
   examId: CreateTagRequestSchema.shape.examId.min(1, '시험을 선택해 주세요.'),
   tagGroupId: CreateTagRequestSchema.shape.tagGroupId,
+  sortOrder: CreateTagRequestSchema.shape.sortOrder.unwrap(),
 });
 
 export const tagGroupFormSchema = CreateTagGroupRequestSchema.extend({

@@ -34,6 +34,7 @@ export function useSaveTagMutation(
         keywords: form.keywords,
         examId: form.examId,
         tagGroupId: form.tagGroupId,
+        sortOrder: form.sortOrder,
       };
       if (!input.name) throw new Error('태그 이름을 입력해 주세요.');
       if (!input.examId) throw new Error('시험을 선택해 주세요.');

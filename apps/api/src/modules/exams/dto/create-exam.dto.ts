@@ -1,13 +1,38 @@
 import { CreateExamRequest } from '@kichulbot/api-contract/taxonomy';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsInt,
   IsOptional,
   IsString,
   Matches,
+  Max,
   MaxLength,
+  Min,
+  ValidateNested,
 } from 'class-validator';
+
+class MockExamBlueprintItemDto {
+  @IsString()
+  tagId: string;
+
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  minQuestionCount: number;
+
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  maxQuestionCount: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
+}
 
 export class CreateExamDto implements CreateExamRequest {
   @ApiProperty({ example: '수능 한국사' })
@@ -42,4 +67,26 @@ export class CreateExamDto implements CreateExamRequest {
   @IsOptional()
   @IsBoolean()
   usesRound?: boolean;
+
+  @ApiProperty({ required: false, nullable: true, minimum: 1, maximum: 100 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  mockExamQuestionCount?: number | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  @IsString()
+  eraTagGroupId?: string | null;
+
+  @ApiProperty({
+    required: false,
+    type: [MockExamBlueprintItemDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MockExamBlueprintItemDto)
+  mockExamBlueprintItems?: MockExamBlueprintItemDto[];
 }

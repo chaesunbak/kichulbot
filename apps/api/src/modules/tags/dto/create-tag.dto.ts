@@ -1,6 +1,13 @@
 import { CreateTagRequest } from '@kichulbot/api-contract/tags';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateTagDto implements CreateTagRequest {
   @ApiProperty({ example: '조선' })
@@ -30,4 +37,10 @@ export class CreateTagDto implements CreateTagRequest {
   @IsOptional()
   @IsString()
   tagGroupId?: string | null;
+
+  @ApiProperty({ required: false, default: 0 })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
 }

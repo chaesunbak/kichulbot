@@ -17,6 +17,8 @@ describe('ExamsService', () => {
       create: jest.fn(),
       update: jest.fn(),
       deleteIfNoPapers: jest.fn(),
+      countTagGroupsByIds: jest.fn().mockResolvedValue(1),
+      countTagsByIdsInTagGroup: jest.fn().mockResolvedValue(1),
     } as unknown as jest.Mocked<ExamsRepository>;
     service = new ExamsService(repository);
   });
@@ -34,6 +36,7 @@ describe('ExamsService', () => {
       usesMonth: true,
       usesGrade: false,
       usesRound: false,
+      isMockExamAvailable: false,
     });
   });
 
@@ -73,6 +76,25 @@ describe('ExamsService', () => {
       usesGrade: false,
       usesRound: true,
     });
+  });
+
+  it('모의고사 설정의 문항수 합계가 불가능하면 시험 수정을 거부한다', async () => {
+    repository.findById.mockResolvedValue(makeExam());
+
+    await expect(
+      service.updateExam('exam_1', {
+        mockExamQuestionCount: 3,
+        eraTagGroupId: 'tag_group_1',
+        mockExamBlueprintItems: [
+          {
+            tagId: 'tag_1',
+            minQuestionCount: 4,
+            maxQuestionCount: 5,
+            sortOrder: 0,
+          },
+        ],
+      }),
+    ).rejects.toThrow('출제 범위의 최소 문항수 합계가 총 문항수보다 큽니다.');
   });
 
   it('없는 시험 수정은 거부한다', async () => {
@@ -139,8 +161,11 @@ function baseExam() {
     usesMonth: true,
     usesGrade: false,
     usesRound: false,
+    mockExamQuestionCount: null,
+    eraTagGroupId: null,
     createdAt: now,
     updatedAt: now,
+    mockExamBlueprintItems: [],
     categories: [
       {
         examId: 'exam_1',

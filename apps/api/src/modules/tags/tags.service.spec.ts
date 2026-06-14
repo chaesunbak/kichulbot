@@ -161,6 +161,7 @@ function makeTag() {
     tagGroupId: null,
     tagGroup: null,
     keywords: [],
+    sortOrder: 0,
     createdAt: now,
     updatedAt: now,
     _count: { questions: 0 },

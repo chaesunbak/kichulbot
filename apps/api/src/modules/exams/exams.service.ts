@@ -18,6 +18,7 @@ import {
   Category,
   Exam,
   ExamCategory,
+  MockExamBlueprintItem,
   Prisma,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
@@ -27,8 +28,13 @@ import { ExamsRepository } from './exams.repository';
 
 type ExamWithCategories = Exam & {
   categories: Array<ExamCategory & { category: Category }>;
+  mockExamBlueprintItems?: MockExamBlueprintItem[];
   sessions?: Array<{ _count: { papers: number } }>;
 };
+
+type MockExamBlueprintItemInput = NonNullable<
+  CreateExamDto['mockExamBlueprintItems']
+>[number];
 
 @Injectable()
 export class ExamsService {
@@ -47,6 +53,7 @@ export class ExamsService {
   }
 
   async createExam(dto: CreateExamDto): Promise<ExamMutationResponse> {
+    this.assertNoMockExamSettingsOnCreate(dto);
     const categoryIds = this.normalizeCategoryIds(dto.categoryIds ?? []);
     const exam = await this.examsRepository
       .create({
@@ -79,6 +86,7 @@ export class ExamsService {
       dto.categoryIds !== undefined
         ? this.normalizeCategoryIds(dto.categoryIds)
         : undefined;
+    await this.assertMockExamSettings(existing, dto);
     const exam = await this.examsRepository
       .update(id, {
         name: dto.name?.trim(),
@@ -87,6 +95,9 @@ export class ExamsService {
         usesMonth: dto.usesMonth,
         usesGrade: false,
         usesRound: dto.usesRound,
+        mockExamQuestionCount: dto.mockExamQuestionCount,
+        eraTagGroupId: dto.eraTagGroupId,
+        mockExamBlueprintItems: dto.mockExamBlueprintItems,
       })
       .catch((error: unknown) => {
         throw this.mapKnownError(error);
@@ -128,6 +139,7 @@ export class ExamsService {
       usesMonth: exam.usesMonth,
       usesGrade: false,
       usesRound: exam.usesRound,
+      isMockExamAvailable: this.isMockExamAvailable(exam),
     };
 
     if (role !== UserRole.ADMIN) {
@@ -137,9 +149,138 @@ export class ExamsService {
     return {
       ...response,
       paperCount: this.countPapers(exam),
+      mockExamQuestionCount: exam.mockExamQuestionCount,
+      eraTagGroupId: exam.eraTagGroupId,
+      mockExamBlueprintItems: (exam.mockExamBlueprintItems ?? []).map(
+        (item) => ({
+          tagId: item.tagId,
+          minQuestionCount: item.minQuestionCount,
+          maxQuestionCount: item.maxQuestionCount,
+          sortOrder: item.sortOrder,
+        }),
+      ),
       createdAt: exam.createdAt.toISOString(),
       updatedAt: exam.updatedAt.toISOString(),
     };
+  }
+
+  private assertNoMockExamSettingsOnCreate(dto: CreateExamDto) {
+    if (
+      dto.mockExamQuestionCount !== undefined ||
+      dto.eraTagGroupId !== undefined ||
+      dto.mockExamBlueprintItems !== undefined
+    ) {
+      throw new BadRequestException(
+        '모의고사 설정은 시험 생성 후 수정 화면에서 저장해 주세요.',
+      );
+    }
+  }
+
+  private async assertMockExamSettings(
+    existing: ExamWithCategories,
+    dto: UpdateExamDto,
+  ) {
+    const shouldValidate =
+      dto.mockExamQuestionCount !== undefined ||
+      dto.eraTagGroupId !== undefined ||
+      dto.mockExamBlueprintItems !== undefined;
+    if (!shouldValidate) return;
+
+    const questionCount =
+      dto.mockExamQuestionCount === undefined
+        ? existing.mockExamQuestionCount
+        : dto.mockExamQuestionCount;
+    const eraTagGroupId =
+      dto.eraTagGroupId === undefined
+        ? existing.eraTagGroupId
+        : dto.eraTagGroupId;
+    const blueprintItems =
+      dto.mockExamBlueprintItems === undefined
+        ? (existing.mockExamBlueprintItems ?? [])
+        : dto.mockExamBlueprintItems;
+
+    if (
+      questionCount == null &&
+      !eraTagGroupId &&
+      blueprintItems.length === 0
+    ) {
+      return;
+    }
+    if (
+      questionCount == null ||
+      !eraTagGroupId ||
+      blueprintItems.length === 0
+    ) {
+      throw new BadRequestException(
+        '모의고사 총 문항수, 시대 태그 그룹, 출제 범위를 모두 입력해 주세요.',
+      );
+    }
+
+    const tagGroupCount = await this.examsRepository.countTagGroupsByIds(
+      [eraTagGroupId],
+      existing.id,
+    );
+    if (tagGroupCount !== 1) {
+      throw new BadRequestException(
+        '선택한 시험에 속한 태그 그룹만 시대 태그 그룹으로 지정할 수 있습니다.',
+      );
+    }
+
+    const tagIds = blueprintItems.map((item) => item.tagId);
+    const uniqueTagIds = [...new Set(tagIds)];
+    if (uniqueTagIds.length !== tagIds.length) {
+      throw new BadRequestException('출제 범위 태그가 중복되었습니다.');
+    }
+    const tagCount = await this.examsRepository.countTagsByIdsInTagGroup(
+      uniqueTagIds,
+      existing.id,
+      eraTagGroupId,
+    );
+    if (tagCount !== uniqueTagIds.length) {
+      throw new BadRequestException(
+        '시대 태그 그룹에 속한 태그만 출제 범위로 지정할 수 있습니다.',
+      );
+    }
+
+    this.assertBlueprintQuestionCounts(questionCount, blueprintItems);
+  }
+
+  private assertBlueprintQuestionCounts(
+    questionCount: number,
+    blueprintItems: MockExamBlueprintItemInput[],
+  ) {
+    const sums = blueprintItems.reduce(
+      (acc, item) => {
+        if (item.minQuestionCount > item.maxQuestionCount) {
+          throw new BadRequestException(
+            '최소 문항수는 최대 문항수보다 클 수 없습니다.',
+          );
+        }
+        return {
+          min: acc.min + item.minQuestionCount,
+          max: acc.max + item.maxQuestionCount,
+        };
+      },
+      { min: 0, max: 0 },
+    );
+    if (sums.min > questionCount) {
+      throw new BadRequestException(
+        '출제 범위의 최소 문항수 합계가 총 문항수보다 큽니다.',
+      );
+    }
+    if (sums.max < questionCount) {
+      throw new BadRequestException(
+        '출제 범위의 최대 문항수 합계가 총 문항수보다 작습니다.',
+      );
+    }
+  }
+
+  private isMockExamAvailable(exam: ExamWithCategories) {
+    return (
+      exam.mockExamQuestionCount != null &&
+      !!exam.eraTagGroupId &&
+      (exam.mockExamBlueprintItems?.length ?? 0) > 0
+    );
   }
 
   private countPapers(exam: ExamWithCategories): number {

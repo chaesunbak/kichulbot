@@ -29,6 +29,7 @@ export class TagsRepository {
       orderBy: [
         { tagGroup: { sortOrder: 'asc' } },
         { tagGroup: { name: 'asc' } },
+        { sortOrder: 'asc' },
         { name: 'asc' },
       ],
     });
@@ -41,6 +42,7 @@ export class TagsRepository {
         { examId: 'asc' },
         { tagGroup: { sortOrder: 'asc' } },
         { tagGroup: { name: 'asc' } },
+        { sortOrder: 'asc' },
         { name: 'asc' },
       ],
     });

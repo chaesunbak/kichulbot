@@ -101,6 +101,8 @@ const questionSet = {
                 usesMonth: false,
                 usesGrade: false,
                 usesRound: false,
+                mockExamQuestionCount: null,
+                eraTagGroupId: null,
                 createdAt: now,
                 updatedAt: now,
               },

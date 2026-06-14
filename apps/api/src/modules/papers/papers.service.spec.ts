@@ -9,6 +9,7 @@ import type {
   Exam,
   ExamCategory,
   ExamSession,
+  MockExamBlueprintItem,
   Paper,
   Question,
   UserPaper,
@@ -36,11 +37,14 @@ const exam: Exam = {
   usesMonth: false,
   usesGrade: false,
   usesRound: false,
+  mockExamQuestionCount: null,
+  eraTagGroupId: null,
   createdAt: now,
   updatedAt: now,
 };
 const examWithCategories: Exam & {
   categories: Array<ExamCategory & { category: Category }>;
+  mockExamBlueprintItems: MockExamBlueprintItem[];
   sessions: Array<{ _count: { papers: number } }>;
 } = {
   ...exam,
@@ -52,6 +56,7 @@ const examWithCategories: Exam & {
       category,
     },
   ],
+  mockExamBlueprintItems: [],
   sessions: [],
 };
 

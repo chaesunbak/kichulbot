@@ -69,6 +69,7 @@ export class TagsService {
       keywords: this.normalizeKeywords(dto.keywords),
       examId: dto.examId,
       tagGroupId: dto.tagGroupId ?? null,
+      sortOrder: dto.sortOrder ?? 0,
     });
 
     return TagMutationResponseSchema.parse({
@@ -102,6 +103,7 @@ export class TagsService {
           : this.normalizeKeywords(dto.keywords),
       examId: dto.examId,
       tagGroupId: dto.tagGroupId,
+      sortOrder: dto.sortOrder,
     });
 
     return TagMutationResponseSchema.parse({
@@ -270,6 +272,7 @@ export class TagsService {
       id: tag.id,
       name: tag.name,
       keywords: tag.keywords,
+      sortOrder: tag.sortOrder,
       tagGroup: tag.tagGroup ? this.toTagGroupBaseResponse(tag.tagGroup) : null,
     };
 

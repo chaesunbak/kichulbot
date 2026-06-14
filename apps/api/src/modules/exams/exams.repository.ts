@@ -9,6 +9,9 @@ interface ExamCreateData {
   usesMonth: boolean;
   usesGrade: boolean;
   usesRound: boolean;
+  mockExamQuestionCount?: number | null;
+  eraTagGroupId?: string | null;
+  mockExamBlueprintItems?: MockExamBlueprintItemInput[];
 }
 
 interface ExamUpdateData {
@@ -18,10 +21,21 @@ interface ExamUpdateData {
   usesMonth?: boolean;
   usesGrade?: boolean;
   usesRound?: boolean;
+  mockExamQuestionCount?: number | null;
+  eraTagGroupId?: string | null;
+  mockExamBlueprintItems?: MockExamBlueprintItemInput[];
+}
+
+interface MockExamBlueprintItemInput {
+  tagId: string;
+  minQuestionCount: number;
+  maxQuestionCount: number;
+  sortOrder?: number;
 }
 
 const examInclude = {
   categories: { include: { category: true } },
+  mockExamBlueprintItems: { orderBy: { sortOrder: 'asc' as const } },
   sessions: {
     select: {
       _count: {
@@ -57,6 +71,18 @@ export class ExamsRepository {
         usesMonth: data.usesMonth,
         usesGrade: data.usesGrade,
         usesRound: data.usesRound,
+        mockExamQuestionCount: data.mockExamQuestionCount,
+        eraTagGroupId: data.eraTagGroupId,
+        mockExamBlueprintItems: data.mockExamBlueprintItems
+          ? {
+              create: data.mockExamBlueprintItems.map((item, index) => ({
+                tagId: item.tagId,
+                minQuestionCount: item.minQuestionCount,
+                maxQuestionCount: item.maxQuestionCount,
+                sortOrder: item.sortOrder ?? index,
+              })),
+            }
+          : undefined,
         categories: {
           create: data.categoryIds.map((categoryId) => ({
             category: { connect: { id: categoryId } },
@@ -76,6 +102,21 @@ export class ExamsRepository {
         usesMonth: data.usesMonth,
         usesGrade: data.usesGrade,
         usesRound: data.usesRound,
+        mockExamQuestionCount: data.mockExamQuestionCount,
+        eraTagGroupId: data.eraTagGroupId,
+        ...(data.mockExamBlueprintItems
+          ? {
+              mockExamBlueprintItems: {
+                deleteMany: {},
+                create: data.mockExamBlueprintItems.map((item, index) => ({
+                  tagId: item.tagId,
+                  minQuestionCount: item.minQuestionCount,
+                  maxQuestionCount: item.maxQuestionCount,
+                  sortOrder: item.sortOrder ?? index,
+                })),
+              },
+            }
+          : {}),
         ...(data.categoryIds
           ? {
               categories: {
@@ -115,6 +156,26 @@ export class ExamsRepository {
       await tx.exam.delete({ where: { id } });
 
       return { exam, paperCount };
+    });
+  }
+
+  countTagGroupsByIds(tagGroupIds: string[], examId: string) {
+    return this.db.tagGroup.count({
+      where: { id: { in: tagGroupIds }, examId },
+    });
+  }
+
+  countTagsByIdsInTagGroup(
+    tagIds: string[],
+    examId: string,
+    tagGroupId: string,
+  ) {
+    return this.db.tag.count({
+      where: {
+        id: { in: tagIds },
+        examId,
+        tagGroupId,
+      },
     });
   }
 }

@@ -396,6 +396,7 @@ export class PapersService {
             id: questionTag.tag.id,
             name: questionTag.tag.name,
             keywords: questionTag.tag.keywords,
+            sortOrder: questionTag.tag.sortOrder,
             tagGroup: questionTag.tag.tagGroup
               ? {
                   id: questionTag.tag.tagGroup.id,

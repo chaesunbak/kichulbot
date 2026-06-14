@@ -18,6 +18,8 @@ const exam = {
   usesMonth: false,
   usesGrade: false,
   usesRound: false,
+  mockExamQuestionCount: null,
+  eraTagGroupId: null,
   createdAt: now,
   updatedAt: now,
 } satisfies Exam;

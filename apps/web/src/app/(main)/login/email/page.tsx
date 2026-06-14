@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { getUser } from '@/features/auth/api/server/queries';
 import { LoginForm } from '@/features/auth/components/login-form';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
-import { getCachedUser } from '@/features/auth/server';
 import { PageContainer } from '@/shared/components/page-container';
 
 type EmailLoginPageProps = {
@@ -17,7 +17,7 @@ export default async function EmailLoginPage({
 }: EmailLoginPageProps) {
   const params = await searchParams;
   const nextPath = normalizeNextPath(params?.next);
-  const user = await getCachedUser();
+  const user = await getUser();
   if (user) redirect(nextPath);
 
   return (

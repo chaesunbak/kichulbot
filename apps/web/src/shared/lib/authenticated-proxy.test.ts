@@ -9,7 +9,7 @@ const auth = vi.hoisted(() => ({
   getToken: vi.fn(),
 }));
 
-vi.mock('@/features/auth/server', () => ({
+vi.mock('@/features/auth/api/server/queries', () => ({
   getToken: auth.getToken,
 }));
 

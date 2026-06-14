@@ -9,7 +9,7 @@ import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import {
   getSolveSessionLogPage,
   getSolveSessionLogs,
@@ -23,7 +23,7 @@ import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function RecapPage() {
-  const user = await getCachedUser();
+  const user = await getUser();
   if (!user) redirect('/login?next=/recap');
 
   const today = toKstDateString(new Date());

@@ -1,4 +1,4 @@
-import { getToken } from '@/features/auth/server';
+import { getToken } from '@/features/auth/api/server/queries';
 import GlobalFooter from '@/shared/components/global-footer';
 import MainHeader from '@/shared/components/main-header';
 import { MobileBottomNavigation } from '@/shared/components/main-navigation';

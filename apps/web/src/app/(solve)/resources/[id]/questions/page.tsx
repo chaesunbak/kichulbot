@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import { getPaperQuestions } from '@/features/papers/api/server/queries';
 import { PaperQuestionViewer } from '@/features/papers/components/paper-question-viewer';
 
@@ -21,7 +21,7 @@ export default async function PaperQuestionsPage({
     notFound();
   }
 
-  const user = await getCachedUser();
+  const user = await getUser();
 
   return (
     <PaperQuestionViewer

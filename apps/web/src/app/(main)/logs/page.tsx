@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import { getSolveSessionLogPage } from '@/features/learning/api/server/queries';
 import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
 import { PageContainer } from '@/shared/components/page-container';
@@ -20,7 +20,7 @@ interface LogsPageProps {
 export default async function LogsPage({ searchParams }: LogsPageProps) {
   const params = await searchParams;
   const page = normalizePage(params?.page);
-  const user = await getCachedUser();
+  const user = await getUser();
   const nextPath = page > 1 ? `/logs?page=${page}` : '/logs';
   if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 

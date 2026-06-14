@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { StreakSummaryCard } from '@/features/question-attempts/components/streak-summary-card';
 import {
@@ -23,7 +23,7 @@ interface StreakPageProps {
 export default async function StreakPage({ searchParams }: StreakPageProps) {
   const params = await searchParams;
   const month = normalizeMonth(params?.month);
-  const user = await getCachedUser();
+  const user = await getUser();
   const nextPath = params?.month ? `/streak?month=${month}` : '/streak';
   if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 

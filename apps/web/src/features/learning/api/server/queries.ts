@@ -1,6 +1,6 @@
 import { ApiError } from '@kichulbot/api-contract';
 
-import { getToken } from '@/features/auth/server';
+import { getToken } from '@/features/auth/api/server/queries';
 import type {
   DailyWrongQuestionSet,
   SolveSession,

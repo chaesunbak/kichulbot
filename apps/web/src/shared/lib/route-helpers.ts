@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
-import { COOKIE_NAME, COOKIE_OPTIONS } from '@/features/auth/server';
+import {
+  COOKIE_NAME,
+  COOKIE_OPTIONS,
+} from '@/features/auth/api/server/queries';
 import type { AuthUser } from '@/features/auth/types';
 
 export interface AuthResponse {

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import { getPaper, type Paper } from '@/features/papers/api/server/queries';
@@ -23,10 +23,7 @@ export default async function PaperPage({
   } catch {
     notFound();
   }
-  const [logs, user] = await Promise.all([
-    getSolveSessionLogs(),
-    getCachedUser(),
-  ]);
+  const [logs, user] = await Promise.all([getSolveSessionLogs(), getUser()]);
 
   return (
     <PageContainer>

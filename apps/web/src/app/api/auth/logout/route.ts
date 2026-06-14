@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { COOKIE_NAME } from '@/features/auth/server';
+import { COOKIE_NAME } from '@/features/auth/api/server/queries';
 import { rejectCrossOriginRequest } from '@/shared/lib/route-helpers';
 
 export async function POST(request: Request) {

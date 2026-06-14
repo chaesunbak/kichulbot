@@ -1,7 +1,12 @@
-import type { AuthUser } from '@/features/auth/types';
-import { ApiError, clientApi } from '@/shared/api/client';
+import type {
+  EmailVerificationConfirmResponse,
+  EmailVerificationIssueResponse,
+  PasswordResetConfirmResponse,
+  PasswordResetIssueResponse,
+} from '@kichulbot/api-contract';
 
-export { ApiError };
+import type { AuthUser } from '@/features/auth/types';
+import { clientApi } from '@/shared/api/client';
 
 interface AuthResult {
   user: AuthUser;
@@ -14,46 +19,42 @@ export async function loginWithEmailApi(body: {
   return clientApi.post<AuthResult>('/api/auth/login', body);
 }
 
-export async function requestPasswordResetApi(email: string): Promise<{
-  ok: true;
-}> {
-  return assertOkResponse(
-    await clientApi.post('/api/auth/password-reset-requests', { email }),
+export async function requestPasswordResetApi(
+  email: string,
+): Promise<PasswordResetIssueResponse> {
+  return clientApi.post<PasswordResetIssueResponse>(
+    '/api/auth/password-reset-requests',
+    { email },
   );
 }
 
 export async function confirmPasswordResetApi(body: {
   token: string;
   password: string;
-}): Promise<{ ok: true }> {
-  return assertOkResponse(
-    await clientApi.post('/api/auth/password-resets/confirm', body),
+}): Promise<PasswordResetConfirmResponse> {
+  return clientApi.post<PasswordResetConfirmResponse>(
+    '/api/auth/password-resets/confirm',
+    body,
   );
 }
 
-export async function requestEmailVerificationApi(email: string): Promise<{
-  ok: true;
-}> {
-  return assertOkResponse(
-    await clientApi.post('/api/auth/email-verifications', { email }),
+export async function requestEmailVerificationApi(
+  email: string,
+): Promise<EmailVerificationIssueResponse> {
+  return clientApi.post<EmailVerificationIssueResponse>(
+    '/api/auth/email-verifications',
+    { email },
   );
 }
 
 export async function confirmEmailVerificationApi(body: {
   email: string;
   code: string;
-}): Promise<{ emailVerificationToken: string }> {
-  const response = await clientApi.post(
+}): Promise<EmailVerificationConfirmResponse> {
+  return clientApi.post<EmailVerificationConfirmResponse>(
     '/api/auth/email-verifications/confirm',
     body,
   );
-  if (
-    !isRecord(response) ||
-    typeof response.emailVerificationToken !== 'string'
-  ) {
-    throw new ApiError(500, '이메일 인증 응답이 올바르지 않습니다.');
-  }
-  return { emailVerificationToken: response.emailVerificationToken };
 }
 
 export async function registerWithEmailApi(body: {

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import {
   getBookmarkLists,
   getLibrary,
@@ -11,7 +11,7 @@ import { PageContainer } from '@/shared/components/page-container';
 
 export default async function LibraryPage() {
   const [user, library, bookmarkLists] = await Promise.all([
-    getCachedUser(),
+    getUser(),
     getLibrary(),
     getBookmarkLists(),
   ]);

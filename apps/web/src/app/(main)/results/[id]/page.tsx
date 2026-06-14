@@ -1,7 +1,7 @@
 import { ApiError } from '@kichulbot/api-contract';
 import { notFound, redirect } from 'next/navigation';
 
-import { getCachedUser } from '@/features/auth/server';
+import { getUser } from '@/features/auth/api/server/queries';
 import { getSolveSession } from '@/features/learning/api/server/queries';
 import { ResultSession } from '@/features/learning/components/result-session';
 import type { SolveSession } from '@/features/learning/types';
@@ -12,7 +12,7 @@ export default async function ResultPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getCachedUser();
+  const user = await getUser();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/results/${id}`)}`);
 
   let session: SolveSession;

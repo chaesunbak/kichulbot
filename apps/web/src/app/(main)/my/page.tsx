@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 
+import { getUser } from '@/features/auth/api/server/queries';
 import { MyProfileCard } from '@/features/auth/components/my-profile-card';
 import { MySettingsCard } from '@/features/auth/components/my-settings-card';
-import { getCachedUser } from '@/features/auth/server';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function MyPage() {
-  const user = await getCachedUser();
+  const user = await getUser();
   if (!user) redirect('/login?next=/my');
 
   return (

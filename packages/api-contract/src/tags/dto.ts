@@ -16,6 +16,7 @@ export const CreateTagRequestSchema = z.object({
   keywords: z.array(z.string().trim().min(1).max(50)).optional(),
   examId: z.string().min(1),
   tagGroupId: z.string().min(1).nullable().optional(),
+  sortOrder: z.number().int().min(0).optional(),
 });
 export type CreateTagRequest = z.infer<typeof CreateTagRequestSchema>;
 

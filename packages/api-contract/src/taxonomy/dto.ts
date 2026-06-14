@@ -55,6 +55,24 @@ export const CreateExamRequestSchema = z.object({
   categoryIds: z.array(z.string().min(1)).optional(),
   usesMonth: z.boolean().optional(),
   usesRound: z.boolean().optional(),
+  mockExamQuestionCount: z.number().int().min(1).max(100).nullable().optional(),
+  eraTagGroupId: z.string().min(1).nullable().optional(),
+  mockExamBlueprintItems: z
+    .array(
+      z
+        .object({
+          tagId: z.string().min(1),
+          minQuestionCount: z.number().int().min(0).max(100),
+          maxQuestionCount: z.number().int().min(0).max(100),
+          sortOrder: z.number().int().min(0).optional(),
+        })
+        .refine((value) => value.minQuestionCount <= value.maxQuestionCount, {
+          message: '최소 문항수는 최대 문항수보다 클 수 없습니다.',
+          path: ['minQuestionCount'],
+        }),
+    )
+    .max(100)
+    .optional(),
 });
 export type CreateExamRequest = z.infer<typeof CreateExamRequestSchema>;
 

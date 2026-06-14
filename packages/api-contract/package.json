@@ -28,6 +28,9 @@
       "library": [
         "dist/library/index.d.ts"
       ],
+      "mock-exams": [
+        "dist/mock-exams/index.d.ts"
+      ],
       "papers": [
         "dist/papers/index.d.ts"
       ],
@@ -85,6 +88,11 @@
       "types": "./dist/library/index.d.ts",
       "import": "./dist/library/index.js",
       "default": "./dist/library/index.js"
+    },
+    "./mock-exams": {
+      "types": "./dist/mock-exams/index.d.ts",
+      "import": "./dist/mock-exams/index.js",
+      "default": "./dist/mock-exams/index.js"
     },
     "./papers": {
       "types": "./dist/papers/index.d.ts",

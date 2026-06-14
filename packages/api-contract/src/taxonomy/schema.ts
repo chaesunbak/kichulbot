@@ -16,8 +16,19 @@ export const ExamResponseSchema = TaxonomyResponseSchema.extend({
   usesMonth: z.boolean(),
   usesGrade: z.boolean(),
   usesRound: z.boolean(),
+  isMockExamAvailable: z.boolean(),
 });
 export type ExamResponse = z.infer<typeof ExamResponseSchema>;
+
+export const MockExamBlueprintItemResponseSchema = z.object({
+  tagId: z.string(),
+  minQuestionCount: z.number().int().min(0),
+  maxQuestionCount: z.number().int().min(0),
+  sortOrder: z.number().int().min(0),
+});
+export type MockExamBlueprintItemResponse = z.infer<
+  typeof MockExamBlueprintItemResponseSchema
+>;
 
 export const AdminTaxonomyResponseSchema = TaxonomyResponseSchema.extend({
   createdAt: IsoDateStringSchema,
@@ -27,6 +38,9 @@ export type AdminTaxonomyResponse = z.infer<typeof AdminTaxonomyResponseSchema>;
 
 export const AdminExamResponseSchema = ExamResponseSchema.extend({
   paperCount: z.number().int().min(0),
+  mockExamQuestionCount: z.number().int().min(1).nullable(),
+  eraTagGroupId: z.string().nullable(),
+  mockExamBlueprintItems: z.array(MockExamBlueprintItemResponseSchema),
   createdAt: IsoDateStringSchema,
   updatedAt: IsoDateStringSchema,
 });

@@ -1,13 +1,13 @@
 import { ApiError } from '@kichulbot/api-contract';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
-import React from 'react';
+import { useEffect } from 'react';
 import { Navigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { Layout } from '@/shared/components/layout';
 
-import { meQueryOptions } from '../api/server/queries';
+import { meQueryOptions } from '../queries/options';
 import { useAuthStore } from '../store';
 
 export function ProtectedAdminLayout() {
@@ -18,7 +18,7 @@ export function ProtectedAdminLayout() {
     enabled: _hasHydrated && !!token,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!meQuery.isError) return;
     if (meQuery.error instanceof ApiError && meQuery.error.status !== 401)
       return;
@@ -31,7 +31,7 @@ export function ProtectedAdminLayout() {
     );
   }, [clearAuth, meQuery.error, meQuery.isError, queryClient]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleUnauthorized = () => {
       clearAuth();
       queryClient.clear();

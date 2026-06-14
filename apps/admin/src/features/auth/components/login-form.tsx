@@ -6,16 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from '@kichulbot/ui/components/ui/field';
-import { Input } from '@kichulbot/ui/components/ui/input';
 import { useMutation } from '@tanstack/react-query';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+
+import { TextField } from '@/shared/components/form-fields';
 
 import { login } from '../api/client/mutations';
 import { loginSchema } from '../schemas';
@@ -56,45 +52,21 @@ export function LoginForm() {
           className="space-y-5"
           onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
         >
-          <Controller
+          <TextField
+            control={form.control}
             name="email"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>이메일</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="email"
-                  autoComplete="email"
-                  aria-invalid={fieldState.invalid}
-                  placeholder="admin@example.com"
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            label="이메일"
+            type="email"
+            autoComplete="email"
+            placeholder="admin@example.com"
           />
-          <Controller
-            name="password"
+          <TextField
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>비밀번호</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  type="password"
-                  autoComplete="current-password"
-                  aria-invalid={fieldState.invalid}
-                  placeholder="8자 이상"
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            name="password"
+            label="비밀번호"
+            type="password"
+            autoComplete="current-password"
+            placeholder="8자 이상"
           />
           <Button
             className="w-full"

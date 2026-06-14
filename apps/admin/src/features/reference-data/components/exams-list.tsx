@@ -17,7 +17,7 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { ClipboardList, Pencil, Trash2 } from 'lucide-react';
 
-export interface ExamsListProps {
+interface ExamsListProps {
   exams: AdminExamResponse[];
   deletingExamId?: string | null;
   onEdit: (exam: AdminExamResponse) => void;

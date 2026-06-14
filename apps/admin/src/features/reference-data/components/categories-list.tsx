@@ -16,7 +16,7 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { FolderTree, Pencil, Trash2 } from 'lucide-react';
 
-export interface CategoriesListProps {
+interface CategoriesListProps {
   categories: AdminTaxonomyResponse[];
   deletingCategoryId?: string | null;
   onEdit: (category: AdminTaxonomyResponse) => void;

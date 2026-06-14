@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@kichulbot/ui/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 
 import type { Taxonomy } from '@/shared/types';
 
@@ -19,8 +19,8 @@ import {
   useDeleteTagMutation,
   useSaveTagGroupMutation,
   useSaveTagMutation,
-} from '../api/server/mutations';
-import { tagGroupsQueryOptions, tagsQueryOptions } from '../api/server/queries';
+} from '../queries/mutations';
+import { tagGroupsQueryOptions, tagsQueryOptions } from '../queries/options';
 import { TagFormPanel } from './tag-form';
 import { TagGroupPanel } from './tag-group-panel';
 import { TagListPanel } from './tag-list';
@@ -32,14 +32,12 @@ export function TagManager({
   token: string;
   exams: Taxonomy[];
 }) {
-  const [editingTag, setEditingTag] = React.useState<AdminTagResponse | null>(
-    null,
-  );
+  const [editingTag, setEditingTag] = useState<AdminTagResponse | null>(null);
   const [editingTagGroup, setEditingTagGroup] =
-    React.useState<AdminTagGroupResponse | null>(null);
-  const [selectedExamId, setSelectedExamId] = React.useState('');
+    useState<AdminTagGroupResponse | null>(null);
+  const [selectedExamId, setSelectedExamId] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!selectedExamId && exams.length > 0) {
       setSelectedExamId(exams[0].id);
     }
@@ -124,7 +122,7 @@ export function TagManager({
     }
   }
 
-  const tags = (tagsQuery.data?.tags ?? []) as AdminTagResponse[];
+  const tags = tagsQuery.data?.tags ?? [];
   const tagGroups = tagGroupsQuery.data?.tagGroups ?? [];
 
   return (

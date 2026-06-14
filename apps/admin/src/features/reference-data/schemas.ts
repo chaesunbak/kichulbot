@@ -1,4 +1,6 @@
 import {
+  AdminExamResponseSchema,
+  AdminTaxonomyResponseSchema,
   CreateCategoryRequestSchema,
   CreateExamRequestSchema,
 } from '@kichulbot/api-contract/taxonomy';
@@ -35,4 +37,12 @@ export const examFormSchema = CreateExamRequestSchema.extend({
         path: ['minQuestionCount'],
       }),
   ),
+});
+
+export const adminListExamsResponseSchema = z.object({
+  exams: z.array(AdminExamResponseSchema),
+});
+
+export const adminListCategoriesResponseSchema = z.object({
+  categories: z.array(AdminTaxonomyResponseSchema),
 });

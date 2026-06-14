@@ -8,20 +8,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from '@kichulbot/ui/components/ui/field';
-import { Input } from '@kichulbot/ui/components/ui/input';
 import { Plus } from 'lucide-react';
-import * as React from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
+import { getCategoryFormValues } from '@/features/reference-data/lib/form-values';
 import { categoryFormSchema } from '@/features/reference-data/schemas';
 import type { CategoryForm } from '@/features/reference-data/types';
+import { TextField } from '@/shared/components/form-fields';
 
-export interface CategoryFormPanelProps {
+interface CategoryFormPanelProps {
   editingCategory: AdminTaxonomyResponse | null;
   isSubmitting: boolean;
   onSubmit: (values: CategoryForm) => void;
@@ -38,10 +34,11 @@ export function CategoryFormPanel({
     resolver: standardSchemaResolver(categoryFormSchema),
     defaultValues: getCategoryFormValues(editingCategory),
   });
+  const { reset } = form;
 
-  React.useEffect(() => {
-    form.reset(getCategoryFormValues(editingCategory));
-  }, [editingCategory, form]);
+  useEffect(() => {
+    reset(getCategoryFormValues(editingCategory));
+  }, [editingCategory, reset]);
 
   return (
     <Card>
@@ -56,23 +53,11 @@ export function CategoryFormPanel({
       </CardHeader>
       <CardContent>
         <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-          <Controller
-            name="name"
+          <TextField
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>분류 이름</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  aria-invalid={fieldState.invalid}
-                  placeholder="수능"
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            name="name"
+            label="분류 이름"
+            placeholder="수능"
           />
           <div className="flex gap-2">
             {editingCategory && (
@@ -88,12 +73,4 @@ export function CategoryFormPanel({
       </CardContent>
     </Card>
   );
-}
-
-function getCategoryFormValues(
-  editingCategory: AdminTaxonomyResponse | null,
-): CategoryForm {
-  return {
-    name: editingCategory?.name ?? '',
-  };
 }

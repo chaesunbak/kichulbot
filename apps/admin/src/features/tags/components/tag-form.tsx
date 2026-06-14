@@ -18,19 +18,18 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@kichulbot/ui/components/ui/select';
 import { Plus, X } from 'lucide-react';
-import * as React from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
+import {
+  NumberField,
+  SelectField,
+  TextField,
+} from '@/shared/components/form-fields';
 import { type Taxonomy } from '@/shared/types';
 
+import { getTagFormValues, uniqueKeywords } from '../lib/form-values';
 import { tagFormSchema } from '../schemas';
 import type { TagForm } from '../types';
 
@@ -55,10 +54,11 @@ export function TagFormPanel({
     resolver: standardSchemaResolver(tagFormSchema),
     defaultValues: getTagFormValues(editingTag, selectedExam?.id ?? ''),
   });
+  const { reset } = form;
 
-  React.useEffect(() => {
-    form.reset(getTagFormValues(editingTag, selectedExam?.id ?? ''));
-  }, [editingTag, form, selectedExam?.id]);
+  useEffect(() => {
+    reset(getTagFormValues(editingTag, selectedExam?.id ?? ''));
+  }, [editingTag, reset, selectedExam?.id]);
 
   return (
     <Card>
@@ -75,23 +75,11 @@ export function TagFormPanel({
       </CardHeader>
       <CardContent>
         <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-          <Controller
-            name="name"
+          <TextField
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>태그 이름</FieldLabel>
-                <Input
-                  {...field}
-                  id={field.name}
-                  aria-invalid={fieldState.invalid}
-                  placeholder="조선"
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            name="name"
+            label="태그 이름"
+            placeholder="조선"
           />
           <Controller
             name="keywords"
@@ -113,61 +101,24 @@ export function TagFormPanel({
               </Field>
             )}
           />
-          <Controller
+          <SelectField
+            control={form.control}
             name="tagGroupId"
-            control={form.control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>태그 그룹</FieldLabel>
-                <Select
-                  value={field.value ?? 'none'}
-                  onValueChange={(value) =>
-                    field.onChange(value === 'none' ? null : value)
-                  }
-                  disabled={!selectedExam}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="그룹 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">그룹 없음</SelectItem>
-                    {tagGroups.map((tagGroup) => (
-                      <SelectItem key={tagGroup.id} value={tagGroup.id}>
-                        {tagGroup.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            )}
+            label="태그 그룹"
+            placeholder="그룹 선택"
+            emptyOption={{ value: 'none', label: '그룹 없음' }}
+            items={tagGroups.map((tagGroup) => ({
+              value: tagGroup.id,
+              label: tagGroup.name,
+            }))}
+            disabled={!selectedExam}
           />
-          <Controller
-            name="sortOrder"
+          <NumberField
             control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>정렬 순서</FieldLabel>
-                <Input
-                  id={field.name}
-                  type="number"
-                  min={0}
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  ref={field.ref}
-                  aria-invalid={fieldState.invalid}
-                  onChange={(event) =>
-                    field.onChange(
-                      event.target.value === ''
-                        ? 0
-                        : Number(event.target.value),
-                    )
-                  }
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
+            name="sortOrder"
+            label="정렬 순서"
+            min={0}
+            emptyValue={0}
           />
           <div className="flex gap-2">
             {editingTag && (
@@ -185,19 +136,6 @@ export function TagFormPanel({
   );
 }
 
-function getTagFormValues(
-  editingTag: AdminTagResponse | null,
-  examId: string,
-): TagForm {
-  return {
-    name: editingTag?.name ?? '',
-    keywords: editingTag?.keywords ?? [],
-    examId: editingTag?.examId ?? examId,
-    tagGroupId: editingTag?.tagGroupId ?? null,
-    sortOrder: editingTag?.sortOrder ?? 0,
-  };
-}
-
 interface KeywordInputProps {
   id: string;
   keywords: string[];
@@ -206,12 +144,12 @@ interface KeywordInputProps {
   onChange: (keywords: string[]) => void;
 }
 
-const KeywordInput = React.forwardRef<HTMLInputElement, KeywordInputProps>(
+const KeywordInput = forwardRef<HTMLInputElement, KeywordInputProps>(
   function KeywordInput(
     { id, keywords, 'aria-invalid': ariaInvalid, onBlur, onChange },
     ref,
   ) {
-    const [draftKeyword, setDraftKeyword] = React.useState('');
+    const [draftKeyword, setDraftKeyword] = useState('');
 
     function addKeyword() {
       const keyword = draftKeyword.trim();
@@ -272,9 +210,3 @@ const KeywordInput = React.forwardRef<HTMLInputElement, KeywordInputProps>(
     );
   },
 );
-
-function uniqueKeywords(keywords: string[]) {
-  return [
-    ...new Set(keywords.map((keyword) => keyword.trim()).filter(Boolean)),
-  ];
-}

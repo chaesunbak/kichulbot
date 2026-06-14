@@ -1,36 +1,32 @@
-import type {
-  AdminExamResponse,
-  AdminTaxonomyResponse,
-} from '@kichulbot/api-contract/taxonomy';
-import { useQuery } from '@tanstack/react-query';
-import * as React from 'react';
+import type { AdminExamResponse } from '@kichulbot/api-contract/taxonomy';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { useAuthStore } from '@/features/auth/store';
-import {
-  useDeleteExamMutation,
-  useSaveExamMutation,
-} from '@/features/reference-data/api/server/mutations';
-import {
-  categoriesQueryOptions,
-  examsQueryOptions,
-} from '@/features/reference-data/api/server/queries';
 import { ExamFormPanel } from '@/features/reference-data/components/exam-form';
 import { ExamsList } from '@/features/reference-data/components/exams-list';
 import {
+  useDeleteExamMutation,
+  useSaveExamMutation,
+} from '@/features/reference-data/queries/mutations';
+import {
+  categoriesQueryOptions,
+  examsQueryOptions,
+} from '@/features/reference-data/queries/options';
+import {
   tagGroupsQueryOptions,
   tagsQueryOptions,
-} from '@/features/tags/api/server/queries';
+} from '@/features/tags/queries/options';
 
 export function ExamsPage() {
   const token = useAuthStore((state) => state.token)!;
-  const [editingExam, setEditingExam] =
-    React.useState<AdminExamResponse | null>(null);
-  const exams =
-    (useQuery(examsQueryOptions(token)).data?.exams as AdminExamResponse[]) ??
-    [];
-  const categories =
-    (useQuery(categoriesQueryOptions(token)).data
-      ?.categories as AdminTaxonomyResponse[]) ?? [];
+  const [editingExam, setEditingExam] = useState<AdminExamResponse | null>(
+    null,
+  );
+  const examsQuery = useSuspenseQuery(examsQueryOptions(token));
+  const categoriesQuery = useSuspenseQuery(categoriesQueryOptions(token));
+  const exams = examsQuery.data.exams;
+  const categories = categoriesQuery.data.categories;
   const tagGroups =
     useQuery({
       ...tagGroupsQueryOptions(token, editingExam?.id),

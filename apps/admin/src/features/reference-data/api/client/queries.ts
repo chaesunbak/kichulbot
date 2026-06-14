@@ -1,16 +1,16 @@
-import {
-  ListCategoriesResponseSchema,
-  ListExamsResponseSchema,
-} from '@kichulbot/api-contract/taxonomy';
-
 import { apiRequest } from '@/shared/api/api-client';
 
+import {
+  adminListCategoriesResponseSchema,
+  adminListExamsResponseSchema,
+} from '../../schemas';
+
 export async function fetchExams(token: string) {
-  return apiRequest('/exams', ListExamsResponseSchema.parse, { token });
+  return apiRequest('/exams', adminListExamsResponseSchema.parse, { token });
 }
 
 export async function fetchCategories(token: string) {
-  return apiRequest('/categories', ListCategoriesResponseSchema.parse, {
+  return apiRequest('/categories', adminListCategoriesResponseSchema.parse, {
     token,
   });
 }

@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import type { TagForm, TagGroupForm } from '../../types';
 import {
   createTag,
   createTagGroup,
@@ -9,8 +8,9 @@ import {
   deleteTagGroup,
   updateTag,
   updateTagGroup,
-} from '../client/mutations';
-import { tagKeys } from './queries';
+} from '../api/client/mutations';
+import type { TagForm, TagGroupForm } from '../types';
+import { tagKeys } from './keys';
 
 function useInvalidateTags() {
   const queryClient = useQueryClient();

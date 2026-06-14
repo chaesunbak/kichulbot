@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import type { CategoryForm, ExamForm } from '../../types';
 import {
   createCategory,
   createExam,
@@ -9,8 +8,9 @@ import {
   deleteExam,
   updateCategory,
   updateExam,
-} from '../client/mutations';
-import { referenceDataKeys } from './queries';
+} from '../api/client/mutations';
+import type { CategoryForm, ExamForm } from '../types';
+import { referenceDataKeys } from './keys';
 
 export function useSaveCategoryMutation(
   token: string,

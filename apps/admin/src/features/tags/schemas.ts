@@ -1,4 +1,5 @@
 import {
+  AdminTagResponseSchema,
   CreateTagGroupRequestSchema,
   CreateTagRequestSchema,
 } from '@kichulbot/api-contract/tags';
@@ -23,4 +24,8 @@ export const tagGroupFormSchema = CreateTagGroupRequestSchema.extend({
   ),
   sortOrder: CreateTagGroupRequestSchema.shape.sortOrder.unwrap(),
   isActive: CreateTagGroupRequestSchema.shape.isActive.unwrap(),
+});
+
+export const adminListTagsResponseSchema = z.object({
+  tags: z.array(AdminTagResponseSchema),
 });

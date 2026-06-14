@@ -1,23 +1,22 @@
 import type { AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
-import { useQuery } from '@tanstack/react-query';
-import * as React from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { useAuthStore } from '@/features/auth/store';
+import { CategoriesList } from '@/features/reference-data/components/categories-list';
+import { CategoryFormPanel } from '@/features/reference-data/components/category-form';
 import {
   useDeleteCategoryMutation,
   useSaveCategoryMutation,
-} from '@/features/reference-data/api/server/mutations';
-import { categoriesQueryOptions } from '@/features/reference-data/api/server/queries';
-import { CategoriesList } from '@/features/reference-data/components/categories-list';
-import { CategoryFormPanel } from '@/features/reference-data/components/category-form';
+} from '@/features/reference-data/queries/mutations';
+import { categoriesQueryOptions } from '@/features/reference-data/queries/options';
 
 export function CategoriesPage() {
   const token = useAuthStore((state) => state.token)!;
   const [editingCategory, setEditingCategory] =
-    React.useState<AdminTaxonomyResponse | null>(null);
-  const categories =
-    (useQuery(categoriesQueryOptions(token)).data
-      ?.categories as AdminTaxonomyResponse[]) ?? [];
+    useState<AdminTaxonomyResponse | null>(null);
+  const categoriesQuery = useSuspenseQuery(categoriesQueryOptions(token));
+  const categories = categoriesQuery.data.categories;
 
   function resetForm() {
     setEditingCategory(null);

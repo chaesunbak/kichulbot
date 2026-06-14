@@ -81,7 +81,7 @@ use `overlay-kit` to manage overlay elements. reference existing codes.
 
 ### No shadow
 
-Never use shadow
+Never use shadow except overlays(e.g. Select)
 
 ### Border
 

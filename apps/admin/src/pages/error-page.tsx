@@ -16,7 +16,6 @@ export function ErrorPage({ error, onRetry }: ErrorPageProps) {
       <section
         className="
           w-full max-w-md rounded-lg border bg-background px-6 py-10 text-center
-          shadow-sm
           sm:px-10
         "
       >

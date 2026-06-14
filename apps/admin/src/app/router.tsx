@@ -1,10 +1,11 @@
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 import { Toaster } from 'sonner';
 
 import { ProtectedAdminLayout } from '@/features/auth/components/protected-admin-layout';
-
-import { ErrorBoundary } from './error-boundary';
+import { ErrorPage } from '@/pages/error-page';
 
 const LoginPage = lazy(() =>
   import('@/pages/login-page').then((module) => ({
@@ -55,26 +56,41 @@ function PageFallback() {
   );
 }
 
+function toError(error: unknown) {
+  return error instanceof Error ? error : undefined;
+}
+
+function renderErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+  return <ErrorPage error={toError(error)} onRetry={resetErrorBoundary} />;
+}
+
 export function AppRouter() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedAdminLayout />}>
-              <Route index element={<PapersPage />} />
-              <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/exams" element={<ExamsPage />} />
-              <Route path="/papers/:paperId" element={<PaperDetailPage />} />
-              <Route path="/tags" element={<TagsPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-        <Toaster position="bottom-right" richColors />
-      </BrowserRouter>
-    </ErrorBoundary>
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary fallbackRender={renderErrorFallback} onReset={reset}>
+          <BrowserRouter>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route element={<ProtectedAdminLayout />}>
+                  <Route index element={<PapersPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/exams" element={<ExamsPage />} />
+                  <Route
+                    path="/papers/:paperId"
+                    element={<PaperDetailPage />}
+                  />
+                  <Route path="/tags" element={<TagsPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+            <Toaster position="bottom-right" richColors />
+          </BrowserRouter>
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
   );
 }

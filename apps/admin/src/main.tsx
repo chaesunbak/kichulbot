@@ -1,15 +1,27 @@
 import './app/globals.css';
 
-import { StrictMode } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { OverlayProvider } from 'overlay-kit';
+import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Providers } from './app/providers';
+import { createQueryClient } from './app/query-client';
 import { AppRouter } from './app/router';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Providers>
-      <AppRouter />
-    </Providers>
+    <App />
   </StrictMode>,
 );
+
+function App() {
+  const [queryClient] = useState(createQueryClient);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <OverlayProvider>
+        <AppRouter />
+      </OverlayProvider>
+    </QueryClientProvider>
+  );
+}

@@ -1,12 +1,9 @@
 import { Button } from '@kichulbot/ui/components/ui/button';
-import { useIsFetching, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw } from 'lucide-react';
 import { BookOpen, ClipboardList, FolderTree, Tags } from 'lucide-react';
 import { Link } from 'react-router';
-import { toast } from 'sonner';
 
+import { AdminRefreshButton } from '@/shared/components/admin-refresh-button';
 import { LogoutButton } from '@/shared/components/logout-button';
-import { cn } from '@/shared/lib/utils';
 
 const ADMIN_NAV_ITEMS = [
   {
@@ -55,25 +52,5 @@ export function AdminHeader() {
         </div>
       </div>
     </header>
-  );
-}
-
-function AdminRefreshButton() {
-  const queryClient = useQueryClient();
-  const isFetching = useIsFetching() > 0;
-
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      disabled={isFetching}
-      onClick={() => {
-        queryClient.invalidateQueries();
-        toast.success('관리자 데이터를 불러왔습니다.');
-      }}
-    >
-      <RefreshCw className={cn('size-4', isFetching && 'animate-spin')} />
-      새로고침
-    </Button>
   );
 }

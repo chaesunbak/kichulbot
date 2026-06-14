@@ -97,11 +97,14 @@ Do
 className="border"
 ```
 
-## Codex
+## Code Smell Reporting
 
-- Do not run package installation, dependency downloads, Docker build/pull, or commands that access external registries in the default sandbox first.
-- Do not arbitrarily sort or format existing lockfiles(`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, etc.).
+If you spot code smell unrelated to the current task, report it.
 
 ## Language
 
 Write commit messages, comments, and test cases in Korean.
+
+## Codex
+
+- Do not run package installation, dependency downloads, Docker build/pull, or commands that access external registries in the default sandbox first.

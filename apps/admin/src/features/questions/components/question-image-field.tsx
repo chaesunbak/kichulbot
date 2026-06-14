@@ -7,10 +7,11 @@ import {
 import { Input } from '@kichulbot/ui/components/ui/input';
 import { Expand, Scissors, Upload } from 'lucide-react';
 import { overlay } from 'overlay-kit';
-import type * as React from 'react';
+import type { ChangeEvent, DragEvent } from 'react';
 
 import { cn } from '@/shared/lib/utils';
 
+import { getImageFileName } from '../lib/question-image';
 import { QuestionImageCropDialog } from './question-image-crop-dialog';
 import { QuestionImagePreviewDialog } from './question-image-preview-dialog';
 
@@ -35,12 +36,12 @@ export function QuestionImageField({
   select,
   reset,
 }: QuestionImageFieldProps) {
-  function change(event: React.ChangeEvent<HTMLInputElement>) {
+  function change(event: ChangeEvent<HTMLInputElement>) {
     const image = event.target.files?.[0];
     if (image) select(image);
     else reset();
   }
-  function drop(event: React.DragEvent<HTMLLabelElement>) {
+  function drop(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault();
     setIsDragging(false);
     const image = event.dataTransfer.files[0];
@@ -157,14 +158,4 @@ export function QuestionImageField({
       </FieldDescription>
     </Field>
   );
-}
-
-function getImageFileName(imageUrl: string) {
-  try {
-    const url = new URL(imageUrl, window.location.href);
-    const fileName = url.pathname.split('/').filter(Boolean).at(-1);
-    return fileName ? decodeURIComponent(fileName) : 'question-image.webp';
-  } catch {
-    return 'question-image.webp';
-  }
 }

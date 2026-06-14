@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@kichulbot/ui/components/ui/dialog';
 import { RotateCcw, Scissors } from 'lucide-react';
-import * as React from 'react';
+import { type SyntheticEvent, useEffect, useRef, useState } from 'react';
 import ReactCrop, {
   convertToPixelCrop,
   type Crop,
@@ -43,21 +43,19 @@ export function QuestionImageCropDialog({
   onClose,
   onExit,
 }: QuestionImageCropDialogProps) {
-  const imageRef = React.useRef<HTMLImageElement | null>(null);
-  const [crop, setCrop] = React.useState<Crop>(FULL_IMAGE_CROP);
-  const [completedCrop, setCompletedCrop] = React.useState<PixelCrop | null>(
-    null,
-  );
-  const [isApplying, setIsApplying] = React.useState(false);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [crop, setCrop] = useState<Crop>(FULL_IMAGE_CROP);
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) return;
 
     const timeoutId = window.setTimeout(onExit, 120);
     return () => window.clearTimeout(timeoutId);
   }, [isOpen, onExit]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) return;
 
     setCrop(FULL_IMAGE_CROP);
@@ -74,7 +72,7 @@ export function QuestionImageCropDialog({
     );
   }
 
-  function loadImage(event: React.SyntheticEvent<HTMLImageElement>) {
+  function loadImage(event: SyntheticEvent<HTMLImageElement>) {
     const image = event.currentTarget;
     imageRef.current = image;
     setCrop(FULL_IMAGE_CROP);

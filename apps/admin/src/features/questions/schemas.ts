@@ -7,27 +7,29 @@ export const questionSchema = z
   .object({
     type: questionRequestShape.type.unwrap(),
     number: questionRequestShape.number,
-    choiceCount: questionRequestShape.choiceCount,
+    choiceCount: questionRequestShape.choiceCount.unwrap().nullable(),
     gradingPolicy: questionRequestShape.gradingPolicy.unwrap(),
-    answerChoice: questionRequestShape.answerChoice,
+    answerChoice: questionRequestShape.answerChoice.unwrap().nullable(),
     answerText: questionRequestShape.answerText.or(z.literal('')),
     explanation: questionRequestShape.explanation.or(z.literal('')),
     points: questionRequestShape.points.unwrap(),
-    recommendedTimeSeconds: questionRequestShape.recommendedTimeSeconds,
+    recommendedTimeSeconds: questionRequestShape.recommendedTimeSeconds
+      .unwrap()
+      .nullable(),
     recommendedTagIds: questionRequestShape.recommendedTagIds.unwrap(),
     tagIds: questionRequestShape.tagIds.unwrap(),
   })
   .superRefine(
     ({ type, choiceCount, gradingPolicy, answerChoice, answerText }, ctx) => {
       if (type === 'MULTIPLE_CHOICE') {
-        if (choiceCount === undefined) {
+        if (choiceCount === null) {
           ctx.addIssue({
             code: 'custom',
             message: '선택지 개수를 입력해 주세요.',
             path: ['choiceCount'],
           });
         }
-        if (gradingPolicy === 'EXACT' && answerChoice === undefined) {
+        if (gradingPolicy === 'EXACT' && answerChoice === null) {
           ctx.addIssue({
             code: 'custom',
             message: '정답을 입력해 주세요.',
@@ -36,8 +38,8 @@ export const questionSchema = z
         }
         if (
           gradingPolicy === 'EXACT' &&
-          choiceCount !== undefined &&
-          answerChoice !== undefined &&
+          choiceCount !== null &&
+          answerChoice !== null &&
           answerChoice > choiceCount
         ) {
           ctx.addIssue({

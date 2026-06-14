@@ -2,14 +2,14 @@ import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers'
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { paperKeys } from '@/features/papers/api/server/queries';
+import { paperKeys } from '@/features/papers/queries/keys';
 
-import type { QuestionValues } from '../../types';
 import {
   createQuestion,
   deleteQuestion,
   updateQuestion,
-} from '../client/mutations';
+} from '../api/client/mutations';
+import type { QuestionValues } from '../types';
 
 export function useSaveQuestionMutation({
   token,
@@ -27,13 +27,14 @@ export function useSaveQuestionMutation({
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: QuestionValues) => {
+      const input = toQuestionInput(values);
       if (editingQuestionId)
         return updateQuestion(token, editingQuestionId, {
-          ...values,
+          ...input,
           image: image ?? undefined,
         });
       if (!image) throw new Error('문제 이미지를 업로드해 주세요.');
-      return createQuestion(token, { ...values, paperId, image });
+      return createQuestion(token, { ...input, paperId, image });
     },
     onSuccess: ({ question }) => {
       queryClient.invalidateQueries({ queryKey: paperKeys.detail(paperId) });
@@ -96,7 +97,7 @@ export function useUpdateQuestionTagsMutation({
       tagIds: string[];
     }) =>
       updateQuestion(token, question.id, {
-        ...toQuestionValues(question),
+        ...toQuestionInput(toQuestionValues(question)),
         tagIds,
       }),
     onSuccess: ({ question }) => {
@@ -118,14 +119,35 @@ function toQuestionValues(
   return {
     type: question.type,
     number: question.number,
-    choiceCount: question.choiceCount ?? undefined,
+    choiceCount: question.choiceCount ?? null,
     gradingPolicy: question.gradingPolicy ?? 'EXACT',
-    answerChoice: question.answerChoice ?? undefined,
+    answerChoice: question.answerChoice ?? null,
     answerText: question.answerText ?? '',
     explanation: question.explanation ?? '',
     points: question.points,
-    recommendedTimeSeconds: question.recommendedTimeSeconds ?? undefined,
+    recommendedTimeSeconds: question.recommendedTimeSeconds ?? null,
     recommendedTagIds: question.recommendedTagIds,
     tagIds: question.tags.map((tag) => tag.id),
+  };
+}
+
+function toQuestionInput(values: QuestionValues) {
+  const isMultipleChoice = values.type === 'MULTIPLE_CHOICE';
+  const isExactChoice = values.gradingPolicy === 'EXACT';
+  const answerText = values.answerText ?? '';
+  const explanation = values.explanation ?? '';
+
+  return {
+    ...values,
+    choiceCount: isMultipleChoice
+      ? (values.choiceCount ?? undefined)
+      : undefined,
+    answerChoice:
+      isMultipleChoice && isExactChoice
+        ? (values.answerChoice ?? undefined)
+        : undefined,
+    answerText: !isMultipleChoice && answerText.trim() ? answerText : undefined,
+    explanation: explanation.trim() ? explanation : undefined,
+    recommendedTimeSeconds: values.recommendedTimeSeconds ?? undefined,
   };
 }

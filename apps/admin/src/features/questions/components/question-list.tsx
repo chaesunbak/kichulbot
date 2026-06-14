@@ -19,6 +19,9 @@ import { ImageIcon, Pencil } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
 
+import { formatTagOption, getAnswerSummary } from '../lib/question-summary';
+import { getUnselectedRecommendedTags } from '../lib/recommended-tags';
+
 export function QuestionList({
   questions,
   tags,
@@ -61,93 +64,101 @@ export function QuestionList({
               sm:grid-cols-2
             "
           >
-            {questions.map((question) => (
-              <div
-                key={question.id}
-                className={cn(
-                  `
-                    cursor-pointer rounded-md border bg-background p-4 text-left
-                    transition-colors
-                    hover:bg-muted/50
-                  `,
-                  editingQuestionId === question.id &&
-                    'border-primary bg-primary/5',
-                )}
-                role="button"
-                tabIndex={0}
-                onClick={() => onEdit(question)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    onEdit(question);
-                  }
-                }}
-              >
-                {question.imageUrl ? (
-                  <img
-                    className="
-                      mb-3 h-36 w-full rounded-md border bg-muted/30
-                      object-contain
-                    "
-                    src={question.imageUrl}
-                    alt={`${question.number}번 문항 이미지`}
-                  />
-                ) : (
-                  <div
-                    className="
-                      mb-3 flex h-36 items-center justify-center rounded-md
-                      border border-dashed bg-muted/30 text-xs
-                      text-muted-foreground
-                    "
-                  >
-                    <ImageIcon className="mr-1.5 size-4" />
-                    등록 이미지 없음
-                  </div>
-                )}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{question.number}번 문항</p>
-                      <Badge variant="outline">
-                        {question.type === 'MULTIPLE_CHOICE'
-                          ? '객관식'
-                          : '서술형'}
-                      </Badge>
-                      <Badge variant="secondary">{question.points}점</Badge>
+            {questions.map((question) => {
+              const recommendedTags = getUnselectedRecommendedTags({
+                question,
+                tags,
+                selectedTagIds: question.tags.map((tag) => tag.id),
+              });
+
+              return (
+                <div
+                  key={question.id}
+                  className={cn(
+                    `
+                      cursor-pointer rounded-md border bg-background p-4
+                      text-left transition-colors
+                      hover:bg-muted/50
+                    `,
+                    editingQuestionId === question.id &&
+                      'border-primary bg-primary/5',
+                  )}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onEdit(question)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onEdit(question);
+                    }
+                  }}
+                >
+                  {question.imageUrl ? (
+                    <img
+                      className="
+                        mb-3 h-36 w-full rounded-md border bg-muted/30
+                        object-contain
+                      "
+                      src={question.imageUrl}
+                      alt={`${question.number}번 문항 이미지`}
+                    />
+                  ) : (
+                    <div
+                      className="
+                        mb-3 flex h-36 items-center justify-center rounded-md
+                        border border-dashed bg-muted/30 text-xs
+                        text-muted-foreground
+                      "
+                    >
+                      <ImageIcon className="mr-1.5 size-4" />
+                      등록 이미지 없음
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {getAnswerSummary(question)}
-                    </p>
+                  )}
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{question.number}번 문항</p>
+                        <Badge variant="outline">
+                          {question.type === 'MULTIPLE_CHOICE'
+                            ? '객관식'
+                            : '서술형'}
+                        </Badge>
+                        <Badge variant="secondary">{question.points}점</Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {getAnswerSummary(question)}
+                      </p>
+                    </div>
+                    <Pencil className="size-4 text-muted-foreground" />
                   </div>
-                  <Pencil className="size-4 text-muted-foreground" />
+                  {question.rawText && (
+                    <p
+                      className="
+                        mt-3 line-clamp-3 rounded-md border bg-muted/20 px-3
+                        py-2 text-xs/5 text-muted-foreground
+                      "
+                    >
+                      {question.rawText}
+                    </p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-1">
+                    {question.tags.map((tag) => (
+                      <Badge key={tag.id} variant="secondary">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                    <RecommendedTagBadges recommendedTags={recommendedTags} />
+                    <QuestionTagSelect
+                      question={question}
+                      tags={tags}
+                      isLoading={isLoadingTags}
+                      isPending={addingTagQuestionId === question.id}
+                      onAddTag={onAddTag}
+                    />
+                  </div>
                 </div>
-                {question.rawText && (
-                  <p
-                    className="
-                      mt-3 line-clamp-3 rounded-md border bg-muted/20 px-3 py-2
-                      text-xs/5 text-muted-foreground
-                    "
-                  >
-                    {question.rawText}
-                  </p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-1">
-                  {question.tags.map((tag) => (
-                    <Badge key={tag.id} variant="secondary">
-                      {tag.name}
-                    </Badge>
-                  ))}
-                  <RecommendedTagBadges question={question} tags={tags} />
-                  <QuestionTagSelect
-                    question={question}
-                    tags={tags}
-                    isLoading={isLoadingTags}
-                    isPending={addingTagQuestionId === question.id}
-                    onAddTag={onAddTag}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
@@ -156,18 +167,10 @@ export function QuestionList({
 }
 
 function RecommendedTagBadges({
-  question,
-  tags,
+  recommendedTags,
 }: {
-  question: AdminPaperQuestionResponse;
-  tags: TagResponse[];
+  recommendedTags: TagResponse[];
 }) {
-  const selectedTagIds = new Set(question.tags.map((tag) => tag.id));
-  const recommendedTags = question.recommendedTagIds
-    .map((tagId) => tags.find((tag) => tag.id === tagId))
-    .filter((tag): tag is TagResponse => Boolean(tag))
-    .filter((tag) => !selectedTagIds.has(tag.id));
-
   if (recommendedTags.length === 0) return null;
 
   return (
@@ -237,21 +240,4 @@ function QuestionTagSelect({
       </Select>
     </div>
   );
-}
-
-function formatTagOption(tag: TagResponse) {
-  if (!tag.tagGroup) return tag.name;
-  return `${tag.tagGroup.name} · ${tag.name}`;
-}
-
-function getAnswerSummary(question: AdminPaperQuestionResponse) {
-  if (
-    question.type === 'MULTIPLE_CHOICE' &&
-    question.gradingPolicy === 'ANY_CHOICE'
-  ) {
-    return `정답없음 · 선택지 ${question.choiceCount ?? '-'}개`;
-  }
-  return question.type === 'MULTIPLE_CHOICE'
-    ? `정답 ${question.answerChoice ?? '-'}번 · 선택지 ${question.choiceCount ?? '-'}개`
-    : `모범답안 ${question.answerText ?? '-'}`;
 }

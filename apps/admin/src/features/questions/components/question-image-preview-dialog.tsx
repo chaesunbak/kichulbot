@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@kichulbot/ui/components/ui/dialog';
-import * as React from 'react';
+import { useEffect } from 'react';
 
 interface QuestionImagePreviewDialogProps {
   imageUrl: string;
@@ -22,7 +22,7 @@ export function QuestionImagePreviewDialog({
   onExit,
   title,
 }: QuestionImagePreviewDialogProps) {
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) return;
 
     const timeoutId = window.setTimeout(onExit, 120);

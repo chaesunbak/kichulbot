@@ -1,8 +1,9 @@
 import { Button } from '@kichulbot/ui/components/ui/button';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import { ChevronRight, Search } from 'lucide-react';
+import { ChevronRight, ClipboardList, Search } from 'lucide-react';
 import Link from 'next/link';
 
+import { getUser } from '@/features/auth/api/server/queries';
 import {
   type Category,
   getCategories,
@@ -16,8 +17,10 @@ const CATEGORY_PAPER_LIMIT = 4;
 
 export default async function PapersPage() {
   let sections: CategoryPaperSection[];
+  let isAuthenticated = false;
   try {
-    const categories = await getCategories();
+    const [user, categories] = await Promise.all([getUser(), getCategories()]);
+    isAuthenticated = !!user;
     sections = await Promise.all(
       categories.map(async (category) => {
         const papers = await getPapers({ categoryId: category.id });
@@ -67,6 +70,14 @@ export default async function PapersPage() {
             검색
           </Button>
         </form>
+        {isAuthenticated && (
+          <Button asChild variant="outline" className="h-10 shrink-0">
+            <Link href="/mock-exams">
+              <ClipboardList className="size-4" />
+              모의고사
+            </Link>
+          </Button>
+        )}
       </div>
 
       {sections.every((section) => section.paperCount === 0) ? (

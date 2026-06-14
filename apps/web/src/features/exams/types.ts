@@ -13,4 +13,5 @@ export interface Exam {
   usesMonth: boolean;
   usesGrade: boolean;
   usesRound: boolean;
+  isMockExamAvailable: boolean;
 }

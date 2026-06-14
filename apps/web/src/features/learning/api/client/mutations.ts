@@ -1,6 +1,7 @@
 import type {
   Answer,
   DailyWrongQuestionSet,
+  MockExamGeneration,
   QuestionNote,
   QuestionReportCategory,
   QuestionResult,
@@ -61,6 +62,19 @@ export async function createBookmarkListSolveSession({
     { mode },
   );
   return body.session;
+}
+
+export async function createMockExamSolveSession({
+  examId,
+  mode,
+}: {
+  examId: string;
+  mode: SolveMode;
+}): Promise<{ session: SolveSession; generation: MockExamGeneration }> {
+  return clientApi.post<{
+    session: SolveSession;
+    generation: MockExamGeneration;
+  }>('/api/me/mock-exams/solve-sessions', { examId, mode });
 }
 
 export async function refreshWrongQuestionSet(

@@ -5,10 +5,10 @@ import Link from 'next/link';
 
 import bookmarkIcon from '@/shared/assets/home/bookmark.png';
 import libraryIcon from '@/shared/assets/home/library.png';
+import mocksIcon from '@/shared/assets/home/mocks.png';
 import paperIcon from '@/shared/assets/home/paper.png';
 import recapIcon from '@/shared/assets/home/recap.png';
 import reportIcon from '@/shared/assets/home/report.png';
-import searchIcon from '@/shared/assets/home/search.png';
 
 interface FeatureSectionItem {
   href: string;
@@ -28,9 +28,9 @@ const featureItems = [
     iconSrc: paperIcon,
   },
   {
-    href: '/resources/search',
-    label: '시험지 검색',
-    iconSrc: searchIcon,
+    href: '/mock-exams',
+    label: '모의고사',
+    iconSrc: mocksIcon,
   },
   {
     href: '/recap',

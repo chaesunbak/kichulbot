@@ -2,7 +2,16 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 const AUTH_COOKIE_NAME = 'kichulbot_token';
-const PROTECTED_PATH_PREFIXES = ['/library'];
+const PROTECTED_PATH_PREFIXES = [
+  '/library',
+  '/logs',
+  '/my',
+  '/recap',
+  '/report',
+  '/results',
+  '/solve',
+  '/streak',
+];
 
 export function proxy(request: NextRequest) {
   if (isProtectedPath(request.nextUrl.pathname)) {

@@ -4,6 +4,7 @@ import type {
   BookmarkListSummaryResponse,
 } from '@kichulbot/api-contract/bookmarks';
 import type { LibraryResponse } from '@kichulbot/api-contract/library';
+import type { MockExamGenerationResponse } from '@kichulbot/api-contract/mock-exams';
 import type { QuestionNoteResponse } from '@kichulbot/api-contract/question-notes';
 import type { QuestionReportCategory } from '@kichulbot/api-contract/question-reports';
 import type { DailyWrongQuestionSetResponse } from '@kichulbot/api-contract/review';
@@ -40,3 +41,4 @@ export type { SolveSessionLogStatus };
 export type SolveSessionLogPage = ListSolveSessionLogsResponse;
 
 export type DailyWrongQuestionSet = DailyWrongQuestionSetResponse;
+export type MockExamGeneration = MockExamGenerationResponse;

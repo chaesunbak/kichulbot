@@ -1,4 +1,5 @@
 import type { PaperImportDraftQuestion } from '@kichulbot/api-contract/papers';
+import type { ListPaperImportJobsResponse } from '@kichulbot/api-contract/papers';
 import type * as z from 'zod';
 
 import type {
@@ -16,3 +17,5 @@ export type ImportPaperValues = z.infer<typeof importPaperSchema>;
 export type ImportPaperQuestionValues = PaperImportDraftQuestion & {
   excluded: boolean;
 };
+
+export type PaperImportJob = ListPaperImportJobsResponse['jobs'][number];

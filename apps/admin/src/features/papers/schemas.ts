@@ -1,4 +1,8 @@
-import { CreatePaperRequestSchema } from '@kichulbot/api-contract/papers';
+import {
+  AdminPaperQuestionResponseSchema,
+  AdminPaperResponseSchema,
+  CreatePaperRequestSchema,
+} from '@kichulbot/api-contract/papers';
 import * as z from 'zod';
 
 const paperBaseSchema = CreatePaperRequestSchema.extend({
@@ -11,9 +15,9 @@ const paperBaseSchema = CreatePaperRequestSchema.extend({
     .int('연도는 정수로 입력해 주세요.')
     .min(1994, '1994년 이후 연도를 입력해 주세요.')
     .max(2100, '2100년 이하 연도를 입력해 주세요.'),
-  month: z.number().int().min(1).max(12).optional(),
-  grade: z.number().int().min(1).max(3).optional(),
-  round: z.number().int().min(1).optional(),
+  month: z.number().int().min(1).max(12).nullable().optional(),
+  grade: z.number().int().min(1).max(3).nullable().optional(),
+  round: z.number().int().min(1).nullable().optional(),
   examId: z.string().min(1, '시험을 선택해 주세요.'),
   questionCount: z
     .number()
@@ -36,7 +40,12 @@ export const updatePaperMetadataSchema = z.object({
     .int('연도는 정수로 입력해 주세요.')
     .min(1994, '1994년 이후 연도를 입력해 주세요.')
     .max(2100, '2100년 이하 연도를 입력해 주세요.'),
-  round: z.number().int('회차는 정수로 입력해 주세요.').min(1).optional(),
+  round: z
+    .number()
+    .int('회차는 정수로 입력해 주세요.')
+    .min(1)
+    .nullable()
+    .optional(),
 });
 
 export const importPaperSchema = paperBaseSchema.extend({
@@ -48,5 +57,15 @@ export const importPaperSchema = paperBaseSchema.extend({
   }),
   answerPdf: z.custom<File | null>((value) => value instanceof File, {
     message: '답지 PDF를 선택해 주세요.',
+  }),
+});
+
+export const adminListPapersResponseSchema = z.object({
+  papers: z.array(AdminPaperResponseSchema),
+});
+
+export const adminGetPaperResponseSchema = z.object({
+  paper: AdminPaperResponseSchema.extend({
+    questions: z.array(AdminPaperQuestionResponseSchema),
   }),
 });

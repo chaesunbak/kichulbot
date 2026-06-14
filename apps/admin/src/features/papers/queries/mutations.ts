@@ -4,25 +4,25 @@ import { toast } from 'sonner';
 import type { Exam } from '@/shared/types';
 
 import {
-  toCreatePaperInput,
-  toCreatePaperQuestionImages,
-  toCreatePaperWithQuestionsInput,
-} from '../../mappers';
-import type {
-  ImportPaperQuestionValues,
-  ImportPaperValues,
-  PaperValues,
-  UpdatePaperMetadataValues,
-} from '../../types';
-import {
   createPaper,
   createPaperImportDraft,
   createPaperWithQuestions,
   deletePaper,
   updatePaperMetadata,
   updatePaperPublished,
-} from '../client/mutations';
-import { paperKeys } from './queries';
+} from '../api/client/mutations';
+import {
+  toCreatePaperInput,
+  toCreatePaperQuestionImages,
+  toCreatePaperWithQuestionsInput,
+} from '../lib/mappers';
+import type {
+  ImportPaperQuestionValues,
+  ImportPaperValues,
+  PaperValues,
+  UpdatePaperMetadataValues,
+} from '../types';
+import { paperKeys } from './keys';
 
 export function useCreatePaperMutation(token: string) {
   const queryClient = useQueryClient();
@@ -70,9 +70,9 @@ export function useCreatePaperImportDraftMutation({
         answerPdf,
         title: values.title,
         year: values.year,
-        month: exam.usesMonth ? values.month : undefined,
-        grade: exam.usesGrade ? values.grade : undefined,
-        round: exam.usesRound ? values.round : undefined,
+        month: exam.usesMonth ? (values.month ?? undefined) : undefined,
+        grade: exam.usesGrade ? (values.grade ?? undefined) : undefined,
+        round: exam.usesRound ? (values.round ?? undefined) : undefined,
         examId: values.examId,
         questionCount: values.questionCount,
         isPublished: values.isPublished,
@@ -158,7 +158,10 @@ export function useUpdatePaperMetadataMutation(token: string, paperId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (values: UpdatePaperMetadataValues) =>
-      updatePaperMetadata(token, paperId, values),
+      updatePaperMetadata(token, paperId, {
+        ...values,
+        round: values.round ?? undefined,
+      }),
     onSuccess: ({ paper }) => {
       queryClient.setQueryData(paperKeys.detail(paperId), { paper });
       queryClient.invalidateQueries({ queryKey: paperKeys.lists() });

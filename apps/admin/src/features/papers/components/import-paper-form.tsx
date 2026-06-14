@@ -7,12 +7,12 @@ import {
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
 import { FileText, Loader2, Sparkles } from 'lucide-react';
-import * as React from 'react';
+import { useReducer } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 
 import type { Exam } from '@/shared/types';
 
-import { useCreatePaperImportDraftMutation } from '../api/server/mutations';
+import { useCreatePaperImportDraftMutation } from '../queries/mutations';
 import { importPaperSchema } from '../schemas';
 import type { ImportPaperValues } from '../types';
 import { ImportPaperFields } from './import-paper-fields';
@@ -20,6 +20,9 @@ import { ImportPaperFields } from './import-paper-fields';
 const importPaperDefaults: ImportPaperValues = {
   title: '',
   year: new Date().getFullYear(),
+  month: null,
+  grade: null,
+  round: null,
   examId: '',
   questionCount: 50,
   isPublished: false,
@@ -43,7 +46,7 @@ export function ImportPaperForm({
 
   const values = useWatch({ control: form.control });
   const selectedExam = exams.find((exam) => exam.id === values.examId);
-  const [fieldsResetKey, resetFields] = React.useReducer((key) => key + 1, 0);
+  const [fieldsResetKey, resetFields] = useReducer((key) => key + 1, 0);
 
   const draftMutation = useCreatePaperImportDraftMutation({ token });
 

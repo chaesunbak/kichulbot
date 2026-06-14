@@ -1,11 +1,11 @@
 import type { CreatePaperWithQuestionsRequest } from '@kichulbot/api-contract/papers';
 
-import type { CreatePaperInput } from './api/client/mutations';
+import type { CreatePaperInput } from '../api/client/mutations';
 import type {
   ImportPaperQuestionValues,
   ImportPaperValues,
   PaperValues,
-} from './types';
+} from '../types';
 
 export function toCreatePaperInput(
   values: PaperValues,
@@ -13,9 +13,9 @@ export function toCreatePaperInput(
 ): CreatePaperInput {
   return {
     ...values,
-    month: exam.usesMonth ? values.month : undefined,
-    grade: exam.usesGrade ? values.grade : undefined,
-    round: exam.usesRound ? values.round : undefined,
+    month: exam.usesMonth ? (values.month ?? undefined) : undefined,
+    grade: exam.usesGrade ? (values.grade ?? undefined) : undefined,
+    round: exam.usesRound ? (values.round ?? undefined) : undefined,
     isPublished: values.isPublished === 'true',
   };
 }
@@ -31,9 +31,9 @@ export function toCreatePaperWithQuestionsInput(
     paper: {
       title: values.title,
       year: values.year,
-      month: exam.usesMonth ? values.month : undefined,
-      grade: exam.usesGrade ? values.grade : undefined,
-      round: exam.usesRound ? values.round : undefined,
+      month: exam.usesMonth ? (values.month ?? undefined) : undefined,
+      grade: exam.usesGrade ? (values.grade ?? undefined) : undefined,
+      round: exam.usesRound ? (values.round ?? undefined) : undefined,
       examId: values.examId,
       questionCount: values.questionCount,
       isPublished: values.isPublished,

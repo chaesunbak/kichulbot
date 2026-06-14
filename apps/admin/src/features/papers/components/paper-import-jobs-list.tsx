@@ -4,14 +4,9 @@ import { Button } from '@kichulbot/ui/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Link } from 'react-router';
 
-type PaperImportJob = ListPaperImportJobsResponse['jobs'][number];
+import { formatJobTime, paperImportJobStatusLabels } from '../lib/import-job';
 
-const statusLabels: Record<PaperImportJob['status'], string> = {
-  PENDING: '대기 중',
-  PROCESSING: '처리 중',
-  COMPLETED: '완료',
-  FAILED: '실패',
-};
+type PaperImportJob = ListPaperImportJobsResponse['jobs'][number];
 
 export function PaperImportJobsList({
   jobs,
@@ -65,7 +60,7 @@ function PaperImportJobRow({ job }: { job: PaperImportJob }) {
           <Badge
             variant={job.status === 'FAILED' ? 'destructive' : 'secondary'}
           >
-            {statusLabels[job.status]}
+            {paperImportJobStatusLabels[job.status]}
           </Badge>
           <p className="truncate text-sm font-medium">
             {job.paperTitle || job.questionPdfName || 'PDF 가져오기 작업'}
@@ -87,17 +82,4 @@ function PaperImportJobRow({ job }: { job: PaperImportJob }) {
       ) : null}
     </div>
   );
-}
-
-function formatJobTime(job: PaperImportJob) {
-  const value =
-    job.completedAt ?? job.failedAt ?? job.startedAt ?? job.createdAt;
-  if (!value) return '시간 정보 없음';
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
 }

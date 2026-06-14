@@ -7,33 +7,27 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@kichulbot/ui/components/ui/field';
-import { Input } from '@kichulbot/ui/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@kichulbot/ui/components/ui/select';
+import { FieldGroup } from '@kichulbot/ui/components/ui/field';
 import { Plus } from 'lucide-react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
+import {
+  NumberField,
+  SelectField,
+  TextField,
+} from '@/shared/components/form-fields';
 import type { Exam } from '@/shared/types';
 
-import { useCreatePaperMutation } from '../api/server/mutations';
+import { useCreatePaperMutation } from '../queries/mutations';
 import { paperSchema } from '../schemas';
 import type { PaperValues } from '../types';
 
 const defaults: PaperValues = {
   title: '',
   year: new Date().getFullYear(),
+  month: null,
+  grade: null,
+  round: null,
   examId: '',
   questionCount: 20,
   isPublished: 'false',
@@ -108,7 +102,11 @@ export function CreatePaperForm({
               control={form.control}
               name="examId"
               label="시험"
-              items={exams}
+              placeholder="시험 선택"
+              items={exams.map((exam) => ({
+                value: exam.id,
+                label: exam.name,
+              }))}
             />
             {selectedExam?.usesMonth && (
               <NumberField
@@ -137,26 +135,15 @@ export function CreatePaperForm({
                 required
               />
             )}
-            <Controller
-              name="isPublished"
+            <SelectField
               control={form.control}
-              render={({ field }) => (
-                <Field>
-                  <FieldLabel>공개 상태</FieldLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="false">비공개</SelectItem>
-                      <SelectItem value="true">공개</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FieldDescription>
-                    공개 문제지는 사용자 목록에 노출됩니다.
-                  </FieldDescription>
-                </Field>
-              )}
+              name="isPublished"
+              label="공개 상태"
+              description="공개 문제지는 사용자 목록에 노출됩니다."
+              items={[
+                { value: 'false', label: '비공개' },
+                { value: 'true', label: '공개' },
+              ]}
             />
           </FieldGroup>
           <Button
@@ -170,107 +157,5 @@ export function CreatePaperForm({
         </form>
       </CardContent>
     </Card>
-  );
-}
-
-type Control = ReturnType<typeof useForm<PaperValues>>['control'];
-function TextField({
-  control,
-  name,
-  label,
-  placeholder,
-}: {
-  control: Control;
-  name: 'title';
-  label: string;
-  placeholder: string;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Input {...field} placeholder={placeholder} />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
-function NumberField({
-  control,
-  name,
-  label,
-  placeholder,
-  required,
-}: {
-  control: Control;
-  name: 'year' | 'month' | 'grade' | 'round' | 'questionCount';
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Input
-            type="number"
-            value={field.value ?? ''}
-            placeholder={placeholder}
-            required={required}
-            onChange={(event) =>
-              field.onChange(
-                event.target.value === ''
-                  ? undefined
-                  : Number(event.target.value),
-              )
-            }
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
-function SelectField({
-  control,
-  name,
-  label,
-  items,
-}: {
-  control: Control;
-  name: 'examId';
-  label: string;
-  items: Exam[];
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Select value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={`${label} 선택`} />
-            </SelectTrigger>
-            <SelectContent>
-              {items.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
   );
 }

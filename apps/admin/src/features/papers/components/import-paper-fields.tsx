@@ -5,16 +5,14 @@ import {
   FieldLabel,
 } from '@kichulbot/ui/components/ui/field';
 import { Input } from '@kichulbot/ui/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@kichulbot/ui/components/ui/select';
 import type { useForm } from 'react-hook-form';
 import { Controller } from 'react-hook-form';
 
+import {
+  NumberField,
+  SelectField,
+  TextField,
+} from '@/shared/components/form-fields';
 import type { Exam } from '@/shared/types';
 
 import type { ImportPaperValues } from '../types';
@@ -45,30 +43,15 @@ export function ImportPaperFields({
         <NumberField control={control} name="year" label="시행 연도" />
         <NumberField control={control} name="questionCount" label="문항 수" />
       </div>
-      <Controller
-        name="examId"
+      <SelectField
         control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel>시험</FieldLabel>
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger
-                className="w-full"
-                aria-invalid={fieldState.invalid}
-              >
-                <SelectValue placeholder="시험 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {exams.map((exam) => (
-                  <SelectItem key={exam.id} value={exam.id}>
-                    {exam.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
+        name="examId"
+        label="시험"
+        placeholder="시험 선택"
+        items={exams.map((exam) => ({
+          value: exam.id,
+          label: exam.name,
+        }))}
       />
       {selectedExam?.usesMonth && (
         <NumberField control={control} name="month" label="시행 월" />
@@ -112,113 +95,6 @@ export function ImportPaperFields({
 }
 
 type Control = ReturnType<typeof useForm<ImportPaperValues>>['control'];
-
-function TextField({
-  control,
-  name,
-  label,
-  placeholder,
-}: {
-  control: Control;
-  name: 'title';
-  label: string;
-  placeholder: string;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-          <Input
-            {...field}
-            id={field.name}
-            aria-invalid={fieldState.invalid}
-            placeholder={placeholder}
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
-
-function NumberField({
-  control,
-  name,
-  label,
-}: {
-  control: Control;
-  name: 'year' | 'month' | 'grade' | 'round' | 'questionCount';
-  label: string;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-          <Input
-            id={field.name}
-            type="number"
-            inputMode="numeric"
-            value={field.value ?? ''}
-            onBlur={field.onBlur}
-            ref={field.ref}
-            aria-invalid={fieldState.invalid}
-            onChange={(event) =>
-              field.onChange(
-                event.target.value === ''
-                  ? undefined
-                  : Number(event.target.value),
-              )
-            }
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
-
-function SelectField({
-  control,
-  name,
-  label,
-  items,
-}: {
-  control: Control;
-  name: 'layout' | 'variant';
-  label: string;
-  items: Array<{ value: string; label: string }>;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Select value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger className="w-full" aria-invalid={fieldState.invalid}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {items.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
 
 function FileField({
   control,

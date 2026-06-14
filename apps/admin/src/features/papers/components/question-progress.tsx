@@ -4,6 +4,8 @@ import { Progress } from '@kichulbot/ui/components/ui/progress';
 import { CheckCircle2, Tag } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { getPercentage } from '../lib/progress';
+
 export function QuestionProgress({
   registered,
   tagged,
@@ -85,9 +87,4 @@ function ProgressMetric({
       <Progress value={percentage} />
     </div>
   );
-}
-
-function getPercentage(value: number, total: number) {
-  if (total <= 0) return 0;
-  return Math.min(100, (value / total) * 100);
 }

@@ -1,18 +1,15 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 import { Button } from '@kichulbot/ui/components/ui/button';
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@kichulbot/ui/components/ui/field';
-import { Input } from '@kichulbot/ui/components/ui/input';
+import { FieldGroup } from '@kichulbot/ui/components/ui/field';
 import { Switch } from '@kichulbot/ui/components/ui/switch';
 import { ArrowLeft, Check, Pencil, Trash2, X } from 'lucide-react';
-import * as React from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
 
+import { NumberField, TextField } from '@/shared/components/form-fields';
+
+import { formatPaperSession, toMetadataValues } from '../lib/paper-metadata';
 import { updatePaperMetadataSchema } from '../schemas';
 import type { UpdatePaperMetadataValues } from '../types';
 
@@ -44,23 +41,24 @@ export function PaperDetailHeader({
   onPublishedChange: (isPublished: boolean) => void;
   onDelete: () => void;
 }) {
-  const [isEditingMetadata, setIsEditingMetadata] = React.useState(false);
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   const form = useForm<UpdatePaperMetadataValues>({
     resolver: standardSchemaResolver(updatePaperMetadataSchema),
     defaultValues: toMetadataValues(paper),
   });
+  const { reset } = form;
   const hasRound = paper.round !== null;
 
-  React.useEffect(() => {
-    form.reset(toMetadataValues(paper));
-  }, [form, paper]);
+  useEffect(() => {
+    reset(toMetadataValues(paper));
+  }, [paper, reset]);
 
   const submit = form.handleSubmit((values) => {
     onUpdateMetadata(
       {
         title: values.title,
         year: values.year,
-        ...(hasRound ? { round: values.round } : {}),
+        ...(hasRound ? { round: values.round ?? undefined } : {}),
       },
       { onSuccess: () => setIsEditingMetadata(false) },
     );
@@ -160,7 +158,7 @@ export function PaperDetailHeader({
                 variant="outline"
                 disabled={isUpdatingMetadata}
                 onClick={() => {
-                  form.reset(toMetadataValues(paper));
+                  reset(toMetadataValues(paper));
                   setIsEditingMetadata(false);
                 }}
               >
@@ -176,89 +174,4 @@ export function PaperDetailHeader({
       )}
     </div>
   );
-}
-
-type Control = ReturnType<typeof useForm<UpdatePaperMetadataValues>>['control'];
-
-function TextField({
-  control,
-  name,
-  label,
-}: {
-  control: Control;
-  name: 'title';
-  label: string;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Input {...field} />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
-
-function NumberField({
-  control,
-  name,
-  label,
-}: {
-  control: Control;
-  name: 'year' | 'round';
-  label: string;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel>{label}</FieldLabel>
-          <Input
-            type="number"
-            value={field.value ?? ''}
-            onChange={(event) =>
-              field.onChange(
-                event.target.value === ''
-                  ? undefined
-                  : Number(event.target.value),
-              )
-            }
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
-  );
-}
-
-function toMetadataValues(paper: {
-  title: string;
-  year: number;
-  round: number | null;
-}): UpdatePaperMetadataValues {
-  return {
-    title: paper.title,
-    year: paper.year,
-    round: paper.round ?? undefined,
-  };
-}
-
-function formatPaperSession(paper: {
-  year: number;
-  month: number | null;
-  grade: number | null;
-  round: number | null;
-}) {
-  if (paper.round) return `제${paper.round}회`;
-  const year = paper.month
-    ? `${paper.year}년 ${paper.month}월`
-    : `${paper.year}학년도`;
-  return paper.grade ? `${year} 고${paper.grade}` : year;
 }

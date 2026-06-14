@@ -7,8 +7,8 @@ export function ImportPaperNumberField({
   onChange,
 }: {
   label: string;
-  value?: number;
-  onChange: (value: number | undefined) => void;
+  value?: number | null;
+  onChange: (value: number | null) => void;
 }) {
   return (
     <Field>
@@ -28,8 +28,8 @@ export function ImportPaperNumberInput({
   onChange,
 }: {
   ariaLabel: string;
-  value?: number;
-  onChange: (value: number | undefined) => void;
+  value?: number | null;
+  onChange: (value: number | null) => void;
 }) {
   return (
     <Input
@@ -38,9 +38,7 @@ export function ImportPaperNumberInput({
       inputMode="numeric"
       value={value ?? ''}
       onChange={(event) =>
-        onChange(
-          event.target.value === '' ? undefined : Number(event.target.value),
-        )
+        onChange(event.target.value === '' ? null : Number(event.target.value))
       }
     />
   );

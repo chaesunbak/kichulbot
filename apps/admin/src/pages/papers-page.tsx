@@ -11,27 +11,28 @@ import {
   TabsList,
   TabsTrigger,
 } from '@kichulbot/ui/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/store';
-import {
-  paperImportJobsQueryOptions,
-  papersQueryOptions,
-} from '@/features/papers/api/server/queries';
 import { CreatePaperForm } from '@/features/papers/components/create-paper-form';
 import { ImportPaperForm } from '@/features/papers/components/import-paper-form';
 import { PaperImportJobsList } from '@/features/papers/components/paper-import-jobs-list';
 import { PapersSummary } from '@/features/papers/components/papers-summary';
 import { PapersTable } from '@/features/papers/components/papers-table';
-import { examsQueryOptions } from '@/features/reference-data/api/server/queries';
+import {
+  paperImportJobsQueryOptions,
+  papersQueryOptions,
+} from '@/features/papers/queries/options';
+import { examsQueryOptions } from '@/features/reference-data/queries/options';
 
 export function PapersPage() {
   const token = useAuthStore((state) => state.token)!;
-  const papersQuery = useQuery(papersQueryOptions(token));
-  const papers = papersQuery.data?.papers ?? [];
-  const importJobsQuery = useQuery(paperImportJobsQueryOptions(token));
-  const exams = useQuery(examsQueryOptions(token)).data?.exams ?? [];
+  const papersQuery = useSuspenseQuery(papersQueryOptions(token));
+  const importJobsQuery = useSuspenseQuery(paperImportJobsQueryOptions(token));
+  const examsQuery = useSuspenseQuery(examsQueryOptions(token));
+  const papers = papersQuery.data.papers;
+  const exams = examsQuery.data.exams;
   return (
     <div
       className="
@@ -61,7 +62,7 @@ export function PapersPage() {
           <div className="space-y-4">
             <ImportPaperForm token={token} exams={exams} />
             <PaperImportJobsList
-              jobs={importJobsQuery.data?.jobs ?? []}
+              jobs={importJobsQuery.data.jobs}
               isFetching={importJobsQuery.isFetching}
               onRefresh={() => {
                 importJobsQuery.refetch();

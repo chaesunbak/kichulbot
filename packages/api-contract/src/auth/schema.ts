@@ -8,7 +8,7 @@ import {
 
 export const UserResponseSchema = z.object({
   id: z.string(),
-  email: z.string().email().nullable(),
+  email: z.email().nullable(),
   nickname: z.string().nullable(),
   authType: UserAuthTypeSchema,
   linkedProviders: z.array(OAuthProviderSchema),
@@ -20,7 +20,7 @@ export type UserResponse = z.infer<typeof UserResponseSchema>;
 
 export const AuthConnectionSchema = z.object({
   provider: OAuthProviderSchema,
-  providerEmail: z.string().email().nullable(),
+  providerEmail: z.email().nullable(),
   providerNickname: z.string().nullable(),
   lastLoginAt: IsoDateStringSchema.nullable(),
   createdAt: IsoDateStringSchema,

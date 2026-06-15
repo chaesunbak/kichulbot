@@ -8,13 +8,13 @@ export const updateProfileSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('이메일 형식이 올바르지 않습니다'),
+  email: z.email('이메일 형식이 올바르지 않습니다'),
   password: z.string().min(8, '비밀번호를 입력해주세요').max(72),
 });
 
 export const emailRegisterSchema = z
   .object({
-    email: z.string().email('이메일 형식이 올바르지 않습니다'),
+    email: z.email('이메일 형식이 올바르지 않습니다'),
     code: z.string().regex(/^\d{6}$/, '인증번호 6자리를 입력해주세요'),
     nickname: z
       .string()
@@ -32,7 +32,7 @@ export const emailRegisterSchema = z
   });
 
 export const passwordResetRequestSchema = z.object({
-  email: z.string().email('이메일 형식이 올바르지 않습니다'),
+  email: z.email('이메일 형식이 올바르지 않습니다'),
 });
 
 export const passwordResetConfirmSchema = z

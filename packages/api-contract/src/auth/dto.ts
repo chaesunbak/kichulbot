@@ -2,13 +2,13 @@ import * as z from 'zod';
 import { AuthConnectionSchema, UserResponseSchema } from './schema.js';
 
 export const LoginRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(8).max(72),
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
 export const PasswordResetRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
 
@@ -35,7 +35,7 @@ export type PasswordResetConfirmResponse = z.infer<
 >;
 
 export const RegisterRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(8).max(72),
   nickname: z.string().max(20).optional(),
   emailVerificationToken: z.string().min(1),
@@ -43,14 +43,14 @@ export const RegisterRequestSchema = z.object({
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
 export const EmailVerificationRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 });
 export type EmailVerificationRequest = z.infer<
   typeof EmailVerificationRequestSchema
 >;
 
 export const ConfirmEmailVerificationRequestSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   code: z.string().regex(/^\d{6}$/),
 });
 export type ConfirmEmailVerificationRequest = z.infer<
@@ -64,7 +64,7 @@ export type UpdateMeRequest = z.infer<typeof UpdateMeRequestSchema>;
 
 export const KakaoOAuthProfileRequestSchema = z.object({
   providerAccountId: z.string().min(1),
-  providerEmail: z.string().email().nullable().optional(),
+  providerEmail: z.email().nullable().optional(),
   providerNickname: z.string().max(50).nullable().optional(),
   rawProfile: z.record(z.string(), z.unknown()).nullable().optional(),
 });

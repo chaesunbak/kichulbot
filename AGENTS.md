@@ -141,7 +141,3 @@ If you spot code smell unrelated to the current task, report it.
 ## Language
 
 Write commit messages, comments, and test cases in Korean.
-
-## Codex
-
-- Do not run package installation, dependency downloads, Docker build/pull, or commands that access external registries in the default sandbox first.

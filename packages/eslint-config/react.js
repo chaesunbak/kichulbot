@@ -10,7 +10,11 @@ import {
   zodNamespaceImportRule,
 } from './rules.js';
 
-export function reactConfig({ ignores = [], tsconfigRootDir } = {}) {
+export function reactConfig({
+  ignores = [],
+  tailwindEntryPoint,
+  tsconfigRootDir,
+} = {}) {
   return defineConfig([
     globalIgnores(['dist/**', ...ignores]),
     js.configs.recommended,
@@ -24,7 +28,7 @@ export function reactConfig({ ignores = [], tsconfigRootDir } = {}) {
     },
     importSortRule,
     kichulbotRule,
-    betterTailwindConfig(),
+    betterTailwindConfig({ entryPoint: tailwindEntryPoint }),
     {
       rules: {
         ...consistentTypeImportsRule,

@@ -1,12 +1,12 @@
-import './app/globals.css';
+import './shared/styles/globals.css';
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { OverlayProvider } from 'overlay-kit';
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { createQueryClient } from './app/query-client';
 import { AppRouter } from './app/router';
+import { createQueryClient } from './shared/api/query-client';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

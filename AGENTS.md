@@ -40,6 +40,43 @@ apps/web/
 └── tsconfig.json
 ```
 
+## Admin Frontend Structure
+
+The admin frontend app lives in `apps/admin`.
+
+```text
+apps/admin/
+├── public/
+├── src/
+│   ├── app/
+│   │   └── router.tsx
+│   ├── features/
+│   │   └── (feature)/
+│   │       ├── components/
+│   │       ├── hooks/
+│   │       ├── lib/
+│   │       ├── queries/
+│   │       │   ├── keys.ts
+│   │       │   ├── options.ts
+│   │       │   └── mutations.ts
+│   │       ├── api.ts
+│   │       ├── schemas.ts
+│   │       └── types.ts
+│   ├── pages/
+│   ├── shared/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── lib/
+│   │   ├── styles/
+│   │   └── types.ts
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
 ## Backend Structure
 
 The backend app lives in `apps/api`.

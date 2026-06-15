@@ -138,6 +138,16 @@ className="border"
 
 If you spot code smell unrelated to the current task, report it.
 
+## Commit Message
+
+Write the first line as:
+
+```text
+type: message
+```
+
+Additional body lines are allowed when they clarify context, reasoning, or follow-up work.
+
 ## Language
 
 Write commit messages, comments, and test cases in Korean.

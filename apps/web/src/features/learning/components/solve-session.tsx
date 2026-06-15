@@ -460,6 +460,7 @@ export function SolveSession({
           onMoveTo={moveTo}
           onRevealAnswer={revealAnswer}
           onMoveToNextQuestion={moveToNextQuestion}
+          onSubmit={() => void requestSubmit()}
           firstAnswerControlRef={firstAnswerControlRef}
         />
       </div>
@@ -1076,6 +1077,7 @@ function SolveControlPanel({
   onMoveTo,
   onRevealAnswer,
   onMoveToNextQuestion,
+  onSubmit,
   firstAnswerControlRef,
 }: {
   session: SolveSession;
@@ -1094,12 +1096,37 @@ function SolveControlPanel({
   onMoveTo: (index: number) => void;
   onRevealAnswer: () => void;
   onMoveToNextQuestion: () => void;
+  onSubmit: () => void;
   firstAnswerControlRef: RefObject<
     HTMLButtonElement | HTMLTextAreaElement | null
   >;
 }) {
   const isPracticeMode = session.mode === 'ONE_BY_ONE';
   const canMoveNext = currentIndex < session.paper.questions.length - 1;
+  const shouldMoveNextAfterCheck =
+    isPracticeMode && isAnswerRevealed && canMoveNext;
+  const shouldSubmitAfterCheck =
+    isPracticeMode && isAnswerRevealed && !canMoveNext;
+  const primaryButtonLabel = isFinishing
+    ? '처리 중...'
+    : shouldMoveNextAfterCheck
+      ? '다음 문항'
+      : shouldSubmitAfterCheck
+        ? '시험종료'
+        : isPracticeMode
+          ? '답안 제출하기'
+          : '다음 문항';
+  const isPrimaryButtonDisabled =
+    disabled ||
+    isFinishing ||
+    (isPracticeMode ? !isAnswerRevealed && !hasCurrentAnswer : !canMoveNext);
+  const handlePrimaryButtonClick = shouldMoveNextAfterCheck
+    ? onMoveToNextQuestion
+    : shouldSubmitAfterCheck
+      ? onSubmit
+      : isPracticeMode
+        ? onRevealAnswer
+        : onMoveToNextQuestion;
 
   return (
     <aside
@@ -1131,23 +1158,15 @@ function SolveControlPanel({
         <Button
           type="button"
           className="w-full"
-          disabled={
-            disabled ||
-            isFinishing ||
-            (isPracticeMode ? !hasCurrentAnswer : !canMoveNext)
-          }
-          onClick={isPracticeMode ? onRevealAnswer : onMoveToNextQuestion}
+          disabled={isPrimaryButtonDisabled}
+          onClick={handlePrimaryButtonClick}
         >
-          {isPracticeMode ? (
-            <Send data-icon="inline-start" />
-          ) : (
+          {shouldMoveNextAfterCheck || !isPracticeMode ? (
             <ChevronRight data-icon="inline-start" />
+          ) : (
+            <Send data-icon="inline-start" />
           )}
-          {isFinishing
-            ? '처리 중...'
-            : isPracticeMode
-              ? '답안 제출하기'
-              : '다음 문항'}
+          {primaryButtonLabel}
         </Button>
       </div>
     </aside>

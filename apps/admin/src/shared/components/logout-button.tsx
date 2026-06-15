@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useAuthStore } from '@/features/auth/store';
+import { useAuthStore } from '@/features/auth/store/use-auth-store';
 
 export function LogoutButton() {
   const queryClient = useQueryClient();

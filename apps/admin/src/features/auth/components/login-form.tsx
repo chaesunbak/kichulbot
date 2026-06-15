@@ -13,9 +13,9 @@ import { toast } from 'sonner';
 
 import { TextField } from '@/shared/components/form-fields';
 
-import { login } from '../api/client/mutations';
+import { login } from '../api';
 import { loginSchema } from '../schemas';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '../store/use-auth-store';
 import type { LoginValues } from '../types';
 
 export function LoginForm() {

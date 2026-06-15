@@ -1,10 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import {
-  fetchAdminTags,
-  fetchTagGroups,
-  fetchTags,
-} from '../api/client/queries';
+import { fetchAdminTags, fetchTagGroups, fetchTags } from '../api';
 import { tagKeys } from './keys';
 
 export function tagsQueryOptions(token: string, examId?: string) {

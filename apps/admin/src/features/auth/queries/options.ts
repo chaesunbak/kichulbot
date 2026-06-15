@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchMe } from '../api/client/queries';
+import { fetchMe } from '../api';
 import { authKeys } from './keys';
 
 export function meQueryOptions(token: string) {

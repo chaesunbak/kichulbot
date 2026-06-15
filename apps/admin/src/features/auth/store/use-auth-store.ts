@@ -1,11 +1,7 @@
-import type { UserResponse } from '@kichulbot/api-contract/auth';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type AuthUser = Pick<
-  UserResponse,
-  'id' | 'email' | 'nickname' | 'authType' | 'role'
->;
+import type { AuthUser } from '../types';
 
 interface AuthStore {
   token: string | null;

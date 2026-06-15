@@ -8,7 +8,7 @@ import {
   deleteTagGroup,
   updateTag,
   updateTagGroup,
-} from '../api/client/mutations';
+} from '../api';
 import type { TagForm, TagGroupForm } from '../types';
 import { tagKeys } from './keys';
 

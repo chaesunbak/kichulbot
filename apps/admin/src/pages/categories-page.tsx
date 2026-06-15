@@ -2,7 +2,7 @@ import type { AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { useAuthStore } from '@/features/auth/store';
+import { useAuthStore } from '@/features/auth/store/use-auth-store';
 import { CategoriesList } from '@/features/reference-data/components/categories-list';
 import { CategoryFormPanel } from '@/features/reference-data/components/category-form';
 import {

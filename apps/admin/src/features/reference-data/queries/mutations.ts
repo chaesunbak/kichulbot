@@ -8,7 +8,7 @@ import {
   deleteExam,
   updateCategory,
   updateExam,
-} from '../api/client/mutations';
+} from '../api';
 import type { CategoryForm, ExamForm } from '../types';
 import { referenceDataKeys } from './keys';
 

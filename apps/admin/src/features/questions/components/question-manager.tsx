@@ -18,12 +18,12 @@ import { tagsQueryOptions } from '@/features/tags/queries/options';
 
 import { useQuestionImage } from '../hooks/use-question-image';
 import { findNextQuestionNumber } from '../lib/question-number';
+import { getNextTagIds, mergeTags, sortTags } from '../lib/question-tag-utils';
 import {
   useDeleteQuestionMutation,
   useSaveQuestionMutation,
   useUpdateQuestionTagsMutation,
 } from '../queries/mutations';
-import { getNextTagIds, mergeTags, sortTags } from '../question-tag-utils';
 import { questionSchema } from '../schemas';
 import type { QuestionValues } from '../types';
 import { QuestionFormCard } from './question-form-card';

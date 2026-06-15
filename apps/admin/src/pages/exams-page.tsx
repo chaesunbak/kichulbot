@@ -2,7 +2,7 @@ import type { AdminExamResponse } from '@kichulbot/api-contract/taxonomy';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { useAuthStore } from '@/features/auth/store';
+import { useAuthStore } from '@/features/auth/store/use-auth-store';
 import { ExamFormPanel } from '@/features/reference-data/components/exam-form';
 import { ExamsList } from '@/features/reference-data/components/exams-list';
 import {

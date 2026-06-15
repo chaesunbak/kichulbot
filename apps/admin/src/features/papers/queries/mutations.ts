@@ -10,7 +10,7 @@ import {
   deletePaper,
   updatePaperMetadata,
   updatePaperPublished,
-} from '../api/client/mutations';
+} from '../api';
 import {
   toCreatePaperInput,
   toCreatePaperQuestionImages,

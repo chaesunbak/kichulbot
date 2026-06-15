@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-import { useAuthStore } from '@/features/auth/store';
+import { useAuthStore } from '@/features/auth/store/use-auth-store';
 import { examsQueryOptions } from '@/features/reference-data/queries/options';
 import { TagManager } from '@/features/tags/components/tag-manager';
 

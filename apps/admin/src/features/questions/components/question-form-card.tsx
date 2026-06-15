@@ -36,7 +36,7 @@ import { Controller, type UseFormReturn } from 'react-hook-form';
 
 import { NumberField, SelectField } from '@/shared/components/form-fields';
 
-import { getNextTagIds } from '../question-tag-utils';
+import { getNextTagIds } from '../lib/question-tag-utils';
 import type { QuestionValues } from '../types';
 import { QuestionExtractedText } from './question-extracted-text';
 import { QuestionImageField } from './question-image-field';

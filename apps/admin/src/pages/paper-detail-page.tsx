@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
 
-import { useAuthStore } from '@/features/auth/store';
+import { useAuthStore } from '@/features/auth/store/use-auth-store';
 import { QuestionManager } from '@/features/questions/components/question-manager';
 
 export function PaperDetailPage() {

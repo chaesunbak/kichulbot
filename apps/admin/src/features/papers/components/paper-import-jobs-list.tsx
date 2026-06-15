@@ -1,12 +1,10 @@
-import type { ListPaperImportJobsResponse } from '@kichulbot/api-contract/papers';
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { formatJobTime, paperImportJobStatusLabels } from '../lib/import-job';
-
-type PaperImportJob = ListPaperImportJobsResponse['jobs'][number];
+import type { PaperImportJob } from '../types';
 
 export function PaperImportJobsList({
   jobs,

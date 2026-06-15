@@ -14,7 +14,7 @@ import {
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { BookOpen } from 'lucide-react';
 
-import { useAuthStore } from '@/features/auth/store';
+import { useAuthStore } from '@/features/auth/store/use-auth-store';
 import { CreatePaperForm } from '@/features/papers/components/create-paper-form';
 import { ImportPaperForm } from '@/features/papers/components/import-paper-form';
 import { PaperImportJobsList } from '@/features/papers/components/paper-import-jobs-list';

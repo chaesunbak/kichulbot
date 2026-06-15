@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Layout } from '@/shared/components/layout';
 
 import { meQueryOptions } from '../queries/options';
-import { useAuthStore } from '../store';
+import { useAuthStore } from '../store/use-auth-store';
 
 export function ProtectedAdminLayout() {
   const queryClient = useQueryClient();

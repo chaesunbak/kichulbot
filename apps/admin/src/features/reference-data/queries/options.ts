@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import { fetchCategories, fetchExams } from '../api/client/queries';
+import { fetchCategories, fetchExams } from '../api';
 import { referenceDataKeys } from './keys';
 
 export function examsQueryOptions(token: string) {

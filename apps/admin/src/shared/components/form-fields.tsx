@@ -158,6 +158,65 @@ export function NumberField<
   );
 }
 
+type FileFieldProps<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+> = BaseFieldProps<TFieldValues, TName> &
+  Omit<
+    ComponentProps<typeof Input>,
+    | 'aria-invalid'
+    | 'defaultValue'
+    | 'id'
+    | 'name'
+    | 'onBlur'
+    | 'onChange'
+    | 'ref'
+    | 'type'
+    | 'value'
+  >;
+
+export function FileField<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+>({
+  control,
+  name,
+  label,
+  description,
+  id,
+  ...inputProps
+}: FileFieldProps<TFieldValues, TName>) {
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState }) => {
+        const fieldId = id ?? field.name;
+
+        return (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+            <Input
+              {...inputProps}
+              id={fieldId}
+              name={field.name}
+              type="file"
+              onBlur={field.onBlur}
+              onChange={(event) =>
+                field.onChange(event.target.files?.[0] ?? null)
+              }
+              ref={field.ref}
+              aria-invalid={fieldState.invalid}
+            />
+            {description && <FieldDescription>{description}</FieldDescription>}
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        );
+      }}
+    />
+  );
+}
+
 type SelectItemOption = {
   value: string;
   label: ReactNode;

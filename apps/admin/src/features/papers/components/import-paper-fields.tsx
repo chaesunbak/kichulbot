@@ -1,14 +1,8 @@
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@kichulbot/ui/components/ui/field';
-import { Input } from '@kichulbot/ui/components/ui/input';
-import type { useForm } from 'react-hook-form';
-import { Controller } from 'react-hook-form';
+import { FieldGroup } from '@kichulbot/ui/components/ui/field';
+import type { Control } from 'react-hook-form';
 
 import {
+  FileField,
   NumberField,
   SelectField,
   TextField,
@@ -17,15 +11,17 @@ import type { Exam } from '@/shared/types';
 
 import type { ImportPaperValues } from '../types';
 
+interface ImportPaperFieldsProps {
+  control: Control<ImportPaperValues>;
+  exams: Exam[];
+  selectedExam?: Exam;
+}
+
 export function ImportPaperFields({
   control,
   exams,
   selectedExam,
-}: {
-  control: ReturnType<typeof useForm<ImportPaperValues>>['control'];
-  exams: Exam[];
-  selectedExam?: Exam;
-}) {
+}: ImportPaperFieldsProps) {
   return (
     <FieldGroup>
       <TextField
@@ -88,42 +84,18 @@ export function ImportPaperFields({
           ]}
         />
       </div>
-      <FileField control={control} name="questionPdf" label="문제 PDF" />
-      <FileField control={control} name="answerPdf" label="답지 PDF" />
+      <FileField
+        control={control}
+        name="questionPdf"
+        label="문제 PDF"
+        accept="application/pdf"
+      />
+      <FileField
+        control={control}
+        name="answerPdf"
+        label="답지 PDF"
+        accept="application/pdf"
+      />
     </FieldGroup>
-  );
-}
-
-type Control = ReturnType<typeof useForm<ImportPaperValues>>['control'];
-
-function FileField({
-  control,
-  name,
-  label,
-}: {
-  control: Control;
-  name: 'questionPdf' | 'answerPdf';
-  label: string;
-}) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field: { onChange, ref, ...field }, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-          <Input
-            id={field.name}
-            name={field.name}
-            ref={ref}
-            type="file"
-            accept="application/pdf"
-            aria-invalid={fieldState.invalid}
-            onChange={(event) => onChange(event.target.files?.[0] ?? null)}
-          />
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
-    />
   );
 }

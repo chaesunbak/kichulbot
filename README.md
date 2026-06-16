@@ -12,6 +12,10 @@ packages/
   utils
 ```
 
+## 프로젝트 다이어그램
+
+https://s.icepanel.io/yOFWYIl77arJcZ/OjGN
+
 ## 요구 사항
 
 - Node.js 22
@@ -37,26 +41,12 @@ cp apps/admin/.env.example apps/admin/.env
 cp apps/extractor/.env.example apps/extractor/.env
 ```
 
-extractor 자동 publish를 사용하려면 `apps/api/.env`와 `apps/extractor/.env`의 `PAPER_IMPORT_SERVICE_TOKEN`을 같은 값으로 설정한 뒤 seed를 실행합니다.
-
-```bash
-pnpm db:seed
-```
-
 ## 프로젝트 시작
 
-전체 개발 서버를 한 번에 실행합니다.
+전체 개발 서버를 한 번에 실행합니다. `extractor` 패키지는 필요한 경우에만 단독으로 실행합니다.
 
 ```bash
 pnpm dev
-```
-
-이 명령은 다음 작업을 순서대로 수행합니다.
-
-```text
-1. Postgres와 Redis 실행
-2. Prisma schema 동기화
-3. API, web, admin 개발 서버 실행
 ```
 
 로컬 URL은 다음과 같습니다.
@@ -79,22 +69,12 @@ pnpm -F admin dev
 pnpm -F extractor dev
 ```
 
-extractor는 패키지 `dev` 명령에서 별도 Docker Compose 파일로 실행됩니다. extractor 컨테이너만 중지하려면 다음 명령을 사용합니다.
+## 시딩
+
+관리자 계정과 extractor 서비스 계정 생성을 위해 시딩을 진행합니다. `PAPER_IMPORT_SERVICE_TOKEN`을 바꾸거나 서비스 계정 scope가 변경된 경우에도 다시 실행합니다.
 
 ```bash
-docker compose -f docker-compose.dev.yml -f apps/extractor/docker-compose.dev.yml stop extractor
-```
-
-개발 DB와 볼륨을 내릴 때는 다음 명령을 사용합니다.
-
-```bash
-pnpm db:down
-```
-
-DB 볼륨까지 초기화하려면 다음 명령을 사용합니다.
-
-```bash
-pnpm db:reset
+pnpm db:seed
 ```
 
 ## 프로덕션 환경변수
@@ -153,9 +133,8 @@ pnpm db:reset
 - `deploy/Caddyfile`: 프로덕션 라우팅 설정
 - `deploy/.env.example`: 서버 런타임 env 예시
 
-## 하네스
+## 하네스 엔지니어링
 
-- 심볼릭 링크를 사용하여 cladue code, codex 등 어떤 툴을 사용하더라고 같은 하네스가 적용되도록 합니다.
-- 필요한 경우라면 프로젝트에 추가하여 공용으로 사용합니다
-
-## AGENTS.md
+- 심볼릭 링크를 사용하여 claude code, codex 등 어떤 툴을 사용하더라도 같은 하네스가 적용되도록 합니다.
+- 필요하면 프로젝트에 추가하여 공용으로 사용합니다
+- `AGENTS.md`는 200줄 이하로 유지합니다.

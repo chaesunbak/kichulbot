@@ -7,6 +7,7 @@ import {
 import { REDIRECT_METADATA } from '@nestjs/common/constants';
 import { map, Observable } from 'rxjs';
 
+import { RAW_RESPONSE_METADATA } from '../decorators/raw-response.decorator';
 import { SuccessResponse } from '../dto/response.dto';
 
 @Injectable()
@@ -22,8 +23,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<
       REDIRECT_METADATA,
       context.getHandler(),
     );
+    const hasRawResponseMetadata =
+      Reflect.getMetadata(RAW_RESPONSE_METADATA, context.getHandler()) ===
+        true ||
+      Reflect.getMetadata(RAW_RESPONSE_METADATA, context.getClass()) === true;
 
-    if (hasRedirectMetadata) {
+    if (hasRedirectMetadata || hasRawResponseMetadata) {
       return next.handle();
     }
 

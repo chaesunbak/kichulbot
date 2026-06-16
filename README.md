@@ -94,7 +94,7 @@ pnpm db:seed
 | `ORACLE_USERNAME`            | 배포 서버 SSH 사용자                     |
 | `ORACLE_SSH_KEY`             | 배포 서버 SSH private key                |
 | `POSTGRES_PASSWORD`          | PostgreSQL 비밀번호                      |
-| `JWT_SECRET`                 | API JWT 서명 키                          |
+| `JWT_SECRET`                 | API/Web 서버 JWT 서명 키                 |
 | `PAPER_IMPORT_SERVICE_TOKEN` | extractor 서비스 계정 토큰               |
 | `GHCR_USERNAME`              | GHCR 로그인 사용자                       |
 | `GHCR_TOKEN`                 | `read:packages` 권한이 있는 GitHub token |
@@ -102,6 +102,7 @@ pnpm db:seed
 | `RESEND_API_KEY`             | Resend API 키                            |
 | `R2_ACCESS_KEY_ID`           | Cloudflare R2 access key                 |
 | `R2_SECRET_ACCESS_KEY`       | Cloudflare R2 secret key                 |
+| `GRAFANA_ADMIN_PASSWORD`     | Grafana 관리자 비밀번호                  |
 
 ### 주요 Variables
 
@@ -113,10 +114,14 @@ pnpm db:seed
 | `WEB_DOMAIN`                        | `kichulbot.com`                                 |
 | `ADMIN_DOMAIN`                      | `admin.kichulbot.com`                           |
 | `API_DOMAIN`                        | `api.kichulbot.com`                             |
+| `GRAFANA_DOMAIN`                    | `grafana.kichulbot.com`                         |
 | `API_INTERNAL_BASE_URL`             | `http://api:4000/api`                           |
 | `NEXT_PUBLIC_SITE_URL`              | `https://kichulbot.com`                         |
 | `POSTGRES_USER`                     | `kichulbot`                                     |
 | `POSTGRES_DB`                       | `kichulbot`                                     |
+| `GRAFANA_ADMIN_USER`                | `admin`                                         |
+| `PROMETHEUS_RETENTION_TIME`         | `90d`                                           |
+| `PROMETHEUS_RETENTION_SIZE`         | `5GB`                                           |
 | `JWT_EXPIRES_IN`                    | `7d`                                            |
 | `STORAGE_DRIVER`                    | `r2`                                            |
 | `R2_ENDPOINT`                       | `https://<account-id>.r2.cloudflarestorage.com` |

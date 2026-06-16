@@ -2,11 +2,13 @@ import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { REDIRECT_METADATA } from '@nestjs/common/constants';
 import { lastValueFrom, of } from 'rxjs';
 
+import { RAW_RESPONSE_METADATA } from '../decorators/raw-response.decorator';
 import { ResponseInterceptor } from './response.interceptor';
 
 function createContext(handler: () => void): ExecutionContext {
   return {
     getHandler: () => handler,
+    getClass: () => class TestController {},
   } as unknown as ExecutionContext;
 }
 
@@ -45,5 +47,16 @@ describe('ResponseInterceptor', () => {
     await expect(
       lastValueFrom(interceptor.intercept(context, next)),
     ).resolves.toBeUndefined();
+  });
+
+  it('원본 응답 메타데이터가 있는 핸들러 응답은 그대로 반환한다', async () => {
+    const handler = jest.fn();
+    Reflect.defineMetadata(RAW_RESPONSE_METADATA, true, handler);
+    const context = createContext(handler);
+    const next = createNext('plain text');
+
+    await expect(
+      lastValueFrom(interceptor.intercept(context, next)),
+    ).resolves.toBe('plain text');
   });
 });

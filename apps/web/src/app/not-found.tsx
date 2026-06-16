@@ -1,5 +1,5 @@
 import { Button } from '@kichulbot/ui/components/ui/button';
-import { Home, SearchX } from 'lucide-react';
+import { Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NotFound() {
@@ -11,14 +11,6 @@ export default function NotFound() {
       "
     >
       <section className="w-full max-w-md text-center">
-        <div
-          className="
-            mx-auto flex size-14 items-center justify-center rounded-full border
-            bg-muted text-muted-foreground
-          "
-        >
-          <SearchX className="size-7" />
-        </div>
         <p className="mt-8 text-sm font-semibold text-primary">404</p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
           페이지를 찾을 수 없습니다

@@ -18,6 +18,10 @@ pnpm turbo run build --filter=@kichulbot/api
 pnpm turbo run typecheck --filter=@kichulbot/api
 ```
 
+## Shell
+
+- Quote paths with single quotes in shell commands to prevent glob expansion.
+
 ## Frontend
 
 ### Overlay
@@ -32,17 +36,7 @@ Never use shadow except overlays(e.g. Select)
 
 #### Border
 
-Don't
-
-```
-className="border boder-slate-200"
-```
-
-Do
-
-```
-className="border"
-```
+Don't `className="border boder-slate-200"` Do `className="border"`
 
 ## Backend
 

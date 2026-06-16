@@ -18,7 +18,8 @@
     "prisma:migrate:deploy": "prisma migrate deploy --config prisma.config.ts --schema src/infrastructure/database/schema.prisma",
     "prisma:push": "prisma db push --accept-data-loss",
     "prisma:sync": "prisma db push --accept-data-loss && prisma generate",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "seed:prod": "node dist/src/infrastructure/database/seed.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.940.0",

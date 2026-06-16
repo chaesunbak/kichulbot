@@ -1,107 +1,15 @@
 ## Workspace Overview
 
-```text
-kichulbot/
-├── apps/
-│   ├── api/      # NestJS backend
-│   ├── web/      # Next.js user-facing frontend
-│   └── admin/    # Vite + react-router admin frontend
-└── packages/
-    ├── api-contract/       # Shared API types between frontend and backend
-    ├── ui/                 # Shared React component library (shadcn/ui-based)
-    ├── eslint-config/
-    ├── prettier-config/
-    └── typescript-config/
-```
+This is a pnpm + Turbo monorepo.
 
-## Web Frontend Structure
-
-The user-facing frontend app lives in `apps/web`.
-
-```text
-apps/web/
-├── public/
-├── src/
-│   ├── app/
-│   │   ├── (group)/
-│   │   ├── api/             # Route handlers and backend proxy routes(BFF)
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── features/            # Feature modules grouped by domain
-│   │   └── (feature)/
-│   ├── shared/
-│   │   ├── api/
-│   │   ├── components/
-│   │   └── lib/
-│   └── proxy.ts
-├── next.config.ts
-├── package.json
-└── tsconfig.json
-```
-
-## Admin Frontend Structure
-
-The admin frontend app lives in `apps/admin`.
-
-```text
-apps/admin/
-├── public/
-├── src/
-│   ├── app/
-│   │   └── router.tsx
-│   ├── features/
-│   │   └── (feature)/
-│   │       ├── components/
-│   │       ├── hooks/
-│   │       ├── lib/
-│   │       ├── queries/
-│   │       │   ├── keys.ts
-│   │       │   ├── options.ts
-│   │       │   └── mutations.ts
-│   │       ├── api.ts
-│   │       ├── schemas.ts
-│   │       └── types.ts
-│   ├── pages/
-│   ├── shared/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── lib/
-│   │   ├── styles/
-│   │   └── types.ts
-│   ├── main.tsx
-│   └── vite-env.d.ts
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
-```
-
-## Backend Structure
-
-The backend app lives in `apps/api`.
-
-```text
-apps/api/src/
-├── main.ts
-├── app.module.ts
-├── common/                  # Shared decorators, filters, guards, pipes, DTOs, etc.
-├── config/
-├── infrastructure/
-│   └── database/
-│       ├── database.service.ts
-│       ├── schema.prisma
-│       └── seed.ts
-└── modules/
-    └── auth/
-        ├── auth.module.ts
-        ├── auth.controller.ts
-        ├── auth.service.ts
-        ├── users.repository.ts
-        ├── decorators/
-        ├── dto/
-        └── guards/
-```
+- `apps/api`: NestJS backend. See `apps/api/README.md`.
+- `apps/web`: Next.js user-facing frontend. See `apps/web/README.md`.
+- `apps/admin`: Vite + React Router admin frontend. See `apps/admin/README.md`.
+- `apps/extractor`: extraction worker and Python question extraction utilities.
+- `packages/api-contract`: shared API types between frontend and backend.
+- `packages/ui`: shared React component library based on shadcn/ui.
+- `packages/utils`: shared utilities.
+- `packages/eslint-config`, `packages/prettier-config`, `packages/typescript-config`: shared tooling configs.
 
 ## Turbo Repo
 
@@ -110,17 +18,19 @@ pnpm turbo run build --filter=@kichulbot/api
 pnpm turbo run typecheck --filter=@kichulbot/api
 ```
 
-## Overlay
+## Frontend
+
+### Overlay
 
 use `overlay-kit` to manage overlay elements. reference existing codes.
 
-## Styleing
+### Styling
 
-### No shadow
+#### No shadow
 
 Never use shadow except overlays(e.g. Select)
 
-### Border
+#### Border
 
 Don't
 

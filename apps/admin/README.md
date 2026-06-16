@@ -16,6 +16,43 @@ pnpm --filter @kichulbot/admin dev
 ## Commands
 
 ```bash
-pnpm --filter @kichulbot/admin lint
-pnpm --filter @kichulbot/admin build
+pnpm -F @admin lint
+pnpm -F @admin typecheck
+pnpm -F @admin test
+pnpm -F @admin build
+```
+
+## Structure
+
+```text
+apps/admin/
+├── public/
+├── src/
+│   ├── app/
+│   │   └── router.tsx
+│   ├── features/
+│   │   └── (feature)/
+│   │       ├── api/
+│   │       ├── components/
+│   │       ├── hooks/
+│   │       ├── lib/
+│   │       ├── queries/
+│   │       │   ├── keys.ts
+│   │       │   ├── options.ts
+│   │       │   └── mutations.ts
+│   │       ├── schemas.ts
+│   │       └── types.ts
+│   ├── pages/
+│   ├── shared/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── lib/
+│   │   ├── styles/
+│   │   └── types.ts
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
 ```

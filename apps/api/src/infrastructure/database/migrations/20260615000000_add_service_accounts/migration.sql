@@ -2,7 +2,6 @@ CREATE TABLE "ServiceAccount" (
   "id" TEXT NOT NULL,
   "name" TEXT NOT NULL,
   "tokenHash" TEXT NOT NULL,
-  "scopes" TEXT[] NOT NULL,
   "isActive" BOOLEAN NOT NULL DEFAULT true,
   "expiresAt" TIMESTAMP(3),
   "lastUsedAt" TIMESTAMP(3),

@@ -149,6 +149,57 @@ export const PaperImportJobStatusSchema = z.enum([
 ]);
 export type PaperImportJobStatus = z.infer<typeof PaperImportJobStatusSchema>;
 
+export const PaperImportJobExtractorOptionsSchema = z.object({
+  layout: z.string().optional(),
+  variant: z.string().optional(),
+  dpi: z.number().int().optional(),
+  imageFormat: z.string().optional(),
+  quality: z.number().int().optional(),
+  examId: z.string().optional(),
+});
+export type PaperImportJobExtractorOptions = z.infer<
+  typeof PaperImportJobExtractorOptionsSchema
+>;
+
+export const PaperImportJobPayloadResponseSchema = z.object({
+  job: z.object({
+    id: z.string(),
+    questionPdfPath: z.string(),
+    questionPdfName: z.string(),
+    answerPdfPath: z.string(),
+    inputOptions: PaperImportJobExtractorOptionsSchema,
+    paperInput: CreatePaperImportJobRequestSchema,
+  }),
+});
+export type PaperImportJobPayloadResponse = z.infer<
+  typeof PaperImportJobPayloadResponseSchema
+>;
+
+export const UpdatePaperImportJobStatusRequestSchema = z
+  .object({
+    status: z.enum(['PENDING', 'PROCESSING', 'FAILED']),
+    errorMessage: z.string().max(4000).optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.status === 'FAILED' && !value.errorMessage) {
+      context.addIssue({
+        code: 'custom',
+        path: ['errorMessage'],
+        message: '실패 상태에는 오류 메시지가 필요합니다.',
+      });
+    }
+  });
+export type UpdatePaperImportJobStatusRequest = z.infer<
+  typeof UpdatePaperImportJobStatusRequestSchema
+>;
+
+export const SavePaperImportJobResultRequestSchema = z.object({
+  resultJsonPath: z.string().min(1),
+});
+export type SavePaperImportJobResultRequest = z.infer<
+  typeof SavePaperImportJobResultRequestSchema
+>;
+
 export const CreatePaperImportJobResponseSchema = z.object({
   job: z.object({
     id: z.string(),

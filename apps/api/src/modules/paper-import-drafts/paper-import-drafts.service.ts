@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { join } from 'node:path';
 
 import {
   CreatePaperImportJobRequest,
@@ -14,8 +14,14 @@ import {
   ListPaperImportJobsResponseSchema,
   PaperImportDraftResponse,
   PaperImportDraftResponseSchema,
+  PaperImportJobPayloadResponse,
+  PaperImportJobPayloadResponseSchema,
   PaperImportJobResponse,
   PaperImportJobResponseSchema,
+  SavePaperImportJobResultRequest,
+  SavePaperImportJobResultRequestSchema,
+  UpdatePaperImportJobStatusRequest,
+  UpdatePaperImportJobStatusRequestSchema,
 } from '@kichulbot/api-contract/papers';
 import {
   BadRequestException,
@@ -27,6 +33,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 
+import { assertPdfUploadFile } from '../../common/upload/upload-options';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
@@ -95,8 +102,8 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     if (!answerPdf) {
       throw new BadRequestException('답지 PDF를 업로드해주세요.');
     }
-    this.assertPdf(questionPdf, '문제 PDF');
-    this.assertPdf(answerPdf, '답지 PDF');
+    assertPdfUploadFile(questionPdf, '문제 PDF');
+    assertPdfUploadFile(answerPdf, '답지 PDF');
 
     const paperInput = this.parsePaperInput(input.options);
     const jobId = randomUUID();
@@ -192,7 +199,80 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     });
   }
 
-  async publishDraftJob(id: string): Promise<CreatePaperResponse> {
+  async getImportJobPayload(
+    id: string,
+  ): Promise<PaperImportJobPayloadResponse> {
+    const job = await this.database.paperImportJob.findUnique({
+      where: { id },
+    });
+    if (!job) {
+      throw new NotFoundException('PDF 추출 작업을 찾을 수 없습니다.');
+    }
+
+    return PaperImportJobPayloadResponseSchema.parse({
+      job: {
+        id: job.id,
+        questionPdfPath: job.questionPdfPath,
+        questionPdfName: job.questionPdfName,
+        answerPdfPath: job.answerPdfPath,
+        inputOptions: job.inputOptions,
+        paperInput: job.paperInput,
+      },
+    });
+  }
+
+  async updateImportJobStatus(
+    id: string,
+    input: UpdatePaperImportJobStatusRequest,
+  ): Promise<PaperImportJobResponse> {
+    const body = this.parseStatusUpdate(input);
+    const existingJob = await this.database.paperImportJob.findUnique({
+      where: { id },
+    });
+    if (!existingJob) {
+      throw new NotFoundException('PDF 추출 작업을 찾을 수 없습니다.');
+    }
+
+    const job = await this.database.paperImportJob.update({
+      where: { id },
+      data: this.toStatusUpdateData(body),
+    });
+
+    return PaperImportJobResponseSchema.parse({
+      job: this.toJobResponse(job),
+    });
+  }
+
+  async saveImportJobResult(
+    id: string,
+    input: SavePaperImportJobResultRequest,
+  ): Promise<PaperImportJobResponse> {
+    const body = this.parseResultInput(input);
+    const existingJob = await this.database.paperImportJob.findUnique({
+      where: { id },
+    });
+    if (!existingJob) {
+      throw new NotFoundException('PDF 추출 작업을 찾을 수 없습니다.');
+    }
+
+    const job = await this.database.paperImportJob.update({
+      where: { id },
+      data: {
+        status: 'COMPLETED',
+        resultJsonPath: body.resultJsonPath,
+        completedAt: new Date(),
+        failedAt: null,
+        errorMessage: null,
+        updatedAt: new Date(),
+      },
+    });
+
+    return PaperImportJobResponseSchema.parse({
+      job: this.toJobResponse(job),
+    });
+  }
+
+  async createPaperFromImportJob(id: string): Promise<CreatePaperResponse> {
     const job = await this.database.paperImportJob.findUnique({
       where: { id },
     });
@@ -298,6 +378,26 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     return result.data;
   }
 
+  private parseStatusUpdate(input: UpdatePaperImportJobStatusRequest) {
+    const result = UpdatePaperImportJobStatusRequestSchema.safeParse(input);
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+    return result.data;
+  }
+
+  private parseResultInput(input: SavePaperImportJobResultRequest) {
+    const result = SavePaperImportJobResultRequestSchema.safeParse(input);
+    if (!result.success) {
+      throw new BadRequestException(
+        result.error.issues.map((issue) => issue.message),
+      );
+    }
+    return result.data;
+  }
+
   private toExtractorOptions(paperInput: CreatePaperImportJobRequest) {
     return {
       layout: paperInput.layout,
@@ -306,6 +406,34 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       imageFormat: paperInput.imageFormat,
       quality: paperInput.quality ?? 82,
       examId: paperInput.examId,
+    };
+  }
+
+  private toStatusUpdateData(input: UpdatePaperImportJobStatusRequest) {
+    const now = new Date();
+    if (input.status === 'PROCESSING') {
+      return {
+        status: input.status,
+        startedAt: now,
+        failedAt: null,
+        errorMessage: null,
+        updatedAt: now,
+      };
+    }
+
+    if (input.status === 'FAILED') {
+      return {
+        status: input.status,
+        failedAt: now,
+        errorMessage: input.errorMessage?.slice(0, 4000) ?? null,
+        updatedAt: now,
+      };
+    }
+
+    return {
+      status: input.status,
+      errorMessage: input.errorMessage?.slice(0, 4000) ?? null,
+      updatedAt: now,
     };
   }
 
@@ -385,16 +513,5 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     if (!paperInput || typeof paperInput !== 'object') return undefined;
     const title = (paperInput as { title?: unknown }).title;
     return typeof title === 'string' ? title : undefined;
-  }
-
-  private assertPdf(file: UploadedMemoryFile, label: string) {
-    if (
-      file.mimetype !== 'application/pdf' &&
-      extname(file.originalname).toLowerCase() !== '.pdf'
-    ) {
-      throw new BadRequestException(
-        `${label}는 PDF 파일만 업로드할 수 있습니다.`,
-      );
-    }
   }
 }

@@ -10,15 +10,13 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.940.0",
-    "bullmq": "^5.65.1",
-    "pg": "^8.21.0"
+    "@kichulbot/api-contract": "workspace:^",
+    "bullmq": "^5.65.1"
   },
   "devDependencies": {
     "@kichulbot/eslint-config": "workspace:*",
     "@kichulbot/typescript-config": "workspace:*",
     "@types/node": "^22.10.2",
-    "@types/pg": "^8.20.0",
     "eslint": "^9.39.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

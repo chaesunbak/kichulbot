@@ -99,9 +99,9 @@ export async function createPaperImportDraft(
   );
 }
 
-export async function publishPaperImportDraft(token: string, id: string) {
+export async function createPaperFromImportJob(token: string, id: string) {
   return apiRequest(
-    `/paper-import-drafts/${id}/publish`,
+    `/paper-import-jobs/${id}/paper`,
     CreatePaperResponseSchema.parse,
     {
       method: 'POST',

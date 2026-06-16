@@ -1,4 +1,8 @@
-import { IMAGE_FILE_PIPE, PDF_FILES_PIPE } from './upload-options';
+import {
+  assertPdfUploadFile,
+  IMAGE_FILE_PIPE,
+  PDF_FILES_PIPE,
+} from './upload-options';
 
 describe('upload options', () => {
   it('이미지 파일이 없어도 선택 업로드를 통과시킨다', async () => {
@@ -16,12 +20,12 @@ describe('upload options', () => {
     ).rejects.toBeInstanceOf(Error);
   });
 
-  it('PDF 파일 배열이 비어도 선택 업로드를 통과시킨다', async () => {
-    await expect(PDF_FILES_PIPE.transform([])).resolves.toEqual([]);
+  it('PDF 파일 배열이 비어도 선택 업로드를 통과시킨다', () => {
+    expect(PDF_FILES_PIPE.transform([])).toEqual([]);
   });
 
-  it('최대 크기를 초과한 PDF는 업로드를 거부한다', async () => {
-    await expect(
+  it('최대 크기를 초과한 PDF는 업로드를 거부한다', () => {
+    expect(() =>
       PDF_FILES_PIPE.transform([
         {
           originalname: 'questions.pdf',
@@ -30,6 +34,20 @@ describe('upload options', () => {
           buffer: Buffer.alloc(0),
         },
       ]),
-    ).rejects.toBeInstanceOf(Error);
+    ).toThrow(Error);
+  });
+
+  it('확장자가 PDF여도 MIME 타입이 다르면 업로드를 거부한다', () => {
+    expect(() =>
+      assertPdfUploadFile(
+        {
+          originalname: 'questions.pdf',
+          mimetype: 'image/png',
+          size: 1024,
+          buffer: Buffer.alloc(0),
+        },
+        '문제 PDF',
+      ),
+    ).toThrow('문제 PDF는 PDF 파일만 업로드할 수 있습니다.');
   });
 });

@@ -4,9 +4,12 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, extname, join, resolve } from 'node:path';
 
+import type {
+  PaperImportDraftResponse,
+  PaperImportJobPayloadResponse,
+} from '@kichulbot/api-contract/papers';
 import type { Job } from 'bullmq';
 import { QueueEvents, Worker } from 'bullmq';
-import { Pool } from 'pg';
 
 const QUEUE_NAME = 'paper-import';
 const JOB_NAME = 'extract-paper';
@@ -20,34 +23,19 @@ type PaperImportJobData = {
   jobId: string;
 };
 
-type InputOptions = {
-  layout?: string;
-  variant?: string;
-  dpi?: number;
-  imageFormat?: string;
-  quality?: number;
-  examId?: string;
-};
+type PaperImportJobPayload = PaperImportJobPayloadResponse['job'];
 
-type PaperInput = {
-  title: string;
-  examId: string;
-  year: number;
-  month?: number | null;
-  grade?: number | null;
-  round?: number | null;
-  questionCount?: number;
-  isPublished?: boolean;
-};
-
-type PaperImportJobRow = {
-  id: string;
-  questionPdfPath: string;
-  questionPdfName: string;
-  answerPdfPath: string;
-  inputOptions: InputOptions;
-  paperInput: PaperInput;
-};
+type ApiEnvelope<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error?: {
+        message?: string | string[];
+      };
+    };
 
 type QuestionManifest = {
   questions?: Array<{
@@ -79,10 +67,6 @@ const connection = {
   url: process.env.REDIS_URL ?? 'redis://localhost:6379',
 };
 
-const database = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
 function storageRoot() {
   return process.env.PAPER_IMPORT_STORAGE_DIR ?? DEFAULT_STORAGE_DIR;
 }
@@ -99,6 +83,36 @@ function requiredEnv(name: string) {
     throw new Error(`${name} 환경 변수가 필요합니다.`);
   }
   return value;
+}
+
+async function apiRequest<T>(
+  path: string,
+  init: RequestInit & { body?: string } = {},
+) {
+  const response = await fetch(`${apiBaseUrl()}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${requiredEnv('PAPER_IMPORT_SERVICE_TOKEN')}`,
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...init.headers,
+    },
+  });
+  const body = await response.text();
+  const envelope = body
+    ? (JSON.parse(body) as ApiEnvelope<T>)
+    : ({ success: true, data: undefined as T } satisfies ApiEnvelope<T>);
+
+  if (!response.ok || !envelope.success) {
+    const message =
+      !envelope.success && envelope.error?.message
+        ? Array.isArray(envelope.error.message)
+          ? envelope.error.message.join('\n')
+          : envelope.error.message
+        : body;
+    throw new Error(`API 요청에 실패했습니다: ${response.status} ${message}`);
+  }
+
+  return envelope.data;
 }
 
 function toolsDir() {
@@ -128,107 +142,53 @@ function safeStem(path: string) {
 }
 
 async function loadImportJob(id: string) {
-  const result = await database.query<PaperImportJobRow>(
-    `
-    SELECT
-      "id",
-      "questionPdfPath",
-      "questionPdfName",
-      "answerPdfPath",
-      "inputOptions",
-      "paperInput"
-    FROM "PaperImportJob"
-    WHERE "id" = $1
-    `,
-    [id],
+  const result = await apiRequest<{ job: PaperImportJobPayload }>(
+    `/paper-import-jobs/${id}`,
   );
 
-  const job = result.rows[0];
-  if (!job) {
-    throw new Error(`PDF 추출 작업을 찾을 수 없습니다: ${id}`);
-  }
-
-  return job;
+  return result.job;
 }
 
 async function markProcessing(id: string) {
-  await database.query(
-    `
-    UPDATE "PaperImportJob"
-    SET
-      "status" = 'PROCESSING',
-      "startedAt" = COALESCE("startedAt", NOW()),
-      "updatedAt" = NOW(),
-      "errorMessage" = NULL
-    WHERE "id" = $1
-    `,
-    [id],
-  );
+  await apiRequest(`/paper-import-jobs/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'PROCESSING' }),
+  });
 }
 
 async function markCompleted(id: string, resultJsonPath: string) {
-  await database.query(
-    `
-    UPDATE "PaperImportJob"
-    SET
-      "status" = 'COMPLETED',
-      "resultJsonPath" = $2,
-      "completedAt" = NOW(),
-      "updatedAt" = NOW()
-    WHERE "id" = $1
-    `,
-    [id, resultJsonPath],
-  );
+  await apiRequest(`/paper-import-jobs/${id}/result`, {
+    method: 'PUT',
+    body: JSON.stringify({ resultJsonPath }),
+  });
 }
 
 async function publishImportJob(id: string) {
-  const response = await fetch(
-    `${apiBaseUrl()}/paper-import-drafts/${id}/publish`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${requiredEnv('PAPER_IMPORT_SERVICE_TOKEN')}`,
-      },
-    },
-  );
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `PDF 추출 초안 자동 생성을 실패했습니다: ${response.status} ${body}`,
-    );
-  }
+  await apiRequest(`/paper-import-jobs/${id}/paper`, {
+    method: 'POST',
+  });
 }
 
 async function markFailed(id: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  await database.query(
-    `
-    UPDATE "PaperImportJob"
-    SET
-      "status" = 'FAILED',
-      "errorMessage" = $2,
-      "failedAt" = NOW(),
-      "updatedAt" = NOW()
-    WHERE "id" = $1
-    `,
-    [id, message.slice(0, 4000)],
-  );
+  await apiRequest(`/paper-import-jobs/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      status: 'FAILED',
+      errorMessage: message.slice(0, 4000),
+    }),
+  });
 }
 
 async function markPendingRetry(id: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  await database.query(
-    `
-    UPDATE "PaperImportJob"
-    SET
-      "status" = 'PENDING',
-      "errorMessage" = $2,
-      "updatedAt" = NOW()
-    WHERE "id" = $1
-    `,
-    [id, message.slice(0, 4000)],
-  );
+  await apiRequest(`/paper-import-jobs/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      status: 'PENDING',
+      errorMessage: message.slice(0, 4000),
+    }),
+  });
 }
 
 function runPython(scriptPath: string, args: string[]) {
@@ -278,11 +238,11 @@ function resolveContentType(imageName: string) {
 }
 
 async function createDraftResult(
-  importJob: PaperImportJobRow,
+  importJob: PaperImportJobPayload,
   manifest: QuestionManifest,
   answerManifest: AnswerManifest,
   questionDir: string,
-) {
+): Promise<PaperImportDraftResponse> {
   const questions = [...(manifest.questions ?? [])].sort(
     (a, b) => a.number - b.number,
   );
@@ -318,21 +278,27 @@ async function createDraftResult(
       const sourcePath = join(questionDir, question.image);
       const image = await readFile(sourcePath);
       const filename = question.image.replace(/[\\/]+/g, '_');
+      const textLayer = question.textLayer
+        ? {
+            ...question.textLayer,
+            choiceTexts: question.textLayer.choiceTexts ?? [],
+          }
+        : null;
 
       return {
         number: question.number,
-        type: 'MULTIPLE_CHOICE',
+        type: 'MULTIPLE_CHOICE' as const,
         choiceCount: 5,
-        gradingPolicy: 'EXACT',
+        gradingPolicy: 'EXACT' as const,
         answerChoice: answer.answer_index ?? null,
         answerText: null,
         explanation: null,
         points: answer.points ?? 5,
         recommendedTimeSeconds: null,
-        rawText: question.textLayer?.text?.trim() || null,
-        promptText: question.textLayer?.promptText?.trim() || null,
-        passageText: question.textLayer?.passageText?.trim() || null,
-        choiceTexts: question.textLayer?.choiceTexts ?? [],
+        rawText: textLayer?.text?.trim() || null,
+        promptText: textLayer?.promptText?.trim() || null,
+        passageText: textLayer?.passageText?.trim() || null,
+        choiceTexts: textLayer?.choiceTexts ?? [],
         recommendedTagIds: [],
         recommendedTagMatches: [],
         tagIds: [],
@@ -341,7 +307,7 @@ async function createDraftResult(
           mimeType: resolveContentType(question.image),
           base64: image.toString('base64'),
         },
-        textLayer: question.textLayer ?? null,
+        textLayer,
       };
     }),
   );
@@ -354,10 +320,10 @@ async function createDraftResult(
     },
     warnings: answerManifest.warnings ?? [],
     questions: draftQuestions,
-  };
+  } satisfies PaperImportDraftResponse;
 }
 
-async function processImportJob(importJob: PaperImportJobRow) {
+async function processImportJob(importJob: PaperImportJobPayload) {
   const workDir = await mkdtemp(join(tmpdir(), 'kichulbot-paper-import-'));
 
   try {
@@ -480,7 +446,6 @@ worker.on('failed', (job, error) => {
 async function shutdown() {
   await worker.close();
   await queueEvents.close();
-  await database.end();
 }
 
 process.on('SIGTERM', () => {

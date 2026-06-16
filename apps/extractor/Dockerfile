@@ -16,6 +16,7 @@ ARG TARGETPLATFORM
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/extractor/package.json ./apps/extractor/package.json
+COPY packages/api-contract/package.json ./packages/api-contract/package.json
 COPY packages/eslint-config/package.json ./packages/eslint-config/package.json
 COPY packages/typescript-config/package.json ./packages/typescript-config/package.json
 
@@ -25,10 +26,12 @@ RUN --mount=type=cache,id=pnpm-extractor-${TARGETPLATFORM},target=/pnpm/store,sh
 FROM deps AS builder
 
 COPY apps/extractor ./apps/extractor
+COPY packages/api-contract ./packages/api-contract
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/typescript-config ./packages/typescript-config
 
-RUN pnpm --filter=@kichulbot/extractor build
+RUN pnpm --filter=@kichulbot/api-contract build \
+    && pnpm --filter=@kichulbot/extractor build
 
 FROM base AS runner
 

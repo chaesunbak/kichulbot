@@ -43,11 +43,9 @@ async function main() {
     create: {
       name: 'extractor',
       tokenHash: hashToken(paperImportServiceToken),
-      scopes: ['paper-import:publish'],
     },
     update: {
       tokenHash: hashToken(paperImportServiceToken),
-      scopes: ['paper-import:publish'],
       isActive: true,
       expiresAt: null,
     },

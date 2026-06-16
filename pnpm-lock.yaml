@@ -300,15 +300,12 @@ importers:
 
   apps/extractor:
     dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.940.0
-        version: 3.1063.0
+      '@kichulbot/api-contract':
+        specifier: workspace:^
+        version: link:../../packages/api-contract
       bullmq:
         specifier: ^5.65.1
         version: 5.78.0
-      pg:
-        specifier: ^8.21.0
-        version: 8.21.0
     devDependencies:
       '@kichulbot/eslint-config':
         specifier: workspace:*
@@ -319,9 +316,6 @@ importers:
       '@types/node':
         specifier: ^22.10.2
         version: 22.19.19
-      '@types/pg':
-        specifier: ^8.20.0
-        version: 8.20.0
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)

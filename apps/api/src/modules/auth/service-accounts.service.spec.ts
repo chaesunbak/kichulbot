@@ -24,13 +24,11 @@ describe('ServiceAccountsService', () => {
     jest.useRealTimers();
   });
 
-  it('토큰 해시와 scope를 확인하고 서비스 계정을 반환한다', async () => {
+  it('토큰 해시를 확인하고 서비스 계정을 반환한다', async () => {
     repository.findByTokenHash.mockResolvedValue(makeServiceAccount());
     repository.markUsed.mockResolvedValue(makeServiceAccount());
 
-    const account = await service.authenticate('plain-token', [
-      'paper-import:publish',
-    ]);
+    const account = await service.authenticate('plain-token');
 
     expect(repository.findByTokenHash).toHaveBeenCalledWith(
       createHash('sha256').update('plain-token').digest('hex'),
@@ -39,7 +37,6 @@ describe('ServiceAccountsService', () => {
     expect(account).toEqual({
       id: 'service_account_1',
       name: 'extractor',
-      scopes: ['paper-import:publish'],
     });
   });
 
@@ -63,15 +60,6 @@ describe('ServiceAccountsService', () => {
       '서비스 계정 인증 정보가 유효하지 않습니다.',
     );
   });
-
-  it('필요한 scope가 없으면 거부한다', async () => {
-    repository.findByTokenHash.mockResolvedValue(makeServiceAccount());
-
-    await expect(
-      service.authenticate('plain-token', ['maintenance:run']),
-    ).rejects.toThrow('서비스 계정 권한이 부족합니다.');
-    expect(repository.markUsed).not.toHaveBeenCalled();
-  });
 });
 
 function makeServiceAccount(overrides = {}) {
@@ -79,7 +67,6 @@ function makeServiceAccount(overrides = {}) {
     id: 'service_account_1',
     name: 'extractor',
     tokenHash: 'hashed-token',
-    scopes: ['paper-import:publish'],
     isActive: true,
     expiresAt: null,
     lastUsedAt: null,

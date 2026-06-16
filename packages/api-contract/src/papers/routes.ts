@@ -1,6 +1,7 @@
 import {
   CreatePaperRequestSchema,
   CreatePaperResponseSchema,
+  PaperImportJobPayloadResponseSchema,
   CreatePaperImportJobResponseSchema,
   CreatePaperImportJobRequestSchema,
   DeletePaperResponseSchema,
@@ -10,6 +11,8 @@ import {
   ListPaperQuestionsResponseSchema,
   ListPaperImportJobsResponseSchema,
   PaperImportJobResponseSchema,
+  SavePaperImportJobResultRequestSchema,
+  UpdatePaperImportJobStatusRequestSchema,
   UpdatePaperRequestSchema,
   UpdatePaperResponseSchema,
 } from './dto.js';
@@ -45,9 +48,27 @@ export const papersRoutes = {
     request: null,
     response: PaperImportJobResponseSchema,
   },
-  publishPaperImportDraft: {
+  getPaperImportJobPayload: {
+    method: 'GET',
+    path: '/paper-import-jobs/:id',
+    request: null,
+    response: PaperImportJobPayloadResponseSchema,
+  },
+  updatePaperImportJobStatus: {
+    method: 'PATCH',
+    path: '/paper-import-jobs/:id/status',
+    request: UpdatePaperImportJobStatusRequestSchema,
+    response: PaperImportJobResponseSchema,
+  },
+  savePaperImportJobResult: {
+    method: 'PUT',
+    path: '/paper-import-jobs/:id/result',
+    request: SavePaperImportJobResultRequestSchema,
+    response: PaperImportJobResponseSchema,
+  },
+  createPaperFromImportJob: {
     method: 'POST',
-    path: '/paper-import-drafts/:id/publish',
+    path: '/paper-import-jobs/:id/paper',
     request: null,
     response: CreatePaperResponseSchema,
   },

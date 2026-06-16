@@ -7,7 +7,6 @@ import { ServiceAccountsRepository } from './service-accounts.repository';
 export type RequestServiceAccount = {
   id: string;
   name: string;
-  scopes: string[];
 };
 
 @Injectable()
@@ -16,7 +15,7 @@ export class ServiceAccountsService {
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
   ) {}
 
-  async authenticate(token: string, requiredScopes: string[] = []) {
+  async authenticate(token: string) {
     const account = await this.serviceAccountsRepository.findByTokenHash(
       this.hashToken(token),
     );
@@ -31,17 +30,11 @@ export class ServiceAccountsService {
       );
     }
 
-    const scopes = new Set(account.scopes);
-    if (requiredScopes.some((scope) => !scopes.has(scope))) {
-      throw new UnauthorizedException('서비스 계정 권한이 부족합니다.');
-    }
-
     await this.serviceAccountsRepository.markUsed(account.id);
 
     return {
       id: account.id,
       name: account.name,
-      scopes: account.scopes,
     } satisfies RequestServiceAccount;
   }
 

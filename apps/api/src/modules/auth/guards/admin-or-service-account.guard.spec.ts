@@ -1,6 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
 import type { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
@@ -14,15 +13,11 @@ import { AdminOrServiceAccountGuard } from './admin-or-service-account.guard';
 
 describe('AdminOrServiceAccountGuard', () => {
   let guard: AdminOrServiceAccountGuard;
-  let reflector: jest.Mocked<Reflector>;
   let jwtService: jest.Mocked<JwtService>;
   let authService: jest.Mocked<AuthService>;
   let serviceAccountsService: jest.Mocked<ServiceAccountsService>;
 
   beforeEach(() => {
-    reflector = {
-      getAllAndOverride: jest.fn().mockReturnValue(['paper-import:publish']),
-    } as unknown as jest.Mocked<Reflector>;
     jwtService = {
       verifyAsync: jest.fn(),
     } as unknown as jest.Mocked<JwtService>;
@@ -34,7 +29,6 @@ describe('AdminOrServiceAccountGuard', () => {
     } as unknown as jest.Mocked<ServiceAccountsService>;
 
     guard = new AdminOrServiceAccountGuard(
-      reflector,
       jwtService,
       authService,
       serviceAccountsService,
@@ -91,20 +85,18 @@ describe('AdminOrServiceAccountGuard', () => {
     expect(serviceAccountsService.authenticate).not.toHaveBeenCalled();
   });
 
-  it('JWT 검증이 실패하면 서비스 계정 토큰과 scope로 통과시킨다', async () => {
+  it('JWT 검증이 실패하면 서비스 계정 토큰으로 통과시킨다', async () => {
     const request = makeRequest('service-token');
     jwtService.verifyAsync.mockRejectedValue(new Error('invalid jwt'));
     serviceAccountsService.authenticate.mockResolvedValue({
       id: 'service_account_1',
       name: 'extractor',
-      scopes: ['paper-import:publish'],
     });
 
     await expect(guard.canActivate(makeContext(request))).resolves.toBe(true);
 
     expect(serviceAccountsService.authenticate).toHaveBeenCalledWith(
       'service-token',
-      ['paper-import:publish'],
     );
     expect(request.serviceAccount).toMatchObject({ name: 'extractor' });
   });

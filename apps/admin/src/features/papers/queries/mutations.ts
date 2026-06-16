@@ -5,10 +5,10 @@ import type { Exam } from '@/shared/types';
 
 import {
   createPaper,
+  createPaperFromImportJob,
   createPaperImportDraft,
   createPaperWithQuestions,
   deletePaper,
-  publishPaperImportDraft,
   updatePaperMetadata,
   updatePaperPublished,
 } from '../api';
@@ -129,10 +129,10 @@ export function useCreatePaperWithQuestionsMutation({
   });
 }
 
-export function usePublishPaperImportDraftMutation(token: string) {
+export function useCreatePaperFromImportJobMutation(token: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => publishPaperImportDraft(token, id),
+    mutationFn: (id: string) => createPaperFromImportJob(token, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: paperKeys.importJobs() });
       queryClient.invalidateQueries({ queryKey: paperKeys.lists() });

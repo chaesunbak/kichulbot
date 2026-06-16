@@ -64,6 +64,84 @@ describe('PaperImportDraftsService', () => {
     );
   });
 
+  it('extractor가 처리할 PDF 추출 작업 payload를 반환한다', async () => {
+    paperImportJob.findUnique.mockResolvedValue(makeImportJob());
+
+    await expect(service.getImportJobPayload('job_1')).resolves.toMatchObject({
+      job: {
+        id: 'job_1',
+        questionPdfPath: 'paper-import-jobs/job_1/questions.pdf',
+        questionPdfName: 'questions.pdf',
+        answerPdfPath: 'paper-import-jobs/job_1/answers.pdf',
+        paperInput: {
+          title: '한국사 78회',
+          examId: 'exam_1',
+        },
+      },
+    });
+  });
+
+  it('PDF 추출 작업 상태를 처리 중으로 변경한다', async () => {
+    paperImportJob.findUnique.mockResolvedValue(makeImportJob());
+    paperImportJob.update.mockResolvedValue(
+      makeImportJob({ status: 'PROCESSING', errorMessage: null }),
+    );
+
+    await expect(
+      service.updateImportJobStatus('job_1', { status: 'PROCESSING' }),
+    ).resolves.toMatchObject({
+      job: {
+        id: 'job_1',
+        status: 'PROCESSING',
+        errorMessage: null,
+      },
+    });
+
+    expect(paperImportJob.update).toHaveBeenCalledWith({
+      where: { id: 'job_1' },
+      data: {
+        status: 'PROCESSING',
+        startedAt: expect.any(Date),
+        failedAt: null,
+        errorMessage: null,
+        updatedAt: expect.any(Date),
+      },
+    });
+  });
+
+  it('PDF 추출 작업 결과 경로를 저장하고 완료 상태로 변경한다', async () => {
+    paperImportJob.findUnique.mockResolvedValue(makeImportJob());
+    paperImportJob.update.mockResolvedValue(
+      makeImportJob({
+        status: 'COMPLETED',
+        resultJsonPath: 'paper-import-jobs/job_1/result.json',
+      }),
+    );
+
+    await expect(
+      service.saveImportJobResult('job_1', {
+        resultJsonPath: 'paper-import-jobs/job_1/result.json',
+      }),
+    ).resolves.toMatchObject({
+      job: {
+        id: 'job_1',
+        status: 'COMPLETED',
+      },
+    });
+
+    expect(paperImportJob.update).toHaveBeenCalledWith({
+      where: { id: 'job_1' },
+      data: {
+        status: 'COMPLETED',
+        resultJsonPath: 'paper-import-jobs/job_1/result.json',
+        completedAt: expect.any(Date),
+        failedAt: null,
+        errorMessage: null,
+        updatedAt: expect.any(Date),
+      },
+    });
+  });
+
   it('추출 결과를 읽어 추천 태그를 계산하고 문제지 생성 서비스로 전달한다', async () => {
     paperImportJob.findUnique.mockResolvedValue(makeImportJob());
     paperImportJob.update.mockResolvedValue(makeImportJob());
@@ -75,7 +153,9 @@ describe('PaperImportDraftsService', () => {
       paper: makePaperResponse('paper_1'),
     });
 
-    await expect(service.publishDraftJob('job_1')).resolves.toMatchObject({
+    await expect(
+      service.createPaperFromImportJob('job_1'),
+    ).resolves.toMatchObject({
       paper: { id: 'paper_1' },
     });
 
@@ -138,7 +218,9 @@ describe('PaperImportDraftsService', () => {
       paper: makePaperResponse('paper_existing'),
     });
 
-    await expect(service.publishDraftJob('job_1')).resolves.toMatchObject({
+    await expect(
+      service.createPaperFromImportJob('job_1'),
+    ).resolves.toMatchObject({
       paper: { id: 'paper_existing' },
     });
 

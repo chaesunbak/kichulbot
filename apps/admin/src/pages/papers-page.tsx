@@ -20,7 +20,7 @@ import { ImportPaperForm } from '@/features/papers/components/import-paper-form'
 import { PaperImportJobsList } from '@/features/papers/components/paper-import-jobs-list';
 import { PapersSummary } from '@/features/papers/components/papers-summary';
 import { PapersTable } from '@/features/papers/components/papers-table';
-import { usePublishPaperImportDraftMutation } from '@/features/papers/queries/mutations';
+import { useCreatePaperFromImportJobMutation } from '@/features/papers/queries/mutations';
 import {
   paperImportJobsQueryOptions,
   papersQueryOptions,
@@ -32,7 +32,7 @@ export function PapersPage() {
   const papersQuery = useSuspenseQuery(papersQueryOptions(token));
   const importJobsQuery = useSuspenseQuery(paperImportJobsQueryOptions(token));
   const examsQuery = useSuspenseQuery(examsQueryOptions(token));
-  const publishImportDraftMutation = usePublishPaperImportDraftMutation(token);
+  const publishImportDraftMutation = useCreatePaperFromImportJobMutation(token);
   const papers = papersQuery.data.papers;
   const exams = examsQuery.data.exams;
   return (

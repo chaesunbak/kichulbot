@@ -5,13 +5,11 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
 import { UserRole } from '../../../infrastructure/database/prisma-client';
 import { AuthService } from '../auth.service';
-import { SERVICE_ACCOUNT_SCOPES_KEY } from '../decorators/service-account-scopes.decorator';
 import type { RequestServiceAccount } from '../service-accounts.service';
 import { ServiceAccountsService } from '../service-accounts.service';
 import type { JwtUser, RequestUser } from '../types';
@@ -24,7 +22,6 @@ type RequestWithActor = Request & {
 @Injectable()
 export class AdminOrServiceAccountGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
     private readonly serviceAccountsService: ServiceAccountsService,
@@ -33,11 +30,6 @@ export class AdminOrServiceAccountGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<RequestWithActor>();
     const token = this.extractBearerToken(request);
-    const requiredScopes =
-      this.reflector.getAllAndOverride<string[]>(SERVICE_ACCOUNT_SCOPES_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]) ?? [];
 
     const user = await this.authenticateUser(token).catch(() => null);
     if (user) {
@@ -48,10 +40,8 @@ export class AdminOrServiceAccountGuard implements CanActivate {
       return true;
     }
 
-    request.serviceAccount = await this.serviceAccountsService.authenticate(
-      token,
-      requiredScopes,
-    );
+    request.serviceAccount =
+      await this.serviceAccountsService.authenticate(token);
     return true;
   }
 

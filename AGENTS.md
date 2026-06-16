@@ -44,6 +44,12 @@ Do
 className="border"
 ```
 
+## Backend
+
+### Web BFF
+
+`apps/web` uses BFF, so add newly created public endpoints to `ALLOWED_ROUTES` in `apps/web/src/app/api/[...path]/route.ts`.
+
 ## Code Smell Reporting
 
 If you spot code smell unrelated to the current task, report it.

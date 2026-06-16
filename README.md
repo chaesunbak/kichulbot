@@ -88,21 +88,22 @@ pnpm db:seed
 
 ### 필수 Secrets
 
-| 이름                         | 설명                                     |
-| ---------------------------- | ---------------------------------------- |
-| `ORACLE_HOST`                | 배포 서버 주소                           |
-| `ORACLE_USERNAME`            | 배포 서버 SSH 사용자                     |
-| `ORACLE_SSH_KEY`             | 배포 서버 SSH private key                |
-| `POSTGRES_PASSWORD`          | PostgreSQL 비밀번호                      |
-| `JWT_SECRET`                 | API/Web 서버 JWT 서명 키                 |
-| `PAPER_IMPORT_SERVICE_TOKEN` | extractor 서비스 계정 토큰               |
-| `GHCR_USERNAME`              | GHCR 로그인 사용자                       |
-| `GHCR_TOKEN`                 | `read:packages` 권한이 있는 GitHub token |
-| `KAKAO_CLIENT_SECRET`        | 카카오 OAuth client secret               |
-| `RESEND_API_KEY`             | Resend API 키                            |
-| `R2_ACCESS_KEY_ID`           | Cloudflare R2 access key                 |
-| `R2_SECRET_ACCESS_KEY`       | Cloudflare R2 secret key                 |
-| `GRAFANA_ADMIN_PASSWORD`     | Grafana 관리자 비밀번호                  |
+| 이름                         | 설명                                       |
+| ---------------------------- | ------------------------------------------ |
+| `ORACLE_HOST`                | 배포 서버 주소                             |
+| `ORACLE_USERNAME`            | 배포 서버 SSH 사용자                       |
+| `ORACLE_SSH_KEY`             | 배포 서버 SSH private key                  |
+| `POSTGRES_PASSWORD`          | PostgreSQL 비밀번호                        |
+| `JWT_SECRET`                 | API/Web 서버 JWT 서명 키                   |
+| `PAPER_IMPORT_SERVICE_TOKEN` | extractor 서비스 계정 토큰                 |
+| `GHCR_USERNAME`              | GHCR 로그인 사용자                         |
+| `GHCR_TOKEN`                 | `read:packages` 권한이 있는 GitHub token   |
+| `KAKAO_CLIENT_SECRET`        | 카카오 OAuth client secret                 |
+| `RESEND_API_KEY`             | Resend API 키                              |
+| `R2_ACCESS_KEY_ID`           | Cloudflare R2 access key                   |
+| `R2_SECRET_ACCESS_KEY`       | Cloudflare R2 secret key                   |
+| `GRAFANA_ADMIN_PASSWORD`     | Grafana 관리자 비밀번호                    |
+| `CLOUDFLARE_API_TOKEN`       | Caddy DNS-01 인증서 발급용 Cloudflare 토큰 |
 
 ### 주요 Variables
 

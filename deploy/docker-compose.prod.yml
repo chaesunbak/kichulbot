@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: caddy:2-alpine
+    image: ghcr.io/${GHCR_OWNER}/kichulbot-caddy:${IMAGE_TAG:-latest}
     container_name: kichulbot-caddy
     restart: unless-stopped
     depends_on:
@@ -16,6 +16,7 @@ services:
       ADMIN_DOMAIN: ${ADMIN_DOMAIN}
       API_DOMAIN: ${API_DOMAIN}
       GRAFANA_DOMAIN: ${GRAFANA_DOMAIN}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

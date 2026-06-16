@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   applicationName: '기출봇',
   title: {
     default: '기출봇',
-    template: `%s | 기출봇}`,
+    template: `%s | 기출봇`,
   },
   keywords: ['기출', '기출문제', '한국사능력검정시험', '한능검'],
   alternates: {

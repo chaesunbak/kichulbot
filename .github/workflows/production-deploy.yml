@@ -89,8 +89,23 @@ jobs:
       - name: 소스 체크아웃
         uses: actions/checkout@v4
 
-      - name: 프로덕션 환경 파일 생성
+      - name: 배포 파일 업로드
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USERNAME }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          port: ${{ secrets.ORACLE_PORT || '22' }}
+          source: deploy/docker-compose.prod.yml,deploy/Caddyfile
+          target: ${{ vars.ORACLE_DEPLOY_PATH || '/opt/kichulbot' }}
+          strip_components: 1
+
+      - name: 컨테이너 이미지 갱신 및 재시작
+        uses: appleboy/ssh-action@v1.2.0
         env:
+          DEPLOY_PATH: ${{ vars.ORACLE_DEPLOY_PATH || '/opt/kichulbot' }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           GHCR_OWNER: ${{ vars.GHCR_OWNER || github.repository_owner }}
           IMAGE_TAG: ${{ vars.IMAGE_TAG || 'latest' }}
           WEB_DOMAIN: ${{ vars.WEB_DOMAIN }}
@@ -119,99 +134,12 @@ jobs:
           R2_BUCKET: ${{ vars.R2_BUCKET }}
           R2_PUBLIC_BASE_URL: ${{ vars.R2_PUBLIC_BASE_URL }}
           PAPER_IMPORT_SERVICE_TOKEN: ${{ secrets.PAPER_IMPORT_SERVICE_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          umask 077
-          python3 <<'PY'
-          import os
-          import sys
-
-          required_envs = [
-              "GHCR_OWNER",
-              "WEB_DOMAIN",
-              "ADMIN_DOMAIN",
-              "API_DOMAIN",
-              "NEXT_PUBLIC_SITE_URL",
-              "POSTGRES_PASSWORD",
-              "ADMIN_EMAIL",
-              "ADMIN_PASSWORD",
-              "ADMIN_NICKNAME",
-              "JWT_SECRET",
-              "PAPER_IMPORT_SERVICE_TOKEN",
-          ]
-
-          env_names = [
-              "GHCR_OWNER",
-              "IMAGE_TAG",
-              "WEB_DOMAIN",
-              "ADMIN_DOMAIN",
-              "API_DOMAIN",
-              "API_INTERNAL_BASE_URL",
-              "NEXT_PUBLIC_SITE_URL",
-              "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
-              "NEXT_PUBLIC_POSTHOG_HOST",
-              "POSTGRES_USER",
-              "POSTGRES_PASSWORD",
-              "POSTGRES_DB",
-              "ADMIN_EMAIL",
-              "ADMIN_PASSWORD",
-              "ADMIN_NICKNAME",
-              "JWT_SECRET",
-              "JWT_EXPIRES_IN",
-              "KAKAO_CLIENT_ID",
-              "KAKAO_CLIENT_SECRET",
-              "RESEND_API_KEY",
-              "RESEND_FROM_EMAIL",
-              "STORAGE_DRIVER",
-              "R2_ENDPOINT",
-              "R2_ACCESS_KEY_ID",
-              "R2_SECRET_ACCESS_KEY",
-              "R2_BUCKET",
-              "R2_PUBLIC_BASE_URL",
-              "PAPER_IMPORT_SERVICE_TOKEN",
-          ]
-
-          missing_envs = [name for name in required_envs if not os.environ.get(name)]
-          if missing_envs:
-              for name in missing_envs:
-                  print(f"프로덕션 환경변수가 비어 있습니다: {name}", file=sys.stderr)
-              sys.exit(1)
-
-          with open("deploy/.env", "w", encoding="utf-8") as env_file:
-              for name in env_names:
-                  value = os.environ.get(name, "")
-                  if "\n" in value or "\r" in value:
-                      print(f"프로덕션 환경변수는 줄바꿈을 포함할 수 없습니다: {name}", file=sys.stderr)
-                      sys.exit(1)
-
-                  escaped_value = value.replace("\\", "\\\\").replace("'", "\\'")
-                  env_file.write(f"{name}='{escaped_value}'\n")
-          PY
-
-      - name: 배포 파일 업로드
-        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           port: ${{ secrets.ORACLE_PORT || '22' }}
-          source: deploy/docker-compose.prod.yml,deploy/Caddyfile,deploy/.env
-          target: ${{ vars.ORACLE_DEPLOY_PATH || '/opt/kichulbot' }}
-          strip_components: 1
-
-      - name: 컨테이너 이미지 갱신 및 재시작
-        uses: appleboy/ssh-action@v1.2.0
-        env:
-          DEPLOY_PATH: ${{ vars.ORACLE_DEPLOY_PATH || '/opt/kichulbot' }}
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-        with:
-          host: ${{ secrets.ORACLE_HOST }}
-          username: ${{ secrets.ORACLE_USERNAME }}
-          key: ${{ secrets.ORACLE_SSH_KEY }}
-          port: ${{ secrets.ORACLE_PORT || '22' }}
-          envs: DEPLOY_PATH,GHCR_USERNAME,GHCR_TOKEN
+          envs: DEPLOY_PATH,GHCR_USERNAME,GHCR_TOKEN,GHCR_OWNER,IMAGE_TAG,WEB_DOMAIN,ADMIN_DOMAIN,API_DOMAIN,API_INTERNAL_BASE_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,NEXT_PUBLIC_POSTHOG_HOST,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,ADMIN_EMAIL,ADMIN_PASSWORD,ADMIN_NICKNAME,JWT_SECRET,JWT_EXPIRES_IN,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,STORAGE_DRIVER,R2_ENDPOINT,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY,R2_BUCKET,R2_PUBLIC_BASE_URL,PAPER_IMPORT_SERVICE_TOKEN
           script_stop: true
           script: |
             set -euo pipefail
@@ -219,11 +147,79 @@ jobs:
             mkdir -p "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
 
-            if [ ! -f .env ]; then
-              echo "배포 환경 파일이 없습니다: $DEPLOY_PATH/.env"
-              exit 1
-            fi
+            umask 077
+            python3 <<'PY'
+            import os
+            import sys
 
+            required_envs = [
+                "GHCR_OWNER",
+                "WEB_DOMAIN",
+                "ADMIN_DOMAIN",
+                "API_DOMAIN",
+                "NEXT_PUBLIC_SITE_URL",
+                "POSTGRES_PASSWORD",
+                "ADMIN_EMAIL",
+                "ADMIN_PASSWORD",
+                "ADMIN_NICKNAME",
+                "JWT_SECRET",
+                "PAPER_IMPORT_SERVICE_TOKEN",
+            ]
+
+            env_names = [
+                "GHCR_OWNER",
+                "IMAGE_TAG",
+                "WEB_DOMAIN",
+                "ADMIN_DOMAIN",
+                "API_DOMAIN",
+                "API_INTERNAL_BASE_URL",
+                "NEXT_PUBLIC_SITE_URL",
+                "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
+                "NEXT_PUBLIC_POSTHOG_HOST",
+                "POSTGRES_USER",
+                "POSTGRES_PASSWORD",
+                "POSTGRES_DB",
+                "ADMIN_EMAIL",
+                "ADMIN_PASSWORD",
+                "ADMIN_NICKNAME",
+                "JWT_SECRET",
+                "JWT_EXPIRES_IN",
+                "KAKAO_CLIENT_ID",
+                "KAKAO_CLIENT_SECRET",
+                "RESEND_API_KEY",
+                "RESEND_FROM_EMAIL",
+                "STORAGE_DRIVER",
+                "R2_ENDPOINT",
+                "R2_ACCESS_KEY_ID",
+                "R2_SECRET_ACCESS_KEY",
+                "R2_BUCKET",
+                "R2_PUBLIC_BASE_URL",
+                "PAPER_IMPORT_SERVICE_TOKEN",
+            ]
+
+            missing_envs = [name for name in required_envs if not os.environ.get(name)]
+            if missing_envs:
+                for name in missing_envs:
+                    print(f"프로덕션 환경변수가 비어 있습니다: {name}", file=sys.stderr)
+                sys.exit(1)
+
+            env_values = {}
+            for name in env_names:
+                value = os.environ.get(name, "")
+                if "\n" in value or "\r" in value:
+                    print(f"프로덕션 환경변수는 줄바꿈을 포함할 수 없습니다: {name}", file=sys.stderr)
+                    sys.exit(1)
+                env_values[name] = value
+
+            tmp_path = ".env.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as env_file:
+                for name, value in env_values.items():
+                    escaped_value = value.replace("\\", "\\\\").replace("'", "\\'")
+                    env_file.write(f"{name}='{escaped_value}'\n")
+
+            os.chmod(tmp_path, 0o600)
+            os.replace(tmp_path, ".env")
+            PY
             chmod 600 .env
 
             if [ -n "${GHCR_TOKEN:-}" ]; then

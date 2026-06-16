@@ -2,8 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Param,
+  ParseEnumPipe,
   Post,
   Put,
   Query,
@@ -93,11 +95,16 @@ export class PublicSolveSessionsController {
   @ApiOkResponse({ description: '비로그인 풀이에 필요한 문항을 반환합니다.' })
   getPaperSession(
     @Param('paperId') paperId: string,
-    @Query('mode') mode: AnswerMode = AnswerMode.EXAM,
+    @Query(
+      'mode',
+      new DefaultValuePipe(AnswerMode.EXAM),
+      new ParseEnumPipe(AnswerMode, {
+        exceptionFactory: () =>
+          new BadRequestException('지원하지 않는 풀이 방식입니다.'),
+      }),
+    )
+    mode: AnswerMode = AnswerMode.EXAM,
   ) {
-    if (!Object.values(AnswerMode).includes(mode)) {
-      throw new BadRequestException('지원하지 않는 풀이 방식입니다.');
-    }
     return this.solveSessionsService.getPublicPaperSession(paperId, mode);
   }
 }

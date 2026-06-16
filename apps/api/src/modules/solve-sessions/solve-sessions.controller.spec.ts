@@ -1,5 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
-
 import {
   AnswerMode,
   UserAuthType,
@@ -96,10 +94,16 @@ describe('PublicSolveSessionsController', () => {
     );
   });
 
-  it('지원하지 않는 공개 풀이 방식은 거부한다', () => {
-    expect(() =>
-      controller.getPaperSession('paper_1', 'UNKNOWN' as AnswerMode),
-    ).toThrow(BadRequestException);
-    expect(solveSessionsService.getPublicPaperSession).not.toHaveBeenCalled();
+  it('공개 풀이 조회에서 mode를 서비스에 전달한다', async () => {
+    solveSessionsService.getPublicPaperSession.mockResolvedValue({
+      session: { id: 'public_paper_1' },
+    } as never);
+
+    await controller.getPaperSession('paper_1', AnswerMode.ONE_BY_ONE);
+
+    expect(solveSessionsService.getPublicPaperSession).toHaveBeenCalledWith(
+      'paper_1',
+      AnswerMode.ONE_BY_ONE,
+    );
   });
 });

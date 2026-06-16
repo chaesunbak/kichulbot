@@ -35,6 +35,7 @@ interface ExamFormPanelProps {
   categories: AdminTaxonomyResponse[];
   tagGroups: AdminTagGroupResponse[];
   tags: Array<AdminTagResponse | unknown>;
+  isTagsLoading: boolean;
   editingExam: AdminExamResponse | null;
   isSubmitting: boolean;
   onSubmit: (values: ExamForm) => void;
@@ -45,6 +46,7 @@ export function ExamFormPanel({
   categories,
   tagGroups,
   tags,
+  isTagsLoading,
   editingExam,
   isSubmitting,
   onSubmit,
@@ -149,6 +151,8 @@ export function ExamFormPanel({
               tagGroups={tagGroups}
               eraTags={eraTags}
               control={form.control}
+              isTagsLoading={isTagsLoading}
+              savedBlueprintItems={editingExam.mockExamBlueprintItems}
             />
           )}
           <div className="flex gap-2">

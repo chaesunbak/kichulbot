@@ -27,16 +27,16 @@ export function ExamsPage() {
   const categoriesQuery = useSuspenseQuery(categoriesQueryOptions(token));
   const exams = examsQuery.data.exams;
   const categories = categoriesQuery.data.categories;
-  const tagGroups =
-    useQuery({
-      ...tagGroupsQueryOptions(token, editingExam?.id),
-      enabled: !!editingExam,
-    }).data?.tagGroups ?? [];
-  const tags =
-    useQuery({
-      ...tagsQueryOptions(token, editingExam?.id),
-      enabled: !!editingExam,
-    }).data?.tags ?? [];
+  const tagGroupsQuery = useQuery({
+    ...tagGroupsQueryOptions(token, editingExam?.id),
+    enabled: !!editingExam,
+  });
+  const tagsQuery = useQuery({
+    ...tagsQueryOptions(token, editingExam?.id),
+    enabled: !!editingExam,
+  });
+  const tagGroups = tagGroupsQuery.data?.tagGroups ?? [];
+  const tags = tagsQuery.data?.tags ?? [];
 
   function resetForm() {
     setEditingExam(null);
@@ -86,9 +86,11 @@ export function ExamsPage() {
         onDelete={handleDelete}
       />
       <ExamFormPanel
+        key={editingExam?.id ?? 'new'}
         categories={categories}
         tagGroups={tagGroups}
         tags={tags}
+        isTagsLoading={!!editingExam && !tagsQuery.data && tagsQuery.isPending}
         editingExam={editingExam}
         isSubmitting={saveMutation.isPending}
         onSubmit={(values) => saveMutation.mutate(values)}

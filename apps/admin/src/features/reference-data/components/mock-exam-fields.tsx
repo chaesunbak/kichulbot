@@ -23,14 +23,23 @@ interface MockExamFieldsProps {
   tagGroups: AdminTagGroupResponse[];
   eraTags: AdminTagResponse[];
   control: Control<ExamForm>;
+  isTagsLoading: boolean;
+  savedBlueprintItems: ExamForm['mockExamBlueprintItems'];
 }
 
 export function MockExamFields({
   tagGroups,
   eraTags,
   control,
+  isTagsLoading,
+  savedBlueprintItems,
 }: MockExamFieldsProps) {
-  const { fields } = useSyncMockExamBlueprintItems({ control, eraTags });
+  const { fields } = useSyncMockExamBlueprintItems({
+    control,
+    eraTags,
+    isTagsLoading,
+    savedBlueprintItems,
+  });
 
   return (
     <Field>
@@ -98,9 +107,13 @@ export function MockExamFields({
 function useSyncMockExamBlueprintItems({
   control,
   eraTags,
+  isTagsLoading,
+  savedBlueprintItems,
 }: {
   control: Control<ExamForm>;
   eraTags: AdminTagResponse[];
+  isTagsLoading: boolean;
+  savedBlueprintItems: ExamForm['mockExamBlueprintItems'];
 }) {
   const { fields, replace } = useFieldArray({
     control,
@@ -110,8 +123,12 @@ function useSyncMockExamBlueprintItems({
     useWatch({ control, name: 'mockExamBlueprintItems' }) ?? [];
 
   useEffect(() => {
+    if (isTagsLoading) return;
+
     const nextItems = eraTags.map((tag, index) => {
-      const item = blueprintItems.find((value) => value.tagId === tag.id);
+      const item =
+        blueprintItems.find((value) => value.tagId === tag.id) ??
+        savedBlueprintItems.find((value) => value.tagId === tag.id);
 
       return {
         tagId: tag.id,
@@ -133,7 +150,7 @@ function useSyncMockExamBlueprintItems({
       });
 
     if (!isSame) replace(nextItems);
-  }, [blueprintItems, eraTags, replace]);
+  }, [blueprintItems, eraTags, isTagsLoading, replace, savedBlueprintItems]);
 
   return { fields };
 }

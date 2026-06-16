@@ -88,8 +88,11 @@ const FeatureItem = ({ item }: { item: FeatureSectionItem }) => {
         <Image
           src={item.iconSrc}
           alt=""
-          width={56}
-          height={56}
+          width={32}
+          height={32}
+          sizes="32px"
+          loading="eager"
+          fetchPriority="high"
           className="
             size-8 object-contain
             sm:size-8

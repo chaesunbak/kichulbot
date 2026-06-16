@@ -61,12 +61,15 @@ export class PapersRepository {
     return this.db.paper.findMany({
       where,
       include: this.paperIncludes(userId),
-      orderBy: [
-        { examSession: { displayYear: 'desc' } },
-        { examSession: { month: 'desc' } },
-        { examSession: { round: 'desc' } },
-        { createdAt: 'desc' },
-      ],
+      orderBy: this.paperOrderBy(),
+    });
+  }
+
+  findManyForList(where: Prisma.PaperWhereInput, userId?: string) {
+    return this.db.paper.findMany({
+      where,
+      select: this.paperListSelect(userId),
+      orderBy: this.paperOrderBy(),
     });
   }
 
@@ -201,5 +204,41 @@ export class PapersRepository {
           }
         : false,
     } satisfies Prisma.PaperInclude;
+  }
+
+  private paperListSelect(userId?: string) {
+    return {
+      id: true,
+      title: true,
+      questionCount: true,
+      isPublished: true,
+      createdAt: true,
+      updatedAt: true,
+      examSession: {
+        select: {
+          displayYear: true,
+          month: true,
+          grade: true,
+          round: true,
+          exam: true,
+        },
+      },
+      _count: { select: { questions: true } },
+      users: userId
+        ? {
+            where: { userId },
+            select: { id: true },
+          }
+        : false,
+    } satisfies Prisma.PaperSelect;
+  }
+
+  private paperOrderBy() {
+    return [
+      { examSession: { displayYear: 'desc' } },
+      { examSession: { month: 'desc' } },
+      { examSession: { round: 'desc' } },
+      { createdAt: 'desc' },
+    ] satisfies Prisma.PaperOrderByWithRelationInput[];
   }
 }

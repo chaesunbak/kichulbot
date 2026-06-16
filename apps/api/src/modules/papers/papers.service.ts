@@ -58,6 +58,10 @@ type PaperWithRelations = Paper & {
   users?: Array<{ id: string }>;
 };
 
+type PaperListItem = Awaited<
+  ReturnType<PapersRepository['findManyForList']>
+>[number];
+
 @Injectable()
 export class PapersService {
   constructor(
@@ -163,7 +167,7 @@ export class PapersService {
     const examId = filters?.examId?.trim();
     const categoryId = filters?.categoryId?.trim();
     const q = filters?.q?.trim();
-    const papers = await this.papersRepository.findMany(
+    const papers = await this.papersRepository.findManyForList(
       {
         ...(role === UserRole.ADMIN ? {} : { isPublished: true }),
         ...(examId || categoryId
@@ -197,7 +201,7 @@ export class PapersService {
     );
 
     return ListPapersResponseSchema.parse({
-      papers: papers.map((paper) => this.toPaperResponse(paper, role)),
+      papers: papers.map((paper) => this.toPaperListResponse(paper, role)),
     });
   }
 
@@ -411,6 +415,35 @@ export class PapersService {
         createdAt: question.createdAt.toISOString(),
         updatedAt: question.updatedAt.toISOString(),
       })),
+    };
+  }
+
+  private toPaperListResponse(
+    paper: PaperListItem,
+    role: UserRole,
+  ): PaperResponse | AdminPaperResponse {
+    const base = {
+      id: paper.id,
+      title: paper.title,
+      year: paper.examSession.displayYear,
+      month: paper.examSession.month,
+      grade: paper.examSession.grade,
+      round: paper.examSession.round,
+      questionCount: paper.questionCount,
+      isInLibrary: (paper.users?.length ?? 0) > 0,
+      exam: this.toTaxonomyResponse(paper.examSession.exam),
+    };
+
+    if (role !== UserRole.ADMIN) {
+      return base;
+    }
+
+    return {
+      ...base,
+      isPublished: paper.isPublished,
+      registeredQuestionCount: paper._count.questions,
+      createdAt: paper.createdAt.toISOString(),
+      updatedAt: paper.updatedAt.toISOString(),
     };
   }
 

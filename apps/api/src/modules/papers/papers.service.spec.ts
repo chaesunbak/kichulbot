@@ -93,6 +93,16 @@ const paper = (
   ...overrides,
 });
 
+const paperListItem = (
+  overrides: Partial<
+    ReturnType<typeof paper> & { _count: { questions: number } }
+  > = {},
+) => ({
+  ...paper(),
+  _count: { questions: 0 },
+  ...overrides,
+});
+
 describe('PapersService', () => {
   let service: PapersService;
   let repository: jest.Mocked<PapersRepository>;
@@ -106,6 +116,7 @@ describe('PapersService', () => {
       countQuestionAttempts: jest.fn().mockResolvedValue(0),
       delete: jest.fn(),
       findMany: jest.fn(),
+      findManyForList: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<PapersRepository>;
@@ -130,11 +141,13 @@ describe('PapersService', () => {
   });
 
   it('일반 사용자에게는 관리자 필드 없이 공개된 시험지만 반환한다', async () => {
-    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+    repository.findManyForList.mockResolvedValue([
+      paperListItem({ isPublished: true }),
+    ]);
 
     const response = await service.listPapers(UserRole.USER);
 
-    expect(repository.findMany).toHaveBeenCalledWith(
+    expect(repository.findManyForList).toHaveBeenCalledWith(
       { isPublished: true },
       undefined,
     );
@@ -148,11 +161,11 @@ describe('PapersService', () => {
   });
 
   it('관리자에게는 관리자 필드를 포함한 전체 시험지를 반환한다', async () => {
-    repository.findMany.mockResolvedValue([paper()]);
+    repository.findManyForList.mockResolvedValue([paperListItem()]);
 
     const response = await service.listPapers(UserRole.ADMIN);
 
-    expect(repository.findMany).toHaveBeenCalledWith({}, undefined);
+    expect(repository.findManyForList).toHaveBeenCalledWith({}, undefined);
     expect(response.papers[0]).toMatchObject({
       id: 'paper_1',
       isPublished: false,
@@ -163,8 +176,8 @@ describe('PapersService', () => {
   });
 
   it('현재 사용자 서재에 이미 담긴 시험지를 표시한다', async () => {
-    repository.findMany.mockResolvedValue([
-      paper({
+    repository.findManyForList.mockResolvedValue([
+      paperListItem({
         users: [
           {
             id: 'library_paper_1',
@@ -175,12 +188,12 @@ describe('PapersService', () => {
             updatedAt: now,
           },
         ],
-      } as never),
+      }),
     ]);
 
     const response = await service.listPapers(UserRole.USER, 'user_1');
 
-    expect(repository.findMany).toHaveBeenCalledWith(
+    expect(repository.findManyForList).toHaveBeenCalledWith(
       { isPublished: true },
       'user_1',
     );
@@ -188,11 +201,13 @@ describe('PapersService', () => {
   });
 
   it('시험 식별자가 주어지면 해당 시험 기준으로 시험지를 필터링한다', async () => {
-    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+    repository.findManyForList.mockResolvedValue([
+      paperListItem({ isPublished: true }),
+    ]);
 
     await service.listPapers(UserRole.USER, undefined, { examId: 'exam_1' });
 
-    expect(repository.findMany).toHaveBeenCalledWith(
+    expect(repository.findManyForList).toHaveBeenCalledWith(
       {
         isPublished: true,
         examSession: { examId: 'exam_1' },
@@ -202,13 +217,15 @@ describe('PapersService', () => {
   });
 
   it('분류 식별자가 주어지면 해당 분류의 시험지로 필터링한다', async () => {
-    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+    repository.findManyForList.mockResolvedValue([
+      paperListItem({ isPublished: true }),
+    ]);
 
     await service.listPapers(UserRole.USER, undefined, {
       categoryId: 'category_1',
     });
 
-    expect(repository.findMany).toHaveBeenCalledWith(
+    expect(repository.findManyForList).toHaveBeenCalledWith(
       {
         isPublished: true,
         examSession: {
@@ -222,11 +239,13 @@ describe('PapersService', () => {
   });
 
   it('검색어가 주어지면 시험지 제목과 시험 이름으로 검색한다', async () => {
-    repository.findMany.mockResolvedValue([paper({ isPublished: true })]);
+    repository.findManyForList.mockResolvedValue([
+      paperListItem({ isPublished: true }),
+    ]);
 
     await service.listPapers(UserRole.USER, undefined, { q: '한국사' });
 
-    expect(repository.findMany).toHaveBeenCalledWith(
+    expect(repository.findManyForList).toHaveBeenCalledWith(
       {
         isPublished: true,
         OR: [

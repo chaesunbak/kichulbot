@@ -1,6 +1,6 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import type { BookmarkList } from '@/features/learning/types';
 import { getBookmarkList } from '@/features/library/api/server/queries';
 import { BookmarkListDetail } from '@/features/library/components/bookmark-list-detail';
@@ -13,17 +13,15 @@ export default async function BookmarkListPage({
   params: Promise<{ bookmarkListId: string }>;
 }) {
   const { bookmarkListId } = await params;
-  const user = await getUser();
-  if (!user) {
-    redirect(
-      `/login?next=${encodeURIComponent(`/library/bookmarks/${bookmarkListId}`)}`,
-    );
-  }
 
   let bookmarkList: BookmarkList;
   try {
     bookmarkList = await getBookmarkList(bookmarkListId);
-  } catch {
+  } catch (error) {
+    redirectToLoginIfUnauthorized(
+      error,
+      `/library/bookmarks/${bookmarkListId}`,
+    );
     notFound();
   }
 

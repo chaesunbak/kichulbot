@@ -1,37 +1,49 @@
-import { ApiError } from '@kichulbot/api-contract';
-
 import { getToken } from '@/features/auth/api/server/queries';
 import type { Category, Exam } from '@/features/exams/types';
 import { serverApi } from '@/shared/api/server';
 
 export type { Category, Exam } from '@/features/exams/types';
 
+const PUBLIC_RESOURCE_REVALIDATE_SECONDS = 300;
+
+const publicResourceCacheOptions = {
+  next: { revalidate: PUBLIC_RESOURCE_REVALIDATE_SECONDS },
+};
+
 export const getExams = async (): Promise<Exam[]> => {
   const token = await getToken();
   const path = token ? '/exams' : '/public/exams';
-  const res = await serverApi
-    .get<{ data: { exams: Exam[] } }>(path, token ?? undefined)
-    .catch((error: unknown) => {
-      if (token && error instanceof ApiError && error.status === 401) {
-        return serverApi.get<{ data: { exams: Exam[] } }>('/public/exams');
-      }
-      throw error;
-    });
+  const res = await serverApi.get<{ data: { exams: Exam[] } }>(
+    path,
+    token ?? undefined,
+  );
+  return res.data.exams;
+};
+
+export const getPublicExams = async (): Promise<Exam[]> => {
+  const res = await serverApi.get<{ data: { exams: Exam[] } }>(
+    '/public/exams',
+    undefined,
+    publicResourceCacheOptions,
+  );
   return res.data.exams;
 };
 
 export const getCategories = async (): Promise<Category[]> => {
   const token = await getToken();
   const path = token ? '/categories' : '/public/categories';
-  const res = await serverApi
-    .get<{ data: { categories: Category[] } }>(path, token ?? undefined)
-    .catch((error: unknown) => {
-      if (token && error instanceof ApiError && error.status === 401) {
-        return serverApi.get<{ data: { categories: Category[] } }>(
-          '/public/categories',
-        );
-      }
-      throw error;
-    });
+  const res = await serverApi.get<{ data: { categories: Category[] } }>(
+    path,
+    token ?? undefined,
+  );
+  return res.data.categories;
+};
+
+export const getPublicCategories = async (): Promise<Category[]> => {
+  const res = await serverApi.get<{ data: { categories: Category[] } }>(
+    '/public/categories',
+    undefined,
+    publicResourceCacheOptions,
+  );
   return res.data.categories;
 };

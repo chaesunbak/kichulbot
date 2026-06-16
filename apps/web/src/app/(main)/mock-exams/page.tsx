@@ -1,19 +1,15 @@
-import { redirect } from 'next/navigation';
-
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import { getExams } from '@/features/exams/api/server/queries';
 import { MockExamStartPanel } from '@/features/learning/components/mock-exam-start-panel';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function MockExamsPage() {
-  const user = await getUser();
-  if (!user) redirect('/login?next=/mock-exams');
-
   let exams;
   try {
     exams = await getExams();
-  } catch {
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, '/mock-exams');
     return (
       <PageContainer className="min-h-[calc(100svh-16rem)]">
         <PageTitle>모의고사</PageTitle>

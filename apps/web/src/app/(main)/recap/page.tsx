@@ -7,9 +7,8 @@ import {
 } from '@kichulbot/ui/components/ui/card';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import {
   getSolveSessionLogPage,
   getSolveSessionLogs,
@@ -23,15 +22,15 @@ import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function RecapPage() {
-  const user = await getUser();
-  if (!user) redirect('/login?next=/recap');
-
   const today = toKstDateString(new Date());
-  const [logPage, todayLogs, wrongQuestionSet] = await Promise.all([
-    getSolveSessionLogPage({ status: 'all', limit: 5 }),
-    getSolveSessionLogs({ status: 'completed', submittedDate: today }),
-    getTodayWrongQuestions(),
-  ]);
+  let data: Awaited<ReturnType<typeof loadRecapPageData>>;
+  try {
+    data = await loadRecapPageData(today);
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, '/recap');
+    throw error;
+  }
+  const { logPage, todayLogs, wrongQuestionSet } = data;
   const todayStats = getTodayStats(todayLogs);
 
   return (
@@ -68,4 +67,13 @@ export default async function RecapPage() {
       />
     </PageContainer>
   );
+}
+
+async function loadRecapPageData(today: string) {
+  const [logPage, todayLogs, wrongQuestionSet] = await Promise.all([
+    getSolveSessionLogPage({ status: 'all', limit: 5 }),
+    getSolveSessionLogs({ status: 'completed', submittedDate: today }),
+    getTodayWrongQuestions(),
+  ]);
+  return { logPage, todayLogs, wrongQuestionSet };
 }

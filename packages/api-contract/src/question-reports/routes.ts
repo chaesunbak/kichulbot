@@ -13,6 +13,12 @@ export const questionReportRoutes = {
     request: CreateQuestionReportRequestSchema,
     response: QuestionReportMutationResponseSchema,
   },
+  createPublicQuestionReport: {
+    method: 'POST',
+    path: '/public/question-reports/:questionId',
+    request: CreateQuestionReportRequestSchema,
+    response: QuestionReportMutationResponseSchema,
+  },
   listAdminQuestionReports: {
     method: 'GET',
     path: '/admin/question-reports',

@@ -1,7 +1,7 @@
 import { ApiError } from '@kichulbot/api-contract';
 import { notFound, redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import { getSolveSession } from '@/features/learning/api/server/queries';
 import { ResultSession } from '@/features/learning/components/result-session';
 import type { SolveSession } from '@/features/learning/types';
@@ -12,13 +12,12 @@ export default async function ResultPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await getUser();
-  if (!user) redirect(`/login?next=${encodeURIComponent(`/results/${id}`)}`);
 
   let session: SolveSession;
   try {
     session = await getSolveSession(id);
   } catch (error) {
+    redirectToLoginIfUnauthorized(error, `/results/${id}`);
     if (error instanceof ApiError && error.status === 404) {
       notFound();
     }

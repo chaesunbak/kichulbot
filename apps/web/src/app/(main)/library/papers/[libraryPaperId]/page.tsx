@@ -1,6 +1,6 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import type { LibraryFolder } from '@/features/learning/types';
@@ -17,17 +17,15 @@ export default async function LibraryPaperPage({
   params: Promise<{ libraryPaperId: string }>;
 }) {
   const { libraryPaperId } = await params;
-  const user = await getUser();
-  if (!user) {
-    redirect(
-      `/login?next=${encodeURIComponent(`/library/papers/${libraryPaperId}`)}`,
-    );
-  }
 
-  const [library, logs] = await Promise.all([
-    getLibrary(),
-    getSolveSessionLogs(),
-  ]);
+  let data: Awaited<ReturnType<typeof loadLibraryPaperPageData>>;
+  try {
+    data = await loadLibraryPaperPageData();
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, `/library/papers/${libraryPaperId}`);
+    throw error;
+  }
+  const { library, logs } = data;
   const libraryPaper = library.papers.find(
     (item) => item.id === libraryPaperId,
   );
@@ -68,6 +66,14 @@ export default async function LibraryPaperPage({
       <PaperSolveHistorySection logs={logs} paperId={paper.id} />
     </PageContainer>
   );
+}
+
+async function loadLibraryPaperPageData() {
+  const [library, logs] = await Promise.all([
+    getLibrary(),
+    getSolveSessionLogs(),
+  ]);
+  return { library, logs };
 }
 
 function getFolderPath(folders: LibraryFolder[], folderId: string | null) {

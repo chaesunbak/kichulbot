@@ -26,3 +26,11 @@ export const AuthConnectionSchema = z.object({
   createdAt: IsoDateStringSchema,
 });
 export type AuthConnection = z.infer<typeof AuthConnectionSchema>;
+
+export const AccessTokenPayloadSchema = z.object({
+  sub: z.string().min(1),
+  role: UserRoleSchema,
+  authType: UserAuthTypeSchema,
+  tokenVersion: z.number().int().nonnegative(),
+});
+export type AccessTokenPayload = z.infer<typeof AccessTokenPayloadSchema>;

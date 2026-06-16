@@ -1,14 +1,11 @@
+import type { AccessTokenPayload } from '@kichulbot/api-contract/auth';
+
 import type {
   UserAuthType,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 
-export type JwtUser = {
-  sub: string;
-  role: UserRole;
-  authType: UserAuthType;
-  tokenVersion: number;
-};
+export type JwtUser = AccessTokenPayload;
 
 export type RequestUser = {
   id: string;

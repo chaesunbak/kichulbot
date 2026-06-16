@@ -1,5 +1,3 @@
-import { ApiError } from '@kichulbot/api-contract';
-
 import { getToken } from '@/features/auth/api/server/queries';
 import type {
   DailyWrongQuestionSet,
@@ -71,27 +69,19 @@ export const getSolveSessionLogPage = async ({
     limit: String(limit),
   });
   if (submittedDate) query.set('submittedDate', submittedDate);
-  const res = await serverApi
-    .get<{ data: SolveSessionLogPage }>(`/me/solve-sessions?${query}`, token)
-    .catch((error: unknown) => {
-      if (error instanceof ApiError && error.status === 401) return null;
-      throw error;
-    });
-  return res?.data ?? { logs: [], total: 0, page, limit, totalPages: 0 };
+  const res = await serverApi.get<{ data: SolveSessionLogPage }>(
+    `/me/solve-sessions?${query}`,
+    token,
+  );
+  return res.data;
 };
 
 export const getTodayWrongQuestions =
   async (): Promise<DailyWrongQuestionSet | null> => {
     const token = await getToken();
     if (!token) return null;
-    const res = await serverApi
-      .get<{
-        data: { questionSet: DailyWrongQuestionSet | null };
-      }>('/me/wrong-question-sets', token)
-      .catch((error: unknown) => {
-        if (error instanceof ApiError && error.status === 401) return null;
-        throw error;
-      });
-    if (!res) return null;
+    const res = await serverApi.get<{
+      data: { questionSet: DailyWrongQuestionSet | null };
+    }>('/me/wrong-question-sets', token);
     return res.data.questionSet;
   };

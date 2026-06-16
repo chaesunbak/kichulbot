@@ -6,13 +6,13 @@ import {
 } from '@kichulbot/ui/components/ui/card';
 import { redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { getCurrentUserOrNull } from '@/features/auth/api/server/queries';
 import { ProfileForm } from '@/features/auth/components/profile-form';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function ProfilePage() {
-  const user = await getUser();
+  const user = await getCurrentUserOrNull();
   if (!user) redirect('/login?next=/my/profile');
 
   return (

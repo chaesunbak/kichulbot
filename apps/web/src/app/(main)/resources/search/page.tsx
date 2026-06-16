@@ -1,5 +1,8 @@
-import { getCategories, getExams } from '@/features/exams/api/server/queries';
-import { getPapers } from '@/features/papers/api/server/queries';
+import {
+  getPublicCategories,
+  getPublicExams,
+} from '@/features/exams/api/server/queries';
+import { getPublicPapers } from '@/features/papers/api/server/queries';
 import { PaperGrid } from '@/features/papers/components/paper-grid';
 import { ResourceSearchControls } from '@/features/papers/components/resource-search-controls';
 import { loadResourceSearchParams } from '@/features/papers/lib/resource-search-params';
@@ -16,16 +19,16 @@ export default async function ResourcesSearchPage({
   const filters = await loadResourceSearchParams(searchParams);
 
   let data: {
-    categories: Awaited<ReturnType<typeof getCategories>>;
-    exams: Awaited<ReturnType<typeof getExams>>;
-    papers: Awaited<ReturnType<typeof getPapers>>;
+    categories: Awaited<ReturnType<typeof getPublicCategories>>;
+    exams: Awaited<ReturnType<typeof getPublicExams>>;
+    papers: Awaited<ReturnType<typeof getPublicPapers>>;
   };
 
   try {
     const [categories, exams, papers] = await Promise.all([
-      getCategories(),
-      getExams(),
-      getPapers({
+      getPublicCategories(),
+      getPublicExams(),
+      getPublicPapers({
         categoryId: filters.categoryId,
         examId: filters.examId,
         q: filters.q,

@@ -35,6 +35,7 @@ const ALLOWED_ROUTES = [
   ['POST', /^\/me\/wrong-question-sets\/solve-sessions$/],
   ['POST', /^\/me\/wrong-question-sets\/[^/]+\/solve-sessions$/],
   ['POST', /^\/me\/mock-exams\/solve-sessions$/],
+  ['POST', /^\/question-reports\/[^/]+$/],
   ['GET', /^\/exam-papers\/[^/]+\/questions$/],
 ] as const;
 

@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation';
-
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { StreakSummaryCard } from '@/features/question-attempts/components/streak-summary-card';
 import {
@@ -23,17 +21,23 @@ interface StreakPageProps {
 export default async function StreakPage({ searchParams }: StreakPageProps) {
   const params = await searchParams;
   const month = normalizeMonth(params?.month);
-  const user = await getUser();
   const nextPath = params?.month ? `/streak?month=${month}` : '/streak';
-  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 
   const range = getMonthRange(month);
   const currentWeek = getCurrentWeekRange();
   const streakRange = getRecentStreakRange();
-  const [questionAttempts, weeklyQuestionAttempts] = await Promise.all([
-    getQuestionAttempts(range.from, range.to),
-    getQuestionAttempts(streakRange.from, currentWeek.to),
-  ]);
+  let data: Awaited<ReturnType<typeof loadStreakPageData>>;
+  try {
+    data = await loadStreakPageData({
+      monthRange: range,
+      streakFrom: streakRange.from,
+      currentWeekTo: currentWeek.to,
+    });
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, nextPath);
+    throw error;
+  }
+  const { questionAttempts, weeklyQuestionAttempts } = data;
   const countsByDate = countAttemptsByDate(questionAttempts);
   const totalDaysInMonth = Number(range.to.slice(-2));
 
@@ -48,4 +52,20 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
       <ConstructionSection />
     </PageContainer>
   );
+}
+
+async function loadStreakPageData({
+  monthRange,
+  streakFrom,
+  currentWeekTo,
+}: {
+  monthRange: { from: string; to: string };
+  streakFrom: string;
+  currentWeekTo: string;
+}) {
+  const [questionAttempts, weeklyQuestionAttempts] = await Promise.all([
+    getQuestionAttempts(monthRange.from, monthRange.to),
+    getQuestionAttempts(streakFrom, currentWeekTo),
+  ]);
+  return { questionAttempts, weeklyQuestionAttempts };
 }

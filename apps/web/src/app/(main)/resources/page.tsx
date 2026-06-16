@@ -3,12 +3,15 @@ import { Input } from '@kichulbot/ui/components/ui/input';
 import { ChevronRight, ClipboardList, Search } from 'lucide-react';
 import Link from 'next/link';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { getToken } from '@/features/auth/api/server/queries';
 import {
   type Category,
-  getCategories,
+  getPublicCategories,
 } from '@/features/exams/api/server/queries';
-import { getPapers, type Paper } from '@/features/papers/api/server/queries';
+import {
+  getPublicPapers,
+  type Paper,
+} from '@/features/papers/api/server/queries';
 import { PaperGrid } from '@/features/papers/components/paper-grid';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
@@ -19,11 +22,14 @@ export default async function PapersPage() {
   let sections: CategoryPaperSection[];
   let isAuthenticated = false;
   try {
-    const [user, categories] = await Promise.all([getUser(), getCategories()]);
-    isAuthenticated = !!user;
+    const [token, categories] = await Promise.all([
+      getToken(),
+      getPublicCategories(),
+    ]);
+    isAuthenticated = !!token;
     sections = await Promise.all(
       categories.map(async (category) => {
-        const papers = await getPapers({ categoryId: category.id });
+        const papers = await getPublicPapers({ categoryId: category.id });
 
         return {
           category,

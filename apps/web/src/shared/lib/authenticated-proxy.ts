@@ -1,6 +1,7 @@
+import { ApiError } from '@kichulbot/api-contract';
 import { NextResponse } from 'next/server';
 
-import { getToken } from '@/features/auth/api/server/queries';
+import { COOKIE_NAME, getToken } from '@/features/auth/api/server/queries';
 import { serverApi } from '@/shared/api/server';
 import { proxyErrorResponse } from '@/shared/lib/proxy-response';
 import { rejectCrossOriginRequest } from '@/shared/lib/route-helpers';
@@ -76,6 +77,14 @@ export async function proxyAuthenticatedRequest(
         { message: '요청 본문이 올바른 JSON이 아닙니다.' },
         { status: 400 },
       );
+    }
+    if (error instanceof ApiError && error.status === 401) {
+      const response = NextResponse.json(
+        { message: error.message },
+        { status: 401 },
+      );
+      response.cookies.delete(COOKIE_NAME);
+      return response;
     }
     return proxyErrorResponse(error);
   }

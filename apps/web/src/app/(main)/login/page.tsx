@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { getCurrentUserOrNull } from '@/features/auth/api/server/queries';
 import { LoginMethodActions } from '@/features/auth/components/login-method-actions';
 import { getKakaoAuthStartPath } from '@/features/auth/lib/kakao-auth';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
@@ -16,7 +16,7 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const nextPath = normalizeNextPath(params?.next);
-  const user = await getUser();
+  const user = await getCurrentUserOrNull();
   if (user) redirect(nextPath);
 
   return (

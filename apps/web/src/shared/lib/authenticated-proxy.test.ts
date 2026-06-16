@@ -1,6 +1,8 @@
 import { ApiError } from '@kichulbot/api-contract';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('server-only', () => ({}));
+
 import type * as ServerApiModule from '@/shared/api/server';
 import { serverApi } from '@/shared/api/server';
 import { proxyAuthenticatedRequest } from '@/shared/lib/authenticated-proxy';
@@ -10,6 +12,7 @@ const auth = vi.hoisted(() => ({
 }));
 
 vi.mock('@/features/auth/api/server/queries', () => ({
+  COOKIE_NAME: 'kichulbot_token',
   getToken: auth.getToken,
 }));
 
@@ -151,5 +154,22 @@ describe('proxyAuthenticatedRequest', () => {
     await expect(response.json()).resolves.toEqual({
       message: '삭제할 수 없습니다.',
     });
+  });
+
+  it('백엔드가 401을 반환하면 인증 쿠키를 삭제한다', async () => {
+    mockedServerApi.get.mockRejectedValue(
+      new ApiError(401, '인증 정보가 유효하지 않습니다.'),
+    );
+
+    const response = await proxyAuthenticatedRequest(
+      new Request('https://kichulbot.test/api/me'),
+      '/me',
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      message: '인증 정보가 유효하지 않습니다.',
+    });
+    expect(response.headers.get('set-cookie')).toContain('kichulbot_token=;');
   });
 });

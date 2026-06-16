@@ -1,10 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { verifyAccessToken } from '@/features/auth/lib/jwt';
+
 const AUTH_COOKIE_NAME = 'kichulbot_token';
 const PROTECTED_PATH_PREFIXES = [
   '/library',
   '/logs',
+  '/mock-exams',
   '/my',
   '/recap',
   '/report',
@@ -13,11 +16,13 @@ const PROTECTED_PATH_PREFIXES = [
   '/streak',
 ];
 
-export function proxy(request: NextRequest) {
-  if (isProtectedPath(request.nextUrl.pathname)) {
+export async function proxy(request: NextRequest) {
+  if (matchesPathPrefix(request.nextUrl.pathname, PROTECTED_PATH_PREFIXES)) {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
 
-    if (!token) {
+    const result = token ? await verifyAccessToken(token) : null;
+
+    if (!result?.ok) {
       const url = request.nextUrl.clone();
       const nextPath = `${url.pathname}${url.search}`;
       url.pathname = '/login';
@@ -35,8 +40,8 @@ export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
 
-function isProtectedPath(pathname: string) {
-  return PROTECTED_PATH_PREFIXES.some(
+function matchesPathPrefix(pathname: string, prefixes: readonly string[]) {
+  return prefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }

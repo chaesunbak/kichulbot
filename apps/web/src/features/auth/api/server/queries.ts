@@ -1,6 +1,9 @@
+import 'server-only';
+
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 
+import { verifyAccessToken } from '@/features/auth/lib/jwt';
 import type { AuthUser } from '@/features/auth/types';
 import { serverApi } from '@/shared/api/server';
 
@@ -19,7 +22,11 @@ export const getToken = cache(async function getToken(): Promise<
   string | null
 > {
   const store = await cookies();
-  return store.get(COOKIE_NAME)?.value ?? null;
+  const token = store.get(COOKIE_NAME)?.value ?? null;
+  if (!token) return null;
+
+  const result = await verifyAccessToken(token);
+  return result.ok ? token : null;
 });
 
 export const getCurrentUser = cache(async function getCurrentUser(
@@ -29,8 +36,8 @@ export const getCurrentUser = cache(async function getCurrentUser(
   return res.data.user;
 });
 
-export const getUser = cache(
-  async function getUser(): Promise<AuthUser | null> {
+export const getCurrentUserOrNull = cache(
+  async function getCurrentUserOrNull(): Promise<AuthUser | null> {
     const token = await getToken();
     if (!token) return null;
     try {

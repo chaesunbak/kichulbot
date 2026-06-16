@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { getCurrentUserOrNull } from '@/features/auth/api/server/queries';
 import { EmailRegisterForm } from '@/features/auth/components/email-register-form';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { PageContainer } from '@/shared/components/page-container';
@@ -17,7 +17,7 @@ export default async function EmailRegisterPage({
 }: EmailRegisterPageProps) {
   const params = await searchParams;
   const nextPath = normalizeNextPath(params?.next);
-  const user = await getUser();
+  const user = await getCurrentUserOrNull();
   if (user) redirect(nextPath);
 
   return (

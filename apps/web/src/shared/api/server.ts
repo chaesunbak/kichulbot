@@ -1,31 +1,50 @@
+import 'server-only';
+
 import { ApiError } from '@kichulbot/api-contract';
 
 import { getInternalApiBaseUrl } from './base-url';
 
 const BASE_URL = getInternalApiBaseUrl();
 
+type NextFetchOptions = RequestInit & {
+  next?: {
+    revalidate?: false | 0 | number;
+    tags?: string[];
+  };
+};
+
+type ServerApiRequestOptions = NextFetchOptions & { token?: string };
+type ServerApiOptions = Omit<
+  ServerApiRequestOptions,
+  'body' | 'method' | 'token'
+>;
+
 async function request<T>(
   path: string,
-  options: RequestInit & { token?: string } = {},
+  options: ServerApiRequestOptions = {},
 ): Promise<T> {
   const { token, ...init } = options;
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(init.headers as Record<string, string>),
-  };
+  const headers = new Headers(init.headers);
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const requestInit: NextFetchOptions = {
+    ...init,
+    headers,
+  };
+  if (token && !hasExplicitCachePolicy(init)) {
+    requestInit.cache = 'no-store';
   }
 
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, {
-      ...init,
-      cache: token ? 'no-store' : init.cache,
-      headers,
-    });
+    res = await fetch(`${BASE_URL}${path}`, requestInit);
   } catch {
     throw new ApiError(0, '네트워크 연결을 확인해주세요');
   }
@@ -45,6 +64,10 @@ async function request<T>(
   } catch {
     throw new ApiError(res.status, '서버 응답을 읽을 수 없습니다');
   }
+}
+
+function hasExplicitCachePolicy(init: NextFetchOptions) {
+  return init.cache !== undefined || init.next !== undefined;
 }
 
 function getErrorMessage(body: unknown) {
@@ -74,30 +97,48 @@ function normalizeMessage(message: unknown) {
 }
 
 export const serverApi = {
-  get: <T>(path: string, token?: string) =>
-    request<T>(path, { method: 'GET', token }),
+  get: <T>(path: string, token?: string, options: ServerApiOptions = {}) =>
+    request<T>(path, { ...options, method: 'GET', token }),
 
-  post: <T>(path: string, body: unknown, token?: string) =>
+  post: <T>(
+    path: string,
+    body: unknown,
+    token?: string,
+    options: ServerApiOptions = {},
+  ) =>
     request<T>(path, {
+      ...options,
       method: 'POST',
       body: JSON.stringify(body),
       token,
     }),
 
-  patch: <T>(path: string, body: unknown, token?: string) =>
+  patch: <T>(
+    path: string,
+    body: unknown,
+    token?: string,
+    options: ServerApiOptions = {},
+  ) =>
     request<T>(path, {
+      ...options,
       method: 'PATCH',
       body: JSON.stringify(body),
       token,
     }),
 
-  put: <T>(path: string, body: unknown, token?: string) =>
+  put: <T>(
+    path: string,
+    body: unknown,
+    token?: string,
+    options: ServerApiOptions = {},
+  ) =>
     request<T>(path, {
+      ...options,
       method: 'PUT',
       body: JSON.stringify(body),
       token,
     }),
 
-  delete: <T>(path: string, token?: string) =>
-    request<T>(path, { method: 'DELETE', token }),
+  delete: <T>(path: string, token?: string, options: ServerApiOptions = {}) =>
+    request<T>(path, { ...options, method: 'DELETE', token }),
 };

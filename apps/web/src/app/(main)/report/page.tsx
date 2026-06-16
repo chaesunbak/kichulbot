@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation';
-
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { RecapTrendSection } from '@/features/learning/components/recap-trend-section';
 import {
@@ -14,16 +12,15 @@ import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function ReportPage() {
-  const user = await getUser();
-  if (!user) redirect('/login?next=/report');
-
   const analysisRange = getRecentStreakRange(90);
-  const [logs, questionAttempts] = await Promise.all([
-    getSolveSessionLogs(),
-    getQuestionAttempts(analysisRange.from, analysisRange.to, {
-      includeTags: true,
-    }),
-  ]);
+  let data: Awaited<ReturnType<typeof loadReportPageData>>;
+  try {
+    data = await loadReportPageData(analysisRange);
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, '/report');
+    throw error;
+  }
+  const { logs, questionAttempts } = data;
   const completedLogs = logs.filter(isCompletedLog);
   const trendPoints = getRecapTrendPoints(completedLogs);
   const weaknessGroups = getRecapWeaknessGroups(questionAttempts);
@@ -34,6 +31,16 @@ export default async function ReportPage() {
       <RecapTrendSection data={trendPoints} weaknessGroups={weaknessGroups} />
     </PageContainer>
   );
+}
+
+async function loadReportPageData(analysisRange: { from: string; to: string }) {
+  const [logs, questionAttempts] = await Promise.all([
+    getSolveSessionLogs(),
+    getQuestionAttempts(analysisRange.from, analysisRange.to, {
+      includeTags: true,
+    }),
+  ]);
+  return { logs, questionAttempts };
 }
 
 type CompletedSolveSessionLog = SolveSessionLog & {

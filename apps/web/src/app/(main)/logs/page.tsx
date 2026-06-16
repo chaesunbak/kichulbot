@@ -1,9 +1,8 @@
 import { Button } from '@kichulbot/ui/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import { getSolveSessionLogPage } from '@/features/learning/api/server/queries';
 import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
 import { PageContainer } from '@/shared/components/page-container';
@@ -20,15 +19,19 @@ interface LogsPageProps {
 export default async function LogsPage({ searchParams }: LogsPageProps) {
   const params = await searchParams;
   const page = normalizePage(params?.page);
-  const user = await getUser();
   const nextPath = page > 1 ? `/logs?page=${page}` : '/logs';
-  if (!user) redirect(`/login?next=${encodeURIComponent(nextPath)}`);
 
-  const logPage = await getSolveSessionLogPage({
-    status: 'all',
-    page,
-    limit: LOG_PAGE_SIZE,
-  });
+  let logPage: Awaited<ReturnType<typeof getSolveSessionLogPage>>;
+  try {
+    logPage = await getSolveSessionLogPage({
+      status: 'all',
+      page,
+      limit: LOG_PAGE_SIZE,
+    });
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, nextPath);
+    throw error;
+  }
   const hasPrevious = logPage.page > 1;
   const hasNext = logPage.totalPages > logPage.page;
 

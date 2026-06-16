@@ -1,9 +1,13 @@
 import { notFound } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
+import { getToken } from '@/features/auth/api/server/queries';
+import { isUnauthorizedError } from '@/features/auth/api/server/redirect';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
-import { getPaper, type Paper } from '@/features/papers/api/server/queries';
+import {
+  getPublicPaper,
+  type Paper,
+} from '@/features/papers/api/server/queries';
 import { PaperActions } from '@/features/papers/components/paper-actions';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { PaperViewTracker } from '@/features/papers/components/paper-view-tracker';
@@ -19,11 +23,17 @@ export default async function PaperPage({
   const { id } = await params;
   let paper: Paper;
   try {
-    paper = await getPaper(id);
+    paper = await getPublicPaper(id);
   } catch {
     notFound();
   }
-  const [logs, user] = await Promise.all([getSolveSessionLogs(), getUser()]);
+  const [logs, token] = await Promise.all([
+    getSolveSessionLogs().catch((error) => {
+      if (isUnauthorizedError(error)) return [];
+      throw error;
+    }),
+    getToken(),
+  ]);
 
   return (
     <PageContainer>
@@ -47,7 +57,7 @@ export default async function PaperPage({
             paperId={paper.id}
             questionCount={paper.questionCount}
             initialIsInLibrary={paper.isInLibrary}
-            isAuthenticated={!!user}
+            isAuthenticated={!!token}
           />
         </div>
       </div>

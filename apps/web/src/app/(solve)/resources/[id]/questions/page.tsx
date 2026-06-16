@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
-import { getUser } from '@/features/auth/api/server/queries';
-import { getPaperQuestions } from '@/features/papers/api/server/queries';
+import { getToken } from '@/features/auth/api/server/queries';
+import { getPublicPaperQuestions } from '@/features/papers/api/server/queries';
 import { PaperQuestionViewer } from '@/features/papers/components/paper-question-viewer';
 
 export default async function PaperQuestionsPage({
@@ -14,14 +14,14 @@ export default async function PaperQuestionsPage({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const questionNumber = Number(query.question ?? 1);
 
-  let data: Awaited<ReturnType<typeof getPaperQuestions>>;
+  let data: Awaited<ReturnType<typeof getPublicPaperQuestions>>;
   try {
-    data = await getPaperQuestions(id);
+    data = await getPublicPaperQuestions(id);
   } catch {
     notFound();
   }
 
-  const user = await getUser();
+  const token = await getToken();
 
   return (
     <PaperQuestionViewer
@@ -30,7 +30,7 @@ export default async function PaperQuestionsPage({
       initialQuestionNumber={
         Number.isFinite(questionNumber) ? questionNumber : 1
       }
-      isAuthenticated={!!user}
+      isAuthenticated={!!token}
     />
   );
 }

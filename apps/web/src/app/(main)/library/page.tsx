@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation';
-
-import { getUser } from '@/features/auth/api/server/queries';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
 import {
   getBookmarkLists,
   getLibrary,
@@ -10,17 +8,26 @@ import { LibraryManager } from '@/features/library/components/library-manager';
 import { PageContainer } from '@/shared/components/page-container';
 
 export default async function LibraryPage() {
-  const [user, library, bookmarkLists] = await Promise.all([
-    getUser(),
-    getLibrary(),
-    getBookmarkLists(),
-  ]);
-  if (!user) redirect('/login?next=/library');
+  let data: Awaited<ReturnType<typeof loadLibraryPageData>>;
+  try {
+    data = await loadLibraryPageData();
+  } catch (error) {
+    redirectToLoginIfUnauthorized(error, '/library');
+    throw error;
+  }
 
   return (
     <PageContainer>
-      <LibraryManager initialLibrary={library} />
-      <BookmarkListManager initialBookmarkLists={bookmarkLists} />
+      <LibraryManager initialLibrary={data.library} />
+      <BookmarkListManager initialBookmarkLists={data.bookmarkLists} />
     </PageContainer>
   );
+}
+
+async function loadLibraryPageData() {
+  const [library, bookmarkLists] = await Promise.all([
+    getLibrary(),
+    getBookmarkLists(),
+  ]);
+  return { library, bookmarkLists };
 }

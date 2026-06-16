@@ -82,10 +82,112 @@ jobs:
     runs-on: ubuntu-24.04
     needs: build-and-publish-container-images
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
 
     steps:
       - name: 소스 체크아웃
         uses: actions/checkout@v4
+
+      - name: 프로덕션 환경 파일 생성
+        env:
+          GHCR_OWNER: ${{ vars.GHCR_OWNER || github.repository_owner }}
+          IMAGE_TAG: ${{ vars.IMAGE_TAG || 'latest' }}
+          WEB_DOMAIN: ${{ vars.WEB_DOMAIN }}
+          ADMIN_DOMAIN: ${{ vars.ADMIN_DOMAIN }}
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+          API_INTERNAL_BASE_URL: ${{ vars.API_INTERNAL_BASE_URL || 'http://api:4000/api' }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: ${{ vars.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com' }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER || 'kichulbot' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB || 'kichulbot' }}
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          ADMIN_NICKNAME: ${{ vars.ADMIN_NICKNAME }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN || '7d' }}
+          KAKAO_CLIENT_ID: ${{ vars.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ vars.RESEND_FROM_EMAIL }}
+          STORAGE_DRIVER: ${{ vars.STORAGE_DRIVER || 'local' }}
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ vars.R2_PUBLIC_BASE_URL }}
+          PAPER_IMPORT_SERVICE_TOKEN: ${{ secrets.PAPER_IMPORT_SERVICE_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          umask 077
+          python3 <<'PY'
+          import os
+          import sys
+
+          required_envs = [
+              "GHCR_OWNER",
+              "WEB_DOMAIN",
+              "ADMIN_DOMAIN",
+              "API_DOMAIN",
+              "NEXT_PUBLIC_SITE_URL",
+              "POSTGRES_PASSWORD",
+              "ADMIN_EMAIL",
+              "ADMIN_PASSWORD",
+              "ADMIN_NICKNAME",
+              "JWT_SECRET",
+              "PAPER_IMPORT_SERVICE_TOKEN",
+          ]
+
+          env_names = [
+              "GHCR_OWNER",
+              "IMAGE_TAG",
+              "WEB_DOMAIN",
+              "ADMIN_DOMAIN",
+              "API_DOMAIN",
+              "API_INTERNAL_BASE_URL",
+              "NEXT_PUBLIC_SITE_URL",
+              "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
+              "NEXT_PUBLIC_POSTHOG_HOST",
+              "POSTGRES_USER",
+              "POSTGRES_PASSWORD",
+              "POSTGRES_DB",
+              "ADMIN_EMAIL",
+              "ADMIN_PASSWORD",
+              "ADMIN_NICKNAME",
+              "JWT_SECRET",
+              "JWT_EXPIRES_IN",
+              "KAKAO_CLIENT_ID",
+              "KAKAO_CLIENT_SECRET",
+              "RESEND_API_KEY",
+              "RESEND_FROM_EMAIL",
+              "STORAGE_DRIVER",
+              "R2_ENDPOINT",
+              "R2_ACCESS_KEY_ID",
+              "R2_SECRET_ACCESS_KEY",
+              "R2_BUCKET",
+              "R2_PUBLIC_BASE_URL",
+              "PAPER_IMPORT_SERVICE_TOKEN",
+          ]
+
+          missing_envs = [name for name in required_envs if not os.environ.get(name)]
+          if missing_envs:
+              for name in missing_envs:
+                  print(f"프로덕션 환경변수가 비어 있습니다: {name}", file=sys.stderr)
+              sys.exit(1)
+
+          with open("deploy/.env", "w", encoding="utf-8") as env_file:
+              for name in env_names:
+                  value = os.environ.get(name, "")
+                  if "\n" in value or "\r" in value:
+                      print(f"프로덕션 환경변수는 줄바꿈을 포함할 수 없습니다: {name}", file=sys.stderr)
+                      sys.exit(1)
+
+                  escaped_value = value.replace("\\", "\\\\").replace("'", "\\'")
+                  env_file.write(f"{name}='{escaped_value}'\n")
+          PY
 
       - name: 배포 파일 업로드
         uses: appleboy/scp-action@v0.1.7
@@ -94,7 +196,7 @@ jobs:
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           port: ${{ secrets.ORACLE_PORT || '22' }}
-          source: deploy/docker-compose.prod.yml,deploy/Caddyfile
+          source: deploy/docker-compose.prod.yml,deploy/Caddyfile,deploy/.env
           target: ${{ vars.ORACLE_DEPLOY_PATH || '/opt/kichulbot' }}
           strip_components: 1
 
@@ -122,11 +224,14 @@ jobs:
               exit 1
             fi
 
+            chmod 600 .env
+
             if [ -n "${GHCR_TOKEN:-}" ]; then
               printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
             fi
 
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml run --rm api pnpm prisma:migrate:deploy
+            docker compose -f docker-compose.prod.yml run --rm api pnpm seed:prod
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
             docker compose -f docker-compose.prod.yml ps

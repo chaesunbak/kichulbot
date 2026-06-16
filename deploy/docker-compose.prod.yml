@@ -59,6 +59,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_URL: redis://redis:6379
       WEB_ORIGINS: https://${WEB_DOMAIN},https://${ADMIN_DOMAIN}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_NICKNAME: ${ADMIN_NICKNAME}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
@@ -68,6 +71,7 @@ services:
       AUTH_PASSWORD_RESET_URL: https://${WEB_DOMAIN}/password-reset
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+      PAPER_IMPORT_SERVICE_TOKEN: ${PAPER_IMPORT_SERVICE_TOKEN}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       STORAGE_PUBLIC_BASE_URL: https://${API_DOMAIN}/uploads
       STORAGE_LOCAL_DIR: /app/apps/api/uploads
@@ -96,6 +100,8 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_URL: redis://redis:6379
       PAPER_IMPORT_STORAGE_DIR: /app/apps/api/uploads
+      PAPER_IMPORT_API_BASE_URL: http://api:4000/api
+      PAPER_IMPORT_SERVICE_TOKEN: ${PAPER_IMPORT_SERVICE_TOKEN}
       STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       STORAGE_PUBLIC_BASE_URL: https://${API_DOMAIN}/uploads
       R2_ENDPOINT: ${R2_ENDPOINT:-}

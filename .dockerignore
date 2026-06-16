@@ -23,5 +23,8 @@ coverage
 !.env.example
 
 apps/api/src/infrastructure/generated/prisma
-tools/question-extractor/input
-tools/question-extractor/output
+
+apps/extractor/question-extractor/.venv
+apps/extractor/question-extractor/input
+apps/extractor/question-extractor/output
+apps/extractor/question-extractor/__pycache__

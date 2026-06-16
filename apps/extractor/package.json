@@ -6,7 +6,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/main.js",
-    "dev": "tsx watch src/main.ts",
+    "dev": "docker compose -f ../../docker-compose.dev.yml -f docker-compose.dev.yml up --build extractor",
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {

@@ -41,6 +41,7 @@ describe('PaperImportDraftsController', () => {
   beforeEach(() => {
     paperImportDraftsService = {
       createDraft: jest.fn(),
+      publishDraftJob: jest.fn(),
     } as unknown as jest.Mocked<PaperImportDraftsService>;
 
     controller = new PaperImportDraftsController(paperImportDraftsService);
@@ -93,5 +94,17 @@ describe('PaperImportDraftsController', () => {
     ).toThrow('답지 PDF는 1개만 업로드할 수 있습니다.');
 
     expect(paperImportDraftsService.createDraft).not.toHaveBeenCalled();
+  });
+
+  it('PDF 추출 초안 발행을 서비스에 위임한다', async () => {
+    paperImportDraftsService.publishDraftJob.mockResolvedValue({
+      paper: { id: 'paper_1' },
+    } as never);
+
+    await controller.publishDraftJob('job_1');
+
+    expect(paperImportDraftsService.publishDraftJob).toHaveBeenCalledWith(
+      'job_1',
+    );
   });
 });

@@ -26,6 +26,8 @@ import {
 import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { ServiceAccountScopes } from '../auth/decorators/service-account-scopes.decorator';
+import { AdminOrServiceAccountGuard } from '../auth/guards/admin-or-service-account.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { PaperImportDraftsService } from './paper-import-drafts.service';
@@ -36,8 +38,6 @@ import { PaperImportDraftsService } from './paper-import-drafts.service';
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.ADMIN)
 @Controller('paper-import-drafts')
 export class PaperImportDraftsController {
   constructor(
@@ -45,6 +45,8 @@ export class PaperImportDraftsController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @UseInterceptors(AnyFilesInterceptor(PDF_UPLOAD_OPTIONS))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '문제 PDF와 답지 PDF에서 문항 초안 추출' })
@@ -62,15 +64,27 @@ export class PaperImportDraftsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'PDF 가져오기 작업 목록 조회' })
   listDraftJobs() {
     return this.paperImportDraftsService.listDraftJobs();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'PDF 추출 작업 상태 조회' })
   getDraftJob(@Param('id') id: string) {
     return this.paperImportDraftsService.getDraftJob(id);
+  }
+
+  @Post(':id/publish')
+  @UseGuards(AdminOrServiceAccountGuard)
+  @ServiceAccountScopes('paper-import:publish')
+  @ApiOperation({ summary: 'PDF 추출 초안으로 문제지 생성' })
+  publishDraftJob(@Param('id') id: string) {
+    return this.paperImportDraftsService.publishDraftJob(id);
   }
 
   private assertAllowedFields(files: UploadedMemoryFile[]) {

@@ -12,5 +12,6 @@ import { PapersService } from './papers.service';
   imports: [AuthModule, ExamsModule, QuestionsModule, StorageModule],
   controllers: [PapersController, PublicPapersController],
   providers: [PapersService, PapersRepository],
+  exports: [PapersService],
 })
 export class PapersModule {}

@@ -99,6 +99,17 @@ export async function createPaperImportDraft(
   );
 }
 
+export async function publishPaperImportDraft(token: string, id: string) {
+  return apiRequest(
+    `/paper-import-drafts/${id}/publish`,
+    CreatePaperResponseSchema.parse,
+    {
+      method: 'POST',
+      token,
+    },
+  );
+}
+
 export async function createPaperWithQuestions(
   token: string,
   payload: CreatePaperWithQuestionsRequest,

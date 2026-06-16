@@ -42,6 +42,13 @@ type TagGroupWithCount = TagGroup & {
   _count?: { tags: number };
 };
 
+type RecommendedTagTextInput = {
+  text?: string | null;
+  promptText?: string | null;
+  passageText?: string | null;
+  choiceTexts?: string[] | null;
+};
+
 @Injectable()
 export class TagsService {
   constructor(private readonly tagsRepository: TagsRepository) {}
@@ -216,6 +223,46 @@ export class TagsService {
     }
   }
 
+  async matchRecommendedTags(examId: string, input: RecommendedTagTextInput) {
+    const tags = await this.tagsRepository.findManyWithKeywords(examId);
+    return this.matchRecommendedTagsWithCandidates(tags, input);
+  }
+
+  async matchRecommendedTagsBatch(
+    examId: string,
+    inputs: RecommendedTagTextInput[],
+  ) {
+    const tags = await this.tagsRepository.findManyWithKeywords(examId);
+    return inputs.map((input) =>
+      this.matchRecommendedTagsWithCandidates(tags, input),
+    );
+  }
+
+  private matchRecommendedTagsWithCandidates(
+    tags: Array<{ id: string; keywords: string[] }>,
+    input: RecommendedTagTextInput,
+  ) {
+    const haystack = this.normalizeForKeywordMatch([
+      input.text,
+      input.promptText,
+      input.passageText,
+      ...(input.choiceTexts ?? []),
+    ]);
+    if (!haystack) return [];
+
+    return tags
+      .map((tag) => ({
+        tagId: tag.id,
+        keywords: tag.keywords.filter((keyword) => {
+          const normalizedKeyword = this.normalizeForKeywordMatch([keyword]);
+          return (
+            Boolean(normalizedKeyword) && haystack.includes(normalizedKeyword)
+          );
+        }),
+      }))
+      .filter((match) => match.keywords.length > 0);
+  }
+
   private async assertExamExists(examId: string) {
     const exists = await this.tagsRepository.existsExamById(examId);
     if (!exists) {
@@ -296,5 +343,9 @@ export class TagsService {
         (keywords ?? []).map((keyword) => keyword.trim()).filter(Boolean),
       ),
     ];
+  }
+
+  private normalizeForKeywordMatch(values: Array<string | null | undefined>) {
+    return values.join('\n').toLowerCase().replace(/\s+/g, '');
   }
 }

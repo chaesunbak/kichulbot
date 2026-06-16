@@ -8,6 +8,7 @@ import {
   createPaperImportDraft,
   createPaperWithQuestions,
   deletePaper,
+  publishPaperImportDraft,
   updatePaperMetadata,
   updatePaperPublished,
 } from '../api';
@@ -120,6 +121,22 @@ export function useCreatePaperWithQuestionsMutation({
       queryClient.invalidateQueries({ queryKey: paperKeys.lists() });
       toast.success('PDF 초안으로 문제지를 생성했습니다.');
       onSuccess(paper.id);
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : '문제지 생성에 실패했습니다.',
+      ),
+  });
+}
+
+export function usePublishPaperImportDraftMutation(token: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => publishPaperImportDraft(token, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: paperKeys.importJobs() });
+      queryClient.invalidateQueries({ queryKey: paperKeys.lists() });
+      toast.success('PDF 초안으로 문제지를 생성했습니다.');
     },
     onError: (error) =>
       toast.error(

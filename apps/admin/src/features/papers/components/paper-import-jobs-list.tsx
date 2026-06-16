@@ -1,6 +1,6 @@
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Button } from '@kichulbot/ui/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { FilePlus2, Loader2, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { formatJobTime, paperImportJobStatusLabels } from '../lib/import-job';
@@ -10,10 +10,14 @@ export function PaperImportJobsList({
   jobs,
   isFetching,
   onRefresh,
+  onPublish,
+  publishingJobId,
 }: {
   jobs: PaperImportJob[];
   isFetching: boolean;
   onRefresh: () => void;
+  onPublish: (id: string) => void;
+  publishingJobId?: string;
 }) {
   return (
     <div className="rounded-md border">
@@ -43,14 +47,29 @@ export function PaperImportJobsList({
             아직 PDF 가져오기 작업이 없습니다.
           </div>
         ) : (
-          jobs.map((job) => <PaperImportJobRow key={job.id} job={job} />)
+          jobs.map((job) => (
+            <PaperImportJobRow
+              key={job.id}
+              job={job}
+              isPublishing={publishingJobId === job.id}
+              onPublish={onPublish}
+            />
+          ))
         )}
       </div>
     </div>
   );
 }
 
-function PaperImportJobRow({ job }: { job: PaperImportJob }) {
+function PaperImportJobRow({
+  job,
+  isPublishing,
+  onPublish,
+}: {
+  job: PaperImportJob;
+  isPublishing: boolean;
+  onPublish: (id: string) => void;
+}) {
   return (
     <div className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_auto]">
       <div className="min-w-0">
@@ -76,6 +95,22 @@ function PaperImportJobRow({ job }: { job: PaperImportJob }) {
       {job.status === 'COMPLETED' && job.paperId ? (
         <Button asChild variant="outline" size="sm">
           <Link to={`/papers/${job.paperId}`}>문제지 열기</Link>
+        </Button>
+      ) : null}
+      {job.status === 'COMPLETED' && !job.paperId ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isPublishing}
+          onClick={() => onPublish(job.id)}
+        >
+          {isPublishing ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <FilePlus2 className="size-4" />
+          )}
+          문제지 생성
         </Button>
       ) : null}
     </div>

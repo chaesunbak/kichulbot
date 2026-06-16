@@ -64,6 +64,20 @@ export class TagsRepository {
     });
   }
 
+  findManyWithKeywords(examId: string) {
+    return this.db.tag.findMany({
+      where: {
+        examId,
+        NOT: { keywords: { isEmpty: true } },
+      },
+      select: {
+        id: true,
+        keywords: true,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    });
+  }
+
   findManyTagGroups(examId?: string) {
     return this.db.tagGroup.findMany({
       where: {

@@ -45,6 +45,12 @@ export const papersRoutes = {
     request: null,
     response: PaperImportJobResponseSchema,
   },
+  publishPaperImportDraft: {
+    method: 'POST',
+    path: '/paper-import-drafts/:id/publish',
+    request: null,
+    response: CreatePaperResponseSchema,
+  },
   getPaper: {
     method: 'GET',
     path: '/exam-papers/:id',

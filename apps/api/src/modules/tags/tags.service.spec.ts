@@ -14,6 +14,7 @@ describe('TagsService', () => {
   beforeEach(() => {
     repository = {
       findManyAvailable: jest.fn(),
+      findManyWithKeywords: jest.fn(),
       findMany: jest.fn(),
       findById: jest.fn(),
       countAssignableByIds: jest.fn(),
@@ -150,6 +151,41 @@ describe('TagsService', () => {
     await expect(service.deleteTagGroup('tag_group_1')).rejects.toThrow(
       '태그가 연결된 그룹은 삭제할 수 없습니다.',
     );
+  });
+
+  it('문항 텍스트에서 시험 태그 키워드를 찾아 추천 태그를 만든다', async () => {
+    repository.findManyWithKeywords.mockResolvedValue([
+      { id: 'tag_1', keywords: ['고려', '광종'] },
+      { id: 'tag_2', keywords: ['조선'] },
+      { id: 'tag_3', keywords: ['', '   '] },
+    ]);
+
+    const matches = await service.matchRecommendedTags('exam_1', {
+      promptText: '다음 왕의 업적으로 옳은 것은?',
+      passageText: '노비안검법을 시행한 고려의 왕이다.',
+      choiceTexts: ['① 태조', '② 광종'],
+    });
+
+    expect(repository.findManyWithKeywords).toHaveBeenCalledWith('exam_1');
+    expect(matches).toEqual([{ tagId: 'tag_1', keywords: ['고려', '광종'] }]);
+  });
+
+  it('여러 문항 추천 태그를 계산할 때 태그 후보를 한 번만 조회한다', async () => {
+    repository.findManyWithKeywords.mockResolvedValue([
+      { id: 'tag_1', keywords: ['고려'] },
+      { id: 'tag_2', keywords: ['조선'] },
+    ]);
+
+    const matches = await service.matchRecommendedTagsBatch('exam_1', [
+      { text: '고려 시대의 제도' },
+      { text: '조선 시대의 제도' },
+    ]);
+
+    expect(repository.findManyWithKeywords).toHaveBeenCalledTimes(1);
+    expect(matches).toEqual([
+      [{ tagId: 'tag_1', keywords: ['고려'] }],
+      [{ tagId: 'tag_2', keywords: ['조선'] }],
+    ]);
   });
 });
 

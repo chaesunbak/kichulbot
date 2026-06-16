@@ -7,6 +7,9 @@ import {
   CreatePaperImportJobRequestSchema,
   CreatePaperImportJobResponse,
   CreatePaperImportJobResponseSchema,
+  CreatePaperResponse,
+  CreatePaperResponseSchema,
+  CreatePaperWithQuestionsRequest,
   ListPaperImportJobsResponse,
   ListPaperImportJobsResponseSchema,
   PaperImportDraftResponse,
@@ -25,7 +28,10 @@ import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
+import { PapersService } from '../papers/papers.service';
+import { TagsService } from '../tags/tags.service';
 
 const DEFAULT_LAYOUT = 'korean-history';
 const DEFAULT_VARIANT = 'odd';
@@ -45,6 +51,7 @@ type PaperImportJobRow = {
   answerPdfName: string;
   paperId: string | null;
   paperInput: unknown;
+  resultJsonPath: string | null;
   errorMessage: string | null;
   createdAt: Date;
   startedAt: Date | null;
@@ -60,6 +67,8 @@ export class PaperImportDraftsService implements OnModuleDestroy {
   constructor(
     private readonly database: DatabaseService,
     configService: ConfigService,
+    private readonly papersService: PapersService,
+    private readonly tagsService: TagsService,
   ) {
     const storageRoot =
       configService.get<string>('storage.local.dir') ??
@@ -175,14 +184,7 @@ export class PaperImportDraftsService implements OnModuleDestroy {
 
     const result =
       job.status === 'COMPLETED' && job.resultJsonPath
-        ? PaperImportDraftResponseSchema.parse(
-            JSON.parse(
-              await readFile(
-                this.resolveStoragePath(job.resultJsonPath),
-                'utf8',
-              ),
-            ) as unknown,
-          )
+        ? await this.readDraftResult(job)
         : null;
 
     return PaperImportJobResponseSchema.parse({
@@ -190,8 +192,84 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     });
   }
 
+  async publishDraftJob(id: string): Promise<CreatePaperResponse> {
+    const job = await this.database.paperImportJob.findUnique({
+      where: { id },
+    });
+    if (!job) {
+      throw new NotFoundException('PDF 추출 작업을 찾을 수 없습니다.');
+    }
+    if (job.paperId) {
+      return CreatePaperResponseSchema.parse(
+        await this.papersService.getPaper(job.paperId, UserRole.ADMIN),
+      );
+    }
+    if (job.status !== 'COMPLETED' || !job.resultJsonPath) {
+      throw new BadRequestException(
+        '완료된 PDF 추출 작업만 문제지로 생성할 수 있습니다.',
+      );
+    }
+
+    const paperInput = CreatePaperImportJobRequestSchema.parse(job.paperInput);
+    const result = await this.readDraftResult(job);
+    const payload = this.toCreatePaperWithQuestionsRequest(paperInput, result);
+    const images = this.toUploadedImageFiles(result);
+    const response = await this.papersService.createPaperWithQuestions(
+      JSON.stringify(payload),
+      images,
+      UserRole.ADMIN,
+    );
+
+    await this.database.paperImportJob.update({
+      where: { id },
+      data: {
+        paperId: response.paper.id,
+        updatedAt: new Date(),
+      },
+    });
+
+    return response;
+  }
+
   private resolveStoragePath(relativePath: string) {
     return join(this.importRootDir, '..', relativePath);
+  }
+
+  private async readDraftResult(job: {
+    paperInput: unknown;
+    resultJsonPath: string | null;
+  }) {
+    if (!job.resultJsonPath) {
+      throw new BadRequestException('PDF 추출 결과를 찾을 수 없습니다.');
+    }
+
+    const paperInput = CreatePaperImportJobRequestSchema.parse(job.paperInput);
+    const result = PaperImportDraftResponseSchema.parse(
+      JSON.parse(
+        await readFile(this.resolveStoragePath(job.resultJsonPath), 'utf8'),
+      ) as unknown,
+    );
+    const matches = await this.tagsService.matchRecommendedTagsBatch(
+      paperInput.examId,
+      result.questions.map((question) => ({
+        text: question.rawText ?? question.textLayer?.text,
+        promptText: question.promptText ?? question.textLayer?.promptText,
+        passageText: question.passageText ?? question.textLayer?.passageText,
+        choiceTexts:
+          question.choiceTexts.length > 0
+            ? question.choiceTexts
+            : question.textLayer?.choiceTexts,
+      })),
+    );
+
+    return PaperImportDraftResponseSchema.parse({
+      ...result,
+      questions: result.questions.map((question, index) => ({
+        ...question,
+        recommendedTagIds: matches[index]?.map((match) => match.tagId) ?? [],
+        recommendedTagMatches: matches[index] ?? [],
+      })),
+    });
   }
 
   private parsePaperInput(
@@ -229,6 +307,58 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       quality: paperInput.quality ?? 82,
       examId: paperInput.examId,
     };
+  }
+
+  private toCreatePaperWithQuestionsRequest(
+    paperInput: CreatePaperImportJobRequest,
+    result: PaperImportDraftResponse,
+  ): CreatePaperWithQuestionsRequest {
+    return {
+      paper: {
+        title: paperInput.title,
+        year: paperInput.year,
+        month: paperInput.month,
+        grade: paperInput.grade,
+        round: paperInput.round,
+        examId: paperInput.examId,
+        questionCount: paperInput.questionCount,
+        isPublished: paperInput.isPublished,
+      },
+      questions: result.questions.map((question) => ({
+        number: question.number,
+        type: question.type,
+        choiceCount: question.choiceCount,
+        gradingPolicy: question.gradingPolicy,
+        answerChoice: question.answerChoice,
+        answerText: question.answerText,
+        explanation: question.explanation,
+        rawText: question.rawText,
+        promptText: question.promptText,
+        passageText: question.passageText,
+        choiceTexts: question.choiceTexts,
+        points: question.points,
+        recommendedTimeSeconds: question.recommendedTimeSeconds,
+        recommendedTagIds: question.recommendedTagIds,
+        recommendedTagMatches: question.recommendedTagMatches,
+        tagIds: question.tagIds,
+        imageFileName: question.image.filename,
+      })),
+    };
+  }
+
+  private toUploadedImageFiles(
+    result: PaperImportDraftResponse,
+  ): UploadedMemoryFile[] {
+    return result.questions.map((question) => {
+      const buffer = Buffer.from(question.image.base64, 'base64');
+      return {
+        fieldname: 'images',
+        originalname: question.image.filename,
+        mimetype: question.image.mimeType,
+        size: buffer.byteLength,
+        buffer,
+      };
+    });
   }
 
   private toJobResponse(

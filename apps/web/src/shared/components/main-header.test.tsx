@@ -23,6 +23,8 @@ describe('MainHeader', () => {
   });
 
   it('로그인한 사용자는 마이페이지 링크를 보여준다', () => {
+    pathname.value = '/my';
+
     const html = renderToStaticMarkup(<MainHeader isAuthenticated />);
 
     expect(html).toContain('href="/my"');

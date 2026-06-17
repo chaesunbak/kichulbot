@@ -48,6 +48,7 @@ export function PaperCover({
   className?: string;
 }) {
   const palette = coverPalettes[hash(paper.id) % coverPalettes.length];
+  const titleLines = getPaperCoverTitleLines(paper.title);
 
   return (
     <div
@@ -64,20 +65,30 @@ export function PaperCover({
       <div className="relative flex h-full flex-col">
         <div
           className="
-            flex flex-1 flex-col items-center justify-center px-3 pt-5
+            flex flex-1 flex-col items-center justify-center px-2 pt-5
             text-center
           "
         >
           <p
             className={cn(
               `
-                mt-1 max-w-full text-[clamp(0.95rem,14cqw,2rem)] leading-[1.15]
+                mt-1 max-w-full text-[clamp(0.5rem,8.5cqw,1.5rem)] leading-[1.15]
                 font-black text-balance wrap-break-word
               `,
               palette.ink,
             )}
           >
-            {paper.title}
+            {titleLines.map((line, index) => (
+              <span
+                key={`${line}-${index}`}
+                className={cn(
+                  'block',
+                  titleLines.length > 1 && 'whitespace-nowrap',
+                )}
+              >
+                {line}
+              </span>
+            ))}
           </p>
         </div>
         <div
@@ -95,6 +106,17 @@ export function PaperCover({
       </div>
     </div>
   );
+}
+
+export function getPaperCoverTitleLines(title: string) {
+  const normalizedTitle = title.trim().replace(/\s+/g, ' ');
+  const titleMatch = /^(제\d+회)\s+(.+)\s+(심화|기본)$/u.exec(normalizedTitle);
+
+  if (!titleMatch) {
+    return [title];
+  }
+
+  return [titleMatch[1], titleMatch[2], titleMatch[3]];
 }
 
 function hash(value: string) {

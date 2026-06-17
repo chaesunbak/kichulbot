@@ -36,37 +36,78 @@ export function PaperGrid({
         lg:grid-cols-4
       "
     >
-      {papers.map((paper, index) => (
-        <li key={paper.id} className="min-w-0">
-          <Link
-            href={`/resources/${paper.id}`}
-            className="
-              group block rounded-lg p-2 transition
-              hover:bg-muted
-            "
-            aria-label={`${paper.title} 자세히 보기`}
-            onClick={() => {
-              posthog.capture('paper_clicked', {
-                paper_id: paper.id,
-                exam_id: paper.exam.id,
-                source,
-                index,
-                result_count: resultCount,
-              });
-            }}
-          >
-            <PaperCover paper={paper} />
-            <div className="mt-3 text-center">
-              <p className="text-sm font-medium text-foreground">
-                {paper.title}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {paper.exam.name} · {formatPaperSession(paper)}
-              </p>
-            </div>
-          </Link>
-        </li>
-      ))}
+      {papers.map((paper, index) => {
+        const labels = getPaperGridLabels(paper);
+
+        return (
+          <li key={paper.id} className="min-w-0">
+            <Link
+              href={`/resources/${paper.id}`}
+              className="
+                group block rounded-lg p-2 transition
+                hover:bg-muted
+              "
+              aria-label={`${paper.title} 자세히 보기`}
+              onClick={() => {
+                posthog.capture('paper_clicked', {
+                  paper_id: paper.id,
+                  exam_id: paper.exam.id,
+                  source,
+                  index,
+                  result_count: resultCount,
+                });
+              }}
+            >
+              <PaperCover paper={paper} />
+              <div className="mt-3 text-center">
+                <p
+                  className="
+                    text-sm font-medium text-balance text-foreground
+                    sm:text-sm
+                  "
+                >
+                  <span className="sm:hidden">{labels.compactTitle}</span>
+                  <span className="hidden sm:inline">{labels.title}</span>
+                </p>
+                <p
+                  className="
+                    mt-1 truncate text-xs text-muted-foreground
+                    sm:text-xs
+                  "
+                >
+                  <span className="sm:hidden">{labels.compactMeta}</span>
+                  <span className="hidden sm:inline">{labels.meta}</span>
+                </p>
+              </div>
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
+}
+
+export function getPaperGridLabels(paper: Paper) {
+  const sessionLabel = formatPaperSession(paper);
+  const titleMatch = /^(제\d+회)\s+(.+)\s+(심화|기본)$/u.exec(
+    paper.title.trim().replace(/\s+/g, ' '),
+  );
+
+  if (!titleMatch) {
+    return {
+      title: paper.title,
+      compactTitle: paper.title,
+      meta: `${paper.exam.name} · ${sessionLabel}`,
+      compactMeta: paper.exam.name,
+    };
+  }
+
+  const [, session, examName, level] = titleMatch;
+
+  return {
+    title: paper.title,
+    compactTitle: `${session} ${level}`,
+    meta: `${paper.exam.name} · ${sessionLabel}`,
+    compactMeta: examName,
+  };
 }

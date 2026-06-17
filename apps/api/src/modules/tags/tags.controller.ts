@@ -20,11 +20,9 @@ import {
 } from '@nestjs/swagger';
 
 import { UserRole } from '../../infrastructure/database/prisma-client';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { RequestUser } from '../auth/types';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { CreateTagGroupDto } from './dto/create-tag-group.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
@@ -37,22 +35,21 @@ import { TagsService } from './tags.service';
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('tags')
+@Roles(UserRole.ADMIN)
+@Controller('admin/tags')
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @Get()
-  @ApiOperation({ summary: '태그 목록 조회' })
+  @ApiOperation({ summary: '관리자 태그 목록 조회' })
   @ApiOkResponse({ description: '태그 목록을 반환합니다.' })
-  listTags(@CurrentUser() user: RequestUser, @Query('examId') examId?: string) {
-    if (user.role === UserRole.ADMIN && !examId) {
-      return this.tagsService.listAdminTags();
-    }
-    return this.tagsService.listTags(user.role, examId);
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  listTags(@Query('examId') examId?: string) {
+    if (!examId) return this.tagsService.listAdminTags();
+    return this.tagsService.listTags(UserRole.ADMIN, examId);
   }
 
   @Post()
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '태그 생성' })
   @ApiCreatedResponse({ description: '태그를 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
@@ -61,7 +58,6 @@ export class TagsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '태그 수정' })
   @ApiOkResponse({ description: '태그를 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
@@ -70,7 +66,6 @@ export class TagsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '태그 삭제' })
   @ApiOkResponse({
     description: '문항에 연결되지 않은 태그를 삭제합니다.',
@@ -88,7 +83,7 @@ export class TagsController {
 })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
-@Controller('tag-groups')
+@Controller('admin/tag-groups')
 export class TagGroupsController {
   constructor(private readonly tagsService: TagsService) {}
 

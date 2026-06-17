@@ -128,24 +128,33 @@ export async function saveQuestionNote({
   return res.data.note;
 }
 
+type CreateQuestionReportInput = {
+  questionId: string;
+  questionRevisionId: string;
+  category: QuestionReportCategory;
+  content: string;
+};
+
 export async function createQuestionReport({
   questionId,
   questionRevisionId,
   category,
   content,
-  isAuthenticated = true,
-}: {
-  questionId: string;
-  questionRevisionId: string;
-  category: QuestionReportCategory;
-  content: string;
-  isAuthenticated?: boolean;
-}) {
-  const path = isAuthenticated
-    ? `/api/question-reports/${questionId}`
-    : `/api/public/question-reports/${questionId}`;
+}: CreateQuestionReportInput) {
+  await clientApi.post(`/api/me/question-reports/${questionId}`, {
+    questionRevisionId,
+    category,
+    content,
+  });
+}
 
-  await clientApi.post(path, {
+export async function createPublicQuestionReport({
+  questionId,
+  questionRevisionId,
+  category,
+  content,
+}: CreateQuestionReportInput) {
+  await clientApi.post(`/api/public/question-reports/${questionId}`, {
     questionRevisionId,
     category,
     content,

@@ -43,7 +43,7 @@ import { QuestionsService } from './questions.service';
 @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN)
-@Controller('questions')
+@Controller('admin/questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 

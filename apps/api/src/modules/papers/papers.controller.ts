@@ -45,17 +45,20 @@ import { PapersService } from './papers.service';
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('exam-papers')
+@Roles(UserRole.ADMIN)
+@Controller('admin/exam-papers')
 export class PapersController {
   constructor(private readonly papersService: PapersService) {}
 
   @Get()
   @ApiOperation({
-    summary: '문제지 목록 조회',
-    description:
-      '일반 사용자는 공개된 문제지만, 관리자는 모든 문제지를 조회합니다.',
+    summary: '관리자 문제지 목록 조회',
+    description: '관리자는 모든 문제지를 조회합니다.',
   })
   @ApiOkResponse({ description: '문제지 목록을 반환합니다.' })
+  @ApiForbiddenResponse({
+    description: '관리자만 문제지를 조회할 수 있습니다.',
+  })
   listPapers(
     @CurrentUser() user: RequestUser,
     @Query('examId') examId?: string,
@@ -70,7 +73,6 @@ export class PapersController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN)
   @UseInterceptors(FilesInterceptor('images', 100, IMAGE_UPLOAD_OPTIONS))
   @ApiConsumes('application/json', 'multipart/form-data')
   @ApiBody({ type: CreatePaperDto })
@@ -106,9 +108,8 @@ export class PapersController {
 
   @Get(':id')
   @ApiOperation({
-    summary: '문제지 상세 조회',
-    description:
-      '일반 사용자는 공개된 문제지만, 관리자는 비공개 문제지도 조회합니다.',
+    summary: '관리자 문제지 상세 조회',
+    description: '관리자는 비공개 문제지도 조회합니다.',
   })
   @ApiOkResponse({ description: '문제지 상세를 반환합니다.' })
   getPaper(@CurrentUser() user: RequestUser, @Param('id') id: string) {
@@ -116,7 +117,6 @@ export class PapersController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '문제지 공개 상태 변경' })
   @ApiOkResponse({ description: '문제지 공개 상태를 변경합니다.' })
   updatePaper(@Param('id') id: string, @Body() dto: UpdatePaperDto) {
@@ -124,7 +124,6 @@ export class PapersController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '문제지 삭제' })
   @ApiOkResponse({ description: '문제지를 삭제합니다.' })
   deletePaper(@Param('id') id: string) {

@@ -55,7 +55,7 @@ describe('/api/[...path]', () => {
 
   it('로그인 사용자의 문항 신고 요청을 JSON BFF로 전달한다', async () => {
     const request = new Request(
-      'https://kichulbot.test/api/question-reports/question_1',
+      'https://kichulbot.test/api/me/question-reports/question_1',
       {
         method: 'POST',
         body: JSON.stringify({
@@ -68,14 +68,14 @@ describe('/api/[...path]', () => {
 
     const response = await POST(request, {
       params: Promise.resolve({
-        path: ['question-reports', 'question_1'],
+        path: ['me', 'question-reports', 'question_1'],
       }),
     });
 
     expect(response.status).toBe(200);
     expect(mocks.forwardJsonBffRequest).toHaveBeenCalledWith(
       request,
-      '/question-reports/question_1',
+      '/me/question-reports/question_1',
       'access-token',
     );
   });

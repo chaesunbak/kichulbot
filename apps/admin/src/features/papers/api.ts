@@ -15,14 +15,14 @@ import {
 } from './schemas';
 
 export async function fetchPapers(token: string) {
-  return apiRequest('/exam-papers', adminListPapersResponseSchema.parse, {
+  return apiRequest('/admin/exam-papers', adminListPapersResponseSchema.parse, {
     token,
   });
 }
 
 export async function fetchPaper(token: string, paperId: string) {
   return apiRequest(
-    `/exam-papers/${paperId}`,
+    `/admin/exam-papers/${paperId}`,
     adminGetPaperResponseSchema.parse,
     { token },
   );
@@ -30,7 +30,7 @@ export async function fetchPaper(token: string, paperId: string) {
 
 export async function fetchPaperImportDraftJobs(token: string) {
   return apiRequest(
-    '/paper-import-drafts',
+    '/admin/paper-import-drafts',
     ListPaperImportJobsResponseSchema.parse,
     { token },
   );
@@ -48,7 +48,7 @@ export interface CreatePaperInput {
 }
 
 export async function createPaper(token: string, input: CreatePaperInput) {
-  return apiRequest('/exam-papers', CreatePaperResponseSchema.parse, {
+  return apiRequest('/admin/exam-papers', CreatePaperResponseSchema.parse, {
     method: 'POST',
     token,
     body: input,
@@ -89,7 +89,7 @@ export async function createPaperImportDraft(
   formData.append('variant', input.variant);
 
   return apiRequest(
-    '/paper-import-drafts',
+    '/admin/paper-import-drafts',
     CreatePaperImportJobResponseSchema.parse,
     {
       method: 'POST',
@@ -101,7 +101,7 @@ export async function createPaperImportDraft(
 
 export async function createPaperFromImportJob(token: string, id: string) {
   return apiRequest(
-    `/paper-import-jobs/${id}/paper`,
+    `/admin/paper-import-jobs/${id}/paper`,
     CreatePaperResponseSchema.parse,
     {
       method: 'POST',
@@ -119,7 +119,7 @@ export async function createPaperWithQuestions(
   formData.append('payload', JSON.stringify(payload));
   images.forEach((image) => formData.append('images', image, image.name));
 
-  return apiRequest('/exam-papers', CreatePaperResponseSchema.parse, {
+  return apiRequest('/admin/exam-papers', CreatePaperResponseSchema.parse, {
     method: 'POST',
     token,
     body: formData,
@@ -132,7 +132,7 @@ export async function updatePaperPublished(
   isPublished: boolean,
 ) {
   return apiRequest(
-    `/exam-papers/${paperId}`,
+    `/admin/exam-papers/${paperId}`,
     UpdatePaperResponseSchema.parse,
     {
       method: 'PATCH',
@@ -154,7 +154,7 @@ export async function updatePaperMetadata(
   input: UpdatePaperMetadataInput,
 ) {
   return apiRequest(
-    `/exam-papers/${paperId}`,
+    `/admin/exam-papers/${paperId}`,
     UpdatePaperResponseSchema.parse,
     {
       method: 'PATCH',
@@ -166,7 +166,7 @@ export async function updatePaperMetadata(
 
 export async function deletePaper(token: string, paperId: string) {
   return apiRequest(
-    `/exam-papers/${paperId}`,
+    `/admin/exam-papers/${paperId}`,
     DeletePaperResponseSchema.parse,
     {
       method: 'DELETE',

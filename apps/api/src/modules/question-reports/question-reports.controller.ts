@@ -41,7 +41,7 @@ export class QuestionReportsController {
     private readonly questionReportsService: QuestionReportsService,
   ) {}
 
-  @Post('question-reports/:questionId')
+  @Post('me/question-reports/:questionId')
   @ApiOperation({ summary: '문항 신고 생성' })
   @ApiCreatedResponse({ description: '문항 신고를 생성합니다.' })
   createQuestionReport(

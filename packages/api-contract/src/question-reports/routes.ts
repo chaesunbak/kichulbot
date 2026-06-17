@@ -9,7 +9,7 @@ import {
 export const questionReportRoutes = {
   createQuestionReport: {
     method: 'POST',
-    path: '/question-reports/:questionId',
+    path: '/me/question-reports/:questionId',
     request: CreateQuestionReportRequestSchema,
     response: QuestionReportMutationResponseSchema,
   },

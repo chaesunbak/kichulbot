@@ -19,17 +19,23 @@ import {
 } from './schemas';
 
 export async function fetchExams(token: string) {
-  return apiRequest('/exams', adminListExamsResponseSchema.parse, { token });
-}
-
-export async function fetchCategories(token: string) {
-  return apiRequest('/categories', adminListCategoriesResponseSchema.parse, {
+  return apiRequest('/admin/exams', adminListExamsResponseSchema.parse, {
     token,
   });
 }
 
+export async function fetchCategories(token: string) {
+  return apiRequest(
+    '/admin/categories',
+    adminListCategoriesResponseSchema.parse,
+    {
+      token,
+    },
+  );
+}
+
 export async function createExam(token: string, input: CreateExamRequest) {
-  return apiRequest('/exams', ExamMutationResponseSchema.parse, {
+  return apiRequest('/admin/exams', ExamMutationResponseSchema.parse, {
     token,
     method: 'POST',
     body: input,
@@ -41,15 +47,19 @@ export async function updateExam(
   examId: string,
   input: UpdateExamRequest,
 ) {
-  return apiRequest(`/exams/${examId}`, ExamMutationResponseSchema.parse, {
-    token,
-    method: 'PATCH',
-    body: input,
-  });
+  return apiRequest(
+    `/admin/exams/${examId}`,
+    ExamMutationResponseSchema.parse,
+    {
+      token,
+      method: 'PATCH',
+      body: input,
+    },
+  );
 }
 
 export async function deleteExam(token: string, examId: string) {
-  return apiRequest(`/exams/${examId}`, DeleteExamResponseSchema.parse, {
+  return apiRequest(`/admin/exams/${examId}`, DeleteExamResponseSchema.parse, {
     token,
     method: 'DELETE',
   });
@@ -59,7 +69,7 @@ export async function createCategory(
   token: string,
   input: CreateCategoryRequest,
 ) {
-  return apiRequest('/categories', CategoryMutationResponseSchema.parse, {
+  return apiRequest('/admin/categories', CategoryMutationResponseSchema.parse, {
     token,
     method: 'POST',
     body: input,
@@ -72,7 +82,7 @@ export async function updateCategory(
   input: UpdateCategoryRequest,
 ) {
   return apiRequest(
-    `/categories/${categoryId}`,
+    `/admin/categories/${categoryId}`,
     CategoryMutationResponseSchema.parse,
     {
       token,
@@ -84,7 +94,7 @@ export async function updateCategory(
 
 export async function deleteCategory(token: string, categoryId: string) {
   return apiRequest(
-    `/categories/${categoryId}`,
+    `/admin/categories/${categoryId}`,
     DeleteCategoryResponseSchema.parse,
     {
       token,

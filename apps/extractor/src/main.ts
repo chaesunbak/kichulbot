@@ -143,35 +143,35 @@ function safeStem(path: string) {
 
 async function loadImportJob(id: string) {
   const result = await apiRequest<{ job: PaperImportJobPayload }>(
-    `/paper-import-jobs/${id}`,
+    `/admin/paper-import-jobs/${id}`,
   );
 
   return result.job;
 }
 
 async function markProcessing(id: string) {
-  await apiRequest(`/paper-import-jobs/${id}/status`, {
+  await apiRequest(`/admin/paper-import-jobs/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status: 'PROCESSING' }),
   });
 }
 
 async function markCompleted(id: string, resultJsonPath: string) {
-  await apiRequest(`/paper-import-jobs/${id}/result`, {
+  await apiRequest(`/admin/paper-import-jobs/${id}/result`, {
     method: 'PUT',
     body: JSON.stringify({ resultJsonPath }),
   });
 }
 
 async function publishImportJob(id: string) {
-  await apiRequest(`/paper-import-jobs/${id}/paper`, {
+  await apiRequest(`/admin/paper-import-jobs/${id}/paper`, {
     method: 'POST',
   });
 }
 
 async function markFailed(id: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  await apiRequest(`/paper-import-jobs/${id}/status`, {
+  await apiRequest(`/admin/paper-import-jobs/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({
       status: 'FAILED',
@@ -182,7 +182,7 @@ async function markFailed(id: string, error: unknown) {
 
 async function markPendingRetry(id: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  await apiRequest(`/paper-import-jobs/${id}/status`, {
+  await apiRequest(`/admin/paper-import-jobs/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({
       status: 'PENDING',

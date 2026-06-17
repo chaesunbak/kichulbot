@@ -35,7 +35,7 @@ import {
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-@Controller('paper-import-drafts')
+@Controller('admin/paper-import-drafts')
 export class PaperImportDraftsController {
   constructor(
     private readonly paperImportDraftsService: PaperImportDraftsService,

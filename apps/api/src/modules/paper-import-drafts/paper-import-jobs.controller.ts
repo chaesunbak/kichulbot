@@ -29,7 +29,7 @@ import { PaperImportDraftsService } from './paper-import-drafts.service';
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @ApiForbiddenResponse({ description: '권한이 부족합니다.' })
-@Controller('paper-import-jobs')
+@Controller('admin/paper-import-jobs')
 export class PaperImportJobsController {
   constructor(
     private readonly paperImportDraftsService: PaperImportDraftsService,

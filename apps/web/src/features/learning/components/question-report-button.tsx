@@ -28,7 +28,10 @@ import { Flag, Loader2, MoreVertical } from 'lucide-react';
 import { overlay } from 'overlay-kit';
 import { useEffect, useState } from 'react';
 
-import { createQuestionReport } from '@/features/learning/api/client/mutations';
+import {
+  createPublicQuestionReport,
+  createQuestionReport,
+} from '@/features/learning/api/client/mutations';
 import type { QuestionReportCategory } from '@/features/learning/types';
 
 const reportCategories = [
@@ -188,12 +191,15 @@ function QuestionReportDialog({
 
     setIsSubmitting(true);
     try {
-      await createQuestionReport({
+      const reportQuestion = isAuthenticated
+        ? createQuestionReport
+        : createPublicQuestionReport;
+
+      await reportQuestion({
         questionId,
         questionRevisionId,
         category,
         content: trimmedContent,
-        isAuthenticated,
       });
       toast.success('문제 신고를 접수했습니다.');
       onClose();

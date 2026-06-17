@@ -1,4 +1,3 @@
-import { getAuthContext } from '@/features/auth/lib/server-auth';
 import type { Paper, PaperQuestion } from '@/features/papers/types';
 import { serverApi } from '@/shared/api/server';
 
@@ -26,19 +25,6 @@ function toPaperQuery(filters: PaperSearchFilters = {}) {
   return serialized ? `?${serialized}` : '';
 }
 
-export const getPapers = async (
-  filters: PaperSearchFilters = {},
-): Promise<Paper[]> => {
-  const token = (await getAuthContext())?.token;
-  const path = token ? '/exam-papers' : '/public/exam-papers';
-  const query = toPaperQuery(filters);
-  const res = await serverApi.get<{ data: { papers: Paper[] } }>(
-    `${path}${query}`,
-    token ?? undefined,
-  );
-  return res.data.papers;
-};
-
 export const getPublicPapers = async (
   filters: PaperSearchFilters = {},
 ): Promise<Paper[]> => {
@@ -51,20 +37,6 @@ export const getPublicPapers = async (
   return res.data.papers;
 };
 
-export const getPapersByExamId = async (examId: string): Promise<Paper[]> => {
-  return getPapers({ examId });
-};
-
-export const getPaper = async (id: string): Promise<Paper> => {
-  const token = (await getAuthContext())?.token;
-  const path = token ? '/exam-papers' : '/public/exam-papers';
-  const res = await serverApi.get<{ data: { paper: Paper } }>(
-    `${path}/${id}`,
-    token ?? undefined,
-  );
-  return res.data.paper;
-};
-
 export const getPublicPaper = async (id: string): Promise<Paper> => {
   const res = await serverApi.get<{ data: { paper: Paper } }>(
     `/public/exam-papers/${id}`,
@@ -72,17 +44,6 @@ export const getPublicPaper = async (id: string): Promise<Paper> => {
     publicResourceCacheOptions,
   );
   return res.data.paper;
-};
-
-export const getPaperQuestions = async (
-  id: string,
-): Promise<{ paper: Paper; questions: PaperQuestion[] }> => {
-  const token = (await getAuthContext())?.token;
-  const path = token ? '/exam-papers' : '/public/exam-papers';
-  const res = await serverApi.get<{
-    data: { paper: Paper; questions: PaperQuestion[] };
-  }>(`${path}/${id}/questions`, token ?? undefined);
-  return res.data;
 };
 
 export const getPublicPaperQuestions = async (

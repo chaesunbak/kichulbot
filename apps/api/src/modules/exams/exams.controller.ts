@@ -20,11 +20,9 @@ import {
 } from '@nestjs/swagger';
 
 import { UserRole } from '../../infrastructure/database/prisma-client';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { RequestUser } from '../auth/types';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamsService } from './exams.service';
@@ -35,19 +33,20 @@ import { ExamsService } from './exams.service';
   description: '인증 정보가 없거나 유효하지 않습니다.',
 })
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('exams')
+@Roles(UserRole.ADMIN)
+@Controller('admin/exams')
 export class ExamsController {
   constructor(private readonly examsService: ExamsService) {}
 
   @Get()
-  @ApiOperation({ summary: '시험 목록 조회' })
+  @ApiOperation({ summary: '관리자 시험 목록 조회' })
   @ApiOkResponse({ description: '시험 목록을 반환합니다.' })
-  listExams(@CurrentUser() user: RequestUser) {
-    return this.examsService.listExams(user.role);
+  @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
+  listExams() {
+    return this.examsService.listExams(UserRole.ADMIN);
   }
 
   @Post()
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '시험 생성' })
   @ApiCreatedResponse({ description: '시험을 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
@@ -56,7 +55,6 @@ export class ExamsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '시험 수정' })
   @ApiOkResponse({ description: '시험을 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
@@ -65,7 +63,6 @@ export class ExamsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: '시험 삭제' })
   @ApiOkResponse({ description: '연결된 문제지가 없는 시험을 삭제합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })

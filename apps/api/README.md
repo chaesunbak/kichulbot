@@ -13,6 +13,12 @@ pnpm --filter @kichulbot/api dev
 
 기본 포트는 `4000`이며, 기본 웹 origin은 `http://localhost:3000,http://localhost:3001`입니다.
 
+## API Path Policy
+
+- `/public/*`: 인증 없이 접근 가능한 공개 API입니다. 토큰 여부에 따라 응답 형태가 바뀌면 안 됩니다.
+- `/me/*`: 로그인한 사용자 본인 리소스 API입니다. 항상 현재 사용자 기준으로 동작합니다.
+- `/admin/*`: 관리자 전용 API입니다. 관리자 데이터 조회와 생성/수정/삭제는 이 접두사를 사용합니다.
+
 ## Commands
 
 ```bash

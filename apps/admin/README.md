@@ -16,10 +16,10 @@ pnpm --filter @kichulbot/admin dev
 ## Commands
 
 ```bash
-pnpm -F @admin lint
-pnpm -F @admin typecheck
-pnpm -F @admin test
-pnpm -F @admin build
+pnpm -F admin lint
+pnpm -F admin typecheck
+pnpm -F admin test
+pnpm -F admin build
 ```
 
 ## Structure

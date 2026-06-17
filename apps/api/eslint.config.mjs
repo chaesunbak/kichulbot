@@ -1,3 +1,6 @@
 import { nestConfig } from '@kichulbot/eslint-config/nest';
 
-export default nestConfig({ tsconfigRootDir: import.meta.dirname });
+export default nestConfig({
+  ignores: ['src/infrastructure/database/generated/**'],
+  tsconfigRootDir: import.meta.dirname,
+});

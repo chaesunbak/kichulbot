@@ -9,10 +9,10 @@ import {
   zodNamespaceImportRule,
 } from './rules.js';
 
-export function nestConfig({ tsconfigRootDir }) {
+export function nestConfig({ ignores = [], tsconfigRootDir }) {
   return tseslint.config(
     {
-      ignores: ['dist', 'eslint.config.mjs'],
+      ignores: ['dist', 'eslint.config.mjs', ...ignores],
     },
     eslint.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,

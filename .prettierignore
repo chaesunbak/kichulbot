@@ -13,5 +13,7 @@ uploads
 *.tsbuildinfo
 next-env.d.ts
 
+apps/api/src/infrastructure/database/generated/prisma
+
 tools/question-extractor/input
 tools/question-extractor/output

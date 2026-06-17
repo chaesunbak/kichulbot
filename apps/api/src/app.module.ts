@@ -4,13 +4,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 
-import {
-  getRequestId,
-  serializeRequest,
-  serializeResponse,
-} from './common/logger/pino-http';
 import configuration from './config/configuration';
 import { validateEnvironment } from './config/env.validation';
+import { loggerConfig } from './config/logger.config';
 import { HealthController } from './health.controller';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -44,43 +40,7 @@ import { TagsModule } from './modules/tags/tags.module';
       load: [configuration],
       validate: validateEnvironment,
     }),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-        transport:
-          process.env.NODE_ENV === 'production'
-            ? undefined
-            : {
-                target: 'pino-pretty',
-                options: {
-                  colorize: true,
-                  singleLine: true,
-                  translateTime: 'SYS:standard',
-                },
-              },
-        autoLogging: {
-          ignore: (request) =>
-            request.url === '/api/health' || request.url === '/health',
-        },
-        genReqId: getRequestId,
-        serializers: {
-          req: serializeRequest,
-          res: serializeResponse,
-        },
-        customLogLevel: (_request, response, error) => {
-          if (error || response.statusCode >= 500) return 'error';
-          if (response.statusCode >= 400) return 'warn';
-          return 'info';
-        },
-        redact: [
-          'req.headers.authorization',
-          'req.headers.cookie',
-          'req.body.password',
-          'req.body.accessToken',
-          'req.body.refreshToken',
-        ],
-      },
-    }),
+    LoggerModule.forRoot(loggerConfig),
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,

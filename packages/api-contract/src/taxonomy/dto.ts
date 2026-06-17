@@ -6,11 +6,37 @@ import {
   ExamResponseSchema,
   TaxonomyResponseSchema,
 } from './schema.js';
+import { PaperResponseSchema } from '../papers/schema.js';
 
 export const ListExamsResponseSchema = z.object({
   exams: z.array(z.union([AdminExamResponseSchema, ExamResponseSchema])),
 });
 export type ListExamsResponse = z.infer<typeof ListExamsResponseSchema>;
+
+export const ListExamPaperOverviewsQuerySchema = z.object({
+  paperLimit: z.coerce.number().int().min(1).max(20).optional(),
+});
+export type ListExamPaperOverviewsQuery = z.infer<
+  typeof ListExamPaperOverviewsQuerySchema
+>;
+
+export const ExamPaperOverviewSchema = z.object({
+  exam: ExamResponseSchema,
+  paperCount: z.number().int().min(0),
+  papers: z.array(
+    PaperResponseSchema.extend({
+      registeredQuestionCount: z.number().int().min(0),
+    }),
+  ),
+});
+export type ExamPaperOverview = z.infer<typeof ExamPaperOverviewSchema>;
+
+export const ListExamPaperOverviewsResponseSchema = z.object({
+  overviews: z.array(ExamPaperOverviewSchema),
+});
+export type ListExamPaperOverviewsResponse = z.infer<
+  typeof ListExamPaperOverviewsResponseSchema
+>;
 
 export const CreateCategoryRequestSchema = z.object({
   name: z.string().trim().min(1).max(50),

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import type { PublicExamPaperOverviewRow } from './exams.types';
 
 interface ExamCreateData {
   name: string;
@@ -54,6 +55,83 @@ export class ExamsRepository {
       include: examInclude,
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findManyPublicPaperOverviews(
+    paperLimit: number,
+  ): Promise<PublicExamPaperOverviewRow[]> {
+    const exams = await this.db.exam.findMany({
+      include: {
+        categories: { include: { category: true } },
+        mockExamBlueprintItems: {
+          take: 1,
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return Promise.all(
+      exams.map(async (exam) => {
+        const paperWhere = {
+          isPublished: true,
+          examSession: { examId: exam.id },
+        };
+        const [paperCount, papers] = await Promise.all([
+          this.db.paper.count({ where: paperWhere }),
+          this.db.paper.findMany({
+            where: paperWhere,
+            select: {
+              id: true,
+              title: true,
+              questionCount: true,
+              examSession: {
+                select: {
+                  displayYear: true,
+                  month: true,
+                  grade: true,
+                  round: true,
+                },
+              },
+              _count: { select: { questions: true } },
+            },
+            orderBy: [
+              { examSession: { displayYear: 'desc' } },
+              { examSession: { month: 'desc' } },
+              { examSession: { round: 'desc' } },
+              { createdAt: 'desc' },
+            ],
+            take: paperLimit,
+          }),
+        ]);
+
+        return {
+          id: exam.id,
+          name: exam.name,
+          slug: exam.slug,
+          categories: exam.categories
+            .map(({ category }) => ({ id: category.id, name: category.name }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+          usesMonth: exam.usesMonth,
+          usesGrade: exam.usesGrade,
+          usesRound: exam.usesRound,
+          isMockExamAvailable:
+            exam.mockExamQuestionCount != null &&
+            !!exam.eraTagGroupId &&
+            exam.mockExamBlueprintItems.length > 0,
+          paperCount,
+          papers: papers.map((paper) => ({
+            id: paper.id,
+            title: paper.title,
+            year: paper.examSession.displayYear,
+            month: paper.examSession.month,
+            grade: paper.examSession.grade,
+            round: paper.examSession.round,
+            questionCount: paper.questionCount,
+            registeredQuestionCount: paper._count.questions,
+          })),
+        };
+      }),
+    );
   }
 
   findById(id: string) {

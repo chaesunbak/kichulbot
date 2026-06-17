@@ -1,8 +1,8 @@
 import { getAuthContext } from '@/features/auth/lib/server-auth';
-import type { Category, Exam } from '@/features/exams/types';
+import type { Category, Exam, ExamPaperOverview } from '@/features/exams/types';
 import { serverApi } from '@/shared/api/server';
 
-export type { Category, Exam } from '@/features/exams/types';
+export type { Category, Exam, ExamPaperOverview } from '@/features/exams/types';
 
 const PUBLIC_RESOURCE_REVALIDATE_SECONDS = 300;
 
@@ -27,6 +27,20 @@ export const getPublicExams = async (): Promise<Exam[]> => {
     publicResourceCacheOptions,
   );
   return res.data.exams;
+};
+
+export const getPublicExamPaperOverviews = async (
+  paperLimit?: number,
+): Promise<ExamPaperOverview[]> => {
+  const query = paperLimit ? `?paperLimit=${paperLimit}` : '';
+  const res = await serverApi.get<{
+    data: { overviews: ExamPaperOverview[] };
+  }>(
+    `/public/exams/paper-overviews${query}`,
+    undefined,
+    publicResourceCacheOptions,
+  );
+  return res.data.overviews;
 };
 
 export const getCategories = async (): Promise<Category[]> => {

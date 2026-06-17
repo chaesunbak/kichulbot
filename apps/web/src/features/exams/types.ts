@@ -1,3 +1,5 @@
+import type { Paper } from '@/features/papers/types';
+
 export interface ExamCategory {
   id: string;
   name: string;
@@ -14,4 +16,10 @@ export interface Exam {
   usesGrade: boolean;
   usesRound: boolean;
   isMockExamAvailable: boolean;
+}
+
+export interface ExamPaperOverview {
+  exam: Exam;
+  paperCount: number;
+  papers: Array<Paper & { registeredQuestionCount: number }>;
 }

@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -83,5 +84,14 @@ export class PublicExamsController {
   @ApiOkResponse({ description: '시험 목록을 반환합니다.' })
   listExams() {
     return this.examsService.listExams(UserRole.USER);
+  }
+
+  @Get('paper-overviews')
+  @ApiOperation({ summary: '공개 시험별 문제지 미리보기 조회' })
+  @ApiOkResponse({
+    description: '시험별 공개 문제지 개수와 미리보기 목록을 반환합니다.',
+  })
+  listPaperOverviews(@Query('paperLimit') paperLimit?: string) {
+    return this.examsService.listPublicPaperOverviews({ paperLimit });
   }
 }

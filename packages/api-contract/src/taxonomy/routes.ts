@@ -5,6 +5,8 @@ import {
   DeleteCategoryResponseSchema,
   DeleteExamResponseSchema,
   ExamMutationResponseSchema,
+  ListExamPaperOverviewsQuerySchema,
+  ListExamPaperOverviewsResponseSchema,
   ListCategoriesResponseSchema,
   ListExamsResponseSchema,
   UpdateCategoryRequestSchema,
@@ -17,6 +19,12 @@ export const taxonomyRoutes = {
     path: '/exams',
     request: null,
     response: ListExamsResponseSchema,
+  },
+  listExamPaperOverviews: {
+    method: 'GET',
+    path: '/exams/paper-overviews',
+    request: ListExamPaperOverviewsQuerySchema,
+    response: ListExamPaperOverviewsResponseSchema,
   },
   createExam: {
     method: 'POST',

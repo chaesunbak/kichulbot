@@ -13,6 +13,7 @@ describe('ExamsService', () => {
   beforeEach(() => {
     repository = {
       findMany: jest.fn(),
+      findManyPublicPaperOverviews: jest.fn(),
       findById: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -53,6 +54,70 @@ describe('ExamsService', () => {
       paperCount: 5,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+    });
+  });
+
+  it('공개 시험별 문제지 미리보기 목록을 반환한다', async () => {
+    repository.findManyPublicPaperOverviews.mockResolvedValue([
+      {
+        id: 'exam_1',
+        name: '한국사능력검정시험 심화',
+        slug: 'korean-history-advanced',
+        categories: [{ id: 'category_1', name: '한국사' }],
+        usesMonth: false,
+        usesGrade: true,
+        usesRound: true,
+        isMockExamAvailable: false,
+        paperCount: 12,
+        papers: [
+          {
+            id: 'paper_1',
+            title: '제78회 한국사능력검정시험 심화',
+            year: 2026,
+            month: null,
+            grade: null,
+            round: 78,
+            questionCount: 50,
+            registeredQuestionCount: 50,
+          },
+        ],
+      },
+    ]);
+
+    const response = await service.listPublicPaperOverviews({
+      paperLimit: 4,
+    });
+
+    expect(repository.findManyPublicPaperOverviews).toHaveBeenCalledWith(4);
+    expect(response.overviews[0]).toEqual({
+      exam: {
+        id: 'exam_1',
+        name: '한국사능력검정시험 심화',
+        slug: 'korean-history-advanced',
+        categories: [{ id: 'category_1', name: '한국사' }],
+        usesMonth: false,
+        usesGrade: false,
+        usesRound: true,
+        isMockExamAvailable: false,
+      },
+      paperCount: 12,
+      papers: [
+        {
+          id: 'paper_1',
+          title: '제78회 한국사능력검정시험 심화',
+          year: 2026,
+          month: null,
+          grade: null,
+          round: 78,
+          questionCount: 50,
+          registeredQuestionCount: 50,
+          isInLibrary: false,
+          exam: {
+            id: 'exam_1',
+            name: '한국사능력검정시험 심화',
+          },
+        },
+      ],
     });
   });
 

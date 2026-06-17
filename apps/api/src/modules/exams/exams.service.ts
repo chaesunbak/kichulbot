@@ -5,6 +5,9 @@ import {
   ExamMutationResponse,
   ExamMutationResponseSchema,
   ExamResponse,
+  ListExamPaperOverviewsQuerySchema,
+  ListExamPaperOverviewsResponse,
+  ListExamPaperOverviewsResponseSchema,
   ListExamsResponse,
   ListExamsResponseSchema,
 } from '@kichulbot/api-contract/taxonomy';
@@ -36,6 +39,8 @@ type MockExamBlueprintItemInput = NonNullable<
   CreateExamDto['mockExamBlueprintItems']
 >[number];
 
+const DEFAULT_PAPER_OVERVIEW_LIMIT = 4;
+
 @Injectable()
 export class ExamsService {
   constructor(private readonly examsRepository: ExamsRepository) {}
@@ -44,6 +49,39 @@ export class ExamsService {
     const exams = await this.examsRepository.findMany();
     return ListExamsResponseSchema.parse({
       exams: exams.map((exam) => this.toResponse(exam, role)),
+    });
+  }
+
+  async listPublicPaperOverviews(
+    query: { paperLimit?: unknown } = {},
+  ): Promise<ListExamPaperOverviewsResponse> {
+    const { paperLimit = DEFAULT_PAPER_OVERVIEW_LIMIT } =
+      ListExamPaperOverviewsQuerySchema.parse(query);
+    const overviews =
+      await this.examsRepository.findManyPublicPaperOverviews(paperLimit);
+
+    return ListExamPaperOverviewsResponseSchema.parse({
+      overviews: overviews.map((overview) => ({
+        exam: {
+          id: overview.id,
+          name: overview.name,
+          slug: overview.slug,
+          categories: overview.categories,
+          usesMonth: overview.usesMonth,
+          usesGrade: false,
+          usesRound: overview.usesRound,
+          isMockExamAvailable: overview.isMockExamAvailable,
+        },
+        paperCount: overview.paperCount,
+        papers: overview.papers.map((paper) => ({
+          ...paper,
+          isInLibrary: false,
+          exam: {
+            id: overview.id,
+            name: overview.name,
+          },
+        })),
+      })),
     });
   }
 

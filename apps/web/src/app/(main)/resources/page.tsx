@@ -4,34 +4,19 @@ import { ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
 
 import {
-  type Category,
-  getPublicCategories,
+  type ExamPaperOverview,
+  getPublicExamPaperOverviews,
 } from '@/features/exams/api/server/queries';
-import {
-  getPublicPapers,
-  type Paper,
-} from '@/features/papers/api/server/queries';
 import { PaperGrid } from '@/features/papers/components/paper-grid';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
-const CATEGORY_PAPER_LIMIT = 4;
+const EXAM_PAPER_LIMIT = 4;
 
 export default async function PapersPage() {
-  let sections: CategoryPaperSection[];
+  let sections: ExamPaperOverview[];
   try {
-    const categories = await getPublicCategories();
-    sections = await Promise.all(
-      categories.map(async (category) => {
-        const papers = await getPublicPapers({ categoryId: category.id });
-
-        return {
-          category,
-          paperCount: papers.length,
-          papers: papers.slice(0, CATEGORY_PAPER_LIMIT),
-        };
-      }),
-    );
+    sections = await getPublicExamPaperOverviews(EXAM_PAPER_LIMIT);
   } catch {
     return (
       <PageContainer className="min-h-[calc(100svh-16rem)]">
@@ -83,10 +68,7 @@ export default async function PapersPage() {
           {sections
             .filter((section) => section.paperCount > 0)
             .map((section) => (
-              <CategoryPaperSectionItem
-                key={section.category.id}
-                section={section}
-              />
+              <ExamPaperSectionItem key={section.exam.id} section={section} />
             ))}
         </div>
       )}
@@ -94,32 +76,24 @@ export default async function PapersPage() {
   );
 }
 
-type CategoryPaperSection = {
-  category: Category;
-  paperCount: number;
-  papers: Paper[];
+type ExamPaperSectionItemProps = {
+  section: ExamPaperOverview;
 };
 
-type CategoryPaperSectionItemProps = {
-  section: CategoryPaperSection;
-};
-
-function CategoryPaperSectionItem({ section }: CategoryPaperSectionItemProps) {
-  const { category, paperCount, papers } = section;
+function ExamPaperSectionItem({ section }: ExamPaperSectionItemProps) {
+  const { exam, paperCount, papers } = section;
 
   return (
     <section className="grid gap-4">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-foreground">
-            {category.name}
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">{exam.name}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {paperCount}개 시험지
           </p>
         </div>
         <Button asChild variant="outline" size="sm" className="shrink-0">
-          <Link href={`/resources/search?categoryId=${category.id}`}>
+          <Link href={`/resources/search?examId=${exam.id}`}>
             더보기
             <ChevronRight className="size-4" />
           </Link>
@@ -127,7 +101,7 @@ function CategoryPaperSectionItem({ section }: CategoryPaperSectionItemProps) {
       </div>
       <PaperGrid
         papers={papers}
-        source="resources_category_section"
+        source="resources_exam_section"
         resultCount={paperCount}
       />
     </section>

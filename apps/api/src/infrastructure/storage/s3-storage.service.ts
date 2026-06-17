@@ -101,12 +101,13 @@ export class S3StorageService extends StorageService {
     extension: string,
   ) {
     const questionNumber = context.questionNumber.toString().padStart(3, '0');
+    const objectId = context.imageObjectId ?? context.questionId;
 
     return [
       'questions',
       context.examSlug,
       context.paperSlug,
-      `${questionNumber}-${context.questionId}.${extension}`,
+      `${questionNumber}-${objectId}.${extension}`,
     ].join('/');
   }
 }

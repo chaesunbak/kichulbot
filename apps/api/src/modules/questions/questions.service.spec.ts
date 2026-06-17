@@ -338,6 +338,108 @@ describe('QuestionsService', () => {
     );
   });
 
+  it('문항 이미지 수정 실패 시 새 업로드를 삭제하고 기존 이미지는 유지한다', async () => {
+    const updateError = new Error('DB 업데이트 실패');
+    repository.findById.mockResolvedValue({
+      id: 'question_1',
+      paperId: 'paper_1',
+      number: 1,
+      type: QuestionType.MULTIPLE_CHOICE,
+      choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
+      answerChoice: 2,
+      answerText: null,
+      imageUrl:
+        'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-old-image.png',
+      imageHash: 'legacy_question_1',
+      tags: [],
+    } as never);
+    repository.findPaper.mockResolvedValue(makePaper() as never);
+    storageService.uploadQuestionImage.mockResolvedValue({
+      objectKey: 'questions/korean-history-advanced/78/001-new-image.png',
+      url: 'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-new-image.png',
+    });
+    repository.update.mockRejectedValue(updateError);
+
+    await expect(service.updateQuestion('question_1', {}, image)).rejects.toBe(
+      updateError,
+    );
+
+    expect(storageService.deleteObject).toHaveBeenCalledTimes(1);
+    expect(storageService.deleteObject).toHaveBeenCalledWith(
+      'questions/korean-history-advanced/78/001-new-image.png',
+    );
+    expect(storageService.deleteObject).not.toHaveBeenCalledWith(
+      'questions/korean-history-advanced/78/001-old-image.png',
+    );
+  });
+
+  it('문항 이미지 수정 성공 후 기존 이미지를 삭제한다', async () => {
+    repository.findById.mockResolvedValue({
+      id: 'question_1',
+      paperId: 'paper_1',
+      number: 1,
+      type: QuestionType.MULTIPLE_CHOICE,
+      choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
+      answerChoice: 2,
+      answerText: null,
+      imageUrl:
+        'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-old-image.png',
+      imageHash: 'legacy_question_1',
+      tags: [],
+    } as never);
+    repository.findPaper.mockResolvedValue(makePaper() as never);
+    storageService.uploadQuestionImage.mockResolvedValue({
+      objectKey: 'questions/korean-history-advanced/78/001-new-image.png',
+      url: 'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-new-image.png',
+    });
+    repository.update.mockResolvedValue({
+      id: 'question_1',
+      paperId: 'paper_1',
+      number: 1,
+      type: QuestionType.MULTIPLE_CHOICE,
+      choiceCount: 5,
+      gradingPolicy: GradingPolicy.EXACT,
+      rawText: null,
+      promptText: null,
+      passageText: null,
+      choiceTexts: [],
+      answerChoice: 2,
+      answerText: null,
+      explanation: null,
+      points: 5,
+      recommendedTimeSeconds: null,
+      recommendedTagIds: [],
+      recommendedTagMatches: [],
+      imageUrl:
+        'http://localhost:4000/uploads/questions/korean-history-advanced/78/001-new-image.png',
+      imageHash:
+        '6105d6cc76af400325e94d588ce511be5bfdbb73b437dc51eca43917d7a43e3d',
+      tags: [],
+      createdAt: new Date('2026-05-31T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-31T00:00:00.000Z'),
+    });
+
+    await service.updateQuestion('question_1', {}, image);
+
+    expect(storageService.uploadQuestionImage).toHaveBeenCalledWith(
+      image,
+      expect.objectContaining({
+        imageObjectId: expect.any(String),
+        questionId: 'question_1',
+        questionNumber: 1,
+      }),
+    );
+    expect(storageService.deleteObject).toHaveBeenCalledTimes(1);
+    expect(storageService.deleteObject).toHaveBeenCalledWith(
+      'questions/korean-history-advanced/78/001-old-image.png',
+    );
+    expect(repository.update.mock.invocationCallOrder[0]).toBeLessThan(
+      storageService.deleteObject.mock.invocationCallOrder[0],
+    );
+  });
+
   it('문항과 저장된 이미지를 함께 삭제한다', async () => {
     repository.findById.mockResolvedValue({
       id: 'question_1',

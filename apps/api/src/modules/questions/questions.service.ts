@@ -196,26 +196,37 @@ export class QuestionsService {
       recommendedTagMatches: dto.recommendedTagMatches,
     };
 
+    let uploadedImage: { objectKey: string; url: string } | null = null;
     if (file) {
       const paper = await this.questionsRepository.findPaper(existing.paperId);
       if (!paper) {
         throw new BadRequestException('문제지를 찾을 수 없습니다.');
       }
       const questionNumber = dto.number ?? existing.number;
-      const { url } = await this.storageService.uploadQuestionImage(
+      uploadedImage = await this.storageService.uploadQuestionImage(
         file,
-        this.createQuestionImagePathContext(id, paper, questionNumber),
+        this.createQuestionImagePathContext(id, paper, questionNumber, {
+          imageObjectId: randomUUID(),
+        }),
       );
-      data.imageUrl = url;
+      data.imageUrl = uploadedImage.url;
       data.imageHash = this.createImageHash(file);
-      await this.deleteStaleImage(existing.imageUrl, url);
     }
 
     let updated: QuestionWithTags;
     try {
       updated = await this.questionsRepository.update(id, data, dto.tagIds);
     } catch (error) {
+      if (uploadedImage && uploadedImage.url !== existing.imageUrl) {
+        await this.storageService
+          .deleteObject(uploadedImage.objectKey)
+          .catch(() => undefined);
+      }
       throw this.mapKnownError(error);
+    }
+
+    if (uploadedImage) {
+      await this.deleteStaleImage(existing.imageUrl, uploadedImage.url);
     }
 
     return this.toMutationResponse(updated);
@@ -352,9 +363,11 @@ export class QuestionsService {
     questionId: string,
     paper: QuestionImagePathPaper,
     questionNumber: number,
+    options: { imageObjectId?: string } = {},
   ) {
     return {
       questionId,
+      imageObjectId: options.imageObjectId,
       examSlug: paper.examSession.exam.slug,
       paperSlug: this.createPaperSlug(paper.examSession),
       questionNumber,

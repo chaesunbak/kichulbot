@@ -17,6 +17,7 @@ export interface StoredObject {
 
 export interface QuestionImagePathContext {
   questionId: string;
+  imageObjectId?: string;
   examSlug: string;
   paperSlug: string;
   questionNumber: number;

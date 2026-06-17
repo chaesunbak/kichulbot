@@ -16,8 +16,31 @@ concurrency:
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
+  changes:
+    name: 변경 감지
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - name: 변경 파일 필터링
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/api-contract/**'
+              - 'packages/utils/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - '.github/workflows/pr-check.yml'
+
   lint:
     name: 린트
     runs-on: ubuntu-latest
@@ -64,6 +87,8 @@ jobs:
 
   coverage:
     name: 테스트 및 커버리지
+    needs: changes
+    if: ${{ needs.changes.outputs.api == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: 소스 체크아웃
@@ -91,3 +116,16 @@ jobs:
           name: coverage
           path: apps/api/coverage/
           retention-days: 7
+
+      - name: 커버리지 PR 코멘트 작성
+        uses: MishaKav/jest-coverage-comment@v1
+        if: always()
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          coverage-summary-path: apps/api/coverage/coverage-summary.json
+          title: API 테스트 커버리지
+          summary-title: 커버리지 요약
+          badge-title: API Coverage
+          coverage-path-prefix: apps/api/
+          report-only-changed-files: true

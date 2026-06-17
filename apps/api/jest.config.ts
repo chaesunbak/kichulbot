@@ -29,6 +29,7 @@ const config: Config = {
     '!src/**/dto/**/*.ts',
   ],
   coverageDirectory: 'coverage',
+  coverageReporters: ['json-summary', 'json', 'lcov', 'text', 'clover'],
   testEnvironment: 'node',
   watchman: false,
 };

@@ -18,7 +18,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
-import { PDF_UPLOAD_OPTIONS } from '../../common/upload/upload-options';
+import { PDF_UPLOAD_OPTIONS } from '../../common/pipes/upload-file.pipe';
 import { UserRole } from '../../infrastructure/database/prisma-client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

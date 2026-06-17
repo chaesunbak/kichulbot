@@ -1,10 +1,6 @@
-import {
-  assertPdfUploadFile,
-  IMAGE_FILE_PIPE,
-  PDF_FILES_PIPE,
-} from './upload-options';
+import { assertPdfUploadFile, IMAGE_FILE_PIPE } from './upload-file.pipe';
 
-describe('upload options', () => {
+describe('upload file pipe', () => {
   it('이미지 파일이 없어도 선택 업로드를 통과시킨다', async () => {
     await expect(IMAGE_FILE_PIPE.transform(undefined)).resolves.toBeUndefined();
   });
@@ -20,20 +16,17 @@ describe('upload options', () => {
     ).rejects.toBeInstanceOf(Error);
   });
 
-  it('PDF 파일 배열이 비어도 선택 업로드를 통과시킨다', () => {
-    expect(PDF_FILES_PIPE.transform([])).toEqual([]);
-  });
-
   it('최대 크기를 초과한 PDF는 업로드를 거부한다', () => {
     expect(() =>
-      PDF_FILES_PIPE.transform([
+      assertPdfUploadFile(
         {
           originalname: 'questions.pdf',
           mimetype: 'application/pdf',
           size: 30 * 1024 * 1024 + 1,
           buffer: Buffer.alloc(0),
         },
-      ]),
+        '문제 PDF',
+      ),
     ).toThrow(Error);
   });
 

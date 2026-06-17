@@ -1,4 +1,3 @@
-import type { PipeTransform } from '@nestjs/common';
 import { BadRequestException, ParseFilePipeBuilder } from '@nestjs/common';
 
 import type { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
@@ -7,7 +6,7 @@ const IMAGE_FILE_TYPE = /image\/(png|jpeg|webp)/;
 const PDF_FILE_TYPE = /application\/pdf/;
 
 const IMAGE_MAX_FILE_SIZE = 5 * 1024 * 1024;
-export const PDF_MAX_FILE_SIZE = 30 * 1024 * 1024;
+const PDF_MAX_FILE_SIZE = 30 * 1024 * 1024;
 
 export const IMAGE_UPLOAD_OPTIONS = {
   limits: { fileSize: IMAGE_MAX_FILE_SIZE },
@@ -31,16 +30,6 @@ export function assertPdfUploadFile(file: UploadedMemoryFile, label: string) {
   }
 }
 
-class OptionalPdfFilesPipe implements PipeTransform<
-  UploadedMemoryFile[] | undefined,
-  UploadedMemoryFile[]
-> {
-  transform(value: UploadedMemoryFile[] = []) {
-    value.forEach((file) => assertPdfUploadFile(file, 'PDF'));
-    return value;
-  }
-}
-
 export const IMAGE_FILE_PIPE = new ParseFilePipeBuilder()
   .addMaxSizeValidator({
     maxSize: IMAGE_MAX_FILE_SIZE,
@@ -48,5 +37,3 @@ export const IMAGE_FILE_PIPE = new ParseFilePipeBuilder()
   })
   .addFileTypeValidator({ fileType: IMAGE_FILE_TYPE })
   .build({ fileIsRequired: false });
-
-export const PDF_FILES_PIPE = new OptionalPdfFilesPipe();

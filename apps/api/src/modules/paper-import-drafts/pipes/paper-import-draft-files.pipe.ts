@@ -1,7 +1,7 @@
 import type { PipeTransform } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 
-import { assertPdfUploadFile } from '../../../common/upload/upload-options';
+import { assertPdfUploadFile } from '../../../common/pipes/upload-file.pipe';
 import type { UploadedMemoryFile } from '../../../infrastructure/storage/storage.service';
 
 const PAPER_IMPORT_DRAFT_FILE_FIELDS = {

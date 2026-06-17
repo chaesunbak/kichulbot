@@ -33,7 +33,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
 
-import { assertPdfUploadFile } from '../../common/upload/upload-options';
+import { assertPdfUploadFile } from '../../common/pipes/upload-file.pipe';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';

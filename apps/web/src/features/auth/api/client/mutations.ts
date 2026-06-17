@@ -16,45 +16,53 @@ export async function loginWithEmailApi(body: {
   email: string;
   password: string;
 }): Promise<AuthResult> {
-  return clientApi.post<AuthResult>('/api/auth/login', body);
+  const res = await clientApi.post<{ data: AuthResult }>(
+    '/api/auth/login',
+    body,
+  );
+  return res.data;
 }
 
 export async function requestPasswordResetApi(
   email: string,
 ): Promise<PasswordResetIssueResponse> {
-  return clientApi.post<PasswordResetIssueResponse>(
+  const res = await clientApi.post<{ data: PasswordResetIssueResponse }>(
     '/api/auth/password-reset-requests',
     { email },
   );
+  return res.data;
 }
 
 export async function confirmPasswordResetApi(body: {
   token: string;
   password: string;
 }): Promise<PasswordResetConfirmResponse> {
-  return clientApi.post<PasswordResetConfirmResponse>(
+  const res = await clientApi.post<{ data: PasswordResetConfirmResponse }>(
     '/api/auth/password-resets/confirm',
     body,
   );
+  return res.data;
 }
 
 export async function requestEmailVerificationApi(
   email: string,
 ): Promise<EmailVerificationIssueResponse> {
-  return clientApi.post<EmailVerificationIssueResponse>(
+  const res = await clientApi.post<{ data: EmailVerificationIssueResponse }>(
     '/api/auth/email-verifications',
     { email },
   );
+  return res.data;
 }
 
 export async function confirmEmailVerificationApi(body: {
   email: string;
   code: string;
 }): Promise<EmailVerificationConfirmResponse> {
-  return clientApi.post<EmailVerificationConfirmResponse>(
+  const res = await clientApi.post<{ data: EmailVerificationConfirmResponse }>(
     '/api/auth/email-verifications/confirm',
     body,
   );
+  return res.data;
 }
 
 export async function registerWithEmailApi(body: {
@@ -63,13 +71,21 @@ export async function registerWithEmailApi(body: {
   nickname?: string;
   emailVerificationToken: string;
 }): Promise<AuthResult> {
-  return clientApi.post<AuthResult>('/api/auth/register', body);
+  const res = await clientApi.post<{ data: AuthResult }>(
+    '/api/auth/register',
+    body,
+  );
+  return res.data;
 }
 
 export async function completeOAuthSessionApi(
   code: string,
 ): Promise<AuthResult> {
-  return clientApi.post<AuthResult>('/api/auth/oauth/session', { code });
+  const res = await clientApi.post<{ data: AuthResult }>(
+    '/api/auth/oauth/session',
+    { code },
+  );
+  return res.data;
 }
 
 export async function logoutApi(): Promise<void> {
@@ -81,5 +97,8 @@ export async function deleteAccountApi(): Promise<void> {
 }
 
 export async function updateProfileApi(nickname: string): Promise<AuthResult> {
-  return clientApi.patch<AuthResult>('/api/me', { nickname });
+  const res = await clientApi.patch<{ data: AuthResult }>('/api/me', {
+    nickname,
+  });
+  return res.data;
 }

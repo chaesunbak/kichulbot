@@ -39,7 +39,26 @@ async function readJson(res: Response): Promise<unknown> {
 function getErrorMessage(body: unknown) {
   if (!body || typeof body !== 'object') return null;
   const errorBody = body as Record<string, unknown>;
-  return errorBody.message?.toString() ?? errorBody.error?.toString() ?? null;
+  const directMessage = normalizeMessage(errorBody.message);
+  if (directMessage) return directMessage;
+
+  const directError = normalizeMessage(errorBody.error);
+  if (directError) return directError;
+
+  if (errorBody.error && typeof errorBody.error === 'object') {
+    const nestedError = errorBody.error as Record<string, unknown>;
+    return (
+      normalizeMessage(nestedError.message) ??
+      normalizeMessage(nestedError.error)
+    );
+  }
+
+  return null;
+}
+
+function normalizeMessage(message: unknown) {
+  if (Array.isArray(message)) return message.join(', ');
+  return typeof message === 'string' && message.trim() ? message : null;
 }
 
 export const clientApi = {

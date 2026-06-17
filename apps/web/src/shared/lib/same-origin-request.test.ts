@@ -2,45 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
-import type { AuthUser } from '@/features/auth/types';
-import {
-  authErrorResponse,
-  authSuccessResponse,
-  rejectCrossOriginRequest,
-} from '@/shared/lib/route-helpers';
-
-const user = {
-  id: 'user-1',
-  email: 'user@example.com',
-  nickname: '홍길동',
-  authType: 'EMAIL',
-  linkedProviders: [],
-  role: 'USER',
-} satisfies AuthUser;
-
-describe('authSuccessResponse', () => {
-  it('사용자 정보와 인증 쿠키를 함께 반환한다', async () => {
-    const response = authSuccessResponse(user, 'access-token');
-
-    await expect(response.json()).resolves.toEqual({ user });
-    expect(response.headers.get('set-cookie')).toContain(
-      'kichulbot_token=access-token',
-    );
-    expect(response.headers.get('set-cookie')).toContain('HttpOnly');
-    expect(response.headers.get('set-cookie')).toContain('SameSite=lax');
-  });
-});
-
-describe('authErrorResponse', () => {
-  it('지정한 상태 코드와 에러 메시지를 반환한다', async () => {
-    const response = authErrorResponse(400, '잘못된 요청입니다.');
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({
-      error: '잘못된 요청입니다.',
-    });
-  });
-});
+import { rejectCrossOriginRequest } from '@/shared/lib/same-origin-request';
 
 describe('rejectCrossOriginRequest', () => {
   it('요청 URL과 origin이 같으면 요청을 허용한다', () => {
@@ -77,8 +39,12 @@ describe('rejectCrossOriginRequest', () => {
     const response = rejectCrossOriginRequest(request);
 
     expect(response?.status).toBe(403);
-    await expect(response?.json()).resolves.toEqual({
-      error: 'Cross-origin request is not allowed',
+    await expect(response?.json()).resolves.toMatchObject({
+      success: false,
+      error: {
+        statusCode: 403,
+        message: 'Cross-origin request is not allowed',
+      },
     });
   });
 });

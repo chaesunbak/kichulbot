@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { COOKIE_NAME } from '@/features/auth/api/server/queries';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { getInternalApiBaseUrl } from '@/shared/api/base-url';
-import { authErrorResponse } from '@/shared/lib/route-helpers';
+import { localApiErrorResponse } from '@/shared/lib/local-api-error-response';
 
 const OAUTH_NEXT_COOKIE_NAME = 'kichulbot_oauth_next';
 
@@ -26,13 +26,21 @@ export async function GET(request: NextRequest) {
       redirect: 'manual',
     });
   } catch {
-    return authErrorResponse(502, '백엔드 서버에 연결할 수 없습니다.');
+    return localApiErrorResponse(
+      502,
+      '백엔드 서버에 연결할 수 없습니다.',
+      request,
+    );
   }
 
   const location = response.headers.get('location');
 
   if (!location) {
-    return authErrorResponse(502, '카카오 로그인 시작에 실패했습니다.');
+    return localApiErrorResponse(
+      502,
+      '카카오 로그인 시작에 실패했습니다.',
+      request,
+    );
   }
 
   const redirectResponse = NextResponse.redirect(location);

@@ -1,10 +1,8 @@
 import { ApiError } from '@kichulbot/api-contract';
 
 import { serverApi } from '@/shared/api/server';
-import {
-  authErrorResponse,
-  rejectCrossOriginRequest,
-} from '@/shared/lib/route-helpers';
+import { localApiErrorResponse } from '@/shared/lib/local-api-error-response';
+import { rejectCrossOriginRequest } from '@/shared/lib/same-origin-request';
 
 export async function POST(request: Request) {
   const originError = rejectCrossOriginRequest(request);
@@ -14,7 +12,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return authErrorResponse(400, 'Invalid request body');
+    return localApiErrorResponse(400, 'Invalid request body', request);
   }
 
   try {
@@ -22,11 +20,11 @@ export async function POST(request: Request) {
       '/auth/password-reset/confirm',
       body,
     );
-    return Response.json(res.data);
+    return Response.json(res);
   } catch (err) {
     if (err instanceof ApiError) {
-      return authErrorResponse(err.status, err.message);
+      return localApiErrorResponse(err.status, err.message, request);
     }
-    return authErrorResponse(500, 'Internal server error');
+    return localApiErrorResponse(500, 'Internal server error', request);
   }
 }

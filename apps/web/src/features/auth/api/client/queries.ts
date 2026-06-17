@@ -9,5 +9,16 @@ export async function listAuthConnectionsApi(): Promise<{
     createdAt: string;
   }>;
 }> {
-  return clientApi.get('/api/me/auth-connections');
+  const res = await clientApi.get<{
+    data: {
+      connections: Array<{
+        provider: 'KAKAO';
+        providerEmail: string | null;
+        providerNickname: string | null;
+        lastLoginAt: string | null;
+        createdAt: string;
+      }>;
+    };
+  }>('/api/me/auth-connections');
+  return res.data;
 }

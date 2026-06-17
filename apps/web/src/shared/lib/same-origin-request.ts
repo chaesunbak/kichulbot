@@ -1,24 +1,4 @@
-import { NextResponse } from 'next/server';
-
-import {
-  COOKIE_NAME,
-  COOKIE_OPTIONS,
-} from '@/features/auth/api/server/queries';
-import type { AuthUser } from '@/features/auth/types';
-
-export interface AuthResponse {
-  data: { user: AuthUser; accessToken: string };
-}
-
-export function authSuccessResponse(user: AuthUser, accessToken: string) {
-  const response = NextResponse.json({ user });
-  response.cookies.set(COOKIE_NAME, accessToken, COOKIE_OPTIONS);
-  return response;
-}
-
-export function authErrorResponse(status: number, message: string) {
-  return NextResponse.json({ error: message }, { status });
-}
+import { localApiErrorResponse } from '@/shared/lib/local-api-error-response';
 
 export function rejectCrossOriginRequest(request: Request) {
   const origin = normalizeOrigin(request.headers.get('origin'));
@@ -26,7 +6,11 @@ export function rejectCrossOriginRequest(request: Request) {
     return null;
   }
 
-  return authErrorResponse(403, 'Cross-origin request is not allowed');
+  return localApiErrorResponse(
+    403,
+    'Cross-origin request is not allowed',
+    request,
+  );
 }
 
 function getRequestOrigin(request: Request) {

@@ -115,7 +115,7 @@ beforeEach(() => {
   const localStorage = createLocalStorageStub();
 
   mockedClientApi.get.mockReset();
-  mockedClientApi.get.mockResolvedValue({ session: baseSession });
+  mockedClientApi.get.mockResolvedValue({ data: { session: baseSession } });
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
   vi.stubGlobal('window', { localStorage });
@@ -187,7 +187,7 @@ describe('saveLocalSolveSessionAnswer', () => {
 
   it('시험모드에서는 제출 전까지 문항 결과를 갱신하지 않는다', async () => {
     mockedClientApi.get.mockResolvedValue({
-      session: { ...baseSession, mode: 'EXAM' },
+      data: { session: { ...baseSession, mode: 'EXAM' } },
     });
     const session = await createLocalSolveSession({
       paperId: 'paper-1',
@@ -231,22 +231,24 @@ describe('saveLocalSolveSessionAnswer', () => {
 
   it('모든 선택지가 정답인 객관식은 선택한 답안을 정답으로 채점한다', async () => {
     mockedClientApi.get.mockResolvedValue({
-      session: {
-        ...baseSession,
-        paper: {
-          ...baseSession.paper,
-          questions: [
-            {
-              ...baseSession.paper.questions[0],
-              result: {
-                gradingPolicy: 'ANY_CHOICE',
-                answerChoice: null,
-                answerText: null,
-                explanation: '모든 선택지를 정답으로 처리합니다.',
-                isCorrect: null,
+      data: {
+        session: {
+          ...baseSession,
+          paper: {
+            ...baseSession.paper,
+            questions: [
+              {
+                ...baseSession.paper.questions[0],
+                result: {
+                  gradingPolicy: 'ANY_CHOICE',
+                  answerChoice: null,
+                  answerText: null,
+                  explanation: '모든 선택지를 정답으로 처리합니다.',
+                  isCorrect: null,
+                },
               },
-            },
-          ],
+            ],
+          },
         },
       },
     });
@@ -273,7 +275,7 @@ describe('saveLocalSolveSessionAnswer', () => {
 describe('submitLocalSolveSession', () => {
   it('제출 시 객관식/주관식 정답과 미응답을 집계한다', async () => {
     mockedClientApi.get.mockResolvedValue({
-      session: { ...baseSession, mode: 'EXAM' },
+      data: { session: { ...baseSession, mode: 'EXAM' } },
     });
     const session = await createLocalSolveSession({
       paperId: 'paper-1',

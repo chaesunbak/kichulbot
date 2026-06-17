@@ -17,11 +17,11 @@ export async function createSolveSession({
   paperId: string;
   mode: SolveMode;
 }): Promise<SolveSession> {
-  const body = await clientApi.post<{ session: SolveSession }>(
+  const res = await clientApi.post<{ data: { session: SolveSession } }>(
     '/api/me/solve-sessions',
     { paperId, mode },
   );
-  return body.session;
+  return res.data.session;
 }
 
 export async function createWrongQuestionSolveSession({
@@ -31,11 +31,11 @@ export async function createWrongQuestionSolveSession({
   questionSetId: string;
   mode: SolveMode;
 }): Promise<SolveSession> {
-  const body = await clientApi.post<{ session: SolveSession }>(
+  const res = await clientApi.post<{ data: { session: SolveSession } }>(
     `/api/me/wrong-question-sets/${questionSetId}/solve-sessions`,
     { mode },
   );
-  return body.session;
+  return res.data.session;
 }
 
 export async function createLatestWrongQuestionSolveSession({
@@ -43,11 +43,11 @@ export async function createLatestWrongQuestionSolveSession({
 }: {
   mode: SolveMode;
 }): Promise<SolveSession> {
-  const body = await clientApi.post<{ session: SolveSession }>(
+  const res = await clientApi.post<{ data: { session: SolveSession } }>(
     '/api/me/wrong-question-sets/solve-sessions',
     { mode },
   );
-  return body.session;
+  return res.data.session;
 }
 
 export async function createBookmarkListSolveSession({
@@ -57,11 +57,11 @@ export async function createBookmarkListSolveSession({
   bookmarkListId: string;
   mode: SolveMode;
 }): Promise<SolveSession> {
-  const body = await clientApi.post<{ session: SolveSession }>(
+  const res = await clientApi.post<{ data: { session: SolveSession } }>(
     `/api/me/question-lists/${bookmarkListId}/solve-sessions`,
     { mode },
   );
-  return body.session;
+  return res.data.session;
 }
 
 export async function createMockExamSolveSession({
@@ -71,20 +71,19 @@ export async function createMockExamSolveSession({
   examId: string;
   mode: SolveMode;
 }): Promise<{ session: SolveSession; generation: MockExamGeneration }> {
-  return clientApi.post<{
-    session: SolveSession;
-    generation: MockExamGeneration;
+  const res = await clientApi.post<{
+    data: { session: SolveSession; generation: MockExamGeneration };
   }>('/api/me/mock-exams/solve-sessions', { examId, mode });
+  return res.data;
 }
 
 export async function refreshWrongQuestionSet(
   studyDate: string,
 ): Promise<DailyWrongQuestionSet> {
-  const body = await clientApi.post<{ questionSet: DailyWrongQuestionSet }>(
-    '/api/me/wrong-question-sets',
-    { studyDate },
-  );
-  return body.questionSet;
+  const res = await clientApi.post<{
+    data: { questionSet: DailyWrongQuestionSet };
+  }>('/api/me/wrong-question-sets', { studyDate });
+  return res.data.questionSet;
 }
 
 export async function saveSolveSessionAnswer({
@@ -100,19 +99,19 @@ export async function saveSolveSessionAnswer({
     spentMilliseconds?: number;
   };
 }): Promise<{ answer: Answer; result: QuestionResult | null }> {
-  return clientApi.put<{ answer: Answer; result: QuestionResult | null }>(
-    `/api/me/solve-sessions/${sessionId}/answers/${questionId}`,
-    payload,
-  );
+  const res = await clientApi.put<{
+    data: { answer: Answer; result: QuestionResult | null };
+  }>(`/api/me/solve-sessions/${sessionId}/answers/${questionId}`, payload);
+  return res.data;
 }
 
 export async function submitSolveSession(
   sessionId: string,
 ): Promise<SolveSession> {
-  const body = await clientApi.post<{ session: SolveSession }>(
+  const res = await clientApi.post<{ data: { session: SolveSession } }>(
     `/api/me/solve-sessions/${sessionId}/submissions`,
   );
-  return body.session;
+  return res.data.session;
 }
 
 export async function saveQuestionNote({
@@ -122,11 +121,11 @@ export async function saveQuestionNote({
   questionId: string;
   content: string;
 }): Promise<QuestionNote | null> {
-  const body = await clientApi.put<{ note: QuestionNote | null }>(
+  const res = await clientApi.put<{ data: { note: QuestionNote | null } }>(
     `/api/me/question-notes/${questionId}`,
     { content },
   );
-  return body.note;
+  return res.data.note;
 }
 
 export async function createQuestionReport({

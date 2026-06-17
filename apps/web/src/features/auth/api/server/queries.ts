@@ -29,6 +29,13 @@ export const getToken = cache(async function getToken(): Promise<
   return result.ok ? token : null;
 });
 
+export const getCookieToken = cache(async function getCookieToken(): Promise<
+  string | null
+> {
+  const store = await cookies();
+  return store.get(COOKIE_NAME)?.value ?? null;
+});
+
 export const getCurrentUser = cache(async function getCurrentUser(
   token: string,
 ): Promise<AuthUser> {

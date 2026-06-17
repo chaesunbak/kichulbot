@@ -7,11 +7,10 @@ import { clientApi } from '@/shared/api/client';
 export async function createBookmarkList(
   name: string,
 ): Promise<BookmarkListSummary> {
-  const body = await clientApi.post<{ bookmarkList: BookmarkListSummary }>(
-    '/api/me/question-lists',
-    { name },
-  );
-  return body.bookmarkList;
+  const res = await clientApi.post<{
+    data: { bookmarkList: BookmarkListSummary };
+  }>('/api/me/question-lists', { name });
+  return res.data.bookmarkList;
 }
 
 export async function addQuestionToBookmarkList({
@@ -45,11 +44,11 @@ export async function createLibraryFolder({
   name: string;
   parentId: string | null;
 }): Promise<LibraryFolder> {
-  const body = await clientApi.post<{ folder: LibraryFolder }>(
+  const res = await clientApi.post<{ data: { folder: LibraryFolder } }>(
     '/api/me/library/folders',
     { name, parentId },
   );
-  return body.folder;
+  return res.data.folder;
 }
 
 export async function renameLibraryFolder({
@@ -59,11 +58,11 @@ export async function renameLibraryFolder({
   folderId: string;
   name: string;
 }): Promise<LibraryFolder> {
-  const body = await clientApi.patch<{ folder: LibraryFolder }>(
+  const res = await clientApi.patch<{ data: { folder: LibraryFolder } }>(
     `/api/me/library/folders/${folderId}`,
     { name },
   );
-  return body.folder;
+  return res.data.folder;
 }
 
 export async function deleteLibraryFolder(folderId: string): Promise<void> {

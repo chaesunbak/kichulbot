@@ -26,16 +26,16 @@ export async function createLocalSolveSession({
   paperId: string;
   mode: SolveMode;
 }) {
-  const body = await clientApi.get<{ session: SolveSession }>(
+  const res = await clientApi.get<{ data: { session: SolveSession } }>(
     `/api/public/solve-sessions/papers/${paperId}?mode=${mode}`,
   );
   const now = new Date().toISOString();
   const session: SolveSession = {
-    ...body.session,
+    ...res.data.session,
     id: `local_${crypto.randomUUID()}`,
     paper: {
-      ...body.session.paper,
-      questions: body.session.paper.questions.map((question) => ({
+      ...res.data.session.paper,
+      questions: res.data.session.paper.questions.map((question) => ({
         ...question,
         result: null,
       })),
@@ -47,7 +47,7 @@ export async function createLocalSolveSession({
     updatedAt: now,
   };
   const answerKeys = Object.fromEntries(
-    body.session.paper.questions.map((question) => [
+    res.data.session.paper.questions.map((question) => [
       question.id,
       question.result,
     ]),

@@ -18,6 +18,7 @@ type ConfirmDialogProps = {
   cancelLabel?: string;
   confirmLabel?: string;
   destructive?: boolean;
+  closeOnDimmerClick?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   onExit: () => void;
@@ -30,6 +31,7 @@ export function ConfirmDialog({
   cancelLabel = '취소',
   confirmLabel = '확인',
   destructive = false,
+  closeOnDimmerClick = false,
   onCancel,
   onConfirm,
   onExit,
@@ -48,7 +50,9 @@ export function ConfirmDialog({
         if (!open) onCancel();
       }}
     >
-      <AlertDialogContent>
+      <AlertDialogContent
+        dimmerProps={closeOnDimmerClick ? { onClick: onCancel } : undefined}
+      >
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description ? (

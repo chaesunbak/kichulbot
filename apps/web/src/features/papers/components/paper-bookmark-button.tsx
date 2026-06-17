@@ -4,10 +4,12 @@ import { Button } from '@kichulbot/ui/components/ui/button';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
 import { BookCheck, BookPlus, Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { overlay } from 'overlay-kit';
 import posthog from 'posthog-js';
 import { useState } from 'react';
 
 import { addExamPaperToLibrary } from '@/features/papers/api/client/mutations';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 
 const MIN_ADDING_DURATION_MS = 400;
 
@@ -27,7 +29,22 @@ export function PaperBookmarkButton({
 
   const addToLibrary = async (targetFolderId: string | null) => {
     if (!isAuthenticated) {
-      router.push(`/login?next=${encodeURIComponent(pathname)}`);
+      const shouldLogin = await overlay.openAsync<boolean>(
+        ({ isOpen, close, unmount }) => (
+          <ConfirmDialog
+            isOpen={isOpen}
+            title="로그인이 필요한 서비스 입니다."
+            description="로그인 하시겠습니까?"
+            closeOnDimmerClick
+            onCancel={() => close(false)}
+            onConfirm={() => close(true)}
+            onExit={unmount}
+          />
+        ),
+      );
+      if (shouldLogin) {
+        router.push(`/login?next=${encodeURIComponent(pathname)}`);
+      }
       return;
     }
 

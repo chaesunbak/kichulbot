@@ -1,4 +1,4 @@
-import { isUnauthorizedError } from '@/features/auth/api/server/redirect';
+import { isUnauthorizedError } from '@/features/auth/lib/auth-redirect';
 import { FeatureSection } from '@/features/home/components/feature-section';
 import { MissionSection } from '@/features/home/components/mission-section';
 import { RecentLearningRecordsSection } from '@/features/home/components/recent-learning-records-section';

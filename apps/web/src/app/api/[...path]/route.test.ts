@@ -5,12 +5,12 @@ import type * as ApiBffForwarderModule from '@/shared/lib/api-bff-forwarder';
 import { GET, POST } from './route';
 
 const mocks = vi.hoisted(() => ({
-  getCookieToken: vi.fn(),
+  getAuthToken: vi.fn(),
   forwardJsonBffRequest: vi.fn(),
 }));
 
-vi.mock('@/features/auth/api/server/queries', () => ({
-  getCookieToken: mocks.getCookieToken,
+vi.mock('@/features/auth/lib/server-auth', () => ({
+  getAuthToken: mocks.getAuthToken,
 }));
 
 vi.mock('@/shared/lib/api-bff-forwarder', async (importOriginal) => {
@@ -23,7 +23,7 @@ vi.mock('@/shared/lib/api-bff-forwarder', async (importOriginal) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.getCookieToken.mockResolvedValue('access-token');
+  mocks.getAuthToken.mockResolvedValue('access-token');
   mocks.forwardJsonBffRequest.mockResolvedValue(
     Response.json({ success: true, data: { ok: true } }),
   );
@@ -81,7 +81,7 @@ describe('/api/[...path]', () => {
   });
 
   it('public 풀이 세션 조회 요청도 통합 JSON BFF로 전달한다', async () => {
-    mocks.getCookieToken.mockResolvedValue(null);
+    mocks.getAuthToken.mockResolvedValue(null);
     const request = new Request(
       'https://kichulbot.test/api/public/solve-sessions/papers/paper_1?mode=EXAM',
     );

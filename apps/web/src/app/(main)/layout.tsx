@@ -1,4 +1,4 @@
-import { getToken } from '@/features/auth/api/server/queries';
+import { auth } from '@/features/auth/lib/server-auth';
 import GlobalFooter from '@/shared/components/global-footer';
 import MainHeader from '@/shared/components/main-header';
 import { MobileBottomNavigation } from '@/shared/components/main-navigation';
@@ -8,11 +8,11 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const token = await getToken();
+  const session = await auth();
 
   return (
     <div className="flex flex-1 flex-col">
-      <MainHeader isAuthenticated={Boolean(token)} />
+      <MainHeader isAuthenticated={Boolean(session)} />
       <main
         className="
           flex-1 pb-20

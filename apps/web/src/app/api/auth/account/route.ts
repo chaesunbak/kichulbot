@@ -1,23 +1,18 @@
 import { ApiError } from '@kichulbot/api-contract';
-import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { COOKIE_NAME } from '@/features/auth/api/server/queries';
+import { COOKIE_NAME } from '@/features/auth/lib/auth-cookie';
+import { withAuth } from '@/features/auth/lib/with-auth';
 import { serverApi } from '@/shared/api/server';
 import { localApiErrorResponse } from '@/shared/lib/local-api-error-response';
 import { rejectCrossOriginRequest } from '@/shared/lib/same-origin-request';
 
-export async function DELETE(request: NextRequest) {
-  const originError = rejectCrossOriginRequest(request);
-  if (originError) return originError;
-
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) {
-    return localApiErrorResponse(401, '로그인이 필요합니다.', request);
-  }
-
+const deleteAccount = withAuth(async (request, { auth }) => {
   try {
-    const res = await serverApi.delete<{ data: { ok: true } }>('/me', token);
+    const res = await serverApi.delete<{ data: { ok: true } }>(
+      '/me',
+      auth.token,
+    );
     const response = NextResponse.json(res);
     response.cookies.delete(COOKIE_NAME);
     return response;
@@ -31,4 +26,11 @@ export async function DELETE(request: NextRequest) {
     }
     return localApiErrorResponse(500, 'Internal server error', request);
   }
+});
+
+export async function DELETE(request: Request) {
+  const originError = rejectCrossOriginRequest(request);
+  if (originError) return originError;
+
+  return deleteAccount(request);
 }

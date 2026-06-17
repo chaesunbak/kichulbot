@@ -1,4 +1,6 @@
-import { getToken } from '@/features/auth/api/server/queries';
+import { ApiError } from '@kichulbot/api-contract';
+
+import { getAuthContext } from '@/features/auth/lib/server-auth';
 import type {
   DailyWrongQuestionSet,
   SolveSession,
@@ -9,11 +11,11 @@ import type {
 import { serverApi } from '@/shared/api/server';
 
 export const getSolveSession = async (id: string): Promise<SolveSession> => {
-  const token = await getToken();
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const context = await getAuthContext();
+  if (!context) throw new ApiError(401, '로그인이 필요합니다.');
   const res = await serverApi.get<{ data: { session: SolveSession } }>(
     `/me/solve-sessions/${id}`,
-    token,
+    context.token,
   );
   return res.data.session;
 };
@@ -59,10 +61,8 @@ export const getSolveSessionLogPage = async ({
   page = 1,
   limit = 20,
 }: GetSolveSessionLogPageOptions = {}): Promise<SolveSessionLogPage> => {
-  const token = await getToken();
-  if (!token) {
-    return { logs: [], total: 0, page, limit, totalPages: 0 };
-  }
+  const context = await getAuthContext();
+  if (!context) throw new ApiError(401, '로그인이 필요합니다.');
   const query = new URLSearchParams({
     status,
     page: String(page),
@@ -71,17 +71,17 @@ export const getSolveSessionLogPage = async ({
   if (submittedDate) query.set('submittedDate', submittedDate);
   const res = await serverApi.get<{ data: SolveSessionLogPage }>(
     `/me/solve-sessions?${query}`,
-    token,
+    context.token,
   );
   return res.data;
 };
 
 export const getTodayWrongQuestions =
   async (): Promise<DailyWrongQuestionSet | null> => {
-    const token = await getToken();
-    if (!token) return null;
+    const context = await getAuthContext();
+    if (!context) throw new ApiError(401, '로그인이 필요합니다.');
     const res = await serverApi.get<{
       data: { questionSet: DailyWrongQuestionSet | null };
-    }>('/me/wrong-question-sets', token);
+    }>('/me/wrong-question-sets', context.token);
     return res.data.questionSet;
   };

@@ -8,7 +8,7 @@ import {
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import {
   getSolveSessionLogPage,
   getSolveSessionLogs,

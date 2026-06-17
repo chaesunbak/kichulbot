@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import type { LibraryFolder } from '@/features/learning/types';

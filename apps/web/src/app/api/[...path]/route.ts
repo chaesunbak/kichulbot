@@ -1,4 +1,4 @@
-import { getCookieToken } from '@/features/auth/api/server/queries';
+import { getAuthToken } from '@/features/auth/lib/server-auth';
 import { forwardJsonBffRequest } from '@/shared/lib/api-bff-forwarder';
 import { rejectCrossOriginRequest } from '@/shared/lib/same-origin-request';
 
@@ -18,7 +18,7 @@ async function handleBffRequest(request: Request, { params }: RouteContext) {
     if (originError) return originError;
   }
 
-  const token = await getCookieToken();
+  const token = await getAuthToken();
   return forwardJsonBffRequest(request, upstreamPathWithSearch, token);
 }
 

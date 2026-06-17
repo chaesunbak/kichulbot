@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
-import { getToken } from '@/features/auth/api/server/queries';
-import { isUnauthorizedError } from '@/features/auth/api/server/redirect';
+import { isUnauthorizedError } from '@/features/auth/lib/auth-redirect';
+import { auth } from '@/features/auth/lib/server-auth';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
 import {
@@ -32,7 +32,7 @@ export default async function PaperPage({
       if (isUnauthorizedError(error)) return [];
       throw error;
     }),
-    getToken(),
+    auth(),
   ]);
 
   return (

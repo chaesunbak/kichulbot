@@ -2,7 +2,7 @@ import { Button } from '@kichulbot/ui/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getSolveSessionLogPage } from '@/features/learning/api/server/queries';
 import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
 import { PageContainer } from '@/shared/components/page-container';

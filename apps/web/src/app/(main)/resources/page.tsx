@@ -3,7 +3,7 @@ import { Input } from '@kichulbot/ui/components/ui/input';
 import { ChevronRight, ClipboardList, Search } from 'lucide-react';
 import Link from 'next/link';
 
-import { getToken } from '@/features/auth/api/server/queries';
+import { auth } from '@/features/auth/lib/server-auth';
 import {
   type Category,
   getPublicCategories,
@@ -23,7 +23,7 @@ export default async function PapersPage() {
   let isAuthenticated = false;
   try {
     const [token, categories] = await Promise.all([
-      getToken(),
+      auth(),
       getPublicCategories(),
     ]);
     isAuthenticated = !!token;

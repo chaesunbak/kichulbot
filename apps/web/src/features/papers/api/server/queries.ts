@@ -1,4 +1,4 @@
-import { getToken } from '@/features/auth/api/server/queries';
+import { getAuthContext } from '@/features/auth/lib/server-auth';
 import type { Paper, PaperQuestion } from '@/features/papers/types';
 import { serverApi } from '@/shared/api/server';
 
@@ -29,7 +29,7 @@ function toPaperQuery(filters: PaperSearchFilters = {}) {
 export const getPapers = async (
   filters: PaperSearchFilters = {},
 ): Promise<Paper[]> => {
-  const token = await getToken();
+  const token = (await getAuthContext())?.token;
   const path = token ? '/exam-papers' : '/public/exam-papers';
   const query = toPaperQuery(filters);
   const res = await serverApi.get<{ data: { papers: Paper[] } }>(
@@ -56,7 +56,7 @@ export const getPapersByExamId = async (examId: string): Promise<Paper[]> => {
 };
 
 export const getPaper = async (id: string): Promise<Paper> => {
-  const token = await getToken();
+  const token = (await getAuthContext())?.token;
   const path = token ? '/exam-papers' : '/public/exam-papers';
   const res = await serverApi.get<{ data: { paper: Paper } }>(
     `${path}/${id}`,
@@ -77,7 +77,7 @@ export const getPublicPaper = async (id: string): Promise<Paper> => {
 export const getPaperQuestions = async (
   id: string,
 ): Promise<{ paper: Paper; questions: PaperQuestion[] }> => {
-  const token = await getToken();
+  const token = (await getAuthContext())?.token;
   const path = token ? '/exam-papers' : '/public/exam-papers';
   const res = await serverApi.get<{
     data: { paper: Paper; questions: PaperQuestion[] };

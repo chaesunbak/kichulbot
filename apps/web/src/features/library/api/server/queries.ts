@@ -1,4 +1,6 @@
-import { getToken } from '@/features/auth/api/server/queries';
+import { ApiError } from '@kichulbot/api-contract';
+
+import { getAuthContext } from '@/features/auth/lib/server-auth';
 import type {
   BookmarkList,
   BookmarkListSummary,
@@ -7,27 +9,30 @@ import type {
 import { serverApi } from '@/shared/api/server';
 
 export const getLibrary = async (): Promise<Library> => {
-  const token = await getToken();
-  if (!token) return { folders: [], papers: [] };
-  const res = await serverApi.get<{ data: Library }>('/me/library', token);
+  const context = await getAuthContext();
+  if (!context) throw new ApiError(401, '로그인이 필요합니다.');
+  const res = await serverApi.get<{ data: Library }>(
+    '/me/library',
+    context.token,
+  );
   return res.data;
 };
 
 export const getBookmarkLists = async (): Promise<BookmarkListSummary[]> => {
-  const token = await getToken();
-  if (!token) return [];
+  const context = await getAuthContext();
+  if (!context) throw new ApiError(401, '로그인이 필요합니다.');
   const res = await serverApi.get<{
     data: { bookmarkLists: BookmarkListSummary[] };
-  }>('/me/question-lists', token);
+  }>('/me/question-lists', context.token);
   return res.data.bookmarkLists;
 };
 
 export const getBookmarkList = async (id: string): Promise<BookmarkList> => {
-  const token = await getToken();
-  if (!token) throw new Error('로그인이 필요합니다.');
+  const context = await getAuthContext();
+  if (!context) throw new ApiError(401, '로그인이 필요합니다.');
   const res = await serverApi.get<{ data: { bookmarkList: BookmarkList } }>(
     `/me/question-lists/${id}`,
-    token,
+    context.token,
   );
   return res.data.bookmarkList;
 };

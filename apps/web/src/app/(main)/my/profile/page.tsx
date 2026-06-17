@@ -4,16 +4,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
-import { redirect } from 'next/navigation';
 
-import { getCurrentUserOrNull } from '@/features/auth/api/server/queries';
 import { ProfileForm } from '@/features/auth/components/profile-form';
+import { requireAuth } from '@/features/auth/lib/server-auth';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function ProfilePage() {
-  const user = await getCurrentUserOrNull();
-  if (!user) redirect('/login?next=/my/profile');
+  const { user } = await requireAuth('/my/profile');
 
   return (
     <PageContainer>

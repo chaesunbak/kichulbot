@@ -1,4 +1,4 @@
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { StreakSummaryCard } from '@/features/question-attempts/components/streak-summary-card';
 import {

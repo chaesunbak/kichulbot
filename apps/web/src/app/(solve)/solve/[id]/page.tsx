@@ -1,7 +1,7 @@
 import { ApiError } from '@kichulbot/api-contract';
 import { notFound, redirect } from 'next/navigation';
 
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getSolveSession } from '@/features/learning/api/server/queries';
 import { SolveSession } from '@/features/learning/components/solve-session';
 import type { SolveSession as SolveSessionData } from '@/features/learning/types';

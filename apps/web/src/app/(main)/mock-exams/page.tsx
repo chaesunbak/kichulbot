@@ -1,4 +1,4 @@
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getExams } from '@/features/exams/api/server/queries';
 import { MockExamStartPanel } from '@/features/learning/components/mock-exam-start-panel';
 import { PageContainer } from '@/shared/components/page-container';

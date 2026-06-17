@@ -1,4 +1,4 @@
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { RecapTrendSection } from '@/features/learning/components/recap-trend-section';
 import {

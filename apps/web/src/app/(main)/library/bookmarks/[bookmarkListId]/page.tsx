@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import type { BookmarkList } from '@/features/learning/types';
 import { getBookmarkList } from '@/features/library/api/server/queries';
 import { BookmarkListDetail } from '@/features/library/components/bookmark-list-detail';

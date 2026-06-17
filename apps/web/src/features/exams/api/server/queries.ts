@@ -1,4 +1,4 @@
-import { getToken } from '@/features/auth/api/server/queries';
+import { getAuthContext } from '@/features/auth/lib/server-auth';
 import type { Category, Exam } from '@/features/exams/types';
 import { serverApi } from '@/shared/api/server';
 
@@ -11,7 +11,7 @@ const publicResourceCacheOptions = {
 };
 
 export const getExams = async (): Promise<Exam[]> => {
-  const token = await getToken();
+  const token = (await getAuthContext())?.token;
   const path = token ? '/exams' : '/public/exams';
   const res = await serverApi.get<{ data: { exams: Exam[] } }>(
     path,
@@ -30,7 +30,7 @@ export const getPublicExams = async (): Promise<Exam[]> => {
 };
 
 export const getCategories = async (): Promise<Category[]> => {
-  const token = await getToken();
+  const token = (await getAuthContext())?.token;
   const path = token ? '/categories' : '/public/categories';
   const res = await serverApi.get<{ data: { categories: Category[] } }>(
     path,

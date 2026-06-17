@@ -7,9 +7,14 @@ const api = vi.hoisted(() => ({
   serverApi: {
     delete: vi.fn(),
   },
+  getAuthContext: vi.fn(),
 }));
 
 vi.mock('server-only', () => ({}));
+
+vi.mock('@/features/auth/lib/server-auth', () => ({
+  getAuthContext: api.getAuthContext,
+}));
 
 vi.mock('@/shared/api/server', () => ({
   serverApi: api.serverApi,
@@ -17,6 +22,17 @@ vi.mock('@/shared/api/server', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  api.getAuthContext.mockResolvedValue({
+    token: 'expired-token',
+    user: {
+      id: 'user_1',
+      email: 'user@example.com',
+      nickname: '사용자',
+      authType: 'EMAIL',
+      linkedProviders: [],
+      role: 'USER',
+    },
+  });
 });
 
 describe('/api/auth/account', () => {
@@ -25,22 +41,14 @@ describe('/api/auth/account', () => {
       new ApiError(401, '인증 정보가 유효하지 않습니다.'),
     );
 
-    const request = Object.assign(
-      new Request('https://kichulbot.test/api/auth/account', {
-        method: 'DELETE',
-        headers: {
-          origin: 'https://kichulbot.test',
-        },
-      }),
-      {
-        cookies: {
-          get: (name: string) =>
-            name === 'kichulbot_token' ? { value: 'expired-token' } : undefined,
-        },
+    const request = new Request('https://kichulbot.test/api/auth/account', {
+      method: 'DELETE',
+      headers: {
+        origin: 'https://kichulbot.test',
       },
-    );
+    });
 
-    const response = await DELETE(request as Parameters<typeof DELETE>[0]);
+    const response = await DELETE(request);
 
     expect(response.status).toBe(401);
     expect(response.headers.get('set-cookie')).toContain('kichulbot_token=;');

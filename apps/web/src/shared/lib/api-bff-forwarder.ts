@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import {
-  COOKIE_NAME,
-  COOKIE_OPTIONS,
-} from '@/features/auth/api/server/queries';
+import { COOKIE_NAME, COOKIE_OPTIONS } from '@/features/auth/lib/auth-cookie';
 import type { AuthUser } from '@/features/auth/types';
 import { getInternalApiBaseUrl } from '@/shared/api/base-url';
 import { localApiErrorResponse } from '@/shared/lib/local-api-error-response';

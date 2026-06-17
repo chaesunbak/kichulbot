@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { COOKIE_NAME } from '@/features/auth/api/server/queries';
+import { COOKIE_NAME } from '@/features/auth/lib/auth-cookie';
 import { normalizeNextPath } from '@/features/auth/lib/next-path';
 import { getInternalApiBaseUrl } from '@/shared/api/base-url';
 import { localApiErrorResponse } from '@/shared/lib/local-api-error-response';

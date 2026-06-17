@@ -17,6 +17,10 @@ export interface AuthUser {
   role: 'USER' | 'ADMIN';
 }
 
+export interface AuthSession {
+  user: AuthUser;
+}
+
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
 export type EmailRegisterFormValues = z.infer<typeof emailRegisterSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;

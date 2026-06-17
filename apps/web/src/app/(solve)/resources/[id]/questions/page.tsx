@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { getToken } from '@/features/auth/api/server/queries';
+import { auth } from '@/features/auth/lib/server-auth';
 import { getPublicPaperQuestions } from '@/features/papers/api/server/queries';
 import { PaperQuestionViewer } from '@/features/papers/components/paper-question-viewer';
 
@@ -21,7 +21,7 @@ export default async function PaperQuestionsPage({
     notFound();
   }
 
-  const token = await getToken();
+  const session = await auth();
 
   return (
     <PaperQuestionViewer
@@ -30,7 +30,7 @@ export default async function PaperQuestionsPage({
       initialQuestionNumber={
         Number.isFinite(questionNumber) ? questionNumber : 1
       }
-      isAuthenticated={!!token}
+      isAuthenticated={!!session}
     />
   );
 }

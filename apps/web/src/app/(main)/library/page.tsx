@@ -1,4 +1,4 @@
-import { redirectToLoginIfUnauthorized } from '@/features/auth/api/server/redirect';
+import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import {
   getBookmarkLists,
   getLibrary,

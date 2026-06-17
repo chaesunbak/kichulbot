@@ -56,7 +56,7 @@ COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/src/infrastructure/database/schema.prisma ./apps/api/src/infrastructure/database/schema.prisma
 COPY --from=builder /app/apps/api/src/infrastructure/database/migrations ./apps/api/src/infrastructure/database/migrations
-COPY --from=builder /app/apps/api/src/infrastructure/generated/prisma ./apps/api/src/infrastructure/generated/prisma
+COPY --from=builder /app/apps/api/src/infrastructure/database/generated/prisma ./apps/api/src/infrastructure/database/generated/prisma
 COPY --from=builder /app/packages/api-contract ./packages/api-contract
 COPY --from=builder /app/packages/utils ./packages/utils
 

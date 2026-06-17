@@ -40,10 +40,10 @@ apps/api/src/
 ├── infrastructure/
 │   ├── database/
 │   │   ├── database.service.ts
+│   │   ├── generated/       # Prisma generated output
 │   │   ├── migrations/
 │   │   ├── schema.prisma
 │   │   └── seed.ts
-│   ├── generated/           # Prisma generated output
 │   └── storage/
 ├── modules/
 │   └── (module)/

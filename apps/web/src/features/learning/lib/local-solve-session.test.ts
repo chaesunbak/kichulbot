@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  createLocalMockExamSolveSession,
   createLocalSolveSession,
   getLocalSolveSession,
   saveLocalSolveSessionAnswer,
@@ -12,6 +13,7 @@ import { clientApi } from '@/shared/api/client';
 vi.mock('@/shared/api/client', () => ({
   clientApi: {
     get: vi.fn(),
+    post: vi.fn(),
   },
 }));
 
@@ -115,7 +117,22 @@ beforeEach(() => {
   const localStorage = createLocalStorageStub();
 
   mockedClientApi.get.mockReset();
+  mockedClientApi.post.mockReset();
   mockedClientApi.get.mockResolvedValue({ data: { session: baseSession } });
+  mockedClientApi.post.mockResolvedValue({
+    data: {
+      session: {
+        ...baseSession,
+        id: 'public_mock_exam_exam-1',
+        paper: {
+          ...baseSession.paper,
+          id: 'mock_exam_exam-1',
+          title: '시험 모의고사',
+        },
+      },
+      generation: { supplemented: false, insufficientTags: [] },
+    },
+  });
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-06-07T00:00:00.000Z'));
   vi.stubGlobal('window', { localStorage });
@@ -146,6 +163,29 @@ describe('createLocalSolveSession', () => {
       null,
       null,
     ]);
+    expect(getLocalSolveSession(session.id)).toEqual(session);
+  });
+});
+
+describe('createLocalMockExamSolveSession', () => {
+  it('공개 모의고사 세션을 로컬 세션으로 초기화한다', async () => {
+    const { session, generation } = await createLocalMockExamSolveSession({
+      examId: 'exam-1',
+      mode: 'EXAM',
+    });
+
+    expect(mockedClientApi.post).toHaveBeenCalledWith(
+      '/api/public/mock-exams/solve-sessions',
+      { examId: 'exam-1', mode: 'EXAM' },
+    );
+    expect(session.id).toBe('local_local-id-1');
+    expect(session.paper.id).toBe('mock_exam_exam-1');
+    expect(session.paper.questions.map((question) => question.result)).toEqual([
+      null,
+      null,
+      null,
+    ]);
+    expect(generation).toEqual({ supplemented: false, insufficientTags: [] });
     expect(getLocalSolveSession(session.id)).toEqual(session);
   });
 });

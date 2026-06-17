@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -37,5 +38,20 @@ export class MockExamsController {
       dto.examId,
       dto.mode,
     );
+  }
+}
+
+@ApiTags('mock-exams')
+@Controller('public/mock-exams')
+export class PublicMockExamsController {
+  constructor(private readonly mockExamsService: MockExamsService) {}
+
+  @Post('solve-sessions')
+  @ApiOperation({ summary: '공개 모의고사 생성 후 임시 풀이 데이터 조회' })
+  @ApiOkResponse({
+    description: '비로그인 풀이에 필요한 모의고사 문항을 반환합니다.',
+  })
+  startSolveSession(@Body() dto: StartMockExamSolveSessionDto) {
+    return this.mockExamsService.startPublicSolveSession(dto.examId, dto.mode);
   }
 }

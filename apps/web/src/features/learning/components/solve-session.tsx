@@ -83,6 +83,8 @@ export function SolveSession({
     (answer) => answer.questionId === question?.id,
   );
   const isLocalSession = session.id.startsWith('local_');
+  const isLocalMockExam =
+    isLocalSession && session.paper.id.startsWith('mock_exam_');
 
   const answeredIds = useMemo(
     () =>
@@ -294,7 +296,13 @@ export function SolveSession({
         duration_milliseconds: durationMilliseconds,
       });
       setMessage('저장했습니다.');
-      router.push(isLocalSession ? `/resources/${session.paper.id}` : '/logs');
+      router.push(
+        isLocalSession
+          ? isLocalMockExam
+            ? '/mock-exams'
+            : `/resources/${session.paper.id}`
+          : '/logs',
+      );
     } catch {
       setIsFinishing(false);
       showFailureMessage('풀이를 저장하지 못했습니다.');

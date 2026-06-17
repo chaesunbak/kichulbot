@@ -7,7 +7,6 @@ import { verifyAccessToken } from '@/features/auth/lib/jwt';
 const PROTECTED_PATH_PREFIXES = [
   '/library',
   '/logs',
-  '/mock-exams',
   '/my',
   '/recap',
   '/report',
@@ -16,8 +15,13 @@ const PROTECTED_PATH_PREFIXES = [
   '/streak',
 ];
 
+const PUBLIC_PATH_PREFIXES = ['/results/local', '/solve/local'];
+
 export async function proxy(request: NextRequest) {
-  if (matchesPathPrefix(request.nextUrl.pathname, PROTECTED_PATH_PREFIXES)) {
+  if (
+    matchesPathPrefix(request.nextUrl.pathname, PROTECTED_PATH_PREFIXES) &&
+    !matchesPathPrefix(request.nextUrl.pathname, PUBLIC_PATH_PREFIXES)
+  ) {
     const token = request.cookies.get(COOKIE_NAME)?.value;
 
     const result = token ? await verifyAccessToken(token) : null;

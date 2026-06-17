@@ -1,5 +1,6 @@
 import type {
   Answer,
+  MockExamGeneration,
   QuestionResult,
   SolveSession,
 } from '@/features/learning/types';
@@ -29,13 +30,34 @@ export async function createLocalSolveSession({
   const res = await clientApi.get<{ data: { session: SolveSession } }>(
     `/api/public/solve-sessions/papers/${paperId}?mode=${mode}`,
   );
+  return createLocalSessionFromServerSession(res.data.session);
+}
+
+export async function createLocalMockExamSolveSession({
+  examId,
+  mode,
+}: {
+  examId: string;
+  mode: SolveMode;
+}): Promise<{ session: SolveSession; generation: MockExamGeneration }> {
+  const res = await clientApi.post<{
+    data: { session: SolveSession; generation: MockExamGeneration };
+  }>('/api/public/mock-exams/solve-sessions', { examId, mode });
+
+  return {
+    session: createLocalSessionFromServerSession(res.data.session),
+    generation: res.data.generation,
+  };
+}
+
+function createLocalSessionFromServerSession(serverSession: SolveSession) {
   const now = new Date().toISOString();
   const session: SolveSession = {
-    ...res.data.session,
+    ...serverSession,
     id: `local_${crypto.randomUUID()}`,
     paper: {
-      ...res.data.session.paper,
-      questions: res.data.session.paper.questions.map((question) => ({
+      ...serverSession.paper,
+      questions: serverSession.paper.questions.map((question) => ({
         ...question,
         result: null,
       })),
@@ -47,7 +69,7 @@ export async function createLocalSolveSession({
     updatedAt: now,
   };
   const answerKeys = Object.fromEntries(
-    res.data.session.paper.questions.map((question) => [
+    serverSession.paper.questions.map((question) => [
       question.id,
       question.result,
     ]),

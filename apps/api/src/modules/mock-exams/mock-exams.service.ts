@@ -3,6 +3,7 @@ import type {
   StartMockExamSolveSessionResponse,
 } from '@kichulbot/api-contract/mock-exams';
 import { StartMockExamSolveSessionResponseSchema } from '@kichulbot/api-contract/mock-exams';
+import type { SolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
 import {
   BadRequestException,
   Injectable,
@@ -27,12 +28,13 @@ type CandidateQuestion = Awaited<
 
 type Candidate = {
   questionId: string;
-  questionRevisionId: string;
+  revision: CandidateQuestion['revisions'][number];
   tagIds: Set<string>;
 };
 
 type Selection = MockExamSelectedQuestion & {
   questionId: string;
+  revision: CandidateQuestion['revisions'][number];
   selectedTagId: string | null;
   supplemented: boolean;
 };
@@ -49,13 +51,23 @@ export class MockExamsService {
     examId: string,
     mode: AnswerMode,
   ): Promise<StartMockExamSolveSessionResponse> {
-    const { questionSetId, generation } = await this.generateQuestionSet(
+    const { exam, blueprintItems, allocations, selections, generation } =
+      await this.generate(examId);
+    const questionSet = await this.mockExamsRepository.createQuestionSet({
       userId,
-      examId,
-    );
+      title: `${exam.name} 모의고사`,
+      questions: selections,
+      parameters: this.toParameters(
+        exam,
+        blueprintItems,
+        allocations,
+        selections,
+        generation,
+      ),
+    });
     const session = await this.solveSessionsService.startQuestionSet(
       userId,
-      questionSetId,
+      questionSet.id,
       mode,
       { reuseUnsubmitted: false },
     );
@@ -65,7 +77,19 @@ export class MockExamsService {
     });
   }
 
-  private async generateQuestionSet(userId: string, examId: string) {
+  async startPublicSolveSession(
+    examId: string,
+    mode: AnswerMode,
+  ): Promise<StartMockExamSolveSessionResponse> {
+    const { exam, selections, generation } = await this.generate(examId);
+
+    return StartMockExamSolveSessionResponseSchema.parse({
+      session: this.toPublicSessionResponse(exam, selections, mode),
+      generation,
+    });
+  }
+
+  private async generate(examId: string) {
     const exam = await this.mockExamsRepository.findExam(examId);
     if (!exam) throw new NotFoundException('시험을 찾을 수 없습니다.');
     this.assertConfigured(exam);
@@ -90,19 +114,7 @@ export class MockExamsService {
       allocations,
       exam.mockExamQuestionCount,
     );
-    const questionSet = await this.mockExamsRepository.createQuestionSet({
-      userId,
-      title: `${exam.name} 모의고사`,
-      questions: selections,
-      parameters: this.toParameters(
-        exam,
-        blueprintItems,
-        allocations,
-        selections,
-        generation,
-      ),
-    });
-    return { questionSetId: questionSet.id, generation };
+    return { exam, blueprintItems, allocations, selections, generation };
   }
 
   private assertConfigured(
@@ -144,7 +156,7 @@ export class MockExamsService {
         if (!revision) return null;
         return {
           questionId: question.id,
-          questionRevisionId: revision.id,
+          revision,
           tagIds: new Set(question.tags.map((tag) => tag.tagId)),
         };
       })
@@ -212,7 +224,8 @@ export class MockExamsService {
         selectedQuestionIds.add(candidate.questionId);
         selections.push({
           questionId: candidate.questionId,
-          questionRevisionId: candidate.questionRevisionId,
+          questionRevisionId: candidate.revision.id,
+          revision: candidate.revision,
           selectedTagId: item.tagId,
           supplemented: false,
           reason: {
@@ -250,7 +263,8 @@ export class MockExamsService {
         selectedQuestionIds.add(candidate.questionId);
         selections.push({
           questionId: candidate.questionId,
-          questionRevisionId: candidate.questionRevisionId,
+          questionRevisionId: candidate.revision.id,
+          revision: candidate.revision,
           selectedTagId: null,
           supplemented: true,
           reason: {
@@ -268,6 +282,57 @@ export class MockExamsService {
         supplemented: insufficientTags.length > 0,
         insufficientTags,
       },
+    };
+  }
+
+  private toPublicSessionResponse(
+    exam: ConfiguredExam & { mockExamQuestionCount: number },
+    selections: Selection[],
+    mode: AnswerMode,
+  ): SolveSessionResponse {
+    const now = new Date();
+    const nowIso = now.toISOString();
+    return {
+      id: `public_mock_exam_${exam.id}`,
+      mode,
+      paper: {
+        id: `mock_exam_${exam.id}`,
+        title: `${exam.name} 모의고사`,
+        year: now.getUTCFullYear(),
+        month: null,
+        grade: null,
+        round: null,
+        questionCount: selections.length,
+        isInLibrary: false,
+        exam: {
+          id: exam.id,
+          name: exam.name,
+        },
+        questions: selections.map((selection, index) => ({
+          id: selection.questionId,
+          questionRevisionId: selection.questionRevisionId,
+          number: index + 1,
+          type: selection.revision.type,
+          imageUrl: selection.revision.imageUrl,
+          imageCacheKey: this.toImageCacheKey(selection.revision.imageHash),
+          choiceCount: selection.revision.choiceCount,
+          points: selection.revision.points,
+          recommendedTimeSeconds: selection.revision.recommendedTimeSeconds,
+          isBookmarked: false,
+          result: {
+            gradingPolicy: selection.revision.gradingPolicy,
+            answerChoice: selection.revision.answerChoice,
+            answerText: selection.revision.answerText,
+            explanation: selection.revision.explanation,
+            isCorrect: null,
+          },
+        })),
+      },
+      answers: [],
+      result: null,
+      submittedAt: null,
+      createdAt: nowIso,
+      updatedAt: nowIso,
     };
   }
 
@@ -313,5 +378,9 @@ export class MockExamsService {
       [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
     }
     return result;
+  }
+
+  private toImageCacheKey(imageHash: string): string {
+    return imageHash.startsWith('legacy_') ? imageHash : `sha256_${imageHash}`;
   }
 }

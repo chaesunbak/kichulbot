@@ -41,6 +41,7 @@ export function ResultSession({
   showPersonalActions?: boolean;
   isAuthenticated?: boolean;
 }) {
+  const isMockExam = session.paper.id.startsWith('mock_exam_');
   const [currentId, setCurrentId] = useState(session.paper.questions[0]?.id);
   const [filter, setFilter] = useState<ResultFilter>('ALL');
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false);
@@ -113,9 +114,11 @@ export function ResultSession({
           </div>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link href={`/resources/${session.paper.id}`}>
+          <Link
+            href={isMockExam ? '/mock-exams' : `/resources/${session.paper.id}`}
+          >
             <RotateCcw />
-            다시 풀기
+            {isMockExam ? '모의고사로 돌아가기' : '다시 풀기'}
           </Link>
         </Button>
       </div>

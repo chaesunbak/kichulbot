@@ -10,4 +10,10 @@ export const mockExamsRoutes = {
     request: StartMockExamSolveSessionRequestSchema,
     response: StartMockExamSolveSessionResponseSchema,
   },
+  startPublicMockExamSolveSession: {
+    method: 'POST',
+    path: '/public/mock-exams/solve-sessions',
+    request: StartMockExamSolveSessionRequestSchema,
+    response: StartMockExamSolveSessionResponseSchema,
+  },
 } as const;

@@ -135,12 +135,33 @@ describe('proxy', () => {
     );
   });
 
-  it('모의고사 경로도 보호 경로로 처리한다', async () => {
+  it('모의고사 경로는 토큰 없이도 요청을 통과시킨다', async () => {
     const response = await proxy(createRequest('/mock-exams'));
+
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.has('location')).toBe(false);
+  });
+
+  it('로컬 풀이 경로는 토큰 없이도 요청을 통과시킨다', async () => {
+    const response = await proxy(createRequest('/solve/local/local_1'));
+
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.has('location')).toBe(false);
+  });
+
+  it('로컬 결과 경로는 토큰 없이도 요청을 통과시킨다', async () => {
+    const response = await proxy(createRequest('/results/local/local_1'));
+
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(response.headers.has('location')).toBe(false);
+  });
+
+  it('서버 풀이 경로는 토큰이 없으면 로그인 페이지로 이동한다', async () => {
+    const response = await proxy(createRequest('/solve/session_1'));
 
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
-      'https://kichulbot.test/login?next=%2Fmock-exams',
+      'https://kichulbot.test/login?next=%2Fsolve%2Fsession_1',
     );
   });
 });

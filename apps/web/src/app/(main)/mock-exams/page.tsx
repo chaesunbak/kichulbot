@@ -1,13 +1,14 @@
 import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
-import { getExams } from '@/features/exams/api/server/queries';
+import { auth } from '@/features/auth/lib/server-auth';
+import { getPublicExams } from '@/features/exams/api/server/queries';
 import { MockExamStartPanel } from '@/features/learning/components/mock-exam-start-panel';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function MockExamsPage() {
-  let exams;
+  let data;
   try {
-    exams = await getExams();
+    data = await Promise.all([getPublicExams(), auth()]);
   } catch (error) {
     redirectToLoginIfUnauthorized(error, '/mock-exams');
     return (
@@ -19,11 +20,12 @@ export default async function MockExamsPage() {
       </PageContainer>
     );
   }
+  const [exams, session] = data;
 
   return (
     <PageContainer className="min-h-[calc(100svh-16rem)]">
       <PageTitle>모의고사</PageTitle>
-      <MockExamStartPanel exams={exams} />
+      <MockExamStartPanel exams={exams} isAuthenticated={!!session} />
     </PageContainer>
   );
 }

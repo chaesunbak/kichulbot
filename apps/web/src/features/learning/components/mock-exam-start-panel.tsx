@@ -11,9 +11,16 @@ import { useMemo, useState } from 'react';
 import type { Exam } from '@/features/exams/types';
 import { createMockExamSolveSession } from '@/features/learning/api/client/mutations';
 import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
+import { createLocalMockExamSolveSession } from '@/features/learning/lib/local-solve-session';
 import type { SolveMode } from '@/features/learning/types';
 
-export function MockExamStartPanel({ exams }: { exams: Exam[] }) {
+export function MockExamStartPanel({
+  exams,
+  isAuthenticated,
+}: {
+  exams: Exam[];
+  isAuthenticated: boolean;
+}) {
   const router = useRouter();
   const availableExams = useMemo(
     () => exams.filter((exam) => exam.isMockExamAvailable),
@@ -40,18 +47,26 @@ export function MockExamStartPanel({ exams }: { exams: Exam[] }) {
   async function start(exam: Exam, mode: SolveMode) {
     setStartingExamId(exam.id);
     try {
-      const { session, generation } = await createMockExamSolveSession({
-        examId: exam.id,
-        mode,
-      });
+      const { session, generation } = isAuthenticated
+        ? await createMockExamSolveSession({
+            examId: exam.id,
+            mode,
+          })
+        : await createLocalMockExamSolveSession({
+            examId: exam.id,
+            mode,
+          });
       posthog.capture('mock_exam_started', {
         session_id: session.id,
         exam_id: exam.id,
         mode,
         supplemented: generation.supplemented,
         source: 'mock_exam_page',
+        authenticated: isAuthenticated,
       });
-      router.push(`/solve/${session.id}`);
+      router.push(
+        isAuthenticated ? `/solve/${session.id}` : `/solve/local/${session.id}`,
+      );
     } catch (error) {
       setStartingExamId(null);
       toast.error(

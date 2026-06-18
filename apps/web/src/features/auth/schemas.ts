@@ -1,3 +1,4 @@
+import { LoginRequestSchema } from '@kichulbot/api-contract/auth';
 import { z } from 'zod/v4';
 
 export const updateProfileSchema = z.object({
@@ -7,10 +8,7 @@ export const updateProfileSchema = z.object({
     .max(20, '닉네임은 20자 이하로 입력해주세요'),
 });
 
-export const loginSchema = z.object({
-  email: z.email('이메일 형식이 올바르지 않습니다'),
-  password: z.string().min(8, '비밀번호를 입력해주세요').max(72),
-});
+export const loginSchema = LoginRequestSchema;
 
 export const emailRegisterSchema = z
   .object({

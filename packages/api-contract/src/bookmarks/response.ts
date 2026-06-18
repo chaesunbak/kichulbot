@@ -42,6 +42,13 @@ export type DeleteBookmarkedQuestionResponse = z.infer<
   typeof DeleteBookmarkedQuestionResponseSchema
 >;
 
+export const DeleteBookmarkListResponseSchema = z.object({
+  id: z.string(),
+});
+export type DeleteBookmarkListResponse = z.infer<
+  typeof DeleteBookmarkListResponseSchema
+>;
+
 export const StartBookmarkListSessionResponseSchema =
   StartSolveSessionResponseSchema;
 export type StartBookmarkListSessionResponse = z.infer<

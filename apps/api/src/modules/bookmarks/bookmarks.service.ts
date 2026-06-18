@@ -3,6 +3,7 @@ import {
   BookmarkListResponseEnvelope,
   BookmarkListSummaryResponseEnvelope,
   DeleteBookmarkedQuestionResponse,
+  DeleteBookmarkListResponse,
   ListBookmarkListsResponse,
 } from '@kichulbot/api-contract/bookmarks';
 import { StartSolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
@@ -65,6 +66,36 @@ export class BookmarksService {
     return {
       bookmarkList: this.toBookmarkListPayload(bookmarkList),
     };
+  }
+
+  async updateBookmarkList(
+    userId: string,
+    bookmarkListId: string,
+    name: string,
+  ): Promise<BookmarkListSummaryResponseEnvelope> {
+    const bookmarkList = await this.getOwnedBookmarkList(
+      userId,
+      bookmarkListId,
+    );
+    const updated = await this.bookmarksRepository.updateBookmarkList(
+      bookmarkList.id,
+      name.trim(),
+    );
+    return {
+      bookmarkList: this.toBookmarkListSummaryItem(updated),
+    };
+  }
+
+  async deleteBookmarkList(
+    userId: string,
+    bookmarkListId: string,
+  ): Promise<DeleteBookmarkListResponse> {
+    const bookmarkList = await this.getOwnedBookmarkList(
+      userId,
+      bookmarkListId,
+    );
+    await this.bookmarksRepository.deleteBookmarkList(bookmarkList.id);
+    return { id: bookmarkList.id };
   }
 
   async addQuestion(

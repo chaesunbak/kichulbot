@@ -13,6 +13,25 @@ export async function createBookmarkList(
   return res.data.bookmarkList;
 }
 
+export async function renameBookmarkList({
+  bookmarkListId,
+  name,
+}: {
+  bookmarkListId: string;
+  name: string;
+}): Promise<BookmarkListSummary> {
+  const res = await clientApi.patch<{
+    data: { bookmarkList: BookmarkListSummary };
+  }>(`/api/me/question-lists/${bookmarkListId}`, { name });
+  return res.data.bookmarkList;
+}
+
+export async function deleteBookmarkList(
+  bookmarkListId: string,
+): Promise<void> {
+  await clientApi.delete(`/api/me/question-lists/${bookmarkListId}`);
+}
+
 export async function addQuestionToBookmarkList({
   bookmarkListId,
   questionId,

@@ -120,6 +120,8 @@ describe('BookmarksService', () => {
       findBookmarkLists: jest.fn(),
       findBookmarkList: jest.fn(),
       createBookmarkList: jest.fn(),
+      updateBookmarkList: jest.fn(),
+      deleteBookmarkList: jest.fn(),
       findQuestion: jest.fn(),
       addQuestion: jest.fn(),
       findBookmarkedQuestion: jest.fn(),
@@ -129,6 +131,63 @@ describe('BookmarksService', () => {
       startQuestionSet: jest.fn(),
     } as unknown as jest.Mocked<SolveSessionsService>;
     service = new BookmarksService(repository, solveSessionsService);
+  });
+
+  it('이름을 변경하기 전에 북마크 목록 소유권을 확인하고 이름을 정리한다', async () => {
+    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.updateBookmarkList.mockResolvedValue({
+      ...bookmarkList,
+      title: '오답 모음',
+      _count: { items: 0 },
+    });
+
+    const response = await service.updateBookmarkList(
+      'user_1',
+      bookmarkList.id,
+      '  오답 모음  ',
+    );
+
+    expect(repository.findBookmarkList).toHaveBeenCalledWith(
+      'user_1',
+      bookmarkList.id,
+    );
+    expect(repository.updateBookmarkList).toHaveBeenCalledWith(
+      bookmarkList.id,
+      '오답 모음',
+    );
+    expect(response.bookmarkList.name).toBe('오답 모음');
+  });
+
+  it('없는 북마크 목록 이름은 변경하지 않는다', async () => {
+    repository.findBookmarkList.mockResolvedValue(null);
+
+    await expect(
+      service.updateBookmarkList('user_1', bookmarkList.id, '오답 모음'),
+    ).rejects.toThrow('북마크 리스트를 찾을 수 없습니다.');
+    expect(repository.updateBookmarkList).not.toHaveBeenCalled();
+  });
+
+  it('북마크 목록을 삭제하기 전에 소유권을 확인한다', async () => {
+    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.deleteBookmarkList.mockResolvedValue(bookmarkList);
+
+    await expect(
+      service.deleteBookmarkList('user_1', bookmarkList.id),
+    ).resolves.toEqual({ id: bookmarkList.id });
+    expect(repository.findBookmarkList).toHaveBeenCalledWith(
+      'user_1',
+      bookmarkList.id,
+    );
+    expect(repository.deleteBookmarkList).toHaveBeenCalledWith(bookmarkList.id);
+  });
+
+  it('없는 북마크 목록은 삭제하지 않는다', async () => {
+    repository.findBookmarkList.mockResolvedValue(null);
+
+    await expect(
+      service.deleteBookmarkList('user_1', bookmarkList.id),
+    ).rejects.toThrow('북마크 리스트를 찾을 수 없습니다.');
+    expect(repository.deleteBookmarkList).not.toHaveBeenCalled();
   });
 
   it('같은 문항을 다시 추가해도 멱등적으로 저장 동작을 수행한다', async () => {

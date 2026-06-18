@@ -37,6 +37,20 @@ export class BookmarksRepository {
     });
   }
 
+  updateBookmarkList(bookmarkListId: string, name: string) {
+    return this.db.questionSet.update({
+      where: { id: bookmarkListId },
+      data: { title: name },
+      include: { _count: { select: { items: true } } },
+    });
+  }
+
+  deleteBookmarkList(bookmarkListId: string) {
+    return this.db.questionSet.delete({
+      where: { id: bookmarkListId },
+    });
+  }
+
   findQuestion(questionId: string) {
     return this.db.question.findFirst({
       where: { id: questionId, paper: { isPublished: true } },

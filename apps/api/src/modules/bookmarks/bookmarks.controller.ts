@@ -3,6 +3,7 @@ import type {
   BookmarkListResponseEnvelope,
   BookmarkListSummaryResponseEnvelope,
   DeleteBookmarkedQuestionResponse,
+  DeleteBookmarkListResponse,
   ListBookmarkListsResponse,
 } from '@kichulbot/api-contract/bookmarks';
 import type { StartSolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
@@ -12,6 +13,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -29,7 +31,10 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestUser } from '../auth/types';
 import { BookmarksService } from './bookmarks.service';
-import { CreateBookmarkListDto } from './dto/bookmark-list.dto';
+import {
+  CreateBookmarkListDto,
+  UpdateBookmarkListDto,
+} from './dto/bookmark-list.dto';
 import { StartBookmarkListSessionDto } from './dto/start-bookmark-list-session.dto';
 
 @ApiTags('question-lists')
@@ -67,6 +72,31 @@ export class BookmarksController {
     @Param('bookmarkListId') bookmarkListId: string,
   ): Promise<BookmarkListResponseEnvelope> {
     return this.bookmarksService.getBookmarkList(user.id, bookmarkListId);
+  }
+
+  @Patch(':bookmarkListId')
+  @ApiOperation({ summary: '북마크 리스트 이름 변경' })
+  @ApiOkResponse({ description: '북마크 리스트 이름을 변경합니다.' })
+  updateBookmarkList(
+    @CurrentUser() user: RequestUser,
+    @Param('bookmarkListId') bookmarkListId: string,
+    @Body() dto: UpdateBookmarkListDto,
+  ): Promise<BookmarkListSummaryResponseEnvelope> {
+    return this.bookmarksService.updateBookmarkList(
+      user.id,
+      bookmarkListId,
+      dto.name,
+    );
+  }
+
+  @Delete(':bookmarkListId')
+  @ApiOperation({ summary: '북마크 리스트 삭제' })
+  @ApiOkResponse({ description: '북마크 리스트와 포함된 문제를 삭제합니다.' })
+  deleteBookmarkList(
+    @CurrentUser() user: RequestUser,
+    @Param('bookmarkListId') bookmarkListId: string,
+  ): Promise<DeleteBookmarkListResponse> {
+    return this.bookmarksService.deleteBookmarkList(user.id, bookmarkListId);
   }
 
   @Post(':bookmarkListId/solve-sessions')

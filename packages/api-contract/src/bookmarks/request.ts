@@ -13,6 +13,13 @@ export type CreateBookmarkListRequest = z.infer<
   typeof CreateBookmarkListRequestSchema
 >;
 
+export const UpdateBookmarkListRequestSchema = z.strictObject({
+  name: z.string().trim().min(1).max(50),
+});
+export type UpdateBookmarkListRequest = z.infer<
+  typeof UpdateBookmarkListRequestSchema
+>;
+
 export const StartBookmarkListSessionRequestSchema = z.strictObject({
   mode: z.enum(['ONE_BY_ONE', 'EXAM']),
 });

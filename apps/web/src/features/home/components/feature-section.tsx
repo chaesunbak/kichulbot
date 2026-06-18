@@ -24,7 +24,7 @@ const featureItems = [
   },
   {
     href: '/resources',
-    label: '시험지 풀이',
+    label: '기출 풀이',
     iconSrc: paperIcon,
   },
   {

@@ -31,7 +31,7 @@ export function ConfirmDialog({
   cancelLabel = '취소',
   confirmLabel = '확인',
   destructive = false,
-  closeOnDimmerClick = false,
+  closeOnDimmerClick = true,
   onCancel,
   onConfirm,
   onExit,

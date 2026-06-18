@@ -55,3 +55,4 @@ Additional body lines are allowed when they clarify context, reasoning, or follo
 ## Language
 
 Write commit messages, comments, and test cases in Korean.
+Use English for code identifiers such as component names, function names, variables, and types.

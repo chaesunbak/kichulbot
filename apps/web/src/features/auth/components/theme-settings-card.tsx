@@ -1,17 +1,19 @@
 'use client';
 
-import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
-  CardContent,
+  CardAction,
   CardHeader,
   CardTitle,
 } from '@kichulbot/ui/components/ui/card';
+import { Label } from '@kichulbot/ui/components/ui/label';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '@kichulbot/ui/components/ui/radio-group';
 import { type LucideIcon, Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-
-import { cn } from '@/shared/lib/utils';
 
 type ThemeValue = 'system' | 'light' | 'dark';
 
@@ -41,42 +43,29 @@ export function ThemeSettingsCard() {
 
   return (
     <Card className="mx-auto w-full">
-      <CardHeader>
+      <CardHeader className="grid-cols-[1fr_auto] gap-4">
         <CardTitle>화면 모드</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div
-          className="
-            grid gap-2
-            sm:grid-cols-3
-          "
-        >
-          {themeOptions.map(({ value, label, icon: Icon }) => {
-            const isSelected = selectedTheme === value;
-
-            return (
-              <Button
+        <CardAction>
+          <RadioGroup
+            value={selectedTheme}
+            onValueChange={setTheme}
+            className="w-fit gap-3 sm:w-52"
+            aria-label="화면 모드"
+          >
+            {themeOptions.map(({ value, label, icon: Icon }) => (
+              <Label
                 key={value}
-                type="button"
-                variant="outline"
-                aria-pressed={isSelected}
-                className={cn(
-                  `
-                    h-auto justify-start gap-3 rounded-lg border px-4 py-3
-                    text-left
-                  `,
-                  isSelected &&
-                    'border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
-                )}
-                onClick={() => setTheme(value)}
+                htmlFor={`theme-${value}`}
+                className="w-full justify-start gap-2.5 text-sm font-normal"
               >
-                <Icon className="size-4" />
-                <span>{label}</span>
-              </Button>
-            );
-          })}
-        </div>
-      </CardContent>
+                <RadioGroupItem id={`theme-${value}`} value={value} />
+                <Icon className="size-4 text-muted-foreground" />
+                <span className="min-w-12">{label}</span>
+              </Label>
+            ))}
+          </RadioGroup>
+        </CardAction>
+      </CardHeader>
     </Card>
   );
 }

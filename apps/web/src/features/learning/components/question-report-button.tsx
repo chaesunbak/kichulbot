@@ -33,6 +33,7 @@ import {
   createQuestionReport,
 } from '@/features/learning/api/client/mutations';
 import type { QuestionReportCategory } from '@/features/learning/types';
+import { withMinimumLoadingDuration } from '@/shared/lib/minimum-loading-duration';
 
 const reportCategories = [
   { value: 'QUESTION_ERROR', label: '문제 오류' },
@@ -55,24 +56,17 @@ export function QuestionReportButton({
   isAuthenticated?: boolean;
   compact?: boolean;
 }) {
-  const [isOpening, setIsOpening] = useState(false);
-
   const openReport = async () => {
-    setIsOpening(true);
-    try {
-      await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
-        <QuestionReportDialog
-          isOpen={isOpen}
-          questionId={questionId}
-          questionRevisionId={questionRevisionId}
-          isAuthenticated={isAuthenticated}
-          onClose={close}
-          onExit={unmount}
-        />
-      ));
-    } finally {
-      setIsOpening(false);
-    }
+    await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+      <QuestionReportDialog
+        isOpen={isOpen}
+        questionId={questionId}
+        questionRevisionId={questionRevisionId}
+        isAuthenticated={isAuthenticated}
+        onClose={close}
+        onExit={unmount}
+      />
+    ));
   };
 
   if (compact) {
@@ -84,13 +78,8 @@ export function QuestionReportButton({
             variant="ghost"
             size="sm"
             className="size-9 px-0"
-            disabled={isOpening}
           >
-            {isOpening ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <MoreVertical />
-            )}
+            <MoreVertical />
             <span className="sr-only">더보기</span>
           </Button>
         </DropdownMenuTrigger>
@@ -109,10 +98,9 @@ export function QuestionReportButton({
       type="button"
       variant="outline"
       size="sm"
-      disabled={isOpening}
       onClick={() => void openReport()}
     >
-      {isOpening ? <Loader2 className="animate-spin" /> : <Flag />}
+      <Flag />
       신고
     </Button>
   );
@@ -127,29 +115,22 @@ export function QuestionReportMenuItem({
   questionRevisionId: string;
   isAuthenticated?: boolean;
 }) {
-  const [isOpening, setIsOpening] = useState(false);
-
   const openReport = async () => {
-    setIsOpening(true);
-    try {
-      await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
-        <QuestionReportDialog
-          isOpen={isOpen}
-          questionId={questionId}
-          questionRevisionId={questionRevisionId}
-          isAuthenticated={isAuthenticated}
-          onClose={close}
-          onExit={unmount}
-        />
-      ));
-    } finally {
-      setIsOpening(false);
-    }
+    await overlay.openAsync<void>(({ isOpen, close, unmount }) => (
+      <QuestionReportDialog
+        isOpen={isOpen}
+        questionId={questionId}
+        questionRevisionId={questionRevisionId}
+        isAuthenticated={isAuthenticated}
+        onClose={close}
+        onExit={unmount}
+      />
+    ));
   };
 
   return (
-    <DropdownMenuItem disabled={isOpening} onSelect={() => void openReport()}>
-      {isOpening ? <Loader2 className="animate-spin" /> : <Flag />}
+    <DropdownMenuItem onSelect={() => void openReport()}>
+      <Flag />
       신고
     </DropdownMenuItem>
   );
@@ -195,12 +176,14 @@ function QuestionReportDialog({
         ? createQuestionReport
         : createPublicQuestionReport;
 
-      await reportQuestion({
-        questionId,
-        questionRevisionId,
-        category,
-        content: trimmedContent,
-      });
+      await withMinimumLoadingDuration(
+        reportQuestion({
+          questionId,
+          questionRevisionId,
+          category,
+          content: trimmedContent,
+        }),
+      );
       toast.success('문제 신고를 접수했습니다.');
       onClose();
     } catch {

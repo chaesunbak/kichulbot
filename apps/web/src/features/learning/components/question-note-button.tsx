@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { saveQuestionNote } from '@/features/learning/api/client/mutations';
 import { getQuestionNote } from '@/features/learning/api/client/queries';
 import { LoginRequiredDialog } from '@/features/learning/components/login-required-dialog';
+import { withMinimumLoadingDuration } from '@/shared/lib/minimum-loading-duration';
 import { cn } from '@/shared/lib/utils';
 
 export function QuestionNoteButton({
@@ -76,7 +77,7 @@ export function QuestionNoteButton({
       disabled={isOpening}
       onClick={() => void openNote()}
     >
-      {isOpening ? <Loader2 className="animate-spin" /> : <NotebookPen />}
+      <NotebookPen />
       <span className={cn(compact && 'sr-only')}>메모</span>
     </Button>
   );
@@ -108,7 +109,9 @@ function QuestionNoteDialog({
   const save = async () => {
     setIsSaving(true);
     try {
-      const note = await saveQuestionNote({ questionId, content });
+      const note = await withMinimumLoadingDuration(
+        saveQuestionNote({ questionId, content }),
+      );
       toast.success(note ? '메모를 저장했습니다.' : '메모를 비웠습니다.');
       onClose();
     } catch {

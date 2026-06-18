@@ -10,8 +10,7 @@ import { useState } from 'react';
 
 import { addExamPaperToLibrary } from '@/features/papers/api/client/mutations';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
-
-const MIN_ADDING_DURATION_MS = 400;
+import { withMinimumLoadingDuration } from '@/shared/lib/minimum-loading-duration';
 
 export function AddToLibraryButton({
   paperId,
@@ -50,10 +49,9 @@ export function AddToLibraryButton({
 
     setIsAdding(true);
     try {
-      await Promise.all([
+      await withMinimumLoadingDuration(
         addExamPaperToLibrary(paperId, targetFolderId),
-        delay(MIN_ADDING_DURATION_MS),
-      ]);
+      );
       posthog.capture('paper_added_to_library', { paper_id: paperId });
       setIsInLibrary(true);
       router.refresh();
@@ -82,10 +80,4 @@ export function AddToLibraryButton({
       {isAdding ? '추가 중' : isInLibrary ? '추가됨' : '내 서재에 추가'}
     </Button>
   );
-}
-
-function delay(ms: number) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
 }

@@ -23,6 +23,7 @@ import {
 } from '@/features/library/api/client/mutations';
 import { getBookmarkLists } from '@/features/library/api/client/queries';
 import { PromptDialog } from '@/shared/components/prompt-dialog';
+import { withMinimumLoadingDuration } from '@/shared/lib/minimum-loading-duration';
 import { cn } from '@/shared/lib/utils';
 
 export function QuestionBookmarkButton({
@@ -57,10 +58,12 @@ export function QuestionBookmarkButton({
   const addBookmark = async (bookmarkListId: string) => {
     setIsAdding(true);
     try {
-      await addQuestionToBookmarkList({
-        bookmarkListId,
-        questionId,
-      });
+      await withMinimumLoadingDuration(
+        addQuestionToBookmarkList({
+          bookmarkListId,
+          questionId,
+        }),
+      );
       posthog.capture('question_bookmarked', {
         question_id: questionId,
         bookmark_list_id: bookmarkListId,
@@ -138,10 +141,7 @@ export function QuestionBookmarkButton({
             </Button>
           </div>
         ) : isLoadingLists ? (
-          <DropdownMenuItem disabled>
-            <Loader2 className="animate-spin" />
-            리스트 불러오는 중
-          </DropdownMenuItem>
+          <DropdownMenuItem disabled>리스트 불러오는 중</DropdownMenuItem>
         ) : (
           <>
             {bookmarkLists.length ? (

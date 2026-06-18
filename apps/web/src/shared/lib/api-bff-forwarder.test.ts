@@ -139,7 +139,8 @@ describe('forwardAuthSessionRequest', () => {
       id: 'user-1',
       email: 'user@example.com',
       nickname: '홍길동',
-      authType: 'EMAIL',
+      signupMethod: 'EMAIL',
+      authMethods: ['EMAIL'],
       linkedProviders: [],
       role: 'USER',
     };

@@ -46,3 +46,18 @@ export const passwordResetConfirmSchema = z
     path: ['passwordConfirm'],
     message: '비밀번호가 일치하지 않습니다',
   });
+
+export const emailLoginSettingsSchema = z
+  .object({
+    email: z.email('이메일 형식이 올바르지 않습니다'),
+    code: z.string().regex(/^\d{6}$/, '인증번호 6자리를 입력해주세요'),
+    password: z
+      .string()
+      .min(8, '비밀번호는 8자 이상 입력해주세요')
+      .max(72, '비밀번호는 72자 이하로 입력해주세요'),
+    passwordConfirm: z.string().min(1, '비밀번호를 한 번 더 입력해주세요'),
+  })
+  .refine((values) => values.password === values.passwordConfirm, {
+    path: ['passwordConfirm'],
+    message: '비밀번호가 일치하지 않습니다',
+  });

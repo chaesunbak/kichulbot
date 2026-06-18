@@ -1,7 +1,4 @@
-import {
-  UserAuthType,
-  UserRole,
-} from '../../infrastructure/database/prisma-client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 import type { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import type { RequestUser } from '../auth/types';
 import { PapersController } from './papers.controller';
@@ -11,7 +8,6 @@ const adminUser = {
   id: 'admin_1',
   email: 'admin@example.com',
   nickname: '관리자',
-  authType: UserAuthType.EMAIL,
   role: UserRole.ADMIN,
 } satisfies RequestUser;
 

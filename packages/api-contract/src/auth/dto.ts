@@ -67,9 +67,6 @@ export type UpdateMeRequest = z.infer<typeof UpdateMeRequestSchema>;
 
 export const KakaoOAuthProfileRequestSchema = z.object({
   providerAccountId: z.string().min(1),
-  providerEmail: z.email().nullable().optional(),
-  providerNickname: z.string().max(50).nullable().optional(),
-  rawProfile: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 export type KakaoOAuthProfileRequest = z.infer<
   typeof KakaoOAuthProfileRequestSchema
@@ -80,6 +77,14 @@ export const OAuthCodeExchangeRequestSchema = z.object({
 });
 export type OAuthCodeExchangeRequest = z.infer<
   typeof OAuthCodeExchangeRequestSchema
+>;
+
+export const ConfigureEmailLoginRequestSchema = z.object({
+  emailVerificationToken: z.string().min(1),
+  password: z.string().min(8).max(72),
+});
+export type ConfigureEmailLoginRequest = z.infer<
+  typeof ConfigureEmailLoginRequestSchema
 >;
 
 export const AuthResponseSchema = z.object({

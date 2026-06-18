@@ -65,6 +65,38 @@ export async function confirmEmailVerificationApi(body: {
   return res.data;
 }
 
+export async function requestMyEmailVerificationApi(
+  email: string,
+): Promise<EmailVerificationIssueResponse> {
+  const res = await clientApi.post<{ data: EmailVerificationIssueResponse }>(
+    '/api/me/email-verifications',
+    { email },
+  );
+  return res.data;
+}
+
+export async function confirmMyEmailVerificationApi(body: {
+  email: string;
+  code: string;
+}): Promise<EmailVerificationConfirmResponse> {
+  const res = await clientApi.post<{ data: EmailVerificationConfirmResponse }>(
+    '/api/me/email-verifications/confirm',
+    body,
+  );
+  return res.data;
+}
+
+export async function configureEmailLoginApi(body: {
+  emailVerificationToken: string;
+  password: string;
+}): Promise<AuthResult> {
+  const res = await clientApi.patch<{ data: AuthResult }>(
+    '/api/auth/email-login',
+    body,
+  );
+  return res.data;
+}
+
 export async function registerWithEmailApi(body: {
   email: string;
   password: string;
@@ -94,6 +126,13 @@ export async function logoutApi(): Promise<void> {
 
 export async function deleteAccountApi(): Promise<void> {
   await clientApi.delete('/api/auth/account');
+}
+
+export async function unlinkKakaoApi(): Promise<AuthResult> {
+  const res = await clientApi.delete<{ data: AuthResult }>(
+    '/api/me/auth-connections/KAKAO',
+  );
+  return res.data;
 }
 
 export async function updateProfileApi(nickname: string): Promise<AuthResult> {

@@ -7,5 +7,5 @@ export type LoginValues = z.infer<typeof loginSchema>;
 
 export type AuthUser = Pick<
   UserResponse,
-  'id' | 'email' | 'nickname' | 'authType' | 'role'
+  'id' | 'email' | 'nickname' | 'signupMethod' | 'authMethods' | 'role'
 >;

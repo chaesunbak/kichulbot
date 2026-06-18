@@ -3,10 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import type { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 
-import type { User } from '../../infrastructure/database/prisma-client';
+import type {
+  OAuthAccount,
+  User,
+} from '../../infrastructure/database/prisma-client';
 import {
   OAuthProvider,
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 import { AuthService } from './auth.service';
@@ -14,7 +17,20 @@ import type { AuthMailerService } from './auth-mailer.service';
 import type { UsersRepository } from './users.repository';
 
 const now = new Date('2026-05-28T00:00:00.000Z');
-type TestUser = User & { oauthAccounts: [] };
+type TestUser = User & { oauthAccounts: OAuthAccount[] };
+
+function oauthAccount(overrides: Partial<OAuthAccount> = {}): OAuthAccount {
+  return {
+    id: 'oauth_1',
+    userId: 'user_1',
+    provider: OAuthProvider.KAKAO,
+    providerAccountId: '12345',
+    lastLoginAt: now,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
 
 function user(overrides: Partial<TestUser> = {}): TestUser {
   return {
@@ -24,7 +40,7 @@ function user(overrides: Partial<TestUser> = {}): TestUser {
     tokenVersion: 0,
     nickname: null,
     timezone: 'Asia/Seoul',
-    authType: UserAuthType.EMAIL,
+    signupMethod: SignupMethod.EMAIL,
     role: UserRole.USER,
     createdAt: now,
     updatedAt: now,
@@ -50,7 +66,9 @@ describe('AuthService', () => {
       deleteById: jest.fn(),
       updateProfile: jest.fn(),
       updatePassword: jest.fn(),
+      updateEmailLogin: jest.fn(),
       upsertOAuthAccount: jest.fn(),
+      deleteOAuthAccount: jest.fn(),
       expireEmailVerificationCodes: jest.fn(),
       createEmailVerificationCode: jest.fn(),
       findLatestUsableEmailVerificationCode: jest.fn(),
@@ -99,7 +117,6 @@ describe('AuthService', () => {
       user({
         email: 'student@example.com',
         passwordHash,
-        authType: UserAuthType.EMAIL,
       }),
     );
 
@@ -123,7 +140,6 @@ describe('AuthService', () => {
       user({
         email: 'admin@example.com',
         passwordHash,
-        authType: UserAuthType.EMAIL,
         role: UserRole.ADMIN,
       }),
     );
@@ -136,37 +152,49 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('새 카카오 사용자로 로그인하면 OAuth 계정을 만든다', async () => {
-    usersRepository.findByOAuthAccount.mockResolvedValue(null);
-    usersRepository.findByEmail.mockResolvedValue(null);
-    usersRepository.createOAuthUser.mockResolvedValue(
+  it('비밀번호가 없는 이메일 로그인은 거부한다', async () => {
+    usersRepository.findByEmail.mockResolvedValue(
       user({
         email: 'student@example.com',
+        passwordHash: null,
+      }),
+    );
+
+    await expect(
+      service.login({
+        email: 'student@example.com',
+        password: 'password123',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it('새 카카오 사용자로 로그인하면 OAuth 계정을 만든다', async () => {
+    usersRepository.findByOAuthAccount.mockResolvedValue(null);
+    usersRepository.createOAuthUser.mockResolvedValue(
+      user({
+        email: null,
         nickname: '학생',
-        authType: UserAuthType.OAUTH,
+        signupMethod: SignupMethod.KAKAO,
+        oauthAccounts: [oauthAccount()],
       }),
     );
 
     await expect(
       service.loginWithKakao({
         providerAccountId: '12345',
-        providerEmail: 'Student@Example.COM',
-        providerNickname: '학생',
-        rawProfile: null,
       }),
     ).resolves.toMatchObject({
       user: {
-        authType: UserAuthType.OAUTH,
-        email: 'student@example.com',
+        signupMethod: SignupMethod.KAKAO,
+        authMethods: ['KAKAO'],
+        email: null,
       },
     });
     expect(usersRepository.createOAuthUser).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: OAuthProvider.KAKAO,
         providerAccountId: '12345',
-        providerEmail: 'student@example.com',
         nickname: expect.any(String),
-        providerNickname: '학생',
       }),
     );
   });
@@ -177,11 +205,11 @@ describe('AuthService', () => {
       redirectUrl: 'kichulbot://oauth/callback',
     });
     usersRepository.findByOAuthAccount.mockResolvedValue(null);
-    usersRepository.findByEmail.mockResolvedValue(null);
     usersRepository.createOAuthUser.mockResolvedValue(
       user({
-        email: 'student@example.com',
-        authType: UserAuthType.OAUTH,
+        email: null,
+        signupMethod: SignupMethod.KAKAO,
+        oauthAccounts: [oauthAccount()],
       }),
     );
     usersRepository.expireOAuthAuthorizationCodes.mockResolvedValue({
@@ -196,9 +224,6 @@ describe('AuthService', () => {
     const redirectUrl = await service.handleKakaoCallback(
       {
         providerAccountId: '12345',
-        providerEmail: 'student@example.com',
-        providerNickname: '학생',
-        rawProfile: null,
       },
       'oauth-state',
     );
@@ -227,8 +252,9 @@ describe('AuthService', () => {
       createdAt: now,
       updatedAt: now,
       user: user({
-        email: 'student@example.com',
-        authType: UserAuthType.OAUTH,
+        email: null,
+        signupMethod: SignupMethod.KAKAO,
+        oauthAccounts: [oauthAccount()],
       }),
     });
 
@@ -242,6 +268,57 @@ describe('AuthService', () => {
     });
     expect(usersRepository.consumeOAuthAuthorizationCode).toHaveBeenCalledWith(
       expect.any(String),
+    );
+  });
+
+  it('카카오 해제 후 로그인 수단이 없으면 거부한다', async () => {
+    usersRepository.findById.mockResolvedValue(
+      user({
+        email: null,
+        passwordHash: null,
+        signupMethod: SignupMethod.KAKAO,
+        oauthAccounts: [oauthAccount()],
+      }),
+    );
+
+    await expect(
+      service.unlinkAuthConnection('user_1', OAuthProvider.KAKAO),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(usersRepository.deleteOAuthAccount).not.toHaveBeenCalled();
+  });
+
+  it('이메일 로그인 수단이 있으면 카카오 해제를 허용한다', async () => {
+    const passwordHash = await bcrypt.hash('password123', 4);
+    usersRepository.findById
+      .mockResolvedValueOnce(
+        user({
+          email: 'student@example.com',
+          passwordHash,
+          oauthAccounts: [oauthAccount()],
+        }),
+      )
+      .mockResolvedValueOnce(
+        user({
+          email: 'student@example.com',
+          passwordHash,
+          oauthAccounts: [],
+        }),
+      );
+    usersRepository.deleteOAuthAccount.mockResolvedValue(
+      {} as Awaited<ReturnType<UsersRepository['deleteOAuthAccount']>>,
+    );
+
+    await expect(
+      service.unlinkAuthConnection('user_1', OAuthProvider.KAKAO),
+    ).resolves.toEqual({
+      user: expect.objectContaining({
+        authMethods: ['EMAIL'],
+        linkedProviders: [],
+      }),
+    });
+    expect(usersRepository.deleteOAuthAccount).toHaveBeenCalledWith(
+      'user_1',
+      OAuthProvider.KAKAO,
     );
   });
 
@@ -339,7 +416,7 @@ describe('AuthService', () => {
     usersRepository.createEmailUser.mockResolvedValue(
       user({
         email: 'student@example.com',
-        authType: UserAuthType.EMAIL,
+        passwordHash: 'hash',
       }),
     );
     jwtService.verifyAsync.mockResolvedValue({
@@ -358,7 +435,8 @@ describe('AuthService', () => {
     ).resolves.toMatchObject({
       user: {
         email: 'student@example.com',
-        authType: UserAuthType.EMAIL,
+        signupMethod: SignupMethod.EMAIL,
+        authMethods: ['EMAIL'],
       },
     });
     expect(usersRepository.createEmailUser).toHaveBeenCalledWith(
@@ -370,12 +448,92 @@ describe('AuthService', () => {
     );
   });
 
+  it('이메일 인증 토큰으로 이메일 로그인 수단을 설정한다', async () => {
+    usersRepository.findById.mockResolvedValue(
+      user({
+        email: null,
+        passwordHash: null,
+        signupMethod: SignupMethod.KAKAO,
+        oauthAccounts: [oauthAccount()],
+      }),
+    );
+    usersRepository.findByEmail.mockResolvedValue(null);
+    usersRepository.findEmailVerificationCodeById.mockResolvedValue(
+      {} as Awaited<
+        ReturnType<UsersRepository['findEmailVerificationCodeById']>
+      >,
+    );
+    usersRepository.markEmailVerificationCodeUsed.mockResolvedValue(
+      {} as Awaited<
+        ReturnType<UsersRepository['markEmailVerificationCodeUsed']>
+      >,
+    );
+    usersRepository.updateEmailLogin.mockResolvedValue(
+      user({
+        email: 'student@example.com',
+        passwordHash: 'new-hash',
+        signupMethod: SignupMethod.KAKAO,
+        tokenVersion: 1,
+        oauthAccounts: [oauthAccount()],
+      }),
+    );
+    jwtService.verifyAsync.mockResolvedValue({
+      type: 'email-verification',
+      email: 'student@example.com',
+      codeId: 'code_1',
+    });
+
+    await expect(
+      service.configureEmailLogin('user_1', {
+        emailVerificationToken: 'email-token',
+        password: 'password123',
+      }),
+    ).resolves.toMatchObject({
+      accessToken: 'access-token',
+      user: {
+        email: 'student@example.com',
+        authMethods: ['EMAIL', 'KAKAO'],
+      },
+    });
+    expect(usersRepository.updateEmailLogin).toHaveBeenCalledWith('user_1', {
+      email: 'student@example.com',
+      passwordHash: expect.any(String),
+    });
+  });
+
+  it('이미 사용 중인 이메일로 이메일 로그인 수단 설정을 거부한다', async () => {
+    usersRepository.findById.mockResolvedValue(user({ email: null }));
+    usersRepository.findEmailVerificationCodeById.mockResolvedValue(
+      {} as Awaited<
+        ReturnType<UsersRepository['findEmailVerificationCodeById']>
+      >,
+    );
+    usersRepository.markEmailVerificationCodeUsed.mockResolvedValue(
+      {} as Awaited<
+        ReturnType<UsersRepository['markEmailVerificationCodeUsed']>
+      >,
+    );
+    usersRepository.findByEmail.mockResolvedValue(user({ id: 'other_user' }));
+    jwtService.verifyAsync.mockResolvedValue({
+      type: 'email-verification',
+      email: 'student@example.com',
+      codeId: 'code_1',
+    });
+
+    await expect(
+      service.configureEmailLogin('user_1', {
+        emailVerificationToken: 'email-token',
+        password: 'password123',
+      }),
+    ).rejects.toThrow('이미 사용 중인 이메일입니다.');
+    expect(usersRepository.updateEmailLogin).not.toHaveBeenCalled();
+  });
+
   it('이메일 계정에 비밀번호 재설정 링크를 발송한다', async () => {
     usersRepository.findByEmail.mockResolvedValue(
       user({
         email: 'student@example.com',
         passwordHash: 'hash',
-        authType: UserAuthType.EMAIL,
       }),
     );
     usersRepository.expirePasswordResetTokens.mockResolvedValue({ count: 0 });
@@ -421,14 +579,12 @@ describe('AuthService', () => {
       updatedAt: now,
       user: user({
         email: 'student@example.com',
-        authType: UserAuthType.EMAIL,
         passwordHash: 'old-hash',
       }),
     });
     usersRepository.updatePassword.mockResolvedValue(
       user({
         email: 'student@example.com',
-        authType: UserAuthType.EMAIL,
       }),
     );
     usersRepository.markPasswordResetTokenUsed.mockResolvedValue(
@@ -457,7 +613,6 @@ describe('AuthService', () => {
       service.validateJwtPayload({
         sub: 'user_1',
         role: UserRole.USER,
-        authType: UserAuthType.EMAIL,
         tokenVersion: 1,
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);

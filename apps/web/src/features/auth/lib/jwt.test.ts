@@ -7,7 +7,6 @@ const JWT_SECRET = '테스트용 JWT 비밀 키';
 const payload = {
   sub: 'user-1',
   role: 'USER',
-  authType: 'EMAIL',
   tokenVersion: 0,
 } as const;
 

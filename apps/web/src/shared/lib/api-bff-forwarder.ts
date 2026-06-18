@@ -40,8 +40,14 @@ export async function forwardAuthSessionRequest(
   request: Request,
   upstreamPath: string,
   body?: unknown,
+  token?: string | null,
 ) {
-  const upstream = await fetchUpstream(request, upstreamPath, null, body);
+  const upstream = await fetchUpstream(
+    request,
+    upstreamPath,
+    token ?? null,
+    body,
+  );
   if (!upstream) {
     return localApiErrorResponse(
       502,
@@ -148,7 +154,11 @@ function isAuthUser(value: unknown): value is AuthUser {
     typeof value.id === 'string' &&
     (typeof value.email === 'string' || value.email === null) &&
     (typeof value.nickname === 'string' || value.nickname === null) &&
-    (value.authType === 'EMAIL' || value.authType === 'OAUTH') &&
+    (value.signupMethod === 'EMAIL' || value.signupMethod === 'KAKAO') &&
+    Array.isArray(value.authMethods) &&
+    value.authMethods.every(
+      (authMethod) => authMethod === 'EMAIL' || authMethod === 'KAKAO',
+    ) &&
     Array.isArray(value.linkedProviders) &&
     value.linkedProviders.every((provider) => provider === 'KAKAO') &&
     (value.role === 'USER' || value.role === 'ADMIN')

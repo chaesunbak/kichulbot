@@ -4,7 +4,7 @@ import type { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
 import {
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../../infrastructure/database/prisma-client';
 import type { AuthService } from '../auth.service';
@@ -40,14 +40,14 @@ describe('AdminOrServiceAccountGuard', () => {
     jwtService.verifyAsync.mockResolvedValue({
       sub: 'user_1',
       role: UserRole.ADMIN,
-      authType: UserAuthType.EMAIL,
       tokenVersion: 0,
     });
     authService.validateJwtPayload.mockResolvedValue({
       id: 'user_1',
       email: 'admin@example.com',
       nickname: '관리자',
-      authType: UserAuthType.EMAIL,
+      signupMethod: SignupMethod.EMAIL,
+      authMethods: ['EMAIL'],
       role: UserRole.ADMIN,
       linkedProviders: [],
       createdAt: '2026-06-15T00:00:00.000Z',
@@ -65,14 +65,14 @@ describe('AdminOrServiceAccountGuard', () => {
     jwtService.verifyAsync.mockResolvedValue({
       sub: 'user_1',
       role: UserRole.USER,
-      authType: UserAuthType.EMAIL,
       tokenVersion: 0,
     });
     authService.validateJwtPayload.mockResolvedValue({
       id: 'user_1',
       email: 'user@example.com',
       nickname: '사용자',
-      authType: UserAuthType.EMAIL,
+      signupMethod: SignupMethod.EMAIL,
+      authMethods: ['EMAIL'],
       role: UserRole.USER,
       linkedProviders: [],
       createdAt: '2026-06-15T00:00:00.000Z',

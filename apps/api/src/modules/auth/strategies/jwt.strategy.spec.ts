@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import {
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../../infrastructure/database/prisma-client';
 import type { AuthService } from '../auth.service';
@@ -22,7 +22,8 @@ describe('JwtStrategy', () => {
       id: 'user_1',
       email: 'student.com',
       nickname: null,
-      authType: UserAuthType.EMAIL,
+      signupMethod: SignupMethod.EMAIL,
+      authMethods: ['EMAIL' as const],
       linkedProviders: [],
       role: UserRole.USER,
       createdAt: '2026-05-28T00:00:00.000Z',
@@ -43,14 +44,12 @@ describe('JwtStrategy', () => {
       strategy.validate({
         sub: 'user_1',
         role: UserRole.USER,
-        authType: UserAuthType.EMAIL,
         tokenVersion: 0,
       }),
     ).resolves.toEqual(requestUser);
     expect(authService.validateJwtPayload).toHaveBeenCalledWith({
       sub: 'user_1',
       role: UserRole.USER,
-      authType: UserAuthType.EMAIL,
       tokenVersion: 0,
     });
   });
@@ -73,7 +72,6 @@ describe('JwtStrategy', () => {
       strategy.validate({
         sub: 'missing_user',
         role: UserRole.USER,
-        authType: UserAuthType.EMAIL,
         tokenVersion: 0,
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);

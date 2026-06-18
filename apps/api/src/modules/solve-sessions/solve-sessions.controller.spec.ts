@@ -1,6 +1,5 @@
 import {
   AnswerMode,
-  UserAuthType,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 import type { RequestUser } from '../auth/types';
@@ -14,7 +13,6 @@ const user = {
   id: 'user_1',
   email: 'user@example.com',
   nickname: '사용자',
-  authType: UserAuthType.EMAIL,
   role: UserRole.USER,
 } satisfies RequestUser;
 

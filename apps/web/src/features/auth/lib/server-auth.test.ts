@@ -32,7 +32,8 @@ const user = {
   id: 'user-1',
   email: 'user@example.com',
   nickname: '사용자',
-  authType: 'EMAIL',
+  signupMethod: 'EMAIL',
+  authMethods: ['EMAIL'],
   linkedProviders: [],
   role: 'USER',
 } satisfies AuthUser;

@@ -12,9 +12,9 @@ enum UserRole {
   ADMIN
 }
 
-enum UserAuthType {
+enum SignupMethod {
   EMAIL
-  OAUTH
+  KAKAO
 }
 
 enum OAuthProvider {
@@ -86,7 +86,7 @@ model User {
   tokenVersion            Int                      @default(0)
   nickname                String?
   timezone                String                   @default("Asia/Seoul")
-  authType                UserAuthType             @default(EMAIL)
+  signupMethod            SignupMethod             @default(EMAIL)
   role                    UserRole                 @default(USER)
   oauthAccounts           OAuthAccount[]
   oauthAuthorizationCodes OAuthAuthorizationCode[]
@@ -157,9 +157,6 @@ model OAuthAccount {
   userId            String
   provider          OAuthProvider
   providerAccountId String
-  providerEmail     String?
-  providerNickname  String?
-  rawProfile        Json?
   lastLoginAt       DateTime?
   user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt         DateTime      @default(now())

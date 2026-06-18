@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcryptjs';
 
-import { PrismaClient, UserAuthType, UserRole } from './prisma-client';
+import { PrismaClient, SignupMethod, UserRole } from './prisma-client';
 
 const connectionString = requiredEnv('DATABASE_URL');
 
@@ -24,13 +24,12 @@ async function main() {
       email,
       passwordHash,
       nickname,
-      authType: UserAuthType.EMAIL,
+      signupMethod: SignupMethod.EMAIL,
       role: UserRole.ADMIN,
     },
     update: {
       passwordHash,
       nickname,
-      authType: UserAuthType.EMAIL,
       role: UserRole.ADMIN,
     },
   });

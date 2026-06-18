@@ -1,6 +1,7 @@
 import {
   AuthConnectionsResponse,
   AuthResponse,
+  ConfigureEmailLoginRequest,
   ConfirmEmailVerificationRequest,
   DeleteMeResponse,
   EmailVerificationConfirmResponse,
@@ -22,7 +23,6 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsObject,
   IsOptional,
   IsString,
   MaxLength,
@@ -31,7 +31,7 @@ import {
 
 import {
   OAuthProvider,
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../../infrastructure/database/prisma-client';
 
@@ -157,37 +157,6 @@ export class KakaoOAuthProfileDto implements KakaoOAuthProfileRequest {
   @IsString()
   @MinLength(1)
   providerAccountId: string;
-
-  @ApiProperty({
-    required: false,
-    nullable: true,
-    example: 'student@example.com',
-    description: '카카오 계정 이메일입니다. 미동의 시 없을 수 있습니다.',
-  })
-  @IsOptional()
-  @IsEmail()
-  providerEmail?: string | null;
-
-  @ApiProperty({
-    required: false,
-    nullable: true,
-    maxLength: 50,
-    example: '기출러',
-    description: '카카오 프로필 닉네임입니다.',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  providerNickname?: string | null;
-
-  @ApiProperty({
-    required: false,
-    nullable: true,
-    description: '최소 범위로 보관할 provider 원본 프로필입니다.',
-  })
-  @IsOptional()
-  @IsObject()
-  rawProfile?: Record<string, unknown> | null;
 }
 
 export class OAuthCodeExchangeDto implements OAuthCodeExchangeRequest {
@@ -212,6 +181,26 @@ export class UpdateMeDto implements UpdateMeRequest {
   nickname: string;
 }
 
+export class ConfigureEmailLoginDto implements ConfigureEmailLoginRequest {
+  @ApiProperty({
+    description: '인증번호 확인 후 발급받은 이메일 인증 토큰입니다.',
+  })
+  @IsString()
+  @MinLength(1)
+  emailVerificationToken: string;
+
+  @ApiProperty({
+    minLength: 8,
+    maxLength: 72,
+    example: 'password123!',
+    description: '이메일 로그인에 사용할 비밀번호입니다.',
+  })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(72)
+  password: string;
+}
+
 export class UserResponseDto implements UserResponse {
   @ApiProperty({ example: 'clx0000000000000000000000' })
   id: string;
@@ -230,8 +219,16 @@ export class UserResponseDto implements UserResponse {
   })
   nickname: string | null;
 
-  @ApiProperty({ enum: UserAuthType, example: UserAuthType.EMAIL })
-  authType: UserAuthType;
+  @ApiProperty({ enum: SignupMethod, example: SignupMethod.EMAIL })
+  signupMethod: SignupMethod;
+
+  @ApiProperty({
+    enum: ['EMAIL', 'KAKAO'],
+    isArray: true,
+    example: ['EMAIL', 'KAKAO'],
+    description: '현재 사용할 수 있는 로그인 수단 목록입니다.',
+  })
+  authMethods: Array<'EMAIL' | 'KAKAO'>;
 
   @ApiProperty({
     enum: OAuthProvider,
@@ -302,12 +299,6 @@ export class DeleteMeResponseDto implements DeleteMeResponse {
 export class AuthConnectionDto {
   @ApiProperty({ enum: OAuthProvider, example: OAuthProvider.KAKAO })
   provider: OAuthProvider;
-
-  @ApiProperty({ nullable: true, example: 'student@example.com' })
-  providerEmail: string | null;
-
-  @ApiProperty({ nullable: true, example: '기출러' })
-  providerNickname: string | null;
 
   @ApiProperty({ nullable: true, example: '2026-05-28T08:45:00.000Z' })
   lastLoginAt: string | null;

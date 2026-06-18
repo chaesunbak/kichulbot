@@ -112,4 +112,16 @@ export class KakaoAuthGuard extends AuthGuard('kakao') {
 }
 
 @Injectable()
-export class KakaoCallbackGuard extends AuthGuard('kakao') {}
+export class KakaoCallbackGuard extends AuthGuard('kakao') {
+  constructor(private readonly configService: ConfigService) {
+    super();
+  }
+
+  getAuthenticateOptions() {
+    return {
+      failureRedirect: this.configService.getOrThrow<string>(
+        'auth.webRedirectUrl',
+      ),
+    };
+  }
+}

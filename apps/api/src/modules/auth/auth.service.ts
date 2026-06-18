@@ -32,13 +32,12 @@ import { createHash, randomBytes, randomInt } from 'crypto';
 
 import {
   OAuthProvider,
-  Prisma,
   User,
-  UserAuthType,
 } from '../../infrastructure/database/prisma-client';
-import { serializeUser } from './auth.serializer';
+import { getAuthMethods, serializeUser } from './auth.serializer';
 import { AuthMailerService } from './auth-mailer.service';
 import {
+  ConfigureEmailLoginDto,
   ConfirmEmailVerificationDto,
   EmailVerificationDto,
   KakaoOAuthProfileDto,
@@ -66,7 +65,7 @@ export class AuthService {
       this.normalizeEmail(dto.email),
     );
 
-    if (!user?.passwordHash || user.authType !== UserAuthType.EMAIL) {
+    if (!user?.email || !user.passwordHash) {
       throw new UnauthorizedException(
         '이메일 또는 비밀번호가 올바르지 않습니다.',
       );
@@ -91,7 +90,7 @@ export class AuthService {
     const email = this.normalizeEmail(dto.email);
     const user = await this.usersRepository.findByEmail(email);
 
-    if (!user || user.authType !== UserAuthType.EMAIL || !user.passwordHash) {
+    if (!user || !user.email || !user.passwordHash) {
       return PasswordResetIssueResponseSchema.parse({ ok: true });
     }
 
@@ -121,8 +120,8 @@ export class AuthService {
 
     if (
       !resetToken ||
-      resetToken.user.authType !== UserAuthType.EMAIL ||
-      !resetToken.user.email
+      !resetToken.user.email ||
+      !resetToken.user.passwordHash
     ) {
       throw new BadRequestException(
         '비밀번호 재설정 링크가 유효하지 않습니다.',
@@ -141,7 +140,7 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const email = this.normalizeEmail(dto.email);
     await this.assertEmailAvailable(email);
-    await this.consumeEmailVerificationToken(email, dto.emailVerificationToken);
+    await this.consumeEmailVerificationToken(dto.emailVerificationToken, email);
 
     try {
       return this.toAuthResponse(
@@ -254,17 +253,6 @@ export class AuthService {
       return this.toAuthResponse(oauthAccount.user);
     }
 
-    if (profile.providerEmail) {
-      const existingEmailUser = await this.usersRepository.findByEmail(
-        this.normalizeEmail(profile.providerEmail),
-      );
-      if (existingEmailUser) {
-        throw new ConflictException(
-          '이미 이메일로 가입된 계정입니다. 로그인 후 카카오 계정을 연결해주세요.',
-        );
-      }
-    }
-
     try {
       const user = await this.usersRepository.createOAuthUser({
         ...this.toOAuthProfileData(profile),
@@ -287,6 +275,68 @@ export class AuthService {
     return this.toAuthConnectionsResponse(
       await this.usersRepository.listAuthConnections(userId),
     );
+  }
+
+  async unlinkAuthConnection(userId: string, provider: OAuthProvider) {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
+    }
+
+    if (!user.oauthAccounts.some((account) => account.provider === provider)) {
+      throw new BadRequestException('연결된 계정이 아닙니다.');
+    }
+
+    this.assertCanRemoveAuthMethod(user, provider);
+    await this.usersRepository.deleteOAuthAccount(userId, provider);
+
+    return this.getMe(userId);
+  }
+
+  async requestMyEmailVerification(
+    userId: string,
+    dto: EmailVerificationDto,
+  ): Promise<EmailVerificationIssueResponse> {
+    await this.assertAuthenticatedUser(userId);
+    return this.requestEmailVerification(dto);
+  }
+
+  async confirmMyEmailVerification(
+    userId: string,
+    dto: ConfirmEmailVerificationDto,
+  ): Promise<EmailVerificationConfirmResponse> {
+    await this.assertAuthenticatedUser(userId);
+    return this.confirmEmailVerification(dto);
+  }
+
+  async configureEmailLogin(
+    userId: string,
+    dto: ConfigureEmailLoginDto,
+  ): Promise<AuthResponse> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
+    }
+    if (getAuthMethods(user).includes('EMAIL')) {
+      throw new BadRequestException('이미 이메일 로그인이 설정되어 있습니다.');
+    }
+
+    const email = await this.consumeEmailVerificationToken(
+      dto.emailVerificationToken,
+    );
+    await this.assertEmailAvailableForUser(email, userId);
+
+    try {
+      return this.toAuthResponse(
+        await this.usersRepository.updateEmailLogin(userId, {
+          email,
+          passwordHash: await this.hashPassword(dto.password),
+        }),
+      );
+    } catch (error) {
+      this.handlePotentialDuplicateEmail(error);
+      throw error;
+    }
   }
 
   private async linkKakao(
@@ -374,7 +424,6 @@ export class AuthService {
       {
         sub: user.id,
         role: user.role,
-        authType: user.authType,
         tokenVersion: user.tokenVersion,
       } satisfies JwtUser,
       {
@@ -479,7 +528,10 @@ export class AuthService {
     );
   }
 
-  private async consumeEmailVerificationToken(email: string, token: string) {
+  private async consumeEmailVerificationToken(
+    token: string,
+    expectedEmail?: string,
+  ) {
     let payload: { type?: string; email?: string; codeId?: string };
     try {
       payload = await this.jwtService.verifyAsync(token, {
@@ -491,9 +543,14 @@ export class AuthService {
 
     if (
       payload.type !== 'email-verification' ||
-      payload.email !== email ||
+      !payload.email ||
       !payload.codeId
     ) {
+      throw new BadRequestException('이메일 인증 정보가 유효하지 않습니다.');
+    }
+
+    const email = this.normalizeEmail(payload.email);
+    if (expectedEmail && email !== expectedEmail) {
       throw new BadRequestException('이메일 인증 정보가 유효하지 않습니다.');
     }
 
@@ -507,19 +564,13 @@ export class AuthService {
     }
 
     await this.usersRepository.markEmailVerificationCodeUsed(verification.id);
+    return email;
   }
 
   private toOAuthProfileData(profile: KakaoOAuthProfileDto) {
     return {
       provider: OAuthProvider.KAKAO,
       providerAccountId: profile.providerAccountId,
-      providerEmail: profile.providerEmail
-        ? this.normalizeEmail(profile.providerEmail)
-        : null,
-      providerNickname: profile.providerNickname?.trim() || null,
-      rawProfile: profile.rawProfile
-        ? (profile.rawProfile as Prisma.InputJsonValue)
-        : Prisma.JsonNull,
     };
   }
 
@@ -536,8 +587,6 @@ export class AuthService {
     return AuthConnectionsResponseSchema.parse({
       connections: connections.map((connection) => ({
         provider: connection.provider,
-        providerEmail: connection.providerEmail,
-        providerNickname: connection.providerNickname,
         lastLoginAt: connection.lastLoginAt?.toISOString() ?? null,
         createdAt: connection.createdAt.toISOString(),
       })),
@@ -547,6 +596,13 @@ export class AuthService {
   private async assertEmailAvailable(email: string) {
     const existingUser = await this.usersRepository.findByEmail(email);
     if (existingUser) {
+      throw new ConflictException('이미 사용 중인 이메일입니다.');
+    }
+  }
+
+  private async assertEmailAvailableForUser(email: string, userId: string) {
+    const existingUser = await this.usersRepository.findByEmail(email);
+    if (existingUser && existingUser.id !== userId) {
       throw new ConflictException('이미 사용 중인 이메일입니다.');
     }
   }
@@ -574,6 +630,26 @@ export class AuthService {
   private handlePotentialDuplicateOAuth(error: unknown) {
     if (this.usersRepository.isUniqueConstraintError(error)) {
       throw new ConflictException('이미 연결된 카카오 계정입니다.');
+    }
+  }
+
+  private async assertAuthenticatedUser(userId: string) {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
+    }
+    return user;
+  }
+
+  private assertCanRemoveAuthMethod(
+    user: User & { oauthAccounts?: Array<{ provider: OAuthProvider }> },
+    method: 'EMAIL' | OAuthProvider,
+  ) {
+    const remainingMethods = getAuthMethods(user).filter(
+      (authMethod) => authMethod !== method,
+    );
+    if (remainingMethods.length === 0) {
+      throw new BadRequestException('마지막 로그인 수단은 해제할 수 없습니다.');
     }
   }
 }

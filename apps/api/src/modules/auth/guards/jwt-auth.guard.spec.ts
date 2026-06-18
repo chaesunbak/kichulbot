@@ -2,7 +2,7 @@ import type { ExecutionContext } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
 
 import {
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../../infrastructure/database/prisma-client';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -43,7 +43,8 @@ const requestUser = {
   id: 'user_1',
   email: 'student.com',
   nickname: null,
-  authType: UserAuthType.EMAIL,
+  signupMethod: SignupMethod.EMAIL,
+  authMethods: ['EMAIL'],
   linkedProviders: [],
   role: UserRole.USER,
   createdAt: '2026-05-28T00:00:00.000Z',

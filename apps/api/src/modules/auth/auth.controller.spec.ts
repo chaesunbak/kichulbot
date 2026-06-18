@@ -1,5 +1,5 @@
 import {
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 import { AuthController, MeController } from './auth.controller';
@@ -9,7 +9,8 @@ const serializedUser = {
   id: 'user_1',
   email: 'student@example.com',
   nickname: null,
-  authType: UserAuthType.EMAIL,
+  signupMethod: SignupMethod.EMAIL,
+  authMethods: ['EMAIL' as const],
   linkedProviders: [],
   role: UserRole.USER,
   createdAt: '2026-05-28T00:00:00.000Z',
@@ -147,7 +148,6 @@ describe('MeController', () => {
         id: 'user_1',
         email: 'student@example.com',
         nickname: null,
-        authType: UserAuthType.EMAIL,
         role: UserRole.USER,
       },
       { nickname: '새 닉네임' },

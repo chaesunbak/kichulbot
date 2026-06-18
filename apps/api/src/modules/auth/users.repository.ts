@@ -5,7 +5,7 @@ import {
   OAuthProvider,
   Prisma,
   QuestionSetKind,
-  UserAuthType,
+  SignupMethod,
   UserRole,
 } from '../../infrastructure/database/prisma-client';
 
@@ -16,16 +16,13 @@ export class UsersRepository {
   createOAuthUser(data: {
     provider: OAuthProvider;
     providerAccountId: string;
-    providerEmail?: string | null;
     nickname: string;
-    providerNickname?: string | null;
-    rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
   }) {
     return this.db.user.create({
       data: {
-        email: data.providerEmail,
+        email: null,
         nickname: data.nickname,
-        authType: UserAuthType.OAUTH,
+        signupMethod: SignupMethod.KAKAO,
         role: UserRole.USER,
         questionSets: {
           create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
@@ -34,9 +31,6 @@ export class UsersRepository {
           create: {
             provider: data.provider,
             providerAccountId: data.providerAccountId,
-            providerEmail: data.providerEmail,
-            providerNickname: data.providerNickname,
-            rawProfile: data.rawProfile,
             lastLoginAt: new Date(),
           },
         },
@@ -55,7 +49,7 @@ export class UsersRepository {
         email: data.email,
         passwordHash: data.passwordHash,
         nickname: data.nickname,
-        authType: UserAuthType.EMAIL,
+        signupMethod: SignupMethod.EMAIL,
         role: UserRole.USER,
         questionSets: {
           create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
@@ -131,13 +125,25 @@ export class UsersRepository {
     });
   }
 
+  updateEmailLogin(
+    userId: string,
+    data: { email: string; passwordHash: string },
+  ) {
+    return this.db.user.update({
+      where: { id: userId },
+      data: {
+        email: data.email,
+        passwordHash: data.passwordHash,
+        tokenVersion: { increment: 1 },
+      },
+      include: { oauthAccounts: true },
+    });
+  }
+
   upsertOAuthAccount(data: {
     userId: string;
     provider: OAuthProvider;
     providerAccountId: string;
-    providerEmail?: string | null;
-    providerNickname?: string | null;
-    rawProfile?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
   }) {
     return this.db.oAuthAccount.upsert({
       where: {
@@ -150,16 +156,21 @@ export class UsersRepository {
         userId: data.userId,
         provider: data.provider,
         providerAccountId: data.providerAccountId,
-        providerEmail: data.providerEmail,
-        providerNickname: data.providerNickname,
-        rawProfile: data.rawProfile,
         lastLoginAt: new Date(),
       },
       update: {
-        providerEmail: data.providerEmail,
-        providerNickname: data.providerNickname,
-        rawProfile: data.rawProfile,
         lastLoginAt: new Date(),
+      },
+    });
+  }
+
+  deleteOAuthAccount(userId: string, provider: OAuthProvider) {
+    return this.db.oAuthAccount.delete({
+      where: {
+        userId_provider: {
+          userId,
+          provider,
+        },
       },
     });
   }

@@ -13,6 +13,7 @@ import {
   AuthResponseSchema,
   MeResponseSchema,
   AuthConnectionsResponseSchema,
+  ConfigureEmailLoginRequestSchema,
   OAuthCodeExchangeRequestSchema,
 } from './dto.js';
 
@@ -70,6 +71,30 @@ export const authRoutes = {
     path: '/me/auth-connections',
     request: null,
     response: AuthConnectionsResponseSchema,
+  },
+  unlinkAuthConnection: {
+    method: 'DELETE',
+    path: '/me/auth-connections/:provider',
+    request: null,
+    response: MeResponseSchema,
+  },
+  requestMyEmailVerification: {
+    method: 'POST',
+    path: '/me/email-verifications',
+    request: EmailVerificationRequestSchema,
+    response: EmailVerificationIssueResponseSchema,
+  },
+  confirmMyEmailVerification: {
+    method: 'POST',
+    path: '/me/email-verifications/confirm',
+    request: ConfirmEmailVerificationRequestSchema,
+    response: EmailVerificationConfirmResponseSchema,
+  },
+  configureEmailLogin: {
+    method: 'PATCH',
+    path: '/me/email-login',
+    request: ConfigureEmailLoginRequestSchema,
+    response: AuthResponseSchema,
   },
   deleteMe: {
     method: 'DELETE',

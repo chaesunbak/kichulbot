@@ -1,7 +1,4 @@
-import {
-  UserAuthType,
-  UserRole,
-} from '../../infrastructure/database/prisma-client';
+import { UserRole } from '../../infrastructure/database/prisma-client';
 import type { RequestUser } from '../auth/types';
 import { LibraryController } from './library.controller';
 import type { LibraryService } from './library.service';
@@ -10,7 +7,6 @@ const user = {
   id: 'user_1',
   email: 'student@example.com',
   nickname: '학생',
-  authType: UserAuthType.EMAIL,
   role: UserRole.USER,
 } satisfies RequestUser;
 

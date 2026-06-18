@@ -1,13 +1,6 @@
-import { StartMockExamSolveSessionRequest } from '@kichulbot/api-contract/mock-exams';
-import { IsEnum, IsString, MinLength } from 'class-validator';
+import { StartMockExamSolveSessionRequestSchema } from '@kichulbot/api-contract/mock-exams';
+import { createZodDto } from 'nestjs-zod';
 
-import { AnswerMode } from '../../../infrastructure/database/prisma-client';
-
-export class StartMockExamSolveSessionDto implements StartMockExamSolveSessionRequest {
-  @IsString()
-  @MinLength(1)
-  examId!: string;
-
-  @IsEnum(AnswerMode)
-  mode!: AnswerMode;
-}
+export class StartMockExamSolveSessionDto extends createZodDto(
+  StartMockExamSolveSessionRequestSchema,
+) {}

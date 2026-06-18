@@ -1,3 +1,10 @@
+import type {
+  GetSolveSessionResponse,
+  ListSolveSessionLogsResponse,
+  SaveAnswerResponse,
+  StartSolveSessionResponse,
+  SubmitSolveSessionResponse,
+} from '@kichulbot/api-contract/solve-sessions';
 import {
   BadRequestException,
   Body,
@@ -47,21 +54,27 @@ export class SolveSessionsController {
   listLogs(
     @CurrentUser() user: RequestUser,
     @Query() query: ListSolveSessionLogsDto,
-  ) {
+  ): Promise<ListSolveSessionLogsResponse> {
     return this.solveSessionsService.listLogs(user.id, query);
   }
 
   @Post()
   @ApiOperation({ summary: '문제지 풀이 세션 시작' })
   @ApiCreatedResponse({ description: '기존 세션 또는 새 세션을 반환합니다.' })
-  start(@CurrentUser() user: RequestUser, @Body() dto: StartSolveSessionDto) {
+  start(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: StartSolveSessionDto,
+  ): Promise<StartSolveSessionResponse> {
     return this.solveSessionsService.start(user.id, dto.paperId, dto.mode);
   }
 
   @Get(':id')
   @ApiOperation({ summary: '문제지 풀이 데이터 조회' })
   @ApiOkResponse({ description: '문항과 저장된 임시 답안을 반환합니다.' })
-  get(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+  get(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+  ): Promise<GetSolveSessionResponse> {
     return this.solveSessionsService.get(user.id, id);
   }
 
@@ -73,14 +86,17 @@ export class SolveSessionsController {
     @Param('id') id: string,
     @Param('questionId') questionId: string,
     @Body() dto: SaveAnswerDto,
-  ) {
+  ): Promise<SaveAnswerResponse> {
     return this.solveSessionsService.saveAnswer(user.id, id, questionId, dto);
   }
 
   @Post(':id/submissions')
   @ApiOperation({ summary: '풀이 세션 최종 제출' })
   @ApiCreatedResponse({ description: '제출된 풀이 세션을 반환합니다.' })
-  submit(@CurrentUser() user: RequestUser, @Param('id') id: string) {
+  submit(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+  ): Promise<SubmitSolveSessionResponse> {
     return this.solveSessionsService.submit(user.id, id);
   }
 }
@@ -104,7 +120,7 @@ export class PublicSolveSessionsController {
       }),
     )
     mode: AnswerMode = AnswerMode.EXAM,
-  ) {
+  ): Promise<GetSolveSessionResponse> {
     return this.solveSessionsService.getPublicPaperSession(paperId, mode);
   }
 }

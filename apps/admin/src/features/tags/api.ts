@@ -1,4 +1,5 @@
 import {
+  AdminListTagsResponseSchema,
   type CreateTagGroupRequest,
   type CreateTagRequest,
   DeleteTagGroupResponseSchema,
@@ -12,17 +13,15 @@ import {
 
 import { apiRequest } from '@/shared/api/api-client';
 
-import { adminListTagsResponseSchema } from './schemas';
-
 export async function fetchTags(token: string, examId?: string) {
   const query = examId ? `?examId=${encodeURIComponent(examId)}` : '';
-  return apiRequest(`/admin/tags${query}`, adminListTagsResponseSchema.parse, {
+  return apiRequest(`/admin/tags${query}`, AdminListTagsResponseSchema.parse, {
     token,
   });
 }
 
 export async function fetchAdminTags(token: string) {
-  return apiRequest('/admin/tags', adminListTagsResponseSchema.parse, {
+  return apiRequest('/admin/tags', AdminListTagsResponseSchema.parse, {
     token,
   });
 }

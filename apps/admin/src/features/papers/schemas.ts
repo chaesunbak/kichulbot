@@ -1,8 +1,4 @@
-import {
-  AdminPaperQuestionResponseSchema,
-  AdminPaperResponseSchema,
-  CreatePaperRequestSchema,
-} from '@kichulbot/api-contract/papers';
+import { CreatePaperRequestSchema } from '@kichulbot/api-contract/papers';
 import * as z from 'zod';
 
 const paperBaseSchema = CreatePaperRequestSchema.extend({
@@ -57,15 +53,5 @@ export const importPaperSchema = paperBaseSchema.extend({
   }),
   answerPdf: z.custom<File | null>((value) => value instanceof File, {
     message: '답지 PDF를 선택해 주세요.',
-  }),
-});
-
-export const adminListPapersResponseSchema = z.object({
-  papers: z.array(AdminPaperResponseSchema),
-});
-
-export const adminGetPaperResponseSchema = z.object({
-  paper: AdminPaperResponseSchema.extend({
-    questions: z.array(AdminPaperQuestionResponseSchema),
   }),
 });

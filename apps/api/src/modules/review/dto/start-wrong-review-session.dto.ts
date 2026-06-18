@@ -1,10 +1,6 @@
-import { StartWrongReviewSessionRequest } from '@kichulbot/api-contract/review';
-import { IsEnum, IsOptional } from 'class-validator';
+import { StartWrongReviewSessionRequestSchema } from '@kichulbot/api-contract/review';
+import { createZodDto } from 'nestjs-zod';
 
-import { AnswerMode } from '../../../infrastructure/database/prisma-client';
-
-export class StartWrongReviewSessionDto implements StartWrongReviewSessionRequest {
-  @IsOptional()
-  @IsEnum(AnswerMode)
-  mode?: AnswerMode;
-}
+export class StartWrongReviewSessionDto extends createZodDto(
+  StartWrongReviewSessionRequestSchema,
+) {}

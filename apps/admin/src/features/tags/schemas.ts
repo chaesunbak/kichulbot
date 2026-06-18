@@ -1,5 +1,4 @@
 import {
-  AdminTagResponseSchema,
   CreateTagGroupRequestSchema,
   CreateTagRequestSchema,
 } from '@kichulbot/api-contract/tags';
@@ -10,7 +9,7 @@ export const tagFormSchema = CreateTagRequestSchema.extend({
   keywords: z.array(z.string().trim().min(1).max(50)),
   examId: CreateTagRequestSchema.shape.examId.min(1, '시험을 선택해 주세요.'),
   tagGroupId: CreateTagRequestSchema.shape.tagGroupId,
-  sortOrder: CreateTagRequestSchema.shape.sortOrder.unwrap(),
+  sortOrder: z.number().int().min(0),
 });
 
 export const tagGroupFormSchema = CreateTagGroupRequestSchema.extend({
@@ -22,10 +21,6 @@ export const tagGroupFormSchema = CreateTagGroupRequestSchema.extend({
     1,
     '그룹 이름을 입력해 주세요.',
   ),
-  sortOrder: CreateTagGroupRequestSchema.shape.sortOrder.unwrap(),
-  isActive: CreateTagGroupRequestSchema.shape.isActive.unwrap(),
-});
-
-export const adminListTagsResponseSchema = z.object({
-  tags: z.array(AdminTagResponseSchema),
+  sortOrder: z.number().int().min(0),
+  isActive: z.boolean(),
 });

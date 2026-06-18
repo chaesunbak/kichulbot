@@ -1,6 +1,7 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { Button } from '@kichulbot/ui/components/ui/button';
+
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 import {
   getRecommendedTagKeywords,
@@ -13,10 +14,10 @@ export function RecommendedTagButtons({
   selectedTagIds,
   onApply,
 }: {
-  question: AdminPaperQuestionResponse;
-  tags: TagResponse[];
+  question: AdminPaperQuestion;
+  tags: Tag[];
   selectedTagIds: string[];
-  onApply: (tag: TagResponse) => void;
+  onApply: (tag: Tag) => void;
 }) {
   const recommendedTags = getUnselectedRecommendedTags({
     question,

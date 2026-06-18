@@ -1,6 +1,6 @@
-import type { AdminPaperResponse } from '@kichulbot/api-contract/papers';
+import type { AdminPaper } from '@/shared/types';
 
-export function PapersSummary({ papers }: { papers: AdminPaperResponse[] }) {
+export function PapersSummary({ papers }: { papers: AdminPaper[] }) {
   return (
     <div className="mb-4 grid grid-cols-3 gap-3">
       <Metric label="전체" value={papers.length} />

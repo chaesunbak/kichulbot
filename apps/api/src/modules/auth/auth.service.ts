@@ -1,22 +1,13 @@
 import {
   AuthConnectionsResponse,
-  AuthConnectionsResponseSchema,
   AuthResponse,
-  AuthResponseSchema,
   DeleteMeResponse,
-  DeleteMeResponseSchema,
   EmailVerificationConfirmResponse,
-  EmailVerificationConfirmResponseSchema,
   EmailVerificationIssueResponse,
-  EmailVerificationIssueResponseSchema,
   MeResponse,
-  MeResponseSchema,
   PasswordResetConfirmResponse,
-  PasswordResetConfirmResponseSchema,
   PasswordResetIssueResponse,
-  PasswordResetIssueResponseSchema,
   UpdateMeResponse,
-  UpdateMeResponseSchema,
 } from '@kichulbot/api-contract/auth';
 import { generateRandomNickname } from '@kichulbot/utils';
 import {
@@ -60,7 +51,7 @@ export class AuthService {
     private readonly authMailerService: AuthMailerService,
   ) {}
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto): Promise<AuthResponse> {
     const user = await this.usersRepository.findByEmail(
       this.normalizeEmail(dto.email),
     );
@@ -91,7 +82,7 @@ export class AuthService {
     const user = await this.usersRepository.findByEmail(email);
 
     if (!user || !user.email || !user.passwordHash) {
-      return PasswordResetIssueResponseSchema.parse({ ok: true });
+      return { ok: true };
     }
 
     const token = this.generatePasswordResetToken();
@@ -106,9 +97,9 @@ export class AuthService {
       this.passwordResetUrl(token),
     );
 
-    return PasswordResetIssueResponseSchema.parse({
+    return {
       ok: true,
-    });
+    };
   }
 
   async confirmPasswordReset(
@@ -134,10 +125,10 @@ export class AuthService {
     );
     await this.usersRepository.markPasswordResetTokenUsed(resetToken.id);
 
-    return PasswordResetConfirmResponseSchema.parse({ ok: true });
+    return { ok: true };
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<AuthResponse> {
     const email = this.normalizeEmail(dto.email);
     await this.assertEmailAvailable(email);
     await this.consumeEmailVerificationToken(dto.emailVerificationToken, email);
@@ -173,9 +164,9 @@ export class AuthService {
     });
     await this.authMailerService.sendEmailVerificationCode(email, code);
 
-    return EmailVerificationIssueResponseSchema.parse({
+    return {
       ok: true,
-    });
+    };
   }
 
   async confirmEmailVerification(
@@ -205,15 +196,18 @@ export class AuthService {
       verification.id,
     );
 
-    return EmailVerificationConfirmResponseSchema.parse({
+    return {
       emailVerificationToken: await this.signEmailVerificationToken(
         email,
         verification.id,
       ),
-    });
+    };
   }
 
-  async handleKakaoCallback(profile: KakaoOAuthProfileDto, state: string) {
+  async handleKakaoCallback(
+    profile: KakaoOAuthProfileDto,
+    state: string,
+  ): Promise<string> {
     const payload = await this.verifyOAuthState(state);
     if (payload.mode === 'link') {
       if (!payload.userId || typeof payload.tokenVersion !== 'number') {
@@ -240,7 +234,7 @@ export class AuthService {
     return this.toAuthResponse(authorizationCode.user);
   }
 
-  async loginWithKakao(profile: KakaoOAuthProfileDto) {
+  async loginWithKakao(profile: KakaoOAuthProfileDto): Promise<AuthResponse> {
     const oauthAccount = await this.usersRepository.findByOAuthAccount(
       OAuthProvider.KAKAO,
       profile.providerAccountId,
@@ -277,7 +271,10 @@ export class AuthService {
     );
   }
 
-  async unlinkAuthConnection(userId: string, provider: OAuthProvider) {
+  async unlinkAuthConnection(
+    userId: string,
+    provider: OAuthProvider,
+  ): Promise<MeResponse> {
     const user = await this.usersRepository.findById(userId);
     if (!user) {
       throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
@@ -372,9 +369,9 @@ export class AuthService {
       throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
     }
 
-    return MeResponseSchema.parse({
+    return {
       user: serializeUser(user),
-    });
+    };
   }
 
   async updateMe(userId: string, dto: UpdateMeDto): Promise<UpdateMeResponse> {
@@ -387,9 +384,9 @@ export class AuthService {
       nickname: dto.nickname.trim(),
     });
 
-    return UpdateMeResponseSchema.parse({
+    return {
       user: serializeUser(updatedUser),
-    });
+    };
   }
 
   async deleteMe(userId: string): Promise<DeleteMeResponse> {
@@ -398,9 +395,8 @@ export class AuthService {
       throw new UnauthorizedException('인증 정보가 유효하지 않습니다.');
     }
 
-    return DeleteMeResponseSchema.parse(
-      await this.usersRepository.deleteById(userId),
-    );
+    const deleted = await this.usersRepository.deleteById(userId);
+    return { id: deleted.id };
   }
 
   async validateJwtPayload(payload: JwtUser) {
@@ -413,24 +409,23 @@ export class AuthService {
   }
 
   private async toAuthResponse(user: User): Promise<AuthResponse> {
-    return AuthResponseSchema.parse({
+    return {
       user: serializeUser(user),
       accessToken: await this.signAccessToken(user),
-    });
+    };
   }
 
   private signAccessToken(user: User) {
-    return this.jwtService.signAsync(
-      {
-        sub: user.id,
-        role: user.role,
-        tokenVersion: user.tokenVersion,
-      } satisfies JwtUser,
-      {
-        secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
-        expiresIn: this.configService.getOrThrow<string>('auth.jwtExpiresIn'),
-      },
-    );
+    const payload: JwtUser = {
+      sub: user.id,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
+    };
+
+    return this.jwtService.signAsync(payload, {
+      secret: this.configService.getOrThrow<string>('auth.jwtSecret'),
+      expiresIn: this.configService.getOrThrow<string>('auth.jwtExpiresIn'),
+    });
   }
 
   private async verifyOAuthState(state: string) {
@@ -583,14 +578,14 @@ export class AuthService {
 
   private toAuthConnectionsResponse(
     connections: Awaited<ReturnType<UsersRepository['listAuthConnections']>>,
-  ) {
-    return AuthConnectionsResponseSchema.parse({
+  ): AuthConnectionsResponse {
+    return {
       connections: connections.map((connection) => ({
         provider: connection.provider,
         lastLoginAt: connection.lastLoginAt?.toISOString() ?? null,
         createdAt: connection.createdAt.toISOString(),
       })),
-    });
+    };
   }
 
   private async assertEmailAvailable(email: string) {

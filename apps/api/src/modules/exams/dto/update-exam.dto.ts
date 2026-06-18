@@ -1,5 +1,4 @@
-import { PartialType } from '@nestjs/swagger';
+import { UpdateExamRequestSchema } from '@kichulbot/api-contract/taxonomy';
+import { createZodDto } from 'nestjs-zod';
 
-import { CreateExamDto } from './create-exam.dto';
-
-export class UpdateExamDto extends PartialType(CreateExamDto) {}
+export class UpdateExamDto extends createZodDto(UpdateExamRequestSchema) {}

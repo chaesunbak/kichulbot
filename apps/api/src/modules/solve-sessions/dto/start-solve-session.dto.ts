@@ -1,12 +1,6 @@
-import { IsEnum, IsString, MinLength } from 'class-validator';
+import { StartSolveSessionRequestSchema } from '@kichulbot/api-contract/solve-sessions';
+import { createZodDto } from 'nestjs-zod';
 
-import { AnswerMode } from '../../../infrastructure/database/prisma-client';
-
-export class StartSolveSessionDto {
-  @IsString()
-  @MinLength(1)
-  paperId!: string;
-
-  @IsEnum(AnswerMode)
-  mode!: AnswerMode;
-}
+export class StartSolveSessionDto extends createZodDto(
+  StartSolveSessionRequestSchema,
+) {}

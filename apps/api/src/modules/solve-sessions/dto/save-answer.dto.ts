@@ -1,25 +1,4 @@
-import { Transform } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { SaveAnswerRequestSchema } from '@kichulbot/api-contract/solve-sessions';
+import { createZodDto } from 'nestjs-zod';
 
-export class SaveAnswerDto {
-  @IsOptional()
-  @Transform(({ value }: { value: unknown }) =>
-    value === undefined ? undefined : Number(value),
-  )
-  @IsInt()
-  @Min(1)
-  answerChoice?: number;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(1)
-  answerText?: string;
-
-  @IsOptional()
-  @Transform(({ value }: { value: unknown }) =>
-    value === undefined ? undefined : Number(value),
-  )
-  @IsInt()
-  @Min(0)
-  spentMilliseconds?: number;
-}
+export class SaveAnswerDto extends createZodDto(SaveAnswerRequestSchema) {}

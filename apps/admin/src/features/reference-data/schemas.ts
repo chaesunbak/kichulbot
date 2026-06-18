@@ -1,6 +1,4 @@
 import {
-  AdminExamResponseSchema,
-  AdminTaxonomyResponseSchema,
   CreateCategoryRequestSchema,
   CreateExamRequestSchema,
 } from '@kichulbot/api-contract/taxonomy';
@@ -19,9 +17,9 @@ export const examFormSchema = CreateExamRequestSchema.extend({
     1,
     '시험 슬러그를 입력해 주세요.',
   ),
-  categoryIds: CreateExamRequestSchema.shape.categoryIds.unwrap(),
-  usesMonth: CreateExamRequestSchema.shape.usesMonth.unwrap(),
-  usesRound: CreateExamRequestSchema.shape.usesRound.unwrap(),
+  categoryIds: z.array(z.string()),
+  usesMonth: z.boolean(),
+  usesRound: z.boolean(),
   mockExamQuestionCount: z.number().int().min(1).max(100).nullable(),
   eraTagGroupId: z.string().min(1).nullable(),
   mockExamBlueprintItems: z.array(
@@ -37,12 +35,4 @@ export const examFormSchema = CreateExamRequestSchema.extend({
         path: ['minQuestionCount'],
       }),
   ),
-});
-
-export const adminListExamsResponseSchema = z.object({
-  exams: z.array(AdminExamResponseSchema),
-});
-
-export const adminListCategoriesResponseSchema = z.object({
-  categories: z.array(AdminTaxonomyResponseSchema),
 });

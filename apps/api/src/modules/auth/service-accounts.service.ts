@@ -3,11 +3,7 @@ import { createHash } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { ServiceAccountsRepository } from './service-accounts.repository';
-
-export type RequestServiceAccount = {
-  id: string;
-  name: string;
-};
+import type { RequestServiceAccount } from './types';
 
 @Injectable()
 export class ServiceAccountsService {

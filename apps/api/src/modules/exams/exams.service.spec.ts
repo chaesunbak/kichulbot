@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
-import { Prisma, UserRole } from '../../infrastructure/database/prisma-client';
+import { Prisma } from '../../infrastructure/database/prisma-client';
 import type { ExamsRepository } from './exams.repository';
 import { ExamsService } from './exams.service';
 
@@ -27,7 +27,7 @@ describe('ExamsService', () => {
   it('일반 사용자 목록에서는 공개 필드만 반환하고 학년 분류를 비활성화한다', async () => {
     repository.findMany.mockResolvedValue([makeExam({ usesGrade: true })]);
 
-    const response = await service.listExams(UserRole.USER);
+    const response = await service.listPublicExams();
 
     expect(response.exams[0]).toEqual({
       id: 'exam_1',
@@ -48,7 +48,7 @@ describe('ExamsService', () => {
       }),
     ]);
 
-    const response = await service.listExams(UserRole.ADMIN);
+    const response = await service.listAdminExams();
 
     expect(response.exams[0]).toMatchObject({
       paperCount: 5,

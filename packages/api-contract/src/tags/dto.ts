@@ -1,66 +1,40 @@
 import * as z from 'zod';
-import {
-  AdminTagGroupResponseSchema,
-  AdminTagResponseSchema,
-  TagResponseSchema,
-  TagSelectionModeSchema,
-} from './schema.js';
+import { IsoDateStringSchema } from '../common.js';
 
-export const ListTagsResponseSchema = z.object({
-  tags: z.array(z.union([AdminTagResponseSchema, TagResponseSchema])),
-});
-export type ListTagsResponse = z.infer<typeof ListTagsResponseSchema>;
+export const TagSelectionModeSchema = z.enum(['SINGLE', 'MULTIPLE']);
+export type TagSelectionMode = z.infer<typeof TagSelectionModeSchema>;
 
-export const CreateTagRequestSchema = z.object({
-  name: z.string().trim().min(1).max(50),
-  keywords: z.array(z.string().trim().min(1).max(50)).optional(),
-  examId: z.string().min(1),
-  tagGroupId: z.string().min(1).nullable().optional(),
-  sortOrder: z.number().int().min(0).optional(),
-});
-export type CreateTagRequest = z.infer<typeof CreateTagRequestSchema>;
-
-export const UpdateTagRequestSchema = CreateTagRequestSchema.partial();
-export type UpdateTagRequest = z.infer<typeof UpdateTagRequestSchema>;
-
-export const TagMutationResponseSchema = z.object({
-  tag: AdminTagResponseSchema,
-});
-export type TagMutationResponse = z.infer<typeof TagMutationResponseSchema>;
-
-export const DeleteTagResponseSchema = z.object({
+export const TagGroupResponseSchema = z.object({
   id: z.string(),
-});
-export type DeleteTagResponse = z.infer<typeof DeleteTagResponseSchema>;
-
-export const ListTagGroupsResponseSchema = z.object({
-  tagGroups: z.array(AdminTagGroupResponseSchema),
-});
-export type ListTagGroupsResponse = z.infer<typeof ListTagGroupsResponseSchema>;
-
-export const CreateTagGroupRequestSchema = z.object({
-  examId: z.string().min(1),
-  name: z.string().trim().min(1).max(50),
+  examId: z.string(),
+  name: z.string(),
   selectionMode: TagSelectionModeSchema,
-  sortOrder: z.number().int().min(0).optional(),
-  isActive: z.boolean().optional(),
+  sortOrder: z.number().int(),
+  isActive: z.boolean(),
 });
-export type CreateTagGroupRequest = z.infer<typeof CreateTagGroupRequestSchema>;
+export type TagGroupResponse = z.infer<typeof TagGroupResponseSchema>;
 
-export const UpdateTagGroupRequestSchema =
-  CreateTagGroupRequestSchema.partial();
-export type UpdateTagGroupRequest = z.infer<typeof UpdateTagGroupRequestSchema>;
-
-export const TagGroupMutationResponseSchema = z.object({
-  tagGroup: AdminTagGroupResponseSchema,
+export const AdminTagGroupResponseSchema = TagGroupResponseSchema.extend({
+  tagCount: z.number().int().min(0),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
 });
-export type TagGroupMutationResponse = z.infer<
-  typeof TagGroupMutationResponseSchema
->;
+export type AdminTagGroupResponse = z.infer<typeof AdminTagGroupResponseSchema>;
 
-export const DeleteTagGroupResponseSchema = z.object({
+export const TagResponseSchema = z.object({
   id: z.string(),
+  name: z.string(),
+  keywords: z.array(z.string()),
+  sortOrder: z.number().int(),
+  tagGroup: TagGroupResponseSchema.nullable().optional(),
 });
-export type DeleteTagGroupResponse = z.infer<
-  typeof DeleteTagGroupResponseSchema
->;
+export type TagResponse = z.infer<typeof TagResponseSchema>;
+
+export const AdminTagResponseSchema = TagResponseSchema.extend({
+  examId: z.string(),
+  tagGroupId: z.string().nullable(),
+  questionCount: z.number().int().min(0),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
+});
+export type AdminTagResponse = z.infer<typeof AdminTagResponseSchema>;

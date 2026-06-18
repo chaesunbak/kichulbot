@@ -1,8 +1,6 @@
-import { IsEnum } from 'class-validator';
+import { StartBookmarkListSessionRequestSchema } from '@kichulbot/api-contract/bookmarks';
+import { createZodDto } from 'nestjs-zod';
 
-import { AnswerMode } from '../../../infrastructure/database/prisma-client';
-
-export class StartBookmarkListSessionDto {
-  @IsEnum(AnswerMode)
-  mode!: AnswerMode;
-}
+export class StartBookmarkListSessionDto extends createZodDto(
+  StartBookmarkListSessionRequestSchema,
+) {}

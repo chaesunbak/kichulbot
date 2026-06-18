@@ -1,18 +1,28 @@
 import * as z from 'zod';
-import { QuestionAttemptResponseSchema } from './schema.js';
+import { IsoDateStringSchema } from '../common.js';
+import { TagResponseSchema } from '../tags/dto.js';
 
-export const ListQuestionAttemptsQuerySchema = z.object({
-  from: z.iso.date(),
-  to: z.iso.date(),
-  includeTags: z.coerce.boolean().optional(),
-});
-export type ListQuestionAttemptsQuery = z.infer<
-  typeof ListQuestionAttemptsQuerySchema
+export const QuestionAttemptOutcomeSchema = z.enum([
+  'CORRECT',
+  'INCORRECT',
+  'OMITTED',
+]);
+export type QuestionAttemptOutcome = z.infer<
+  typeof QuestionAttemptOutcomeSchema
 >;
 
-export const ListQuestionAttemptsResponseSchema = z.object({
-  questionAttempts: z.array(QuestionAttemptResponseSchema),
+export const QuestionAttemptResponseSchema = z.object({
+  id: z.string(),
+  sessionItemId: z.string().nullable(),
+  questionRevisionId: z.string(),
+  questionId: z.string(),
+  answerChoice: z.number().int().nullable(),
+  answerText: z.string().nullable(),
+  outcome: QuestionAttemptOutcomeSchema,
+  spentMilliseconds: z.number().int().nonnegative(),
+  gradedAt: IsoDateStringSchema,
+  tags: z.array(TagResponseSchema).optional(),
 });
-export type ListQuestionAttemptsResponse = z.infer<
-  typeof ListQuestionAttemptsResponseSchema
+export type QuestionAttemptResponse = z.infer<
+  typeof QuestionAttemptResponseSchema
 >;

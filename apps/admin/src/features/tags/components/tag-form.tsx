@@ -1,8 +1,4 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
-import type {
-  AdminTagGroupResponse,
-  AdminTagResponse,
-} from '@kichulbot/api-contract/tags';
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -27,6 +23,7 @@ import {
   SelectField,
   TextField,
 } from '@/shared/components/form-fields';
+import type { AdminTag,AdminTagGroup } from '@/shared/types';
 import { type Taxonomy } from '@/shared/types';
 
 import { getTagFormValues, uniqueKeywords } from '../lib/form-values';
@@ -35,8 +32,8 @@ import type { TagForm } from '../types';
 
 export interface TagFormPanelProps {
   selectedExam: Taxonomy | null;
-  tagGroups: AdminTagGroupResponse[];
-  editingTag: AdminTagResponse | null;
+  tagGroups: AdminTagGroup[];
+  editingTag: AdminTag | null;
   isSubmitting: boolean;
   onSubmit: (values: TagForm) => void;
   onCancel: () => void;

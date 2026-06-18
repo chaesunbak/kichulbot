@@ -1,12 +1,12 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
-export function formatTagOption(tag: TagResponse) {
+export function formatTagOption(tag: Tag) {
   if (!tag.tagGroup) return tag.name;
   return `${tag.tagGroup.name} · ${tag.name}`;
 }
 
-export function getAnswerSummary(question: AdminPaperQuestionResponse) {
+export function getAnswerSummary(question: AdminPaperQuestion) {
   if (
     question.type === 'MULTIPLE_CHOICE' &&
     question.gradingPolicy === 'ANY_CHOICE'

@@ -1,15 +1,11 @@
-import {
-  QuestionNoteResponse,
-  QuestionNoteResponseEnvelope,
-  QuestionNoteResponseEnvelopeSchema,
-} from '@kichulbot/api-contract/question-notes';
+import { QuestionNoteResponseEnvelope } from '@kichulbot/api-contract/question-notes';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { QuestionNotesRepository } from './question-notes.repository';
-
-type StoredQuestionNote = Awaited<
-  ReturnType<QuestionNotesRepository['findNote']>
->;
+import type {
+  QuestionNotePayload,
+  QuestionNoteRecord,
+} from './question-notes.types';
 
 @Injectable()
 export class QuestionNotesService {
@@ -26,9 +22,9 @@ export class QuestionNotesService {
       userId,
       questionId,
     );
-    return QuestionNoteResponseEnvelopeSchema.parse({
-      note: note ? this.toResponse(note) : null,
-    });
+    return {
+      note: note ? this.toQuestionNotePayload(note) : null,
+    };
   }
 
   async save(
@@ -40,7 +36,7 @@ export class QuestionNotesService {
     const trimmedContent = content.trim();
     if (!trimmedContent) {
       await this.questionNotesRepository.deleteNote(userId, questionId);
-      return QuestionNoteResponseEnvelopeSchema.parse({ note: null });
+      return { note: null };
     }
 
     const note = await this.questionNotesRepository.upsertNote(
@@ -48,9 +44,9 @@ export class QuestionNotesService {
       questionId,
       trimmedContent,
     );
-    return QuestionNoteResponseEnvelopeSchema.parse({
-      note: this.toResponse(note),
-    });
+    return {
+      note: this.toQuestionNotePayload(note),
+    };
   }
 
   private async assertPublishedQuestion(questionId: string) {
@@ -59,8 +55,7 @@ export class QuestionNotesService {
     if (!question) throw new NotFoundException('문항을 찾을 수 없습니다.');
   }
 
-  private toResponse(note: StoredQuestionNote): QuestionNoteResponse {
-    if (!note) throw new NotFoundException('메모를 찾을 수 없습니다.');
+  private toQuestionNotePayload(note: QuestionNoteRecord): QuestionNotePayload {
     return {
       questionId: note.questionId,
       content: note.content,

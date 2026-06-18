@@ -12,7 +12,7 @@ describe('TagsController', () => {
   beforeEach(() => {
     tagsService = {
       listAdminTags: jest.fn(),
-      listTags: jest.fn(),
+      listPublicTags: jest.fn(),
       createTag: jest.fn(),
       updateTag: jest.fn(),
       deleteTag: jest.fn(),
@@ -36,16 +36,15 @@ describe('TagsController', () => {
     await controller.listTags();
 
     expect(tagsService.listAdminTags).toHaveBeenCalledWith();
-    expect(tagsService.listTags).not.toHaveBeenCalled();
+    expect(tagsService.listPublicTags).not.toHaveBeenCalled();
   });
 
-  it('시험 필터를 지정하면 관리자 역할과 시험 식별자로 목록을 요청한다', async () => {
-    tagsService.listTags.mockResolvedValue({ tags: [] });
+  it('시험 필터를 지정하면 관리자 태그 목록에 시험 식별자를 전달한다', async () => {
+    tagsService.listAdminTags.mockResolvedValue({ tags: [] });
 
     await controller.listTags('exam_1');
 
-    expect(tagsService.listTags).toHaveBeenCalledWith(UserRole.ADMIN, 'exam_1');
-    expect(tagsService.listAdminTags).not.toHaveBeenCalled();
+    expect(tagsService.listAdminTags).toHaveBeenCalledWith('exam_1');
   });
 
   it('태그 생성을 서비스에 위임한다', async () => {

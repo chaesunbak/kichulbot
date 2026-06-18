@@ -1,20 +1,14 @@
 import {
-  AdminTaxonomyResponse,
+  AdminListCategoriesResponse,
   CategoryMutationResponse,
-  CategoryMutationResponseSchema,
   DeleteCategoryResponse,
-  DeleteCategoryResponseSchema,
-  ListCategoriesResponse,
-  ListCategoriesResponseSchema,
-  TaxonomyResponse,
+  PublicListCategoriesResponse,
 } from '@kichulbot/api-contract/taxonomy';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import {
-  Category,
-  UserRole,
-} from '../../infrastructure/database/prisma-client';
+import { Category } from '../../infrastructure/database/prisma-client';
 import { CategoriesRepository } from './categories.repository';
+import type { AdminCategoryItem, CategoryItem } from './categories.types';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -22,11 +16,20 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesService {
   constructor(private readonly categoriesRepository: CategoriesRepository) {}
 
-  async listCategories(role: UserRole): Promise<ListCategoriesResponse> {
+  async listAdminCategories(): Promise<AdminListCategoriesResponse> {
     const categories = await this.categoriesRepository.findMany();
-    return ListCategoriesResponseSchema.parse({
-      categories: categories.map((category) => this.toResponse(category, role)),
-    });
+    return {
+      categories: categories.map((category) =>
+        this.toAdminCategoryItem(category),
+      ),
+    };
+  }
+
+  async listPublicCategories(): Promise<PublicListCategoriesResponse> {
+    const categories = await this.categoriesRepository.findMany();
+    return {
+      categories: categories.map((category) => this.toCategoryItem(category)),
+    };
   }
 
   async createCategory(
@@ -36,9 +39,9 @@ export class CategoriesService {
       name: dto.name.trim(),
     });
 
-    return CategoryMutationResponseSchema.parse({
-      category: this.toResponse(category, UserRole.ADMIN),
-    });
+    return {
+      category: this.toAdminCategoryItem(category),
+    };
   }
 
   async updateCategory(
@@ -54,9 +57,9 @@ export class CategoriesService {
       name: dto.name?.trim(),
     });
 
-    return CategoryMutationResponseSchema.parse({
-      category: this.toResponse(category, UserRole.ADMIN),
-    });
+    return {
+      category: this.toAdminCategoryItem(category),
+    };
   }
 
   async deleteCategory(id: string): Promise<DeleteCategoryResponse> {
@@ -67,24 +70,19 @@ export class CategoriesService {
 
     await this.categoriesRepository.delete(id);
 
-    return DeleteCategoryResponseSchema.parse({ id });
+    return { id };
   }
 
-  private toResponse(
-    category: Category,
-    role: UserRole,
-  ): TaxonomyResponse | AdminTaxonomyResponse {
-    const response = {
+  private toCategoryItem(category: Category): CategoryItem {
+    return {
       id: category.id,
       name: category.name,
     };
+  }
 
-    if (role !== UserRole.ADMIN) {
-      return response;
-    }
-
+  private toAdminCategoryItem(category: Category): AdminCategoryItem {
     return {
-      ...response,
+      ...this.toCategoryItem(category),
       createdAt: category.createdAt.toISOString(),
       updatedAt: category.updatedAt.toISOString(),
     };

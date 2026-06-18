@@ -1,3 +1,10 @@
+import type {
+  DeleteLibraryFolderResponse,
+  DeleteLibraryPaperResponse,
+  LibraryFolderResponseEnvelope,
+  LibraryPaperResponseEnvelope,
+  LibraryResponse,
+} from '@kichulbot/api-contract/library';
 import {
   Body,
   Controller,
@@ -42,7 +49,7 @@ export class LibraryController {
   @Get()
   @ApiOperation({ summary: '내 서재 조회' })
   @ApiOkResponse({ description: '내 서재 폴더와 저장한 문제지를 반환합니다.' })
-  getLibrary(@CurrentUser() user: RequestUser) {
+  getLibrary(@CurrentUser() user: RequestUser): Promise<LibraryResponse> {
     return this.libraryService.getLibrary(user.id);
   }
 
@@ -52,7 +59,7 @@ export class LibraryController {
   createFolder(
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateLibraryFolderDto,
-  ) {
+  ): Promise<LibraryFolderResponseEnvelope> {
     return this.libraryService.createFolder(user.id, dto);
   }
 
@@ -63,7 +70,7 @@ export class LibraryController {
     @CurrentUser() user: RequestUser,
     @Param('folderId') folderId: string,
     @Body() dto: UpdateLibraryFolderDto,
-  ) {
+  ): Promise<LibraryFolderResponseEnvelope> {
     return this.libraryService.updateFolder(user.id, folderId, dto);
   }
 
@@ -73,7 +80,7 @@ export class LibraryController {
   deleteFolder(
     @CurrentUser() user: RequestUser,
     @Param('folderId') folderId: string,
-  ) {
+  ): Promise<DeleteLibraryFolderResponse> {
     return this.libraryService.deleteFolder(user.id, folderId);
   }
 
@@ -86,7 +93,7 @@ export class LibraryController {
     @CurrentUser() user: RequestUser,
     @Param('paperId') paperId: string,
     @Body() dto: AddLibraryPaperDto,
-  ) {
+  ): Promise<LibraryPaperResponseEnvelope> {
     return this.libraryService.addPaper(user.id, paperId, dto.folderId ?? null);
   }
 
@@ -99,7 +106,7 @@ export class LibraryController {
     @CurrentUser() user: RequestUser,
     @Param('libraryPaperId') libraryPaperId: string,
     @Body() dto: MoveLibraryPaperDto,
-  ) {
+  ): Promise<LibraryPaperResponseEnvelope> {
     return this.libraryService.movePaper(
       user.id,
       libraryPaperId,
@@ -113,7 +120,7 @@ export class LibraryController {
   deletePaper(
     @CurrentUser() user: RequestUser,
     @Param('libraryPaperId') libraryPaperId: string,
-  ) {
+  ): Promise<DeleteLibraryPaperResponse> {
     return this.libraryService.deletePaper(user.id, libraryPaperId);
   }
 }

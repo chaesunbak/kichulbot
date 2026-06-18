@@ -1,11 +1,12 @@
-import type { UserResponse } from '@kichulbot/api-contract/auth';
 import type * as z from 'zod';
+
+import type { User } from '@/shared/types';
 
 import type { loginSchema } from './schemas';
 
 export type LoginValues = z.infer<typeof loginSchema>;
 
 export type AuthUser = Pick<
-  UserResponse,
+  User,
   'id' | 'email' | 'nickname' | 'signupMethod' | 'authMethods' | 'role'
 >;

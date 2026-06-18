@@ -1,3 +1,4 @@
+import type { ListQuestionAttemptsResponse } from '@kichulbot/api-contract/question-attempts';
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -33,7 +34,7 @@ export class QuestionAttemptsController {
   list(
     @CurrentUser() user: RequestUser,
     @Query() query: ListQuestionAttemptsDto,
-  ) {
+  ): Promise<ListQuestionAttemptsResponse> {
     return this.questionAttemptsService.list(user.id, query);
   }
 }

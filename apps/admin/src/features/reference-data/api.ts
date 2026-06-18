@@ -5,6 +5,8 @@ import type {
   UpdateExamRequest,
 } from '@kichulbot/api-contract/taxonomy';
 import {
+  AdminListCategoriesResponseSchema,
+  AdminListExamsResponseSchema,
   CategoryMutationResponseSchema,
   DeleteCategoryResponseSchema,
   DeleteExamResponseSchema,
@@ -13,13 +15,8 @@ import {
 
 import { apiRequest } from '@/shared/api/api-client';
 
-import {
-  adminListCategoriesResponseSchema,
-  adminListExamsResponseSchema,
-} from './schemas';
-
 export async function fetchExams(token: string) {
-  return apiRequest('/admin/exams', adminListExamsResponseSchema.parse, {
+  return apiRequest('/admin/exams', AdminListExamsResponseSchema.parse, {
     token,
   });
 }
@@ -27,7 +24,7 @@ export async function fetchExams(token: string) {
 export async function fetchCategories(token: string) {
   return apiRequest(
     '/admin/categories',
-    adminListCategoriesResponseSchema.parse,
+    AdminListCategoriesResponseSchema.parse,
     {
       token,
     },

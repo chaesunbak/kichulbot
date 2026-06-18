@@ -1,11 +1,11 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
+import type { AdminPaperQuestion } from '@/shared/types';
 
 import { QuestionTextBlock } from './question-text-block';
 
 export function QuestionExtractedText({
   question,
 }: {
-  question: AdminPaperQuestionResponse;
+  question: AdminPaperQuestion;
 }) {
   const hasText =
     Boolean(question.rawText) ||

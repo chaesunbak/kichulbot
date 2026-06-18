@@ -1,3 +1,11 @@
+import type {
+  AddBookmarkedQuestionResponse,
+  BookmarkListResponseEnvelope,
+  BookmarkListSummaryResponseEnvelope,
+  DeleteBookmarkedQuestionResponse,
+  ListBookmarkListsResponse,
+} from '@kichulbot/api-contract/bookmarks';
+import type { StartSolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
 import {
   Body,
   Controller,
@@ -36,7 +44,9 @@ export class BookmarksController {
 
   @Get()
   @ApiOperation({ summary: '내 북마크 리스트 목록 조회' })
-  listBookmarkLists(@CurrentUser() user: RequestUser) {
+  listBookmarkLists(
+    @CurrentUser() user: RequestUser,
+  ): Promise<ListBookmarkListsResponse> {
     return this.bookmarksService.listBookmarkLists(user.id);
   }
 
@@ -46,7 +56,7 @@ export class BookmarksController {
   createBookmarkList(
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateBookmarkListDto,
-  ) {
+  ): Promise<BookmarkListSummaryResponseEnvelope> {
     return this.bookmarksService.createBookmarkList(user.id, dto.name);
   }
 
@@ -55,7 +65,7 @@ export class BookmarksController {
   getBookmarkList(
     @CurrentUser() user: RequestUser,
     @Param('bookmarkListId') bookmarkListId: string,
-  ) {
+  ): Promise<BookmarkListResponseEnvelope> {
     return this.bookmarksService.getBookmarkList(user.id, bookmarkListId);
   }
 
@@ -68,7 +78,7 @@ export class BookmarksController {
     @CurrentUser() user: RequestUser,
     @Param('bookmarkListId') bookmarkListId: string,
     @Body() dto: StartBookmarkListSessionDto,
-  ) {
+  ): Promise<StartSolveSessionResponse> {
     return this.bookmarksService.startSolveSession(
       user.id,
       bookmarkListId,
@@ -83,7 +93,7 @@ export class BookmarksController {
     @CurrentUser() user: RequestUser,
     @Param('bookmarkListId') bookmarkListId: string,
     @Param('questionId') questionId: string,
-  ) {
+  ): Promise<AddBookmarkedQuestionResponse> {
     return this.bookmarksService.addQuestion(
       user.id,
       bookmarkListId,
@@ -98,7 +108,7 @@ export class BookmarksController {
     @CurrentUser() user: RequestUser,
     @Param('bookmarkListId') bookmarkListId: string,
     @Param('questionId') questionId: string,
-  ) {
+  ): Promise<DeleteBookmarkedQuestionResponse> {
     return this.bookmarksService.deleteQuestion(
       user.id,
       bookmarkListId,

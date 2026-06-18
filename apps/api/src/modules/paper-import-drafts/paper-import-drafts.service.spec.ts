@@ -42,7 +42,7 @@ describe('PaperImportDraftsService', () => {
     } as unknown as DatabaseService;
     papersService = {
       createPaperWithQuestions: jest.fn(),
-      getPaper: jest.fn(),
+      getAdminPaper: jest.fn(),
     } as unknown as jest.Mocked<PapersService>;
     tagsService = {
       matchRecommendedTagsBatch: jest.fn(),
@@ -214,8 +214,8 @@ describe('PaperImportDraftsService', () => {
     paperImportJob.findUnique.mockResolvedValue(
       makeImportJob({ paperId: 'paper_existing' }),
     );
-    papersService.getPaper.mockResolvedValue({
-      paper: makePaperResponse('paper_existing'),
+    papersService.getAdminPaper.mockResolvedValue({
+      paper: { ...makePaperResponse('paper_existing'), questions: [] },
     });
 
     await expect(
@@ -224,10 +224,7 @@ describe('PaperImportDraftsService', () => {
       paper: { id: 'paper_existing' },
     });
 
-    expect(papersService.getPaper).toHaveBeenCalledWith(
-      'paper_existing',
-      UserRole.ADMIN,
-    );
+    expect(papersService.getAdminPaper).toHaveBeenCalledWith('paper_existing');
     expect(papersService.createPaperWithQuestions).not.toHaveBeenCalled();
     expect(paperImportJob.update).not.toHaveBeenCalled();
   });

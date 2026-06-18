@@ -1,4 +1,6 @@
 import {
+  AdminGetPaperResponseSchema,
+  AdminListPapersResponseSchema,
   CreatePaperImportJobResponseSchema,
   CreatePaperResponseSchema,
   type CreatePaperWithQuestionsRequest,
@@ -9,13 +11,8 @@ import {
 
 import { apiRequest } from '@/shared/api/api-client';
 
-import {
-  adminGetPaperResponseSchema,
-  adminListPapersResponseSchema,
-} from './schemas';
-
 export async function fetchPapers(token: string) {
-  return apiRequest('/admin/exam-papers', adminListPapersResponseSchema.parse, {
+  return apiRequest('/admin/exam-papers', AdminListPapersResponseSchema.parse, {
     token,
   });
 }
@@ -23,7 +20,7 @@ export async function fetchPapers(token: string) {
 export async function fetchPaper(token: string, paperId: string) {
   return apiRequest(
     `/admin/exam-papers/${paperId}`,
-    adminGetPaperResponseSchema.parse,
+    AdminGetPaperResponseSchema.parse,
     { token },
   );
 }

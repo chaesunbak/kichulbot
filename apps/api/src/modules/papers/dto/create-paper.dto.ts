@@ -1,60 +1,33 @@
-import { CreatePaperRequest } from '@kichulbot/api-contract/papers';
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { BooleanInputSchema } from '@kichulbot/api-contract';
+import { createZodDto } from 'nestjs-zod';
+import * as z from 'zod';
 
-export class CreatePaperDto implements CreatePaperRequest {
-  @ApiProperty({ example: '2025학년도 수능 한국사' })
-  @IsString()
-  @MaxLength(100)
-  title: string;
+const REQUIRED_PAPER_FIELDS = ['title', 'year', 'examId'] as const;
 
-  @ApiProperty({ example: 2025 })
-  @IsInt()
-  @Min(1994)
-  @Max(2100)
-  year: number;
+export const CreatePaperBodySchema = z
+  .strictObject({
+    payload: z.string().min(1).optional(),
+    title: z.string().min(1).max(100).optional(),
+    year: z.coerce.number().int().min(1994).max(2100).optional(),
+    month: z.coerce.number().int().min(1).max(12).nullable().optional(),
+    grade: z.coerce.number().int().min(1).max(3).nullable().optional(),
+    round: z.coerce.number().int().min(1).nullable().optional(),
+    examId: z.string().min(1).optional(),
+    questionCount: z.coerce.number().int().min(1).max(100).optional(),
+    isPublished: BooleanInputSchema.optional(),
+  })
+  .superRefine((value, context) => {
+    if (value.payload) return;
 
-  @ApiProperty({ required: false, nullable: true, example: 3 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(12)
-  month?: number | null;
+    for (const field of REQUIRED_PAPER_FIELDS) {
+      if (value[field] === undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: [field],
+          message: '필수 입력값입니다.',
+        });
+      }
+    }
+  });
 
-  @ApiProperty({ required: false, nullable: true, example: 3 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(3)
-  grade?: number | null;
-
-  @ApiProperty({ required: false, nullable: true, example: 75 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  round?: number | null;
-
-  @ApiProperty({ example: 'clx0000000000000000000000' })
-  @IsString()
-  examId: string;
-
-  @ApiProperty({ required: false, default: 20, example: 20 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  questionCount?: number;
-
-  @ApiProperty({ required: false, default: false })
-  @IsOptional()
-  @IsBoolean()
-  isPublished?: boolean;
-}
+export class CreatePaperDto extends createZodDto(CreatePaperBodySchema) {}

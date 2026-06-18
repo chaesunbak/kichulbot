@@ -1,4 +1,4 @@
-import type { SolveSessionLogStatus } from '@kichulbot/api-contract/solve-sessions';
+import type { ListSolveSessionLogsQuery } from '@kichulbot/api-contract/solve-sessions';
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
@@ -12,6 +12,8 @@ import {
 } from '../../infrastructure/database/prisma-client';
 
 export class SubmittedSolveSessionError extends Error {}
+
+type SolveSessionLogStatus = NonNullable<ListSolveSessionLogsQuery['status']>;
 
 type SolveSessionLogListFilters = {
   page: number;

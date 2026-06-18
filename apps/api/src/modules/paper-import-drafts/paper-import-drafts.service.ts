@@ -6,18 +6,13 @@ import {
   CreatePaperImportJobRequest,
   CreatePaperImportJobRequestSchema,
   CreatePaperImportJobResponse,
-  CreatePaperImportJobResponseSchema,
   CreatePaperResponse,
-  CreatePaperResponseSchema,
   CreatePaperWithQuestionsRequest,
   ListPaperImportJobsResponse,
-  ListPaperImportJobsResponseSchema,
   PaperImportDraftResponse,
   PaperImportDraftResponseSchema,
   PaperImportJobPayloadResponse,
-  PaperImportJobPayloadResponseSchema,
   PaperImportJobResponse,
-  PaperImportJobResponseSchema,
   SavePaperImportJobResultRequest,
   SavePaperImportJobResultRequestSchema,
   UpdatePaperImportJobStatusRequest,
@@ -39,32 +34,17 @@ import { UserRole } from '../../infrastructure/database/prisma-client';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { PapersService } from '../papers/papers.service';
 import { TagsService } from '../tags/tags.service';
+import type {
+  CreateDraftInput,
+  PaperImportDraftPayload,
+  PaperImportJobItem,
+  PaperImportJobRecord,
+} from './paper-import-drafts.types';
 
 const DEFAULT_LAYOUT = 'korean-history';
 const DEFAULT_VARIANT = 'odd';
 const QUEUE_NAME = 'paper-import';
 const JOB_NAME = 'extract-paper';
-
-type CreateDraftInput = {
-  questionPdf?: UploadedMemoryFile;
-  answerPdf?: UploadedMemoryFile;
-  options: Record<string, string | undefined>;
-};
-
-type PaperImportJobRow = {
-  id: string;
-  status: string;
-  questionPdfName: string;
-  answerPdfName: string;
-  paperId: string | null;
-  paperInput: unknown;
-  resultJsonPath: string | null;
-  errorMessage: string | null;
-  createdAt: Date;
-  startedAt: Date | null;
-  completedAt: Date | null;
-  failedAt: Date | null;
-};
 
 @Injectable()
 export class PaperImportDraftsService implements OnModuleDestroy {
@@ -161,13 +141,13 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       );
     }
 
-    return CreatePaperImportJobResponseSchema.parse({
+    return {
       job: {
         id: job.id,
         status: job.status,
         paperId: job.paperId,
       },
-    });
+    };
   }
 
   async listDraftJobs(): Promise<ListPaperImportJobsResponse> {
@@ -176,9 +156,9 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       take: 20,
     });
 
-    return ListPaperImportJobsResponseSchema.parse({
-      jobs: jobs.map((job) => this.toJobResponse(job)),
-    });
+    return {
+      jobs: jobs.map((job) => this.toPaperImportJobItem(job)),
+    };
   }
 
   async getDraftJob(id: string): Promise<PaperImportJobResponse> {
@@ -194,9 +174,9 @@ export class PaperImportDraftsService implements OnModuleDestroy {
         ? await this.readDraftResult(job)
         : null;
 
-    return PaperImportJobResponseSchema.parse({
-      job: this.toJobResponse(job, result),
-    });
+    return {
+      job: this.toPaperImportJobItem(job, result),
+    };
   }
 
   async getImportJobPayload(
@@ -209,16 +189,18 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       throw new NotFoundException('PDF 추출 작업을 찾을 수 없습니다.');
     }
 
-    return PaperImportJobPayloadResponseSchema.parse({
+    return {
       job: {
         id: job.id,
         questionPdfPath: job.questionPdfPath,
         questionPdfName: job.questionPdfName,
         answerPdfPath: job.answerPdfPath,
-        inputOptions: job.inputOptions,
-        paperInput: job.paperInput,
+        inputOptions: this.toExtractorOptions(
+          CreatePaperImportJobRequestSchema.parse(job.paperInput),
+        ),
+        paperInput: CreatePaperImportJobRequestSchema.parse(job.paperInput),
       },
-    });
+    };
   }
 
   async updateImportJobStatus(
@@ -238,9 +220,9 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       data: this.toStatusUpdateData(body),
     });
 
-    return PaperImportJobResponseSchema.parse({
-      job: this.toJobResponse(job),
-    });
+    return {
+      job: this.toPaperImportJobItem(job),
+    };
   }
 
   async saveImportJobResult(
@@ -267,9 +249,9 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       },
     });
 
-    return PaperImportJobResponseSchema.parse({
-      job: this.toJobResponse(job),
-    });
+    return {
+      job: this.toPaperImportJobItem(job),
+    };
   }
 
   async createPaperFromImportJob(id: string): Promise<CreatePaperResponse> {
@@ -280,9 +262,7 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       throw new NotFoundException('PDF 추출 작업을 찾을 수 없습니다.');
     }
     if (job.paperId) {
-      return CreatePaperResponseSchema.parse(
-        await this.papersService.getPaper(job.paperId, UserRole.ADMIN),
-      );
+      return this.papersService.getAdminPaper(job.paperId);
     }
     if (job.status !== 'COMPLETED' || !job.resultJsonPath) {
       throw new BadRequestException(
@@ -318,7 +298,7 @@ export class PaperImportDraftsService implements OnModuleDestroy {
   private async readDraftResult(job: {
     paperInput: unknown;
     resultJsonPath: string | null;
-  }) {
+  }): Promise<PaperImportDraftResponse> {
     if (!job.resultJsonPath) {
       throw new BadRequestException('PDF 추출 결과를 찾을 수 없습니다.');
     }
@@ -342,14 +322,14 @@ export class PaperImportDraftsService implements OnModuleDestroy {
       })),
     );
 
-    return PaperImportDraftResponseSchema.parse({
+    return {
       ...result,
       questions: result.questions.map((question, index) => ({
         ...question,
         recommendedTagIds: matches[index]?.map((match) => match.tagId) ?? [],
         recommendedTagMatches: matches[index] ?? [],
       })),
-    });
+    };
   }
 
   private parsePaperInput(
@@ -489,10 +469,10 @@ export class PaperImportDraftsService implements OnModuleDestroy {
     });
   }
 
-  private toJobResponse(
-    job: PaperImportJobRow,
-    result: PaperImportDraftResponse | null = null,
-  ) {
+  private toPaperImportJobItem(
+    job: PaperImportJobRecord,
+    result: PaperImportDraftPayload | null = null,
+  ): PaperImportJobItem {
     return {
       id: job.id,
       status: job.status,

@@ -1,8 +1,6 @@
-import { SaveQuestionNoteRequest } from '@kichulbot/api-contract/question-notes';
-import { IsString, MaxLength } from 'class-validator';
+import { SaveQuestionNoteRequestSchema } from '@kichulbot/api-contract/question-notes';
+import { createZodDto } from 'nestjs-zod';
 
-export class SaveQuestionNoteDto implements SaveQuestionNoteRequest {
-  @IsString()
-  @MaxLength(5000)
-  content!: string;
-}
+export class SaveQuestionNoteDto extends createZodDto(
+  SaveQuestionNoteRequestSchema,
+) {}

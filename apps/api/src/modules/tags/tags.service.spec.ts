@@ -1,7 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 
 import type { TagGroup } from '../../infrastructure/database/prisma-client';
-import { UserRole } from '../../infrastructure/database/prisma-client';
 import type { TagsRepository } from './tags.repository';
 import { TagsService } from './tags.service';
 
@@ -36,7 +35,7 @@ describe('TagsService', () => {
   it('일반 태그 목록에서는 공개 필드만 반환한다', async () => {
     repository.findManyAvailable.mockResolvedValue([makeTag()]);
 
-    const response = await service.listTags(UserRole.USER, 'exam_1');
+    const response = await service.listPublicTags('exam_1');
 
     expect(repository.findManyAvailable).toHaveBeenCalledWith('exam_1');
     expect(response.tags[0]).not.toHaveProperty('examId');
@@ -60,7 +59,7 @@ describe('TagsService', () => {
   it('관리자 필터 태그 목록에서는 문항 수를 함께 반환한다', async () => {
     repository.findManyAvailable.mockResolvedValue([makeTag()]);
 
-    const response = await service.listTags(UserRole.ADMIN, 'exam_1');
+    const response = await service.listAdminTags('exam_1');
 
     expect(repository.findManyAvailable).toHaveBeenCalledWith('exam_1');
     expect(response.tags[0]).toMatchObject({

@@ -1,3 +1,4 @@
+import type { QuestionNoteResponseEnvelope } from '@kichulbot/api-contract/question-notes';
 import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -29,7 +30,7 @@ export class QuestionNotesController {
   getQuestionNote(
     @CurrentUser() user: RequestUser,
     @Param('questionId') questionId: string,
-  ) {
+  ): Promise<QuestionNoteResponseEnvelope> {
     return this.questionNotesService.get(user.id, questionId);
   }
 
@@ -40,7 +41,7 @@ export class QuestionNotesController {
     @CurrentUser() user: RequestUser,
     @Param('questionId') questionId: string,
     @Body() dto: SaveQuestionNoteDto,
-  ) {
+  ): Promise<QuestionNoteResponseEnvelope> {
     return this.questionNotesService.save(user.id, questionId, dto.content);
   }
 }

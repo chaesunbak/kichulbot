@@ -1,5 +1,4 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
-import { type AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -16,9 +15,10 @@ import { getCategoryFormValues } from '@/features/reference-data/lib/form-values
 import { categoryFormSchema } from '@/features/reference-data/schemas';
 import type { CategoryForm } from '@/features/reference-data/types';
 import { TextField } from '@/shared/components/form-fields';
+import { type AdminTaxonomy } from '@/shared/types';
 
 interface CategoryFormPanelProps {
-  editingCategory: AdminTaxonomyResponse | null;
+  editingCategory: AdminTaxonomy | null;
   isSubmitting: boolean;
   onSubmit: (values: CategoryForm) => void;
   onCancel: () => void;

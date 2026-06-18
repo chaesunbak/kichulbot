@@ -1,22 +1,13 @@
 import {
-  AdminTagGroupResponse,
-  AdminTagResponse,
+  AdminListTagsResponse,
   CreateTagGroupRequest,
   CreateTagRequest,
   DeleteTagGroupResponse,
-  DeleteTagGroupResponseSchema,
   DeleteTagResponse,
-  DeleteTagResponseSchema,
   ListTagGroupsResponse,
-  ListTagGroupsResponseSchema,
-  ListTagsResponse,
-  ListTagsResponseSchema,
+  PublicListTagsResponse,
   TagGroupMutationResponse,
-  TagGroupMutationResponseSchema,
-  TagGroupResponse,
   TagMutationResponse,
-  TagMutationResponseSchema,
-  TagResponse,
   UpdateTagGroupRequest,
   UpdateTagRequest,
 } from '@kichulbot/api-contract/tags';
@@ -26,45 +17,37 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  Tag,
-  TagGroup,
-  UserRole,
-} from '../../infrastructure/database/prisma-client';
+import { TagGroup } from '../../infrastructure/database/prisma-client';
 import { TagsRepository } from './tags.repository';
-
-type TagWithExam = Tag & {
-  tagGroup?: TagGroup | null;
-  _count?: { questions: number };
-};
-
-type TagGroupWithCount = TagGroup & {
-  _count?: { tags: number };
-};
-
-type RecommendedTagTextInput = {
-  text?: string | null;
-  promptText?: string | null;
-  passageText?: string | null;
-  choiceTexts?: string[] | null;
-};
+import type {
+  AdminTagGroupItem,
+  AdminTagItem,
+  RecommendedTagTextInput,
+  TagGroupItem,
+  TagGroupRecord,
+  TagItem,
+  TagRecord,
+} from './tags.types';
 
 @Injectable()
 export class TagsService {
   constructor(private readonly tagsRepository: TagsRepository) {}
 
-  async listTags(role: UserRole, examId?: string): Promise<ListTagsResponse> {
-    const tags = await this.tagsRepository.findManyAvailable(examId);
-    return ListTagsResponseSchema.parse({
-      tags: tags.map((tag) => this.toResponse(tag, role)),
-    });
+  async listAdminTags(examId?: string): Promise<AdminListTagsResponse> {
+    const tags = examId
+      ? await this.tagsRepository.findManyAvailable(examId)
+      : await this.tagsRepository.findMany();
+
+    return {
+      tags: tags.map((tag) => this.toAdminTagItem(tag)),
+    };
   }
 
-  async listAdminTags(): Promise<ListTagsResponse> {
-    const tags = await this.tagsRepository.findMany();
-    return ListTagsResponseSchema.parse({
-      tags: tags.map((tag) => this.toResponse(tag, UserRole.ADMIN)),
-    });
+  async listPublicTags(examId?: string): Promise<PublicListTagsResponse> {
+    const tags = await this.tagsRepository.findManyAvailable(examId);
+    return {
+      tags: tags.map((tag) => this.toTagItem(tag)),
+    };
   }
 
   async createTag(dto: CreateTagRequest): Promise<TagMutationResponse> {
@@ -79,9 +62,9 @@ export class TagsService {
       sortOrder: dto.sortOrder ?? 0,
     });
 
-    return TagMutationResponseSchema.parse({
-      tag: this.toResponse(tag, UserRole.ADMIN),
-    });
+    return {
+      tag: this.toAdminTagItem(tag),
+    };
   }
 
   async updateTag(
@@ -113,9 +96,9 @@ export class TagsService {
       sortOrder: dto.sortOrder,
     });
 
-    return TagMutationResponseSchema.parse({
-      tag: this.toResponse(tag, UserRole.ADMIN),
-    });
+    return {
+      tag: this.toAdminTagItem(tag),
+    };
   }
 
   async deleteTag(id: string): Promise<DeleteTagResponse> {
@@ -129,14 +112,16 @@ export class TagsService {
       throw new BadRequestException('문항에 연결된 태그는 삭제할 수 없습니다.');
     }
 
-    return DeleteTagResponseSchema.parse({ id });
+    return { id };
   }
 
   async listTagGroups(examId?: string): Promise<ListTagGroupsResponse> {
     const tagGroups = await this.tagsRepository.findManyTagGroups(examId);
-    return ListTagGroupsResponseSchema.parse({
-      tagGroups: tagGroups.map((tagGroup) => this.toTagGroupResponse(tagGroup)),
-    });
+    return {
+      tagGroups: tagGroups.map((tagGroup) =>
+        this.toAdminTagGroupItem(tagGroup),
+      ),
+    };
   }
 
   async createTagGroup(
@@ -151,9 +136,9 @@ export class TagsService {
       isActive: dto.isActive ?? true,
     });
 
-    return TagGroupMutationResponseSchema.parse({
-      tagGroup: this.toTagGroupResponse(tagGroup),
-    });
+    return {
+      tagGroup: this.toAdminTagGroupItem(tagGroup),
+    };
   }
 
   async updateTagGroup(
@@ -182,9 +167,9 @@ export class TagsService {
       isActive: dto.isActive,
     });
 
-    return TagGroupMutationResponseSchema.parse({
-      tagGroup: this.toTagGroupResponse(tagGroup),
-    });
+    return {
+      tagGroup: this.toAdminTagGroupItem(tagGroup),
+    };
   }
 
   async deleteTagGroup(id: string): Promise<DeleteTagGroupResponse> {
@@ -198,7 +183,7 @@ export class TagsService {
       throw new BadRequestException('태그가 연결된 그룹은 삭제할 수 없습니다.');
     }
 
-    return DeleteTagGroupResponseSchema.parse({ id });
+    return { id };
   }
 
   async assertTagsAssignable(
@@ -289,7 +274,7 @@ export class TagsService {
     }
   }
 
-  private toTagGroupBaseResponse(tagGroup: TagGroup): TagGroupResponse {
+  private toTagGroupItem(tagGroup: TagGroup): TagGroupItem {
     return {
       id: tagGroup.id,
       examId: tagGroup.examId,
@@ -300,35 +285,28 @@ export class TagsService {
     };
   }
 
-  private toTagGroupResponse(
-    tagGroup: TagGroupWithCount,
-  ): AdminTagGroupResponse {
+  private toAdminTagGroupItem(tagGroup: TagGroupRecord): AdminTagGroupItem {
     return {
-      ...this.toTagGroupBaseResponse(tagGroup),
+      ...this.toTagGroupItem(tagGroup),
       tagCount: tagGroup._count?.tags ?? 0,
       createdAt: tagGroup.createdAt.toISOString(),
       updatedAt: tagGroup.updatedAt.toISOString(),
     };
   }
 
-  private toResponse(
-    tag: TagWithExam,
-    role: UserRole,
-  ): TagResponse | AdminTagResponse {
-    const response = {
+  private toTagItem(tag: TagRecord): TagItem {
+    return {
       id: tag.id,
       name: tag.name,
       keywords: tag.keywords,
       sortOrder: tag.sortOrder,
-      tagGroup: tag.tagGroup ? this.toTagGroupBaseResponse(tag.tagGroup) : null,
+      tagGroup: tag.tagGroup ? this.toTagGroupItem(tag.tagGroup) : null,
     };
+  }
 
-    if (role !== UserRole.ADMIN) {
-      return response;
-    }
-
+  private toAdminTagItem(tag: TagRecord): AdminTagItem {
     return {
-      ...response,
+      ...this.toTagItem(tag),
       examId: tag.examId,
       tagGroupId: tag.tagGroupId,
       questionCount: tag._count?.questions ?? 0,

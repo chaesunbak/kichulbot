@@ -1,3 +1,8 @@
+import type {
+  CreatePaperImportJobResponse,
+  ListPaperImportJobsResponse,
+  PaperImportJobResponse,
+} from '@kichulbot/api-contract/papers';
 import {
   Body,
   Controller,
@@ -59,7 +64,7 @@ export class PaperImportDraftsController {
     @UploadedFiles(PAPER_IMPORT_DRAFT_FILES_PIPE)
     files: PaperImportDraftFiles = {},
     @Body() body: Record<string, string | undefined>,
-  ) {
+  ): Promise<CreatePaperImportJobResponse> {
     return this.paperImportDraftsService.createDraft({
       questionPdf: files.questionPdf,
       answerPdf: files.answerPdf,
@@ -71,7 +76,7 @@ export class PaperImportDraftsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'PDF 가져오기 작업 목록 조회' })
-  listDraftJobs() {
+  listDraftJobs(): Promise<ListPaperImportJobsResponse> {
     return this.paperImportDraftsService.listDraftJobs();
   }
 
@@ -79,7 +84,7 @@ export class PaperImportDraftsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'PDF 추출 작업 상태 조회' })
-  getDraftJob(@Param('id') id: string) {
+  getDraftJob(@Param('id') id: string): Promise<PaperImportJobResponse> {
     return this.paperImportDraftsService.getDraftJob(id);
   }
 }

@@ -1,3 +1,9 @@
+import type {
+  AdminListCategoriesResponse,
+  CategoryMutationResponse,
+  DeleteCategoryResponse,
+  PublicListCategoriesResponse,
+} from '@kichulbot/api-contract/taxonomy';
 import {
   Body,
   Controller,
@@ -41,15 +47,17 @@ export class CategoriesController {
   @ApiOperation({ summary: '관리자 분류 목록 조회' })
   @ApiOkResponse({ description: '분류 목록을 반환합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  listCategories() {
-    return this.categoriesService.listCategories(UserRole.ADMIN);
+  listCategories(): Promise<AdminListCategoriesResponse> {
+    return this.categoriesService.listAdminCategories();
   }
 
   @Post()
   @ApiOperation({ summary: '분류 생성' })
   @ApiCreatedResponse({ description: '분류를 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  createCategory(@Body() dto: CreateCategoryDto) {
+  createCategory(
+    @Body() dto: CreateCategoryDto,
+  ): Promise<CategoryMutationResponse> {
     return this.categoriesService.createCategory(dto);
   }
 
@@ -57,7 +65,10 @@ export class CategoriesController {
   @ApiOperation({ summary: '분류 수정' })
   @ApiOkResponse({ description: '분류를 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  updateCategory(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): Promise<CategoryMutationResponse> {
     return this.categoriesService.updateCategory(id, dto);
   }
 
@@ -67,7 +78,7 @@ export class CategoriesController {
     description: '분류를 삭제하고 연결된 시험 분류 관계를 정리합니다.',
   })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  deleteCategory(@Param('id') id: string) {
+  deleteCategory(@Param('id') id: string): Promise<DeleteCategoryResponse> {
     return this.categoriesService.deleteCategory(id);
   }
 }
@@ -80,7 +91,7 @@ export class PublicCategoriesController {
   @Get()
   @ApiOperation({ summary: '공개 분류 목록 조회' })
   @ApiOkResponse({ description: '분류 목록을 반환합니다.' })
-  listCategories() {
-    return this.categoriesService.listCategories(UserRole.USER);
+  listCategories(): Promise<PublicListCategoriesResponse> {
+    return this.categoriesService.listPublicCategories();
   }
 }

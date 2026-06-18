@@ -2,6 +2,7 @@
   "extends": "@kichulbot/typescript-config/nestjs.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "declaration": false,
     "strictPropertyInitialization": false,
     "noImplicitAny": false,
     "types": ["node", "jest"]

@@ -12,7 +12,9 @@ export class MetricsController {
   @Get()
   @RawResponse()
   @ApiExcludeEndpoint()
-  async getMetrics(@Res({ passthrough: true }) response: Response) {
+  async getMetrics(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<string> {
     response.type(this.metricsService.getContentType());
 
     return this.metricsService.getMetrics();

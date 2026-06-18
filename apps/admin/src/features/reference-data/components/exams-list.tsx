@@ -1,4 +1,3 @@
-import { type AdminExamResponse } from '@kichulbot/api-contract/taxonomy';
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -17,11 +16,13 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { ClipboardList, Pencil, Trash2 } from 'lucide-react';
 
+import { type AdminExam } from '@/shared/types';
+
 interface ExamsListProps {
-  exams: AdminExamResponse[];
+  exams: AdminExam[];
   deletingExamId?: string | null;
-  onEdit: (exam: AdminExamResponse) => void;
-  onDelete: (exam: AdminExamResponse) => void;
+  onEdit: (exam: AdminExam) => void;
+  onDelete: (exam: AdminExam) => void;
 }
 
 export function ExamsList({

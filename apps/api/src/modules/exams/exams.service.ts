@@ -1,15 +1,10 @@
 import {
-  AdminExamResponse,
+  AdminListExamsResponse,
   DeleteExamResponse,
-  DeleteExamResponseSchema,
   ExamMutationResponse,
-  ExamMutationResponseSchema,
-  ExamResponse,
   ListExamPaperOverviewsQuerySchema,
   ListExamPaperOverviewsResponse,
-  ListExamPaperOverviewsResponseSchema,
-  ListExamsResponse,
-  ListExamsResponseSchema,
+  PublicListExamsResponse,
 } from '@kichulbot/api-contract/taxonomy';
 import {
   BadRequestException,
@@ -17,27 +12,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  Category,
-  Exam,
-  ExamCategory,
-  MockExamBlueprintItem,
-  Prisma,
-  UserRole,
-} from '../../infrastructure/database/prisma-client';
+import { Prisma } from '../../infrastructure/database/prisma-client';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamsRepository } from './exams.repository';
-
-type ExamWithCategories = Exam & {
-  categories: Array<ExamCategory & { category: Category }>;
-  mockExamBlueprintItems?: MockExamBlueprintItem[];
-  sessions?: Array<{ _count: { papers: number } }>;
-};
-
-type MockExamBlueprintItemInput = NonNullable<
-  CreateExamDto['mockExamBlueprintItems']
->[number];
+import type {
+  AdminExamItem,
+  ExamItem,
+  ExamRecord,
+  MockExamBlueprintItemInput,
+} from './exams.types';
 
 const DEFAULT_PAPER_OVERVIEW_LIMIT = 4;
 
@@ -45,11 +29,18 @@ const DEFAULT_PAPER_OVERVIEW_LIMIT = 4;
 export class ExamsService {
   constructor(private readonly examsRepository: ExamsRepository) {}
 
-  async listExams(role: UserRole): Promise<ListExamsResponse> {
+  async listAdminExams(): Promise<AdminListExamsResponse> {
     const exams = await this.examsRepository.findMany();
-    return ListExamsResponseSchema.parse({
-      exams: exams.map((exam) => this.toResponse(exam, role)),
-    });
+    return {
+      exams: exams.map((exam) => this.toAdminExamItem(exam)),
+    };
+  }
+
+  async listPublicExams(): Promise<PublicListExamsResponse> {
+    const exams = await this.examsRepository.findMany();
+    return {
+      exams: exams.map((exam) => this.toExamItem(exam)),
+    };
   }
 
   async listPublicPaperOverviews(
@@ -60,7 +51,7 @@ export class ExamsService {
     const overviews =
       await this.examsRepository.findManyPublicPaperOverviews(paperLimit);
 
-    return ListExamPaperOverviewsResponseSchema.parse({
+    return {
       overviews: overviews.map((overview) => ({
         exam: {
           id: overview.id,
@@ -82,7 +73,7 @@ export class ExamsService {
           },
         })),
       })),
-    });
+    };
   }
 
   async findById(id: string) {
@@ -106,9 +97,9 @@ export class ExamsService {
         throw this.mapKnownError(error);
       });
 
-    return ExamMutationResponseSchema.parse({
-      exam: this.toResponse(exam, UserRole.ADMIN),
-    });
+    return {
+      exam: this.toAdminExamItem(exam),
+    };
   }
 
   async updateExam(
@@ -141,9 +132,9 @@ export class ExamsService {
         throw this.mapKnownError(error);
       });
 
-    return ExamMutationResponseSchema.parse({
-      exam: this.toResponse(exam, UserRole.ADMIN),
-    });
+    return {
+      exam: this.toAdminExamItem(exam),
+    };
   }
 
   async deleteExam(id: string): Promise<DeleteExamResponse> {
@@ -159,14 +150,11 @@ export class ExamsService {
       );
     }
 
-    return DeleteExamResponseSchema.parse({ id });
+    return { id };
   }
 
-  private toResponse(
-    exam: ExamWithCategories,
-    role: UserRole,
-  ): ExamResponse | AdminExamResponse {
-    const response = {
+  private toExamItem(exam: ExamRecord): ExamItem {
+    return {
       id: exam.id,
       name: exam.name,
       slug: exam.slug,
@@ -179,13 +167,11 @@ export class ExamsService {
       usesRound: exam.usesRound,
       isMockExamAvailable: this.isMockExamAvailable(exam),
     };
+  }
 
-    if (role !== UserRole.ADMIN) {
-      return response;
-    }
-
+  private toAdminExamItem(exam: ExamRecord): AdminExamItem {
     return {
-      ...response,
+      ...this.toExamItem(exam),
       paperCount: this.countPapers(exam),
       mockExamQuestionCount: exam.mockExamQuestionCount,
       eraTagGroupId: exam.eraTagGroupId,
@@ -215,7 +201,7 @@ export class ExamsService {
   }
 
   private async assertMockExamSettings(
-    existing: ExamWithCategories,
+    existing: ExamRecord,
     dto: UpdateExamDto,
   ) {
     const shouldValidate =
@@ -313,7 +299,7 @@ export class ExamsService {
     }
   }
 
-  private isMockExamAvailable(exam: ExamWithCategories) {
+  private isMockExamAvailable(exam: ExamRecord) {
     return (
       exam.mockExamQuestionCount != null &&
       !!exam.eraTagGroupId &&
@@ -321,7 +307,7 @@ export class ExamsService {
     );
   }
 
-  private countPapers(exam: ExamWithCategories): number {
+  private countPapers(exam: ExamRecord): number {
     return (
       exam.sessions?.reduce((sum, session) => sum + session._count.papers, 0) ??
       0

@@ -1,5 +1,3 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -35,6 +33,8 @@ import {
 import { Controller, type UseFormReturn } from 'react-hook-form';
 
 import { NumberField, SelectField } from '@/shared/components/form-fields';
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 import { getNextTagIds } from '../lib/question-tag-utils';
 import type { QuestionValues } from '../types';
@@ -49,17 +49,17 @@ interface QuestionFormCardProps {
     ComponentProps<typeof QuestionImageField>,
     'existingImageUrl'
   >;
-  editingQuestion: AdminPaperQuestionResponse | null;
-  selectableTags: TagResponse[];
+  editingQuestion: AdminPaperQuestion | null;
+  selectableTags: Tag[];
   isComplete: boolean;
   isSaving: boolean;
   isDeleting: boolean;
   isTagsEmpty: boolean;
   questionCount: number;
-  previousQuestion: AdminPaperQuestionResponse | null;
-  nextQuestion: AdminPaperQuestionResponse | null;
+  previousQuestion: AdminPaperQuestion | null;
+  nextQuestion: AdminPaperQuestion | null;
   onCreate: () => void;
-  onDelete: (question: AdminPaperQuestionResponse) => void;
+  onDelete: (question: AdminPaperQuestion) => void;
   onMove: (direction: 'previous' | 'next') => void;
   onSubmit: (values: QuestionValues) => void;
 }

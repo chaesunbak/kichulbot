@@ -1,6 +1,7 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { describe, expect, it } from 'vitest';
+
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 import { getPercentage } from '../../papers/lib/progress';
 import { getImageFileName } from './question-image';
@@ -54,7 +55,7 @@ describe('formatTagOption', () => {
           sortOrder: 0,
           isActive: true,
         },
-      } satisfies TagResponse),
+      } satisfies Tag),
     ).toBe('고려 · 광종');
   });
 
@@ -66,7 +67,7 @@ describe('formatTagOption', () => {
         keywords: [],
         sortOrder: 0,
         tagGroup: null,
-      } satisfies TagResponse),
+      } satisfies Tag),
     ).toBe('광종');
   });
 });
@@ -121,8 +122,8 @@ describe('getPercentage', () => {
 });
 
 function createQuestion(
-  overrides: Partial<AdminPaperQuestionResponse> = {},
-): AdminPaperQuestionResponse {
+  overrides: Partial<AdminPaperQuestion> = {},
+): AdminPaperQuestion {
   return {
     id: 'question-1',
     number: 1,

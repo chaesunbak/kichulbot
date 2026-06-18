@@ -1,5 +1,3 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import {
   Card,
@@ -18,6 +16,8 @@ import {
 import { ImageIcon, Pencil } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 import { formatTagOption, getAnswerSummary } from '../lib/question-summary';
 import { getUnselectedRecommendedTags } from '../lib/recommended-tags';
@@ -31,13 +31,13 @@ export function QuestionList({
   onEdit,
   onAddTag,
 }: {
-  questions: AdminPaperQuestionResponse[];
-  tags: TagResponse[];
+  questions: AdminPaperQuestion[];
+  tags: Tag[];
   isLoadingTags: boolean;
   addingTagQuestionId: string | null;
   editingQuestionId: string | null;
-  onEdit: (question: AdminPaperQuestionResponse) => void;
-  onAddTag: (question: AdminPaperQuestionResponse, tagId: string) => void;
+  onEdit: (question: AdminPaperQuestion) => void;
+  onAddTag: (question: AdminPaperQuestion, tagId: string) => void;
 }) {
   return (
     <Card>
@@ -166,11 +166,7 @@ export function QuestionList({
   );
 }
 
-function RecommendedTagBadges({
-  recommendedTags,
-}: {
-  recommendedTags: TagResponse[];
-}) {
+function RecommendedTagBadges({ recommendedTags }: { recommendedTags: Tag[] }) {
   if (recommendedTags.length === 0) return null;
 
   return (
@@ -191,11 +187,11 @@ function QuestionTagSelect({
   isPending,
   onAddTag,
 }: {
-  question: AdminPaperQuestionResponse;
-  tags: TagResponse[];
+  question: AdminPaperQuestion;
+  tags: Tag[];
   isLoading: boolean;
   isPending: boolean;
-  onAddTag: (question: AdminPaperQuestionResponse, tagId: string) => void;
+  onAddTag: (question: AdminPaperQuestion, tagId: string) => void;
 }) {
   const selectedTagIds = new Set(question.tags.map((tag) => tag.id));
   const availableTags = tags.filter((tag) => !selectedTagIds.has(tag.id));

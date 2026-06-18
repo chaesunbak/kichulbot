@@ -1,29 +1,11 @@
+import type { ListQuestionAttemptsResponse } from '@kichulbot/api-contract/question-attempts';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { QuestionAttemptsRepository } from './question-attempts.repository';
+import type { AttemptQuestionRevisionRecord } from './question-attempts.types';
 
 const KST_OFFSET = '+09:00';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-type AttemptQuestionRevisionWithTags = {
-  question?: {
-    tags?: Array<{
-      tag: {
-        id: string;
-        name: string;
-        keywords: string[];
-        tagGroup: {
-          id: string;
-          examId: string;
-          name: string;
-          selectionMode: 'SINGLE' | 'MULTIPLE';
-          sortOrder: number;
-          isActive: boolean;
-        } | null;
-      };
-    }>;
-  };
-};
 
 @Injectable()
 export class QuestionAttemptsService {
@@ -34,7 +16,7 @@ export class QuestionAttemptsService {
   async list(
     userId: string,
     query: { from: string; to: string; includeTags?: boolean },
-  ) {
+  ): Promise<ListQuestionAttemptsResponse> {
     const from = this.toStartOfKstDay(query.from);
     const toExclusive = this.toStartOfNextKstDay(query.to);
 
@@ -69,7 +51,7 @@ export class QuestionAttemptsService {
 
         const taggedRevision =
           attempt.questionRevision as typeof attempt.questionRevision &
-            AttemptQuestionRevisionWithTags;
+            AttemptQuestionRevisionRecord;
 
         return {
           ...response,
@@ -78,6 +60,7 @@ export class QuestionAttemptsService {
               id: tag.id,
               name: tag.name,
               keywords: tag.keywords,
+              sortOrder: tag.sortOrder,
               tagGroup: tag.tagGroup
                 ? {
                     id: tag.tagGroup.id,

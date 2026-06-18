@@ -10,9 +10,8 @@ import type { Request } from 'express';
 
 import { UserRole } from '../../../infrastructure/database/prisma-client';
 import { AuthService } from '../auth.service';
-import type { RequestServiceAccount } from '../service-accounts.service';
 import { ServiceAccountsService } from '../service-accounts.service';
-import type { JwtUser, RequestUser } from '../types';
+import type { JwtUser, RequestServiceAccount, RequestUser } from '../types';
 
 type RequestWithActor = Request & {
   user?: RequestUser;

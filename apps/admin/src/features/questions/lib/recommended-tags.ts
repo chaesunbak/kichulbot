@@ -1,25 +1,25 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 export function getUnselectedRecommendedTags({
   question,
   tags,
   selectedTagIds,
 }: {
-  question: AdminPaperQuestionResponse;
-  tags: TagResponse[];
+  question: AdminPaperQuestion;
+  tags: Tag[];
   selectedTagIds: string[];
 }) {
   const selectedTagIdSet = new Set(selectedTagIds);
   return question.recommendedTagIds
     .map((tagId) => tags.find((tag) => tag.id === tagId))
-    .filter((tag): tag is TagResponse => Boolean(tag))
+    .filter((tag): tag is Tag => Boolean(tag))
     .filter((tag) => !selectedTagIdSet.has(tag.id));
 }
 
 export function getRecommendedTagKeywords(
-  question: AdminPaperQuestionResponse,
-  tag: TagResponse,
+  question: AdminPaperQuestion,
+  tag: Tag,
 ) {
   const savedMatch = question.recommendedTagMatches.find(
     (match) => match.tagId === tag.id,

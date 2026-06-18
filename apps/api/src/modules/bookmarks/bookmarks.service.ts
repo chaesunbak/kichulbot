@@ -1,17 +1,9 @@
 import {
   AddBookmarkedQuestionResponse,
-  AddBookmarkedQuestionResponseSchema,
-  BookmarkedQuestionResponse,
-  BookmarkListResponse,
   BookmarkListResponseEnvelope,
-  BookmarkListResponseEnvelopeSchema,
-  BookmarkListSummaryResponse,
   BookmarkListSummaryResponseEnvelope,
-  BookmarkListSummaryResponseEnvelopeSchema,
   DeleteBookmarkedQuestionResponse,
-  DeleteBookmarkedQuestionResponseSchema,
   ListBookmarkListsResponse,
-  ListBookmarkListsResponseSchema,
 } from '@kichulbot/api-contract/bookmarks';
 import { StartSolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
 import {
@@ -20,38 +12,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  AnswerMode,
-  Prisma,
-} from '../../infrastructure/database/prisma-client';
+import { AnswerMode } from '../../infrastructure/database/prisma-client';
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { BookmarksRepository } from './bookmarks.repository';
-
-type BookmarkListSummary = Prisma.QuestionSetGetPayload<{
-  include: { _count: { select: { items: true } } };
-}>;
-type BookmarkListWithQuestions = Prisma.QuestionSetGetPayload<{
-  include: {
-    items: {
-      include: {
-        questionRevision: {
-          include: {
-            question: {
-              include: {
-                paper: {
-                  include: {
-                    examSession: { include: { exam: true } };
-                  };
-                };
-              };
-            };
-          };
-        };
-      };
-    };
-  };
-}>;
-type BookmarkListItemWithQuestion = BookmarkListWithQuestions['items'][number];
+import type {
+  BookmarkedQuestionItem,
+  BookmarkListPayload,
+  BookmarkListQuestionRecord,
+  BookmarkListRecord,
+  BookmarkListSummaryItem,
+  BookmarkListSummaryRecord,
+} from './bookmarks.types';
 
 @Injectable()
 export class BookmarksService {
@@ -63,9 +34,11 @@ export class BookmarksService {
   async listBookmarkLists(userId: string): Promise<ListBookmarkListsResponse> {
     const bookmarkLists =
       await this.bookmarksRepository.findBookmarkLists(userId);
-    return ListBookmarkListsResponseSchema.parse({
-      bookmarkLists: bookmarkLists.map((list) => this.toSummaryResponse(list)),
-    });
+    return {
+      bookmarkLists: bookmarkLists.map((list) =>
+        this.toBookmarkListSummaryItem(list),
+      ),
+    };
   }
 
   async createBookmarkList(
@@ -76,9 +49,9 @@ export class BookmarksService {
       userId,
       name.trim(),
     );
-    return BookmarkListSummaryResponseEnvelopeSchema.parse({
-      bookmarkList: this.toSummaryResponse(bookmarkList),
-    });
+    return {
+      bookmarkList: this.toBookmarkListSummaryItem(bookmarkList),
+    };
   }
 
   async getBookmarkList(
@@ -89,9 +62,9 @@ export class BookmarksService {
       userId,
       bookmarkListId,
     );
-    return BookmarkListResponseEnvelopeSchema.parse({
-      bookmarkList: this.toBookmarkListResponse(bookmarkList),
-    });
+    return {
+      bookmarkList: this.toBookmarkListPayload(bookmarkList),
+    };
   }
 
   async addQuestion(
@@ -110,9 +83,9 @@ export class BookmarksService {
       bookmarkListId,
       questionId,
     );
-    return AddBookmarkedQuestionResponseSchema.parse({
-      question: this.toQuestionResponse(questionSetItem),
-    });
+    return {
+      question: this.toBookmarkedQuestionItem(questionSetItem),
+    };
   }
 
   async deleteQuestion(
@@ -131,10 +104,10 @@ export class BookmarksService {
       throw new NotFoundException('북마크한 문제를 찾을 수 없습니다.');
     }
     await this.bookmarksRepository.deleteQuestion(bookmarkListId, questionId);
-    return DeleteBookmarkedQuestionResponseSchema.parse({
+    return {
       bookmarkListId,
       questionId,
-    });
+    };
   }
 
   async startSolveSession(
@@ -167,9 +140,9 @@ export class BookmarksService {
     return bookmarkList;
   }
 
-  private toSummaryResponse(
-    bookmarkList: BookmarkListSummary,
-  ): BookmarkListSummaryResponse {
+  private toBookmarkListSummaryItem(
+    bookmarkList: BookmarkListSummaryRecord,
+  ): BookmarkListSummaryItem {
     return {
       id: bookmarkList.id,
       name: bookmarkList.title,
@@ -179,24 +152,24 @@ export class BookmarksService {
     };
   }
 
-  private toBookmarkListResponse(
-    bookmarkList: BookmarkListWithQuestions,
-  ): BookmarkListResponse {
+  private toBookmarkListPayload(
+    bookmarkList: BookmarkListRecord,
+  ): BookmarkListPayload {
     return {
       id: bookmarkList.id,
       name: bookmarkList.title,
       questionCount: bookmarkList.items.length,
       questions: bookmarkList.items.map((question) =>
-        this.toQuestionResponse(question),
+        this.toBookmarkedQuestionItem(question),
       ),
       createdAt: bookmarkList.createdAt.toISOString(),
       updatedAt: bookmarkList.updatedAt.toISOString(),
     };
   }
 
-  private toQuestionResponse(
-    questionSetItem: BookmarkListItemWithQuestion,
-  ): BookmarkedQuestionResponse {
+  private toBookmarkedQuestionItem(
+    questionSetItem: BookmarkListQuestionRecord,
+  ): BookmarkedQuestionItem {
     const { question } = questionSetItem.questionRevision;
     return {
       id: question.id,

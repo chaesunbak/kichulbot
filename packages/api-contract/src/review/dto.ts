@@ -1,37 +1,29 @@
 import * as z from 'zod';
-import { StartSolveSessionResponseSchema } from '../solve-sessions/dto.js';
-import { DailyWrongQuestionSetResponseSchema } from './schema.js';
+import { IsoDateStringSchema } from '../common.js';
 
-export const GetWrongQuestionSetResponseSchema = z.object({
-  questionSet: DailyWrongQuestionSetResponseSchema.nullable(),
+export const WrongQuestionResponseSchema = z.object({
+  id: z.string(),
+  number: z.number().int(),
+  imageUrl: z.string().url(),
+  imageCacheKey: z.string().min(1),
+  sourceOutcome: z.enum(['INCORRECT', 'OMITTED']),
+  paper: z.object({
+    id: z.string(),
+    title: z.string(),
+    year: z.number().int(),
+    examName: z.string(),
+  }),
 });
-export type GetWrongQuestionSetResponse = z.infer<
-  typeof GetWrongQuestionSetResponseSchema
->;
+export type WrongQuestionResponse = z.infer<typeof WrongQuestionResponseSchema>;
 
-export const CreateWrongQuestionSetRequestSchema = z.object({
-  studyDate: z.iso.date().optional(),
+export const DailyWrongQuestionSetResponseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  studyDate: z.iso.date(),
+  questionCount: z.number().int().nonnegative(),
+  questions: z.array(WrongQuestionResponseSchema),
+  generatedAt: IsoDateStringSchema,
 });
-export type CreateWrongQuestionSetRequest = z.infer<
-  typeof CreateWrongQuestionSetRequestSchema
->;
-
-export const CreateWrongQuestionSetResponseSchema = z.object({
-  questionSet: DailyWrongQuestionSetResponseSchema,
-});
-export type CreateWrongQuestionSetResponse = z.infer<
-  typeof CreateWrongQuestionSetResponseSchema
->;
-
-export const StartWrongReviewSessionRequestSchema = z.object({
-  mode: z.enum(['ONE_BY_ONE', 'EXAM']).optional(),
-});
-export type StartWrongReviewSessionRequest = z.infer<
-  typeof StartWrongReviewSessionRequestSchema
->;
-
-export const StartWrongReviewSessionResponseSchema =
-  StartSolveSessionResponseSchema;
-export type StartWrongReviewSessionResponse = z.infer<
-  typeof StartWrongReviewSessionResponseSchema
+export type DailyWrongQuestionSetResponse = z.infer<
+  typeof DailyWrongQuestionSetResponseSchema
 >;

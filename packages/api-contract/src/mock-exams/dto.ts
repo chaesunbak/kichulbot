@@ -1,21 +1,20 @@
 import * as z from 'zod';
 
-import { AnswerModeSchema } from '../common.js';
-import { StartSolveSessionResponseSchema } from '../solve-sessions/dto.js';
-import { MockExamGenerationResponseSchema } from './schema.js';
-
-export const StartMockExamSolveSessionRequestSchema = z.object({
-  examId: z.string().min(1),
-  mode: AnswerModeSchema,
+export const MockExamInsufficientTagSchema = z.object({
+  tagId: z.string(),
+  tagName: z.string(),
+  requiredCount: z.number().int().min(0),
+  availableCount: z.number().int().min(0),
+  selectedCount: z.number().int().min(0),
 });
-export type StartMockExamSolveSessionRequest = z.infer<
-  typeof StartMockExamSolveSessionRequestSchema
+export type MockExamInsufficientTag = z.infer<
+  typeof MockExamInsufficientTagSchema
 >;
 
-export const StartMockExamSolveSessionResponseSchema =
-  StartSolveSessionResponseSchema.extend({
-    generation: MockExamGenerationResponseSchema,
-  });
-export type StartMockExamSolveSessionResponse = z.infer<
-  typeof StartMockExamSolveSessionResponseSchema
+export const MockExamGenerationResponseSchema = z.object({
+  supplemented: z.boolean(),
+  insufficientTags: z.array(MockExamInsufficientTagSchema),
+});
+export type MockExamGenerationResponse = z.infer<
+  typeof MockExamGenerationResponseSchema
 >;

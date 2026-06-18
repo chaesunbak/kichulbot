@@ -1,3 +1,14 @@
+import type {
+  AdminGetPaperResponse,
+  AdminListPaperQuestionsResponse,
+  AdminListPapersResponse,
+  CreatePaperResponse,
+  DeletePaperResponse,
+  PublicGetPaperResponse,
+  PublicListPaperQuestionsResponse,
+  PublicListPapersResponse,
+  UpdatePaperResponse,
+} from '@kichulbot/api-contract/papers';
 import {
   Body,
   Controller,
@@ -64,8 +75,8 @@ export class PapersController {
     @Query('examId') examId?: string,
     @Query('categoryId') categoryId?: string,
     @Query('q') q?: string,
-  ) {
-    return this.papersService.listPapers(user.role, user.id, {
+  ): Promise<AdminListPapersResponse> {
+    return this.papersService.listAdminPapers(user.id, {
       examId,
       categoryId,
       q,
@@ -85,7 +96,7 @@ export class PapersController {
     @CurrentUser() user: RequestUser,
     @Body() body: CreatePaperDto & { payload?: string },
     @UploadedFiles(IMAGE_FILE_PIPE) images: UploadedMemoryFile[] = [],
-  ) {
+  ): Promise<CreatePaperResponse> {
     if (body.payload) {
       return this.papersService.createPaperWithQuestions(
         body.payload,
@@ -102,8 +113,8 @@ export class PapersController {
   listPaperQuestions(
     @CurrentUser() user: RequestUser,
     @Param('id') id: string,
-  ) {
-    return this.papersService.listPaperQuestions(id, user.role, user.id);
+  ): Promise<AdminListPaperQuestionsResponse> {
+    return this.papersService.listAdminPaperQuestions(id, user.id);
   }
 
   @Get(':id')
@@ -112,21 +123,27 @@ export class PapersController {
     description: '관리자는 비공개 문제지도 조회합니다.',
   })
   @ApiOkResponse({ description: '문제지 상세를 반환합니다.' })
-  getPaper(@CurrentUser() user: RequestUser, @Param('id') id: string) {
-    return this.papersService.getPaper(id, user.role, user.id);
+  getPaper(
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+  ): Promise<AdminGetPaperResponse> {
+    return this.papersService.getAdminPaper(id, user.id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: '문제지 공개 상태 변경' })
   @ApiOkResponse({ description: '문제지 공개 상태를 변경합니다.' })
-  updatePaper(@Param('id') id: string, @Body() dto: UpdatePaperDto) {
+  updatePaper(
+    @Param('id') id: string,
+    @Body() dto: UpdatePaperDto,
+  ): Promise<UpdatePaperResponse> {
     return this.papersService.updatePaper(id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '문제지 삭제' })
   @ApiOkResponse({ description: '문제지를 삭제합니다.' })
-  deletePaper(@Param('id') id: string) {
+  deletePaper(@Param('id') id: string): Promise<DeletePaperResponse> {
     return this.papersService.deletePaper(id);
   }
 }
@@ -143,8 +160,8 @@ export class PublicPapersController {
     @Query('examId') examId?: string,
     @Query('categoryId') categoryId?: string,
     @Query('q') q?: string,
-  ) {
-    return this.papersService.listPapers(UserRole.USER, undefined, {
+  ): Promise<PublicListPapersResponse> {
+    return this.papersService.listPublicPapers(undefined, {
       examId,
       categoryId,
       q,
@@ -154,14 +171,16 @@ export class PublicPapersController {
   @Get(':id/questions')
   @ApiOperation({ summary: '공개 문제지 문항 목록 조회' })
   @ApiOkResponse({ description: '공개된 문제지의 문항 목록을 반환합니다.' })
-  listPaperQuestions(@Param('id') id: string) {
-    return this.papersService.listPaperQuestions(id, UserRole.USER);
+  listPaperQuestions(
+    @Param('id') id: string,
+  ): Promise<PublicListPaperQuestionsResponse> {
+    return this.papersService.listPublicPaperQuestions(id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: '공개 문제지 상세 조회' })
   @ApiOkResponse({ description: '공개된 문제지 상세를 반환합니다.' })
-  getPaper(@Param('id') id: string) {
-    return this.papersService.getPaper(id, UserRole.USER);
+  getPaper(@Param('id') id: string): Promise<PublicGetPaperResponse> {
+    return this.papersService.getPublicPaper(id);
   }
 }

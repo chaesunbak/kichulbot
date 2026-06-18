@@ -6,12 +6,7 @@ import {
   Registry,
 } from 'prom-client';
 
-type HttpMetricLabels = {
-  method: string;
-  route: string;
-  status_code: string;
-  status_class: string;
-};
+import type { HttpMetricLabels } from './metrics.types';
 
 @Injectable()
 export class MetricsService {
@@ -37,11 +32,11 @@ export class MetricsService {
     collectDefaultMetrics({ register: this.registry });
   }
 
-  getContentType() {
+  getContentType(): string {
     return this.registry.contentType;
   }
 
-  getMetrics() {
+  getMetrics(): Promise<string> {
     return this.registry.metrics();
   }
 

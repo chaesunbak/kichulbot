@@ -1,8 +1,8 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { paperKeys } from '@/features/papers/queries/keys';
+import type { AdminPaperQuestion } from '@/shared/types';
 
 import { createQuestion, deleteQuestion, updateQuestion } from '../api';
 import type { QuestionValues } from '../types';
@@ -18,7 +18,7 @@ export function useSaveQuestionMutation({
   paperId: string;
   editingQuestionId: string | null;
   image: File | null;
-  onSuccess: (question: AdminPaperQuestionResponse) => void;
+  onSuccess: (question: AdminPaperQuestion) => void;
 }) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -81,7 +81,7 @@ export function useUpdateQuestionTagsMutation({
 }: {
   token: string;
   paperId: string;
-  onSuccess: (question: AdminPaperQuestionResponse) => void;
+  onSuccess: (question: AdminPaperQuestion) => void;
 }) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -89,7 +89,7 @@ export function useUpdateQuestionTagsMutation({
       question,
       tagIds,
     }: {
-      question: AdminPaperQuestionResponse;
+      question: AdminPaperQuestion;
       tagIds: string[];
     }) =>
       updateQuestion(token, question.id, {
@@ -109,9 +109,7 @@ export function useUpdateQuestionTagsMutation({
   });
 }
 
-function toQuestionValues(
-  question: AdminPaperQuestionResponse,
-): QuestionValues {
+function toQuestionValues(question: AdminPaperQuestion): QuestionValues {
   return {
     type: question.type,
     number: question.number,

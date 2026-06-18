@@ -1,17 +1,10 @@
 import {
   CreateLibraryFolderRequest,
   DeleteLibraryFolderResponse,
-  DeleteLibraryFolderResponseSchema,
   DeleteLibraryPaperResponse,
-  DeleteLibraryPaperResponseSchema,
-  LibraryFolderResponse,
   LibraryFolderResponseEnvelope,
-  LibraryFolderResponseEnvelopeSchema,
-  LibraryPaperResponse,
   LibraryPaperResponseEnvelope,
-  LibraryPaperResponseEnvelopeSchema,
   LibraryResponse,
-  LibraryResponseSchema,
   UpdateLibraryFolderRequest,
 } from '@kichulbot/api-contract/library';
 import {
@@ -21,23 +14,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  Exam,
-  ExamSession,
-  LibraryFolder,
-  Paper,
-} from '../../infrastructure/database/prisma-client';
+import { LibraryFolder } from '../../infrastructure/database/prisma-client';
 import { LibraryRepository } from './library.repository';
-
-type LibraryPaperWithPaper = {
-  id: string;
-  folderId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  paper: Paper & {
-    examSession: ExamSession & { exam: Exam };
-  };
-};
+import type {
+  LibraryFolderItem,
+  LibraryPaperItem,
+  LibraryPaperRecord,
+} from './library.types';
 
 @Injectable()
 export class LibraryService {
@@ -45,10 +28,10 @@ export class LibraryService {
 
   async getLibrary(userId: string): Promise<LibraryResponse> {
     const [folders, papers] = await this.libraryRepository.findLibrary(userId);
-    return LibraryResponseSchema.parse({
-      folders: folders.map((folder) => this.toFolderResponse(folder)),
-      papers: papers.map((paper) => this.toLibraryPaperResponse(paper)),
-    });
+    return {
+      folders: folders.map((folder) => this.toFolderItem(folder)),
+      papers: papers.map((paper) => this.toLibraryPaperItem(paper)),
+    };
   }
 
   async createFolder(
@@ -65,9 +48,9 @@ export class LibraryService {
       name,
       parentId,
     );
-    return LibraryFolderResponseEnvelopeSchema.parse({
-      folder: this.toFolderResponse(folder),
-    });
+    return {
+      folder: this.toFolderItem(folder),
+    };
   }
 
   async updateFolder(
@@ -91,9 +74,9 @@ export class LibraryService {
       name,
       parentId,
     });
-    return LibraryFolderResponseEnvelopeSchema.parse({
-      folder: this.toFolderResponse(updated),
-    });
+    return {
+      folder: this.toFolderItem(updated),
+    };
   }
 
   async deleteFolder(
@@ -110,7 +93,7 @@ export class LibraryService {
     }
 
     await this.libraryRepository.deleteFolder(folderId);
-    return DeleteLibraryFolderResponseSchema.parse({ id: folderId });
+    return { id: folderId };
   }
 
   async addPaper(
@@ -139,9 +122,9 @@ export class LibraryService {
         folderId,
       ));
 
-    return LibraryPaperResponseEnvelopeSchema.parse({
-      libraryPaper: this.toLibraryPaperResponse(libraryPaper),
-    });
+    return {
+      libraryPaper: this.toLibraryPaperItem(libraryPaper),
+    };
   }
 
   async movePaper(
@@ -165,9 +148,9 @@ export class LibraryService {
       libraryPaperId,
       folderId,
     );
-    return LibraryPaperResponseEnvelopeSchema.parse({
-      libraryPaper: this.toLibraryPaperResponse(updated),
-    });
+    return {
+      libraryPaper: this.toLibraryPaperItem(updated),
+    };
   }
 
   async deletePaper(
@@ -176,7 +159,7 @@ export class LibraryService {
   ): Promise<DeleteLibraryPaperResponse> {
     await this.getLibraryPaper(userId, libraryPaperId);
     await this.libraryRepository.deletePaper(libraryPaperId);
-    return DeleteLibraryPaperResponseSchema.parse({ id: libraryPaperId });
+    return { id: libraryPaperId };
   }
 
   private async getFolder(userId: string, folderId: string) {
@@ -245,7 +228,7 @@ export class LibraryService {
     }
   }
 
-  private toFolderResponse(folder: LibraryFolder): LibraryFolderResponse {
+  private toFolderItem(folder: LibraryFolder): LibraryFolderItem {
     return {
       id: folder.id,
       name: folder.name,
@@ -256,9 +239,9 @@ export class LibraryService {
     };
   }
 
-  private toLibraryPaperResponse(
-    libraryPaper: LibraryPaperWithPaper,
-  ): LibraryPaperResponse {
+  private toLibraryPaperItem(
+    libraryPaper: LibraryPaperRecord,
+  ): LibraryPaperItem {
     const { paper } = libraryPaper;
     return {
       id: libraryPaper.id,

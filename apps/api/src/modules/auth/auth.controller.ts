@@ -1,3 +1,14 @@
+import type {
+  AuthConnectionsResponse,
+  AuthResponse,
+  DeleteMeResponse,
+  EmailVerificationConfirmResponse,
+  EmailVerificationIssueResponse,
+  MeResponse,
+  PasswordResetConfirmResponse,
+  PasswordResetIssueResponse,
+  UpdateMeResponse,
+} from '@kichulbot/api-contract/auth';
 import {
   BadRequestException,
   Body,
@@ -68,7 +79,7 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: '이메일 또는 비밀번호가 올바르지 않습니다.',
   })
-  login(@Body() dto: LoginDto) {
+  login(@Body() dto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(dto);
   }
 
@@ -80,7 +91,9 @@ export class AuthController {
     type: PasswordResetIssueResponseDto,
   })
   @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
-  requestPasswordReset(@Body() dto: PasswordResetDto) {
+  requestPasswordReset(
+    @Body() dto: PasswordResetDto,
+  ): Promise<PasswordResetIssueResponse> {
     return this.authService.requestPasswordReset(dto);
   }
 
@@ -94,7 +107,9 @@ export class AuthController {
   @ApiBadRequestResponse({
     description: '비밀번호 재설정 링크가 유효하지 않습니다.',
   })
-  confirmPasswordReset(@Body() dto: PasswordResetConfirmDto) {
+  confirmPasswordReset(
+    @Body() dto: PasswordResetConfirmDto,
+  ): Promise<PasswordResetConfirmResponse> {
     return this.authService.confirmPasswordReset(dto);
   }
 
@@ -108,7 +123,7 @@ export class AuthController {
   })
   @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
   @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
-  register(@Body() dto: RegisterDto) {
+  register(@Body() dto: RegisterDto): Promise<AuthResponse> {
     return this.authService.register(dto);
   }
 
@@ -121,7 +136,9 @@ export class AuthController {
   })
   @ApiBadRequestResponse({ description: '요청 body 검증에 실패했습니다.' })
   @ApiConflictResponse({ description: '이미 사용 중인 이메일입니다.' })
-  requestEmailVerification(@Body() dto: EmailVerificationDto) {
+  requestEmailVerification(
+    @Body() dto: EmailVerificationDto,
+  ): Promise<EmailVerificationIssueResponse> {
     return this.authService.requestEmailVerification(dto);
   }
 
@@ -133,7 +150,9 @@ export class AuthController {
     type: EmailVerificationConfirmResponseDto,
   })
   @ApiBadRequestResponse({ description: '인증번호가 올바르지 않습니다.' })
-  confirmEmailVerification(@Body() dto: ConfirmEmailVerificationDto) {
+  confirmEmailVerification(
+    @Body() dto: ConfirmEmailVerificationDto,
+  ): Promise<EmailVerificationConfirmResponse> {
     return this.authService.confirmEmailVerification(dto);
   }
 
@@ -148,7 +167,7 @@ export class AuthController {
   @UseGuards(KakaoCallbackGuard)
   @Redirect()
   @ApiOperation({ summary: '카카오 OAuth 콜백' })
-  async kakaoCallback(@Req() request: Request) {
+  async kakaoCallback(@Req() request: Request): Promise<{ url: string }> {
     const state =
       typeof request.query.state === 'string' ? request.query.state : '';
     const url = await this.authService.handleKakaoCallback(
@@ -169,7 +188,7 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: 'OAuth 인증 코드가 유효하지 않습니다.',
   })
-  exchangeOAuthCode(@Body() dto: OAuthCodeExchangeDto) {
+  exchangeOAuthCode(@Body() dto: OAuthCodeExchangeDto): Promise<AuthResponse> {
     return this.authService.exchangeOAuthCode(dto);
   }
 }
@@ -190,7 +209,7 @@ export class MeController {
   @ApiUnauthorizedResponse({
     description: '인증 정보가 없거나 유효하지 않습니다.',
   })
-  me(@CurrentUser() user: RequestUser) {
+  me(@CurrentUser() user: RequestUser): Promise<MeResponse> {
     return this.authService.getMe(user.id);
   }
 
@@ -206,7 +225,10 @@ export class MeController {
   @ApiUnauthorizedResponse({
     description: '인증 정보가 없거나 유효하지 않습니다.',
   })
-  updateMe(@CurrentUser() user: RequestUser, @Body() dto: UpdateMeDto) {
+  updateMe(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: UpdateMeDto,
+  ): Promise<UpdateMeResponse> {
     return this.authService.updateMe(user.id, dto);
   }
 
@@ -218,7 +240,9 @@ export class MeController {
     description: '현재 계정에 연결된 OAuth provider 목록을 반환합니다.',
     type: AuthConnectionsResponseDto,
   })
-  authConnections(@CurrentUser() user: RequestUser) {
+  authConnections(
+    @CurrentUser() user: RequestUser,
+  ): Promise<AuthConnectionsResponse> {
     return this.authService.listAuthConnections(user.id);
   }
 
@@ -239,7 +263,7 @@ export class MeController {
   unlinkAuthConnection(
     @CurrentUser() user: RequestUser,
     @Param('provider') provider: OAuthProvider,
-  ) {
+  ): Promise<MeResponse> {
     if (provider !== OAuthProvider.KAKAO) {
       throw new BadRequestException('지원하지 않는 OAuth provider입니다.');
     }
@@ -260,7 +284,7 @@ export class MeController {
   requestMyEmailVerification(
     @CurrentUser() user: RequestUser,
     @Body() dto: EmailVerificationDto,
-  ) {
+  ): Promise<EmailVerificationIssueResponse> {
     return this.authService.requestMyEmailVerification(user.id, dto);
   }
 
@@ -277,7 +301,7 @@ export class MeController {
   confirmMyEmailVerification(
     @CurrentUser() user: RequestUser,
     @Body() dto: ConfirmEmailVerificationDto,
-  ) {
+  ): Promise<EmailVerificationConfirmResponse> {
     return this.authService.confirmMyEmailVerification(user.id, dto);
   }
 
@@ -296,7 +320,7 @@ export class MeController {
   configureEmailLogin(
     @CurrentUser() user: RequestUser,
     @Body() dto: ConfigureEmailLoginDto,
-  ) {
+  ): Promise<AuthResponse> {
     return this.authService.configureEmailLogin(user.id, dto);
   }
 
@@ -311,7 +335,7 @@ export class MeController {
   @ApiUnauthorizedResponse({
     description: '인증 정보가 없거나 유효하지 않습니다.',
   })
-  deleteMe(@CurrentUser() user: RequestUser) {
+  deleteMe(@CurrentUser() user: RequestUser): Promise<DeleteMeResponse> {
     return this.authService.deleteMe(user.id);
   }
 }

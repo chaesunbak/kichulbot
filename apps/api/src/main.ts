@@ -1,4 +1,3 @@
-import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -6,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 import { AppModule } from './app.module';
 import { ExceptionFilter } from './common/filters/exception.filter';
@@ -46,13 +46,6 @@ async function bootstrap() {
     origin: origins,
     credentials: true,
   });
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new ExceptionFilter());
 
@@ -63,7 +56,9 @@ async function bootstrap() {
       .setVersion('0.1.0')
       .addBearerAuth()
       .build();
-    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    const swaggerDocument = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(app, swaggerConfig),
+    );
     SwaggerModule.setup('api/docs', app, swaggerDocument, {
       jsonDocumentUrl: 'api/docs-json',
     });

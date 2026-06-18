@@ -1,12 +1,4 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
-import type {
-  AdminTagGroupResponse,
-  AdminTagResponse,
-} from '@kichulbot/api-contract/tags';
-import {
-  type AdminExamResponse,
-  type AdminTaxonomyResponse,
-} from '@kichulbot/api-contract/taxonomy';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -27,16 +19,22 @@ import {
 import { examFormSchema } from '@/features/reference-data/schemas';
 import type { ExamForm } from '@/features/reference-data/types';
 import { TextField } from '@/shared/components/form-fields';
+import type {
+  AdminExam,
+  AdminTag,
+  AdminTagGroup,
+  AdminTaxonomy,
+} from '@/shared/types';
 
 import { MockExamFields } from './mock-exam-fields';
 import { ToggleRow } from './toggle-row';
 
 interface ExamFormPanelProps {
-  categories: AdminTaxonomyResponse[];
-  tagGroups: AdminTagGroupResponse[];
-  tags: Array<AdminTagResponse | unknown>;
+  categories: AdminTaxonomy[];
+  tagGroups: AdminTagGroup[];
+  tags: Array<AdminTag | unknown>;
   isTagsLoading: boolean;
-  editingExam: AdminExamResponse | null;
+  editingExam: AdminExam | null;
   isSubmitting: boolean;
   onSubmit: (values: ExamForm) => void;
   onCancel: () => void;

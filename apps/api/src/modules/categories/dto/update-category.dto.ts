@@ -1,5 +1,6 @@
-import { PartialType } from '@nestjs/swagger';
+import { UpdateCategoryRequestSchema } from '@kichulbot/api-contract/taxonomy';
+import { createZodDto } from 'nestjs-zod';
 
-import { CreateCategoryDto } from './create-category.dto';
-
-export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {}
+export class UpdateCategoryDto extends createZodDto(
+  UpdateCategoryRequestSchema,
+) {}

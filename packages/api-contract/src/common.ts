@@ -29,6 +29,33 @@ export type RecommendedTagMatch = z.infer<typeof RecommendedTagMatchSchema>;
 export const AnswerModeSchema = z.enum(['ONE_BY_ONE', 'EXAM']);
 export type AnswerMode = z.infer<typeof AnswerModeSchema>;
 
+export const BooleanInputSchema = z.preprocess((value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return value;
+
+  const normalized = value.trim().toLowerCase();
+  if (['true', '1'].includes(normalized)) return true;
+  if (['false', '0'].includes(normalized)) return false;
+
+  return value;
+}, z.boolean());
+
+export const createStringArrayInputSchema = <T extends z.ZodTypeAny>(
+  itemSchema: T,
+) =>
+  z.preprocess((value) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+
+    const raw = Array.isArray(value) ? value : [value];
+
+    return raw
+      .flatMap((item) => String(item).split(','))
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }, z.array(itemSchema).optional());
+
 export const ErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.object({
@@ -56,9 +83,9 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
-export const PaginationQuerySchema = z.object({
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+export const PaginationQuerySchema = z.strictObject({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
 

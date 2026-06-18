@@ -145,7 +145,7 @@ describe('PapersService', () => {
       paperListItem({ isPublished: true }),
     ]);
 
-    const response = await service.listPapers(UserRole.USER);
+    const response = await service.listPublicPapers();
 
     expect(repository.findManyForList).toHaveBeenCalledWith(
       { isPublished: true },
@@ -163,7 +163,7 @@ describe('PapersService', () => {
   it('관리자에게는 관리자 필드를 포함한 전체 시험지를 반환한다', async () => {
     repository.findManyForList.mockResolvedValue([paperListItem()]);
 
-    const response = await service.listPapers(UserRole.ADMIN);
+    const response = await service.listAdminPapers();
 
     expect(repository.findManyForList).toHaveBeenCalledWith({}, undefined);
     expect(response.papers[0]).toMatchObject({
@@ -191,7 +191,7 @@ describe('PapersService', () => {
       }),
     ]);
 
-    const response = await service.listPapers(UserRole.USER, 'user_1');
+    const response = await service.listPublicPapers('user_1');
 
     expect(repository.findManyForList).toHaveBeenCalledWith(
       { isPublished: true },
@@ -205,7 +205,7 @@ describe('PapersService', () => {
       paperListItem({ isPublished: true }),
     ]);
 
-    await service.listPapers(UserRole.USER, undefined, { examId: 'exam_1' });
+    await service.listPublicPapers(undefined, { examId: 'exam_1' });
 
     expect(repository.findManyForList).toHaveBeenCalledWith(
       {
@@ -221,7 +221,7 @@ describe('PapersService', () => {
       paperListItem({ isPublished: true }),
     ]);
 
-    await service.listPapers(UserRole.USER, undefined, {
+    await service.listPublicPapers(undefined, {
       categoryId: 'category_1',
     });
 
@@ -243,7 +243,7 @@ describe('PapersService', () => {
       paperListItem({ isPublished: true }),
     ]);
 
-    await service.listPapers(UserRole.USER, undefined, { q: '한국사' });
+    await service.listPublicPapers(undefined, { q: '한국사' });
 
     expect(repository.findManyForList).toHaveBeenCalledWith(
       {
@@ -325,9 +325,9 @@ describe('PapersService', () => {
   it('일반 사용자에게는 비공개 시험지 상세를 숨긴다', async () => {
     repository.findById.mockResolvedValue(null);
 
-    await expect(
-      service.getPaper('paper_1', UserRole.USER),
-    ).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.getPublicPaper('paper_1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
     expect(repository.findById).toHaveBeenCalledWith('paper_1', {
       isPublished: true,
     });

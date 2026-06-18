@@ -1,9 +1,6 @@
 import {
   CreateWrongQuestionSetResponse,
-  CreateWrongQuestionSetResponseSchema,
-  DailyWrongQuestionSetResponse,
   GetWrongQuestionSetResponse,
-  GetWrongQuestionSetResponseSchema,
   StartWrongReviewSessionResponse,
 } from '@kichulbot/api-contract/review';
 import {
@@ -15,34 +12,13 @@ import {
 import {
   AnswerMode,
   AttemptOutcome,
-  Prisma,
 } from '../../infrastructure/database/prisma-client';
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
 import { ReviewRepository } from './review.repository';
-
-type DailyWrongQuestionSet = Prisma.QuestionSetGetPayload<{
-  include: {
-    generated: true;
-    items: {
-      include: {
-        sourceAttempt: true;
-        questionRevision: {
-          include: {
-            question: {
-              include: {
-                paper: {
-                  include: {
-                    examSession: { include: { exam: true } };
-                  };
-                };
-              };
-            };
-          };
-        };
-      };
-    };
-  };
-}>;
+import type {
+  DailyWrongQuestionSetItem,
+  DailyWrongQuestionSetRecord,
+} from './review.types';
 
 @Injectable()
 export class ReviewService {
@@ -60,9 +36,9 @@ export class ReviewService {
       userId,
       studyDate,
     );
-    return GetWrongQuestionSetResponseSchema.parse({
-      questionSet: this.toResponse(questionSet),
-    });
+    return {
+      questionSet: this.toDailyWrongQuestionSetItem(questionSet),
+    };
   }
 
   async generate(
@@ -74,9 +50,9 @@ export class ReviewService {
       userId,
       studyDate,
     );
-    return CreateWrongQuestionSetResponseSchema.parse({
-      questionSet: this.toResponse(questionSet),
-    });
+    return {
+      questionSet: this.toDailyWrongQuestionSetItem(questionSet),
+    };
   }
 
   async start(
@@ -159,9 +135,9 @@ export class ReviewService {
     return new Date(`${get('year')}-${get('month')}-${get('day')}T00:00:00Z`);
   }
 
-  private toResponse(
-    questionSet: DailyWrongQuestionSet,
-  ): DailyWrongQuestionSetResponse {
+  private toDailyWrongQuestionSetItem(
+    questionSet: DailyWrongQuestionSetRecord,
+  ): DailyWrongQuestionSetItem {
     if (!questionSet.generated?.studyDate) {
       throw new Error('DAILY_WRONG 세트의 studyDate가 없습니다.');
     }

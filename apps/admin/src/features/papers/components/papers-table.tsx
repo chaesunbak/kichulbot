@@ -1,4 +1,3 @@
-import type { AdminPaperResponse } from '@kichulbot/api-contract/papers';
 import { Badge } from '@kichulbot/ui/components/ui/badge';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
@@ -11,9 +10,11 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { Link } from 'react-router';
 
+import type { AdminPaper } from '@/shared/types';
+
 import { formatPaperSession } from '../lib/paper-metadata';
 
-export function PapersTable({ papers }: { papers: AdminPaperResponse[] }) {
+export function PapersTable({ papers }: { papers: AdminPaper[] }) {
   return (
     <div className="overflow-hidden rounded-md border">
       <Table>

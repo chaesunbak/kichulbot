@@ -1,58 +1,96 @@
 import * as z from 'zod';
-import { PaginationQuerySchema } from '../common.js';
 import {
-  SolveSessionResponseSchema,
-  SolveSessionLogResponseSchema,
-  AnswerResponseSchema,
-  QuestionResultResponseSchema,
-} from './schema.js';
+  AnswerModeSchema,
+  GradingPolicySchema,
+  IsoDateStringSchema,
+  QuestionTypeSchema,
+} from '../common.js';
+import { PaperResponseSchema } from '../papers/dto.js';
 
-export const StartSolveSessionRequestSchema = z.object({
-  paperId: z.string().min(1),
-  mode: z.enum(['ONE_BY_ONE', 'EXAM']),
+export const QuestionResultResponseSchema = z.object({
+  gradingPolicy: GradingPolicySchema,
+  answerChoice: z.number().int().nullable(),
+  answerText: z.string().nullable(),
+  explanation: z.string().nullable(),
+  isCorrect: z.boolean().nullable(),
 });
-export type StartSolveSessionRequest = z.infer<
-  typeof StartSolveSessionRequestSchema
+export type QuestionResultResponse = z.infer<
+  typeof QuestionResultResponseSchema
 >;
 
-export const StartSolveSessionResponseSchema = z.object({
-  session: SolveSessionResponseSchema,
-});
-export type StartSolveSessionResponse = z.infer<
-  typeof StartSolveSessionResponseSchema
->;
-
-export const GetSolveSessionResponseSchema = StartSolveSessionResponseSchema;
-export type GetSolveSessionResponse = z.infer<
-  typeof GetSolveSessionResponseSchema
->;
-
-export const SaveAnswerRequestSchema = z
-  .object({
-    answerChoice: z.number().int().min(1).optional(),
-    answerText: z.string().trim().min(1).optional(),
-    spentMilliseconds: z.number().int().nonnegative().optional(),
-  })
-  .refine(
-    (value) =>
-      value.answerChoice !== undefined ||
-      value.answerText ||
-      value.spentMilliseconds !== undefined,
-    {
-      message: '답안을 입력해주세요.',
-    },
-  );
-export type SaveAnswerRequest = z.infer<typeof SaveAnswerRequestSchema>;
-
-export const SaveAnswerResponseSchema = z.object({
-  answer: AnswerResponseSchema,
+export const SolveQuestionResponseSchema = z.object({
+  id: z.string(),
+  questionRevisionId: z.string(),
+  number: z.number().int(),
+  type: QuestionTypeSchema,
+  imageUrl: z.string().url(),
+  imageCacheKey: z.string().min(1),
+  choiceCount: z.number().int().nullable(),
+  points: z.number().int(),
+  recommendedTimeSeconds: z.number().int().nullable(),
+  isBookmarked: z.boolean(),
   result: QuestionResultResponseSchema.nullable(),
 });
-export type SaveAnswerResponse = z.infer<typeof SaveAnswerResponseSchema>;
+export type SolveQuestionResponse = z.infer<typeof SolveQuestionResponseSchema>;
 
-export const SubmitSolveSessionResponseSchema = StartSolveSessionResponseSchema;
-export type SubmitSolveSessionResponse = z.infer<
-  typeof SubmitSolveSessionResponseSchema
+export const AnswerResponseSchema = z.object({
+  questionId: z.string(),
+  answerChoice: z.number().int().nullable(),
+  answerText: z.string().nullable(),
+  isCorrect: z.boolean().nullable(),
+  spentMilliseconds: z.number().int().nonnegative(),
+  updatedAt: IsoDateStringSchema,
+});
+export type AnswerResponse = z.infer<typeof AnswerResponseSchema>;
+
+export const SolveSessionResultResponseSchema = z.object({
+  score: z.number().int().nonnegative(),
+  totalCount: z.number().int().nonnegative(),
+  answeredCount: z.number().int().nonnegative(),
+  correctCount: z.number().int().nonnegative(),
+  wrongCount: z.number().int().nonnegative(),
+  totalSpentMilliseconds: z.number().int().nonnegative(),
+});
+export type SolveSessionResultResponse = z.infer<
+  typeof SolveSessionResultResponseSchema
+>;
+
+export const SolveSessionProgressResponseSchema = z.object({
+  answeredCount: z.number().int().nonnegative(),
+  totalCount: z.number().int().nonnegative(),
+  percent: z.number().int().min(0).max(100),
+});
+export type SolveSessionProgressResponse = z.infer<
+  typeof SolveSessionProgressResponseSchema
+>;
+
+export const SolveSessionResponseSchema = z.object({
+  id: z.string(),
+  mode: AnswerModeSchema,
+  paper: PaperResponseSchema.extend({
+    questions: z.array(SolveQuestionResponseSchema),
+  }),
+  answers: z.array(AnswerResponseSchema),
+  result: SolveSessionResultResponseSchema.nullable(),
+  submittedAt: IsoDateStringSchema.nullable(),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
+});
+export type SolveSessionResponse = z.infer<typeof SolveSessionResponseSchema>;
+
+export const SolveSessionLogResponseSchema = z.object({
+  id: z.string(),
+  mode: AnswerModeSchema,
+  paper: PaperResponseSchema,
+  result: SolveSessionResultResponseSchema.nullable(),
+  progress: SolveSessionProgressResponseSchema,
+  submittedAt: IsoDateStringSchema.nullable(),
+  totalSpentMilliseconds: z.number().int().nonnegative(),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
+});
+export type SolveSessionLogResponse = z.infer<
+  typeof SolveSessionLogResponseSchema
 >;
 
 export const SolveSessionLogStatusSchema = z.enum([
@@ -61,22 +99,3 @@ export const SolveSessionLogStatusSchema = z.enum([
   'in_progress',
 ]);
 export type SolveSessionLogStatus = z.infer<typeof SolveSessionLogStatusSchema>;
-
-export const ListSolveSessionLogsQuerySchema = PaginationQuerySchema.extend({
-  status: SolveSessionLogStatusSchema.default('all'),
-  submittedDate: z.iso.date().optional(),
-});
-export type ListSolveSessionLogsQuery = z.infer<
-  typeof ListSolveSessionLogsQuerySchema
->;
-
-export const ListSolveSessionLogsResponseSchema = z.object({
-  logs: z.array(SolveSessionLogResponseSchema),
-  total: z.number().int().nonnegative(),
-  page: z.number().int().positive(),
-  limit: z.number().int().positive(),
-  totalPages: z.number().int().nonnegative(),
-});
-export type ListSolveSessionLogsResponse = z.infer<
-  typeof ListSolveSessionLogsResponseSchema
->;

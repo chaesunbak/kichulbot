@@ -1,3 +1,7 @@
+import type {
+  DeleteQuestionResponse,
+  QuestionMutationResponse,
+} from '@kichulbot/api-contract/questions';
 import {
   Body,
   Controller,
@@ -56,7 +60,7 @@ export class QuestionsController {
   createQuestion(
     @Body() dto: CreateQuestionDto,
     @UploadedFile(IMAGE_FILE_PIPE) file?: UploadedMemoryFile,
-  ) {
+  ): Promise<QuestionMutationResponse> {
     return this.questionsService.createQuestion(dto, file);
   }
 
@@ -70,14 +74,14 @@ export class QuestionsController {
     @Param('id') id: string,
     @Body() dto: UpdateQuestionDto,
     @UploadedFile(IMAGE_FILE_PIPE) file?: UploadedMemoryFile,
-  ) {
+  ): Promise<QuestionMutationResponse> {
     return this.questionsService.updateQuestion(id, dto, file);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '문제 삭제' })
   @ApiOkResponse({ description: '문제를 삭제합니다.' })
-  deleteQuestion(@Param('id') id: string) {
+  deleteQuestion(@Param('id') id: string): Promise<DeleteQuestionResponse> {
     return this.questionsService.deleteQuestion(id);
   }
 }

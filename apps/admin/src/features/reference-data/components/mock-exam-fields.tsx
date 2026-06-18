@@ -1,7 +1,3 @@
-import type {
-  AdminTagGroupResponse,
-  AdminTagResponse,
-} from '@kichulbot/api-contract/tags';
 import {
   Field,
   FieldError,
@@ -18,10 +14,11 @@ import {
 
 import type { ExamForm } from '@/features/reference-data/types';
 import { NumberField, SelectField } from '@/shared/components/form-fields';
+import type { AdminTag, AdminTagGroup } from '@/shared/types';
 
 interface MockExamFieldsProps {
-  tagGroups: AdminTagGroupResponse[];
-  eraTags: AdminTagResponse[];
+  tagGroups: AdminTagGroup[];
+  eraTags: AdminTag[];
   control: Control<ExamForm>;
   isTagsLoading: boolean;
   savedBlueprintItems: ExamForm['mockExamBlueprintItems'];
@@ -111,7 +108,7 @@ function useSyncMockExamBlueprintItems({
   savedBlueprintItems,
 }: {
   control: Control<ExamForm>;
-  eraTags: AdminTagResponse[];
+  eraTags: AdminTag[];
   isTagsLoading: boolean;
   savedBlueprintItems: ExamForm['mockExamBlueprintItems'];
 }) {

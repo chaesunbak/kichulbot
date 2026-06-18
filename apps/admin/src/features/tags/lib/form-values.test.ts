@@ -1,8 +1,6 @@
-import type {
-  AdminTagGroupResponse,
-  AdminTagResponse,
-} from '@kichulbot/api-contract/tags';
 import { describe, expect, it } from 'vitest';
+
+import type { AdminTag,AdminTagGroup } from '@/shared/types';
 
 import {
   getTagFormValues,
@@ -63,7 +61,7 @@ describe('uniqueKeywords', () => {
   });
 });
 
-function createTag(): AdminTagResponse {
+function createTag(): AdminTag {
   return {
     id: 'tag-1',
     name: '고려',
@@ -78,7 +76,7 @@ function createTag(): AdminTagResponse {
   };
 }
 
-function createTagGroup(): AdminTagGroupResponse {
+function createTagGroup(): AdminTagGroup {
   return {
     id: 'tag-group-1',
     examId: 'exam-1',

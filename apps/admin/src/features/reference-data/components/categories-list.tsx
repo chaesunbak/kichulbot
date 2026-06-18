@@ -1,4 +1,3 @@
-import { type AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -16,11 +15,13 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { FolderTree, Pencil, Trash2 } from 'lucide-react';
 
+import { type AdminTaxonomy } from '@/shared/types';
+
 interface CategoriesListProps {
-  categories: AdminTaxonomyResponse[];
+  categories: AdminTaxonomy[];
   deletingCategoryId?: string | null;
-  onEdit: (category: AdminTaxonomyResponse) => void;
-  onDelete: (category: AdminTaxonomyResponse) => void;
+  onEdit: (category: AdminTaxonomy) => void;
+  onDelete: (category: AdminTaxonomy) => void;
 }
 
 export function CategoriesList({

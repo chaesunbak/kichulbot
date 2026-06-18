@@ -1,23 +1,18 @@
-import { CreateQuestionRequestSchema } from '@kichulbot/api-contract/questions';
 import * as z from 'zod';
-
-const questionRequestShape = CreateQuestionRequestSchema.shape;
 
 export const questionSchema = z
   .object({
-    type: questionRequestShape.type.unwrap(),
-    number: questionRequestShape.number,
-    choiceCount: questionRequestShape.choiceCount.unwrap().nullable(),
-    gradingPolicy: questionRequestShape.gradingPolicy.unwrap(),
-    answerChoice: questionRequestShape.answerChoice.unwrap().nullable(),
-    answerText: questionRequestShape.answerText.or(z.literal('')),
-    explanation: questionRequestShape.explanation.or(z.literal('')),
-    points: questionRequestShape.points.unwrap(),
-    recommendedTimeSeconds: questionRequestShape.recommendedTimeSeconds
-      .unwrap()
-      .nullable(),
-    recommendedTagIds: questionRequestShape.recommendedTagIds.unwrap(),
-    tagIds: questionRequestShape.tagIds.unwrap(),
+    type: z.enum(['MULTIPLE_CHOICE', 'WRITTEN']),
+    number: z.number().int().min(1).max(100),
+    choiceCount: z.number().int().min(2).max(10).nullable(),
+    gradingPolicy: z.enum(['EXACT', 'ANY_CHOICE']),
+    answerChoice: z.number().int().min(1).max(10).nullable(),
+    answerText: z.string().optional(),
+    explanation: z.string().optional(),
+    points: z.number().int().min(1).max(100),
+    recommendedTimeSeconds: z.number().int().min(1).nullable(),
+    recommendedTagIds: z.array(z.string()),
+    tagIds: z.array(z.string()),
   })
   .superRefine(
     ({ type, choiceCount, gradingPolicy, answerChoice, answerText }, ctx) => {

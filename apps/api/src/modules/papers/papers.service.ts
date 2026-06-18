@@ -1,24 +1,19 @@
 import {
-  AdminPaperResponse,
+  AdminGetPaperResponse,
+  AdminListPaperQuestionsResponse,
+  AdminListPapersResponse,
+  CreatePaperRequest,
   CreatePaperRequestSchema,
   CreatePaperResponse,
-  CreatePaperResponseSchema,
   CreatePaperWithQuestionsRequest,
   CreatePaperWithQuestionsRequestSchema,
   DeletePaperResponse,
-  DeletePaperResponseSchema,
-  GetPaperResponse,
-  GetPaperResponseSchema,
-  ListPaperQuestionsResponse,
-  ListPaperQuestionsResponseSchema,
-  ListPapersResponse,
-  ListPapersResponseSchema,
-  PaperResponse,
+  PublicGetPaperResponse,
+  PublicListPaperQuestionsResponse,
+  PublicListPapersResponse,
   UpdatePaperRequestSchema,
   UpdatePaperResponse,
-  UpdatePaperResponseSchema,
 } from '@kichulbot/api-contract/papers';
-import { TaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import {
   BadRequestException,
   ConflictException,
@@ -26,41 +21,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import {
-  Exam,
-  ExamSession,
-  Paper,
-  Prisma,
-  Question,
-  QuestionRevision,
-  UserRole,
-} from '../../infrastructure/database/prisma-client';
+import { Exam, UserRole } from '../../infrastructure/database/prisma-client';
 import { StorageService } from '../../infrastructure/storage/storage.service';
 import { UploadedMemoryFile } from '../../infrastructure/storage/storage.service';
 import { ExamsService } from '../exams/exams.service';
 import { QuestionsService } from '../questions/questions.service';
-import { CreatePaperDto } from './dto/create-paper.dto';
 import { UpdatePaperDto } from './dto/update-paper.dto';
 import { PapersRepository } from './papers.repository';
-
-type PaperWithRelations = Paper & {
-  examSession: ExamSession & { exam: Exam };
-  questions?: Array<
-    Question & {
-      revisions?: QuestionRevision[];
-      tags?: Array<
-        Prisma.QuestionTagGetPayload<{
-          include: { tag: { include: { tagGroup: true } } };
-        }>
-      >;
-    }
-  >;
-  users?: Array<{ id: string }>;
-};
-
-type PaperListItem = Awaited<
-  ReturnType<PapersRepository['findManyForList']>
->[number];
+import type {
+  AdminPaperDetailItem,
+  AdminPaperItem,
+  PaperDetailItem,
+  PaperExamItem,
+  PaperListRecord,
+  PaperRecord,
+} from './papers.types';
 
 @Injectable()
 export class PapersService {
@@ -72,9 +47,13 @@ export class PapersService {
   ) {}
 
   async createPaper(
-    dto: CreatePaperDto,
+    dto: unknown,
     role: UserRole,
   ): Promise<CreatePaperResponse> {
+    if (role !== UserRole.ADMIN) {
+      throw new BadRequestException('관리자만 문제지를 생성할 수 있습니다.');
+    }
+
     const parsedDto = this.parseCreatePaperRequest(dto);
     const exam = await this.examsService.findById(parsedDto.examId);
 
@@ -95,9 +74,9 @@ export class PapersService {
       isPublished: parsedDto.isPublished ?? false,
     });
 
-    return CreatePaperResponseSchema.parse({
-      paper: this.toPaperResponse(paper, role),
-    });
+    return {
+      paper: this.toAdminPaperItem(paper),
+    };
   }
 
   async createPaperWithQuestions(
@@ -150,7 +129,7 @@ export class PapersService {
         );
       }
 
-      return this.getPaper(paperId, role) as Promise<CreatePaperResponse>;
+      return this.getAdminPaper(paperId);
     } catch (error) {
       if (paperId) {
         await this.deletePaper(paperId).catch(() => undefined);
@@ -159,11 +138,57 @@ export class PapersService {
     }
   }
 
-  async listPapers(
+  async listAdminPapers(
+    userId?: string,
+    filters?: { examId?: string; categoryId?: string; q?: string },
+  ): Promise<AdminListPapersResponse> {
+    return {
+      papers: await this.listPaperItems(UserRole.ADMIN, userId, filters),
+    };
+  }
+
+  async listPublicPapers(
+    userId?: string,
+    filters?: { examId?: string; categoryId?: string; q?: string },
+  ): Promise<PublicListPapersResponse> {
+    return {
+      papers: await this.listPaperItems(UserRole.USER, userId, filters),
+    };
+  }
+
+  async getAdminPaper(
+    id: string,
+    userId?: string,
+  ): Promise<AdminGetPaperResponse> {
+    return {
+      paper: await this.findPaperItem(id, UserRole.ADMIN, userId),
+    };
+  }
+
+  async getPublicPaper(
+    id: string,
+    userId?: string,
+  ): Promise<PublicGetPaperResponse> {
+    return {
+      paper: await this.findPaperItem(id, UserRole.USER, userId),
+    };
+  }
+
+  private async listPaperItems(
+    role: typeof UserRole.ADMIN,
+    userId?: string,
+    filters?: { examId?: string; categoryId?: string; q?: string },
+  ): Promise<AdminPaperItem[]>;
+  private async listPaperItems(
+    role: typeof UserRole.USER,
+    userId?: string,
+    filters?: { examId?: string; categoryId?: string; q?: string },
+  ): Promise<PaperDetailItem[]>;
+  private async listPaperItems(
     role: UserRole,
     userId?: string,
     filters?: { examId?: string; categoryId?: string; q?: string },
-  ): Promise<ListPapersResponse> {
+  ): Promise<Array<PaperDetailItem | AdminPaperItem>> {
     const examId = filters?.examId?.trim();
     const categoryId = filters?.categoryId?.trim();
     const q = filters?.q?.trim();
@@ -200,16 +225,28 @@ export class PapersService {
       userId,
     );
 
-    return ListPapersResponseSchema.parse({
-      papers: papers.map((paper) => this.toPaperListResponse(paper, role)),
-    });
+    return papers.map((paper) =>
+      role === UserRole.ADMIN
+        ? this.toAdminPaperListItem(paper)
+        : this.toPublicPaperListItem(paper),
+    );
   }
 
-  async getPaper(
+  private async findPaperItem(
+    id: string,
+    role: typeof UserRole.ADMIN,
+    userId?: string,
+  ): Promise<AdminPaperDetailItem>;
+  private async findPaperItem(
+    id: string,
+    role: typeof UserRole.USER,
+    userId?: string,
+  ): Promise<PaperDetailItem>;
+  private async findPaperItem(
     id: string,
     role: UserRole,
     userId?: string,
-  ): Promise<GetPaperResponse> {
+  ): Promise<PaperDetailItem | AdminPaperDetailItem> {
     const where = role === UserRole.ADMIN ? {} : { isPublished: true };
     const paper = userId
       ? await this.papersRepository.findById(id, where, userId)
@@ -219,16 +256,30 @@ export class PapersService {
       throw new NotFoundException('문제지를 찾을 수 없습니다.');
     }
 
-    return GetPaperResponseSchema.parse({
-      paper: this.toPaperResponse(paper, role),
-    });
+    return role === UserRole.ADMIN
+      ? this.toAdminPaperDetailItem(paper)
+      : this.toPublicPaperItem(paper);
   }
 
-  async listPaperQuestions(
+  async listAdminPaperQuestions(
+    id: string,
+    userId?: string,
+  ): Promise<AdminListPaperQuestionsResponse> {
+    return this.listPaperQuestionItems(id, UserRole.ADMIN, userId);
+  }
+
+  async listPublicPaperQuestions(
+    id: string,
+    userId?: string,
+  ): Promise<PublicListPaperQuestionsResponse> {
+    return this.listPaperQuestionItems(id, UserRole.USER, userId);
+  }
+
+  private async listPaperQuestionItems(
     id: string,
     role: UserRole,
     userId?: string,
-  ): Promise<ListPaperQuestionsResponse> {
+  ) {
     const where = role === UserRole.ADMIN ? {} : { isPublished: true };
     const paper = userId
       ? await this.papersRepository.findById(id, where, userId)
@@ -248,8 +299,8 @@ export class PapersService {
         )
       : new Set<string>();
 
-    return ListPaperQuestionsResponseSchema.parse({
-      paper: this.toPaperResponse(paper, UserRole.USER),
+    return {
+      paper: this.toPublicPaperItem(paper),
       questions: questions.map((question) => {
         const revision = question.revisions?.[0];
 
@@ -278,7 +329,7 @@ export class PapersService {
           isBookmarked: bookmarkedQuestionIds.has(question.id),
         };
       }),
-    });
+    };
   }
 
   async updatePaper(
@@ -311,9 +362,9 @@ export class PapersService {
 
     const updated = await this.papersRepository.update(id, updateInput);
 
-    return UpdatePaperResponseSchema.parse({
-      paper: this.toPaperResponse(updated, UserRole.ADMIN),
-    });
+    return {
+      paper: this.toAdminPaperItem(updated),
+    };
   }
 
   async deletePaper(id: string): Promise<DeletePaperResponse> {
@@ -337,14 +388,11 @@ export class PapersService {
       ),
     );
 
-    return DeletePaperResponseSchema.parse({ id });
+    return { id };
   }
 
-  private toPaperResponse(
-    paper: PaperWithRelations,
-    role: UserRole,
-  ): PaperResponse | AdminPaperResponse {
-    const base = {
+  private toPublicPaperItem(paper: PaperRecord): PaperDetailItem {
+    return {
       id: paper.id,
       title: paper.title,
       year: paper.examSession.displayYear,
@@ -353,28 +401,24 @@ export class PapersService {
       round: paper.examSession.round,
       questionCount: paper.questionCount,
       isInLibrary: (paper.users?.length ?? 0) > 0,
-      exam: this.toTaxonomyResponse(paper.examSession.exam),
+      exam: this.toPaperExamItem(paper.examSession.exam),
     };
+  }
 
-    if (role !== UserRole.ADMIN) {
-      return base;
-    }
-
-    const response = {
-      ...base,
+  private toAdminPaperItem(paper: PaperRecord): AdminPaperItem {
+    return {
+      ...this.toPublicPaperItem(paper),
       isPublished: paper.isPublished,
       registeredQuestionCount: paper.questions?.length ?? 0,
       createdAt: paper.createdAt.toISOString(),
       updatedAt: paper.updatedAt.toISOString(),
     };
+  }
 
-    if (!paper.questions) {
-      return response;
-    }
-
+  private toAdminPaperDetailItem(paper: PaperRecord): AdminPaperDetailItem {
     return {
-      ...response,
-      questions: paper.questions.map((question) => ({
+      ...this.toAdminPaperItem(paper),
+      questions: (paper.questions ?? []).map((question) => ({
         id: question.id,
         number: question.number,
         type: question.type,
@@ -418,11 +462,8 @@ export class PapersService {
     };
   }
 
-  private toPaperListResponse(
-    paper: PaperListItem,
-    role: UserRole,
-  ): PaperResponse | AdminPaperResponse {
-    const base = {
+  private toPublicPaperListItem(paper: PaperListRecord): PaperDetailItem {
+    return {
       id: paper.id,
       title: paper.title,
       year: paper.examSession.displayYear,
@@ -431,15 +472,13 @@ export class PapersService {
       round: paper.examSession.round,
       questionCount: paper.questionCount,
       isInLibrary: (paper.users?.length ?? 0) > 0,
-      exam: this.toTaxonomyResponse(paper.examSession.exam),
+      exam: this.toPaperExamItem(paper.examSession.exam),
     };
+  }
 
-    if (role !== UserRole.ADMIN) {
-      return base;
-    }
-
+  private toAdminPaperListItem(paper: PaperListRecord): AdminPaperItem {
     return {
-      ...base,
+      ...this.toPublicPaperListItem(paper),
       isPublished: paper.isPublished,
       registeredQuestionCount: paper._count.questions,
       createdAt: paper.createdAt.toISOString(),
@@ -447,7 +486,7 @@ export class PapersService {
     };
   }
 
-  private toTaxonomyResponse(entity: Exam): TaxonomyResponse {
+  private toPaperExamItem(entity: Exam): PaperExamItem {
     return {
       id: entity.id,
       name: entity.name,
@@ -460,7 +499,7 @@ export class PapersService {
 
   private assertSessionFields(
     exam: Exam,
-    dto: Pick<CreatePaperDto, 'month' | 'grade' | 'round'>,
+    dto: Pick<CreatePaperRequest, 'month' | 'grade' | 'round'>,
   ) {
     this.assertSessionField(exam.usesMonth, dto.month, '시행 월');
     this.assertSessionField(exam.usesGrade, dto.grade, '대상 학년');

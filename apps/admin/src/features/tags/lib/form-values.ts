@@ -1,12 +1,9 @@
-import type {
-  AdminTagGroupResponse,
-  AdminTagResponse,
-} from '@kichulbot/api-contract/tags';
+import type { AdminTag,AdminTagGroup } from '@/shared/types';
 
 import type { TagForm, TagGroupForm } from '../types';
 
 export function getTagFormValues(
-  editingTag: AdminTagResponse | null,
+  editingTag: AdminTag | null,
   examId: string,
 ): TagForm {
   return {
@@ -19,7 +16,7 @@ export function getTagFormValues(
 }
 
 export function getTagGroupFormValues(
-  editingTagGroup: AdminTagGroupResponse | null,
+  editingTagGroup: AdminTagGroup | null,
   examId: string,
 ): TagGroupForm {
   return {

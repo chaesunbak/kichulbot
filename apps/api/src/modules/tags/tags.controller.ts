@@ -1,3 +1,11 @@
+import type {
+  AdminListTagsResponse,
+  DeleteTagGroupResponse,
+  DeleteTagResponse,
+  ListTagGroupsResponse,
+  TagGroupMutationResponse,
+  TagMutationResponse,
+} from '@kichulbot/api-contract/tags';
 import {
   Body,
   Controller,
@@ -44,16 +52,16 @@ export class TagsController {
   @ApiOperation({ summary: '관리자 태그 목록 조회' })
   @ApiOkResponse({ description: '태그 목록을 반환합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  listTags(@Query('examId') examId?: string) {
+  listTags(@Query('examId') examId?: string): Promise<AdminListTagsResponse> {
     if (!examId) return this.tagsService.listAdminTags();
-    return this.tagsService.listTags(UserRole.ADMIN, examId);
+    return this.tagsService.listAdminTags(examId);
   }
 
   @Post()
   @ApiOperation({ summary: '태그 생성' })
   @ApiCreatedResponse({ description: '태그를 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  createTag(@Body() dto: CreateTagDto) {
+  createTag(@Body() dto: CreateTagDto): Promise<TagMutationResponse> {
     return this.tagsService.createTag(dto);
   }
 
@@ -61,7 +69,10 @@ export class TagsController {
   @ApiOperation({ summary: '태그 수정' })
   @ApiOkResponse({ description: '태그를 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  updateTag(@Param('id') id: string, @Body() dto: UpdateTagDto) {
+  updateTag(
+    @Param('id') id: string,
+    @Body() dto: UpdateTagDto,
+  ): Promise<TagMutationResponse> {
     return this.tagsService.updateTag(id, dto);
   }
 
@@ -71,7 +82,7 @@ export class TagsController {
     description: '문항에 연결되지 않은 태그를 삭제합니다.',
   })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  deleteTag(@Param('id') id: string) {
+  deleteTag(@Param('id') id: string): Promise<DeleteTagResponse> {
     return this.tagsService.deleteTag(id);
   }
 }
@@ -91,7 +102,9 @@ export class TagGroupsController {
   @ApiOperation({ summary: '태그 그룹 목록 조회' })
   @ApiOkResponse({ description: '태그 그룹 목록을 반환합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  listTagGroups(@Query('examId') examId?: string) {
+  listTagGroups(
+    @Query('examId') examId?: string,
+  ): Promise<ListTagGroupsResponse> {
     return this.tagsService.listTagGroups(examId);
   }
 
@@ -99,7 +112,9 @@ export class TagGroupsController {
   @ApiOperation({ summary: '태그 그룹 생성' })
   @ApiCreatedResponse({ description: '태그 그룹을 생성합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  createTagGroup(@Body() dto: CreateTagGroupDto) {
+  createTagGroup(
+    @Body() dto: CreateTagGroupDto,
+  ): Promise<TagGroupMutationResponse> {
     return this.tagsService.createTagGroup(dto);
   }
 
@@ -107,7 +122,10 @@ export class TagGroupsController {
   @ApiOperation({ summary: '태그 그룹 수정' })
   @ApiOkResponse({ description: '태그 그룹을 수정합니다.' })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  updateTagGroup(@Param('id') id: string, @Body() dto: UpdateTagGroupDto) {
+  updateTagGroup(
+    @Param('id') id: string,
+    @Body() dto: UpdateTagGroupDto,
+  ): Promise<TagGroupMutationResponse> {
     return this.tagsService.updateTagGroup(id, dto);
   }
 
@@ -117,7 +135,7 @@ export class TagGroupsController {
     description: '태그가 연결되지 않은 그룹을 삭제합니다.',
   })
   @ApiForbiddenResponse({ description: '관리자만 접근할 수 있습니다.' })
-  deleteTagGroup(@Param('id') id: string) {
+  deleteTagGroup(@Param('id') id: string): Promise<DeleteTagGroupResponse> {
     return this.tagsService.deleteTagGroup(id);
   }
 }

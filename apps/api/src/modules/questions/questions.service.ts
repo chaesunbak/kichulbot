@@ -1,11 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 
 import {
-  AdminQuestionResponse,
   DeleteQuestionResponse,
-  DeleteQuestionResponseSchema,
   QuestionMutationResponse,
-  QuestionMutationResponseSchema,
 } from '@kichulbot/api-contract/questions';
 import {
   BadRequestException,
@@ -24,21 +21,12 @@ import { TagsService } from '../tags/tags.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QuestionsRepository } from './questions.repository';
-
-type QuestionWithTags = Prisma.QuestionGetPayload<{
-  include: { tags: { include: { tag: { include: { tagGroup: true } } } } };
-}>;
-
-type QuestionAnswerInput = {
-  choiceCount?: number;
-  gradingPolicy?: GradingPolicy;
-  answerChoice?: number;
-  answerText?: string;
-};
-
-type QuestionImagePathPaper = NonNullable<
-  Awaited<ReturnType<QuestionsRepository['findPaper']>>
->;
+import type {
+  AdminQuestionItem,
+  QuestionAnswerDataInput,
+  QuestionImagePathPaper,
+  QuestionRecord,
+} from './questions.types';
 
 @Injectable()
 export class QuestionsService {
@@ -213,7 +201,7 @@ export class QuestionsService {
       data.imageHash = this.createImageHash(file);
     }
 
-    let updated: QuestionWithTags;
+    let updated: QuestionRecord;
     try {
       updated = await this.questionsRepository.update(id, data, dto.tagIds);
     } catch (error) {
@@ -241,13 +229,13 @@ export class QuestionsService {
     await this.questionsRepository.delete(id);
     await this.deleteStoredImage(existing.imageUrl);
 
-    return DeleteQuestionResponseSchema.parse({ id });
+    return { id };
   }
 
   private resolveAnswerData(
     type: QuestionType,
-    input: QuestionAnswerInput,
-    existing?: QuestionWithTags,
+    input: QuestionAnswerDataInput,
+    existing?: QuestionRecord,
   ) {
     if (type === QuestionType.MULTIPLE_CHOICE) {
       const choiceCount =
@@ -395,14 +383,14 @@ export class QuestionsService {
   }
 
   private toMutationResponse(
-    question: QuestionWithTags,
+    question: QuestionRecord,
   ): QuestionMutationResponse {
-    return QuestionMutationResponseSchema.parse({
-      question: this.toResponse(question),
-    });
+    return {
+      question: this.toAdminQuestionItem(question),
+    };
   }
 
-  private toResponse(question: QuestionWithTags): AdminQuestionResponse {
+  private toAdminQuestionItem(question: QuestionRecord): AdminQuestionItem {
     return {
       id: question.id,
       paperId: question.paperId,

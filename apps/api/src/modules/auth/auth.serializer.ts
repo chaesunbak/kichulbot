@@ -1,11 +1,16 @@
-import type { UserResponse } from '@kichulbot/api-contract/auth';
-import { UserResponseSchema } from '@kichulbot/api-contract/auth';
+import {
+  type AuthResponse,
+  AuthResponseSchema,
+} from '@kichulbot/api-contract/auth';
 
 import type {
   OAuthAccount,
   User,
 } from '../../infrastructure/database/prisma-client';
 import { OAuthProvider } from '../../infrastructure/database/prisma-client';
+
+type UserResponse = AuthResponse['user'];
+const UserResponseSchema = AuthResponseSchema.shape.user;
 
 export type SerializableUser = User & {
   oauthAccounts?: Pick<OAuthAccount, 'provider'>[];

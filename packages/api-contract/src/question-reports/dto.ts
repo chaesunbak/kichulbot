@@ -1,49 +1,61 @@
 import * as z from 'zod';
-import { PaginationQuerySchema, PaginatedResponseSchema } from '../common.js';
-import {
-  QuestionReportCategorySchema,
-  QuestionReportResponseSchema,
-  QuestionReportStatusSchema,
-} from './schema.js';
+import { IsoDateStringSchema } from '../common.js';
 
-export const CreateQuestionReportRequestSchema = z.object({
+export const QuestionReportCategorySchema = z.enum([
+  'QUESTION_ERROR',
+  'IMAGE_ERROR',
+  'CHOICE_ERROR',
+  'ANSWER_ERROR',
+  'EXPLANATION_ERROR',
+  'CATEGORY_ERROR',
+  'OTHER',
+]);
+export type QuestionReportCategory = z.infer<
+  typeof QuestionReportCategorySchema
+>;
+
+export const QuestionReportStatusSchema = z.enum([
+  'PENDING',
+  'IN_REVIEW',
+  'RESOLVED',
+  'DISMISSED',
+]);
+export type QuestionReportStatus = z.infer<typeof QuestionReportStatusSchema>;
+
+export const QuestionReportUserSchema = z.object({
+  id: z.string(),
+  email: z.string().nullable(),
+  nickname: z.string().nullable(),
+});
+export type QuestionReportUser = z.infer<typeof QuestionReportUserSchema>;
+
+export const QuestionReportQuestionSchema = z.object({
+  id: z.string(),
+  paperId: z.string(),
+  paperTitle: z.string(),
+  number: z.number().int().positive(),
+});
+export type QuestionReportQuestion = z.infer<
+  typeof QuestionReportQuestionSchema
+>;
+
+export const QuestionReportResponseSchema = z.object({
+  id: z.string(),
+  reporterUserId: z.string().nullable(),
+  questionId: z.string(),
+  questionRevisionId: z.string().nullable(),
   category: QuestionReportCategorySchema,
-  content: z.string().trim().min(1).max(5000),
-  questionRevisionId: z.string().min(1).optional(),
+  content: z.string(),
+  status: QuestionReportStatusSchema,
+  adminMemo: z.string().nullable(),
+  reviewedByUserId: z.string().nullable(),
+  reviewedAt: IsoDateStringSchema.nullable(),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
+  question: QuestionReportQuestionSchema.optional(),
+  reporter: QuestionReportUserSchema.nullable().optional(),
+  reviewedBy: QuestionReportUserSchema.nullable().optional(),
 });
-export type CreateQuestionReportRequest = z.infer<
-  typeof CreateQuestionReportRequestSchema
->;
-
-export const QuestionReportMutationResponseSchema = z.object({
-  report: QuestionReportResponseSchema,
-});
-export type QuestionReportMutationResponse = z.infer<
-  typeof QuestionReportMutationResponseSchema
->;
-
-export const ListAdminQuestionReportsQuerySchema = PaginationQuerySchema.extend(
-  {
-    status: QuestionReportStatusSchema.optional(),
-    category: QuestionReportCategorySchema.optional(),
-    questionId: z.string().min(1).optional(),
-  },
-);
-export type ListAdminQuestionReportsQuery = z.infer<
-  typeof ListAdminQuestionReportsQuerySchema
->;
-
-export const ListAdminQuestionReportsResponseSchema = PaginatedResponseSchema(
-  QuestionReportResponseSchema,
-);
-export type ListAdminQuestionReportsResponse = z.infer<
-  typeof ListAdminQuestionReportsResponseSchema
->;
-
-export const UpdateQuestionReportRequestSchema = z.object({
-  status: QuestionReportStatusSchema.optional(),
-  adminMemo: z.string().trim().max(5000).nullable().optional(),
-});
-export type UpdateQuestionReportRequest = z.infer<
-  typeof UpdateQuestionReportRequestSchema
+export type QuestionReportResponse = z.infer<
+  typeof QuestionReportResponseSchema
 >;

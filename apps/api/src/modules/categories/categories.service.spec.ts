@@ -1,6 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
 
-import { UserRole } from '../../infrastructure/database/prisma-client';
 import type { CategoriesRepository } from './categories.repository';
 import { CategoriesService } from './categories.service';
 
@@ -24,7 +23,7 @@ describe('CategoriesService', () => {
   it('일반 사용자 목록에서는 공개 필드만 반환한다', async () => {
     repository.findMany.mockResolvedValue([makeCategory()]);
 
-    const response = await service.listCategories(UserRole.USER);
+    const response = await service.listPublicCategories();
 
     expect(response.categories[0]).toEqual({
       id: 'category_1',
@@ -35,7 +34,7 @@ describe('CategoriesService', () => {
   it('관리자 목록에서는 생성일과 수정일을 함께 반환한다', async () => {
     repository.findMany.mockResolvedValue([makeCategory()]);
 
-    const response = await service.listCategories(UserRole.ADMIN);
+    const response = await service.listAdminCategories();
 
     expect(response.categories[0]).toMatchObject({
       id: 'category_1',

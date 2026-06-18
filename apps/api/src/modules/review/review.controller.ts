@@ -1,3 +1,8 @@
+import type {
+  CreateWrongQuestionSetResponse,
+  GetWrongQuestionSetResponse,
+  StartWrongReviewSessionResponse,
+} from '@kichulbot/api-contract/review';
 import {
   Body,
   Controller,
@@ -41,7 +46,7 @@ export class ReviewController {
   getByStudyDate(
     @CurrentUser() user: RequestUser,
     @Query('studyDate') studyDate?: string,
-  ) {
+  ): Promise<GetWrongQuestionSetResponse> {
     return this.reviewService.getByStudyDate(user.id, studyDate);
   }
 
@@ -53,7 +58,7 @@ export class ReviewController {
   generate(
     @CurrentUser() user: RequestUser,
     @Body() dto: CreateWrongQuestionSetDto,
-  ) {
+  ): Promise<CreateWrongQuestionSetResponse> {
     return this.reviewService.generate(user.id, dto.studyDate);
   }
 
@@ -65,7 +70,7 @@ export class ReviewController {
   startLatest(
     @CurrentUser() user: RequestUser,
     @Body() dto: StartWrongReviewSessionDto,
-  ) {
+  ): Promise<StartWrongReviewSessionResponse> {
     return this.reviewService.startLatest(user.id, dto.mode);
   }
 
@@ -76,7 +81,7 @@ export class ReviewController {
     @CurrentUser() user: RequestUser,
     @Param('questionSetId') questionSetId: string,
     @Body() dto: StartWrongReviewSessionDto,
-  ) {
+  ): Promise<StartWrongReviewSessionResponse> {
     return this.reviewService.start(user.id, questionSetId, dto.mode);
   }
 }

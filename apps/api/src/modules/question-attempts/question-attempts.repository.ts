@@ -43,6 +43,7 @@ export class QuestionAttemptsRepository {
                               id: true,
                               name: true,
                               keywords: true,
+                              sortOrder: true,
                               tagGroup: {
                                 select: {
                                   id: true,

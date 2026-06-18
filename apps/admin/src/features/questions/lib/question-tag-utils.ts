@@ -1,9 +1,9 @@
-import type { TagResponse } from '@kichulbot/api-contract/tags';
+import type { Tag } from '@/shared/types';
 
 export function getNextTagIds(
   currentTagIds: string[],
-  selectedTag: TagResponse,
-  tags: TagResponse[],
+  selectedTag: Tag,
+  tags: Tag[],
   checked: boolean,
 ) {
   if (!checked) {
@@ -22,17 +22,17 @@ export function getNextTagIds(
   return [...selectedTagIds];
 }
 
-export function mergeTags(...tagGroups: TagResponse[][]) {
-  const tags = new Map<string, TagResponse>();
+export function mergeTags(...tagGroups: Tag[][]) {
+  const tags = new Map<string, Tag>();
   tagGroups.flat().forEach((tag) => tags.set(tag.id, tag));
   return sortTags([...tags.values()]);
 }
 
-export function sortTags(tags: TagResponse[]) {
+export function sortTags(tags: Tag[]) {
   return [...tags].sort(compareTags);
 }
 
-function compareTags(left: TagResponse, right: TagResponse) {
+function compareTags(left: Tag, right: Tag) {
   return (
     (left.tagGroup?.sortOrder ?? 0) - (right.tagGroup?.sortOrder ?? 0) ||
     (left.tagGroup?.name ?? '').localeCompare(right.tagGroup?.name ?? '') ||

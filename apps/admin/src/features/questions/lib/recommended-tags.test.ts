@@ -1,6 +1,7 @@
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { describe, expect, it } from 'vitest';
+
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 import {
   getRecommendedTagKeywords,
@@ -65,8 +66,8 @@ describe('getRecommendedTagKeywords', () => {
 });
 
 function createQuestion(
-  overrides: Partial<AdminPaperQuestionResponse> = {},
-): AdminPaperQuestionResponse {
+  overrides: Partial<AdminPaperQuestion> = {},
+): AdminPaperQuestion {
   return {
     id: 'question-1',
     number: 1,
@@ -93,7 +94,7 @@ function createQuestion(
   };
 }
 
-function createTag(overrides: Partial<TagResponse> = {}): TagResponse {
+function createTag(overrides: Partial<Tag> = {}): Tag {
   return {
     id: 'tag-1',
     name: '태그',

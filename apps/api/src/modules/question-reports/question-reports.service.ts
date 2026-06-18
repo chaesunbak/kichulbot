@@ -1,9 +1,6 @@
 import {
   ListAdminQuestionReportsResponse,
-  ListAdminQuestionReportsResponseSchema,
   QuestionReportMutationResponse,
-  QuestionReportMutationResponseSchema,
-  QuestionReportResponse,
 } from '@kichulbot/api-contract/question-reports';
 import {
   BadRequestException,
@@ -15,10 +12,10 @@ import { CreateQuestionReportDto } from './dto/create-question-report.dto';
 import { ListQuestionReportsDto } from './dto/list-question-reports.dto';
 import { UpdateQuestionReportDto } from './dto/update-question-report.dto';
 import { QuestionReportsRepository } from './question-reports.repository';
-
-type StoredQuestionReport = NonNullable<
-  Awaited<ReturnType<QuestionReportsRepository['findById']>>
->;
+import type {
+  QuestionReportItem,
+  QuestionReportRecord,
+} from './question-reports.types';
 
 @Injectable()
 export class QuestionReportsService {
@@ -65,9 +62,9 @@ export class QuestionReportsService {
       content,
     });
 
-    return QuestionReportMutationResponseSchema.parse({
-      report: this.toResponse(report),
-    });
+    return {
+      report: this.toQuestionReportItem(report),
+    };
   }
 
   async listAdmin(
@@ -83,13 +80,13 @@ export class QuestionReportsService {
       limit,
     });
 
-    return ListAdminQuestionReportsResponseSchema.parse({
-      items: reports.map((report) => this.toResponse(report)),
+    return {
+      items: reports.map((report) => this.toQuestionReportItem(report)),
       total,
       page,
       limit,
       totalPages: total === 0 ? 0 : Math.ceil(total / limit),
-    });
+    };
   }
 
   async updateAdmin(
@@ -117,9 +114,9 @@ export class QuestionReportsService {
       reviewedAt: new Date(),
     });
 
-    return QuestionReportMutationResponseSchema.parse({
-      report: this.toResponse(updated),
-    });
+    return {
+      report: this.toQuestionReportItem(updated),
+    };
   }
 
   private normalizeAdminMemo(adminMemo: string | null | undefined) {
@@ -128,7 +125,9 @@ export class QuestionReportsService {
     return trimmed || null;
   }
 
-  private toResponse(report: StoredQuestionReport): QuestionReportResponse {
+  private toQuestionReportItem(
+    report: QuestionReportRecord,
+  ): QuestionReportItem {
     return {
       id: report.id,
       reporterUserId: report.reporterUserId,

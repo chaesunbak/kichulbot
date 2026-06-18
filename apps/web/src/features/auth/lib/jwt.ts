@@ -1,6 +1,13 @@
-import type { AccessTokenPayload } from '@kichulbot/api-contract/auth';
-import { AccessTokenPayloadSchema } from '@kichulbot/api-contract/auth';
+import { AuthResponseSchema } from '@kichulbot/api-contract/auth';
 import { errors, jwtVerify } from 'jose';
+import * as z from 'zod';
+
+const AccessTokenPayloadSchema = z.object({
+  sub: AuthResponseSchema.shape.user.shape.id,
+  role: AuthResponseSchema.shape.user.shape.role,
+  tokenVersion: z.number().int().nonnegative(),
+});
+type AccessTokenPayload = z.infer<typeof AccessTokenPayloadSchema>;
 
 export type VerifyAccessTokenResult =
   | {

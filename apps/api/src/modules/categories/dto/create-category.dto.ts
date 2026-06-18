@@ -1,10 +1,6 @@
-import { CreateCategoryRequest } from '@kichulbot/api-contract/taxonomy';
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength } from 'class-validator';
+import { CreateCategoryRequestSchema } from '@kichulbot/api-contract/taxonomy';
+import { createZodDto } from 'nestjs-zod';
 
-export class CreateCategoryDto implements CreateCategoryRequest {
-  @ApiProperty({ example: '수능' })
-  @IsString()
-  @MaxLength(50)
-  name: string;
-}
+export class CreateCategoryDto extends createZodDto(
+  CreateCategoryRequestSchema,
+) {}

@@ -1,9 +1,4 @@
-import type {
-  MockExamGenerationResponse,
-  StartMockExamSolveSessionResponse,
-} from '@kichulbot/api-contract/mock-exams';
-import { StartMockExamSolveSessionResponseSchema } from '@kichulbot/api-contract/mock-exams';
-import type { SolveSessionResponse } from '@kichulbot/api-contract/solve-sessions';
+import type { StartMockExamSolveSessionResponse } from '@kichulbot/api-contract/mock-exams';
 import {
   BadRequestException,
   Injectable,
@@ -15,29 +10,16 @@ import {
   Prisma,
 } from '../../infrastructure/database/prisma-client';
 import { SolveSessionsService } from '../solve-sessions/solve-sessions.service';
-import type { MockExamSelectedQuestion } from './mock-exams.repository';
 import { MockExamsRepository } from './mock-exams.repository';
-
-type ConfiguredExam = NonNullable<
-  Awaited<ReturnType<MockExamsRepository['findExam']>>
->;
-type BlueprintItem = ConfiguredExam['mockExamBlueprintItems'][number];
-type CandidateQuestion = Awaited<
-  ReturnType<MockExamsRepository['findPublishedQuestionCandidates']>
->[number];
-
-type Candidate = {
-  questionId: string;
-  revision: CandidateQuestion['revisions'][number];
-  tagIds: Set<string>;
-};
-
-type Selection = MockExamSelectedQuestion & {
-  questionId: string;
-  revision: CandidateQuestion['revisions'][number];
-  selectedTagId: string | null;
-  supplemented: boolean;
-};
+import type {
+  ConfiguredMockExam,
+  MockExamBlueprintItem,
+  MockExamCandidate,
+  MockExamCandidateQuestion,
+  MockExamGenerationPayload,
+  MockExamSelection,
+  MockExamSolveSessionPayload,
+} from './mock-exams.types';
 
 @Injectable()
 export class MockExamsService {
@@ -71,10 +53,10 @@ export class MockExamsService {
       mode,
       { reuseUnsubmitted: false },
     );
-    return StartMockExamSolveSessionResponseSchema.parse({
+    return {
       ...session,
       generation,
-    });
+    };
   }
 
   async startPublicSolveSession(
@@ -83,10 +65,10 @@ export class MockExamsService {
   ): Promise<StartMockExamSolveSessionResponse> {
     const { exam, selections, generation } = await this.generate(examId);
 
-    return StartMockExamSolveSessionResponseSchema.parse({
-      session: this.toPublicSessionResponse(exam, selections, mode),
+    return {
+      session: this.toPublicSessionPayload(exam, selections, mode),
       generation,
-    });
+    };
   }
 
   private async generate(examId: string) {
@@ -118,8 +100,8 @@ export class MockExamsService {
   }
 
   private assertConfigured(
-    exam: ConfiguredExam,
-  ): asserts exam is ConfiguredExam & { mockExamQuestionCount: number } {
+    exam: ConfiguredMockExam,
+  ): asserts exam is ConfiguredMockExam & { mockExamQuestionCount: number } {
     if (
       exam.mockExamQuestionCount == null ||
       !exam.eraTagGroupId ||
@@ -149,7 +131,9 @@ export class MockExamsService {
     }
   }
 
-  private toCandidates(questions: CandidateQuestion[]): Candidate[] {
+  private toCandidates(
+    questions: MockExamCandidateQuestion[],
+  ): MockExamCandidate[] {
     return questions
       .map((question) => {
         const revision = question.revisions[0];
@@ -160,10 +144,15 @@ export class MockExamsService {
           tagIds: new Set(question.tags.map((tag) => tag.tagId)),
         };
       })
-      .filter((candidate): candidate is Candidate => candidate !== null);
+      .filter(
+        (candidate): candidate is MockExamCandidate => candidate !== null,
+      );
   }
 
-  private allocateQuestionCounts(totalCount: number, items: BlueprintItem[]) {
+  private allocateQuestionCounts(
+    totalCount: number,
+    items: MockExamBlueprintItem[],
+  ) {
     const allocations = new Map<string, number>();
     for (const item of items) {
       allocations.set(item.tagId, item.minQuestionCount);
@@ -189,7 +178,7 @@ export class MockExamsService {
     return allocations;
   }
 
-  private sortBlueprintItems(items: BlueprintItem[]) {
+  private sortBlueprintItems(items: MockExamBlueprintItem[]) {
     return [...items].sort(
       (left, right) =>
         left.tag.sortOrder - right.tag.sortOrder ||
@@ -199,14 +188,14 @@ export class MockExamsService {
   }
 
   private selectQuestions(
-    candidates: Candidate[],
-    items: BlueprintItem[],
+    candidates: MockExamCandidate[],
+    items: MockExamBlueprintItem[],
     allocations: Map<string, number>,
     totalCount: number,
   ) {
     const selectedQuestionIds = new Set<string>();
-    const selections: Selection[] = [];
-    const insufficientTags: MockExamGenerationResponse['insufficientTags'] = [];
+    const selections: MockExamSelection[] = [];
+    const insufficientTags: MockExamGenerationPayload['insufficientTags'] = [];
 
     for (const item of items) {
       const requiredCount = allocations.get(item.tagId) ?? 0;
@@ -285,11 +274,11 @@ export class MockExamsService {
     };
   }
 
-  private toPublicSessionResponse(
-    exam: ConfiguredExam & { mockExamQuestionCount: number },
-    selections: Selection[],
+  private toPublicSessionPayload(
+    exam: ConfiguredMockExam & { mockExamQuestionCount: number },
+    selections: MockExamSelection[],
     mode: AnswerMode,
-  ): SolveSessionResponse {
+  ): MockExamSolveSessionPayload {
     const now = new Date();
     const nowIso = now.toISOString();
     return {
@@ -337,11 +326,11 @@ export class MockExamsService {
   }
 
   private toParameters(
-    exam: ConfiguredExam & { mockExamQuestionCount: number },
-    blueprintItems: BlueprintItem[],
+    exam: ConfiguredMockExam & { mockExamQuestionCount: number },
+    blueprintItems: MockExamBlueprintItem[],
     allocations: Map<string, number>,
-    selections: Selection[],
-    generation: MockExamGenerationResponse,
+    selections: MockExamSelection[],
+    generation: MockExamGenerationPayload,
   ): Prisma.InputJsonValue {
     const selectedByTag = selections.reduce<Record<string, number>>(
       (acc, selection) => {

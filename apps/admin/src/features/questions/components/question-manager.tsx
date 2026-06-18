@@ -1,6 +1,4 @@
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
-import type { AdminPaperQuestionResponse } from '@kichulbot/api-contract/papers';
-import type { TagResponse } from '@kichulbot/api-contract/tags';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -15,6 +13,8 @@ import {
 } from '@/features/papers/queries/mutations';
 import { paperQueryOptions } from '@/features/papers/queries/options';
 import { tagsQueryOptions } from '@/features/tags/queries/options';
+import type { AdminPaperQuestion } from '@/shared/types';
+import type { Tag } from '@/shared/types';
 
 import { useQuestionImage } from '../hooks/use-question-image';
 import { findNextQuestionNumber } from '../lib/question-number';
@@ -68,7 +68,7 @@ export function QuestionManager({
   const editingQuestion =
     questions.find((question) => question.id === editingQuestionId) ?? null;
   const selectableTags = useMemo(() => {
-    const tags = new Map<string, TagResponse>(
+    const tags = new Map<string, Tag>(
       (tagsQuery.data?.tags ?? []).map((tag) => [tag.id, tag]),
     );
     editingQuestion?.tags.forEach((tag) => tags.set(tag.id, tag));
@@ -96,7 +96,7 @@ export function QuestionManager({
       : null;
 
   const resetFormForQuestion = useCallback(
-    (question: AdminPaperQuestionResponse) => {
+    (question: AdminPaperQuestion) => {
       setEditingQuestionId(question.id);
       imageField.reset();
       questionForm.reset({
@@ -143,7 +143,7 @@ export function QuestionManager({
     [imageField, questionCount, questionForm, questions],
   );
 
-  function beginEdit(question: AdminPaperQuestionResponse) {
+  function beginEdit(question: AdminPaperQuestion) {
     resetFormForQuestion(question);
   }
 
@@ -215,7 +215,7 @@ export function QuestionManager({
     }
   }
 
-  function handleDeleteQuestion(question: AdminPaperQuestionResponse) {
+  function handleDeleteQuestion(question: AdminPaperQuestion) {
     const shouldDelete = window.confirm(
       `${question.number}번 문항과 등록된 이미지를 삭제할까요?\n이 작업은 되돌릴 수 없습니다.`,
     );
@@ -224,10 +224,7 @@ export function QuestionManager({
     }
   }
 
-  function handleAddQuestionTag(
-    question: AdminPaperQuestionResponse,
-    tagId: string,
-  ) {
+  function handleAddQuestionTag(question: AdminPaperQuestion, tagId: string) {
     const tag = selectableTags.find((item) => item.id === tagId);
     if (!tag) return;
 

@@ -1,8 +1,6 @@
-import type {
-  AdminExamResponse,
-  AdminTaxonomyResponse,
-} from '@kichulbot/api-contract/taxonomy';
 import { describe, expect, it } from 'vitest';
+
+import type { AdminExam, AdminTaxonomy } from '@/shared/types';
 
 import {
   getCategoryFormValues,
@@ -22,7 +20,7 @@ describe('getCategoryFormValues', () => {
         name: '한국사',
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
-      } satisfies AdminTaxonomyResponse),
+      } satisfies AdminTaxonomy),
     ).toEqual({ name: '한국사' });
   });
 });
@@ -74,7 +72,7 @@ describe('isAdminTag', () => {
   });
 });
 
-function createExam(): AdminExamResponse {
+function createExam(): AdminExam {
   return {
     id: 'exam-1',
     name: '대학수학능력시험',

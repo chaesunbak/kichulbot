@@ -1,16 +1,10 @@
 import * as z from 'zod';
-import { QuestionNoteResponseSchema } from './schema.js';
+import { IsoDateStringSchema } from '../common.js';
 
-export const SaveQuestionNoteRequestSchema = z.object({
-  content: z.string().max(5000),
+export const QuestionNoteResponseSchema = z.object({
+  questionId: z.string(),
+  content: z.string(),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
 });
-export type SaveQuestionNoteRequest = z.infer<
-  typeof SaveQuestionNoteRequestSchema
->;
-
-export const QuestionNoteResponseEnvelopeSchema = z.object({
-  note: QuestionNoteResponseSchema.nullable(),
-});
-export type QuestionNoteResponseEnvelope = z.infer<
-  typeof QuestionNoteResponseEnvelopeSchema
->;
+export type QuestionNoteResponse = z.infer<typeof QuestionNoteResponseSchema>;

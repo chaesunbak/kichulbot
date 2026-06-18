@@ -1,4 +1,3 @@
-import type { AdminTaxonomyResponse } from '@kichulbot/api-contract/taxonomy';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -10,11 +9,13 @@ import {
   useSaveCategoryMutation,
 } from '@/features/reference-data/queries/mutations';
 import { categoriesQueryOptions } from '@/features/reference-data/queries/options';
+import type { AdminTaxonomy } from '@/shared/types';
 
 export function CategoriesPage() {
   const token = useAuthStore((state) => state.token)!;
-  const [editingCategory, setEditingCategory] =
-    useState<AdminTaxonomyResponse | null>(null);
+  const [editingCategory, setEditingCategory] = useState<AdminTaxonomy | null>(
+    null,
+  );
   const categoriesQuery = useSuspenseQuery(categoriesQueryOptions(token));
   const categories = categoriesQuery.data.categories;
 
@@ -33,11 +34,11 @@ export function CategoriesPage() {
     }
   });
 
-  function beginEdit(category: AdminTaxonomyResponse) {
+  function beginEdit(category: AdminTaxonomy) {
     setEditingCategory(category);
   }
 
-  function handleDelete(category: AdminTaxonomyResponse) {
+  function handleDelete(category: AdminTaxonomy) {
     if (
       window.confirm(
         `${category.name} 분류를 삭제할까요?\n시험과의 분류 연결도 함께 정리되며, 이 작업은 되돌릴 수 없습니다.`,

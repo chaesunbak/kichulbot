@@ -1,6 +1,7 @@
-import type { PaperImportDraftQuestion } from '@kichulbot/api-contract/papers';
 import type { ListPaperImportJobsResponse } from '@kichulbot/api-contract/papers';
 import type * as z from 'zod';
+
+import type { PaperImportDraftQuestion } from '@/shared/types';
 
 import type {
   importPaperSchema,

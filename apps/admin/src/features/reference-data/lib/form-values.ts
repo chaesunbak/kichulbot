@@ -1,22 +1,16 @@
-import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
-import type {
-  AdminExamResponse,
-  AdminTaxonomyResponse,
-} from '@kichulbot/api-contract/taxonomy';
+import type { AdminExam, AdminTag, AdminTaxonomy } from '@/shared/types';
 
 import type { CategoryForm, ExamForm } from '../types';
 
 export function getCategoryFormValues(
-  editingCategory: AdminTaxonomyResponse | null,
+  editingCategory: AdminTaxonomy | null,
 ): CategoryForm {
   return {
     name: editingCategory?.name ?? '',
   };
 }
 
-export function getExamFormValues(
-  editingExam: AdminExamResponse | null,
-): ExamForm {
+export function getExamFormValues(editingExam: AdminExam | null): ExamForm {
   return {
     name: editingExam?.name ?? '',
     slug: editingExam?.slug ?? '',
@@ -29,7 +23,7 @@ export function getExamFormValues(
   };
 }
 
-export function isAdminTag(value: unknown): value is AdminTagResponse {
+export function isAdminTag(value: unknown): value is AdminTag {
   return (
     typeof value === 'object' &&
     value !== null &&

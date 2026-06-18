@@ -1,7 +1,3 @@
-import type {
-  AdminTagGroupResponse,
-  AdminTagResponse,
-} from '@kichulbot/api-contract/tags';
 import {
   Select,
   SelectContent,
@@ -12,6 +8,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
+import type { AdminTag,AdminTagGroup } from '@/shared/types';
 import type { Taxonomy } from '@/shared/types';
 
 import {
@@ -32,9 +29,10 @@ export function TagManager({
   token: string;
   exams: Taxonomy[];
 }) {
-  const [editingTag, setEditingTag] = useState<AdminTagResponse | null>(null);
-  const [editingTagGroup, setEditingTagGroup] =
-    useState<AdminTagGroupResponse | null>(null);
+  const [editingTag, setEditingTag] = useState<AdminTag | null>(null);
+  const [editingTagGroup, setEditingTagGroup] = useState<AdminTagGroup | null>(
+    null,
+  );
   const [selectedExamId, setSelectedExamId] = useState('');
 
   useEffect(() => {
@@ -88,15 +86,15 @@ export function TagManager({
     }
   });
 
-  function beginEdit(tag: AdminTagResponse) {
+  function beginEdit(tag: AdminTag) {
     setEditingTag(tag);
   }
 
-  function beginEditTagGroup(tagGroup: AdminTagGroupResponse) {
+  function beginEditTagGroup(tagGroup: AdminTagGroup) {
     setEditingTagGroup(tagGroup);
   }
 
-  function handleDelete(tag: AdminTagResponse) {
+  function handleDelete(tag: AdminTag) {
     if (tag.questionCount > 0) {
       return;
     }
@@ -109,7 +107,7 @@ export function TagManager({
     }
   }
 
-  function handleDeleteTagGroup(tagGroup: AdminTagGroupResponse) {
+  function handleDeleteTagGroup(tagGroup: AdminTagGroup) {
     if (tagGroup.tagCount > 0) {
       return;
     }

@@ -1,4 +1,3 @@
-import type { AdminTagResponse } from '@kichulbot/api-contract/tags';
 import { Button } from '@kichulbot/ui/components/ui/button';
 import {
   Card,
@@ -17,15 +16,16 @@ import {
 } from '@kichulbot/ui/components/ui/table';
 import { Pencil, Tags, Trash2 } from 'lucide-react';
 
+import type { AdminTag } from '@/shared/types';
 import { type Taxonomy } from '@/shared/types';
 
 export interface TagListPanelProps {
-  tags: AdminTagResponse[];
+  tags: AdminTag[];
   selectedExam: Taxonomy | null;
   isLoading: boolean;
   deletingTagId?: string | null;
-  onEdit: (tag: AdminTagResponse) => void;
-  onDelete: (tag: AdminTagResponse) => void;
+  onEdit: (tag: AdminTag) => void;
+  onDelete: (tag: AdminTag) => void;
 }
 
 export function TagListPanel({

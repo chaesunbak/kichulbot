@@ -20,7 +20,7 @@ export class HealthController {
     description: 'API 서버 상태를 반환합니다.',
     type: HealthResponseDto,
   })
-  check() {
+  check(): HealthResponseDto {
     return {
       status: 'ok',
     };

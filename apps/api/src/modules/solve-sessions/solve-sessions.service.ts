@@ -1,20 +1,10 @@
 import {
-  AnswerResponse,
   GetSolveSessionResponse,
-  GetSolveSessionResponseSchema,
   ListSolveSessionLogsQuery,
   ListSolveSessionLogsResponse,
-  ListSolveSessionLogsResponseSchema,
-  QuestionResultResponse,
   SaveAnswerResponse,
-  SaveAnswerResponseSchema,
-  SolveSessionLogResponse,
-  SolveSessionResponse,
-  SolveSessionResultResponse,
   StartSolveSessionResponse,
-  StartSolveSessionResponseSchema,
   SubmitSolveSessionResponse,
-  SubmitSolveSessionResponseSchema,
 } from '@kichulbot/api-contract/solve-sessions';
 import {
   BadRequestException,
@@ -27,7 +17,6 @@ import {
   AnswerMode,
   AttemptOutcome,
   GradingPolicy,
-  Prisma,
   QuestionSetKind,
   QuestionType,
 } from '../../infrastructure/database/prisma-client';
@@ -36,32 +25,19 @@ import {
   SolveSessionsRepository,
   SubmittedSolveSessionError,
 } from './solve-sessions.repository';
-
-type SessionWithRelations = Prisma.SolveSessionGetPayload<{
-  include: {
-    paper: {
-      include: {
-        examSession: { include: { exam: true } };
-      };
-    };
-    sourceSet: true;
-    items: {
-      include: {
-        questionRevision: { include: { question: true } };
-        draft: true;
-        attempts: true;
-      };
-    };
-  };
-}>;
-type SessionItem = SessionWithRelations['items'][number];
-type StoredDraft = NonNullable<SessionItem['draft']>;
-type StoredAttempt = SessionItem['attempts'][number];
-type StoredRevision = SessionItem['questionRevision'];
-type GradedAnswer = Pick<StoredAttempt, 'outcome'>;
-type PublicPaperSolveData = NonNullable<
-  Awaited<ReturnType<SolveSessionsRepository['findPublishedPaperSolveData']>>
->;
+import type {
+  AnswerPayload,
+  DraftAnswerRecord,
+  GradedAnswer,
+  PublicPaperSolveData,
+  QuestionResultPayload,
+  QuestionRevisionRecord,
+  SolveSessionItemRecord,
+  SolveSessionLogItem,
+  SolveSessionPayload,
+  SolveSessionRecord,
+  SolveSessionResultPayload,
+} from './solve-sessions.types';
 
 @Injectable()
 export class SolveSessionsService {
@@ -83,9 +59,9 @@ export class SolveSessionsService {
       paperId,
       mode,
     );
-    return StartSolveSessionResponseSchema.parse({
-      session: await this.toResponse(session),
-    });
+    return {
+      session: await this.toSolveSessionPayload(session),
+    };
   }
 
   async getPublicPaperSession(
@@ -96,9 +72,9 @@ export class SolveSessionsService {
       await this.solveSessionsRepository.findPublishedPaperSolveData(paperId);
     if (!paper) throw new NotFoundException('문제지를 찾을 수 없습니다.');
 
-    return GetSolveSessionResponseSchema.parse({
-      session: this.toPublicPaperSessionResponse(paper, mode),
-    });
+    return {
+      session: this.toPublicPaperSessionPayload(paper, mode),
+    };
   }
 
   async listLogs(
@@ -121,13 +97,13 @@ export class SolveSessionsService {
         submittedTo: submittedRange?.to,
       },
     );
-    return ListSolveSessionLogsResponseSchema.parse({
-      logs: sessions.map((session) => this.toLogResponse(session)),
+    return {
+      logs: sessions.map((session) => this.toSolveSessionLogItem(session)),
       total,
       page,
       limit,
       totalPages: total === 0 ? 0 : Math.ceil(total / limit),
-    });
+    };
   }
 
   private toKstDateRange(date: string) {
@@ -156,23 +132,23 @@ export class SolveSessionsService {
     questionSetId: string,
     mode: AnswerMode,
     options?: { reuseUnsubmitted?: boolean },
-  ) {
+  ): Promise<StartSolveSessionResponse> {
     const session = await this.solveSessionsRepository.startQuestionSet(
       userId,
       questionSetId,
       mode,
       options,
     );
-    return StartSolveSessionResponseSchema.parse({
-      session: await this.toResponse(session),
-    });
+    return {
+      session: await this.toSolveSessionPayload(session),
+    };
   }
 
   async get(userId: string, id: string): Promise<GetSolveSessionResponse> {
     const session = await this.findOwnedSession(userId, id);
-    return GetSolveSessionResponseSchema.parse({
-      session: await this.toResponse(session),
-    });
+    return {
+      session: await this.toSolveSessionPayload(session),
+    };
   }
 
   async saveAnswer(
@@ -213,12 +189,12 @@ export class SolveSessionsService {
       });
     const gradedAnswer =
       attempt ?? this.toEphemeralGradedAnswer(session, item, draft);
-    return SaveAnswerResponseSchema.parse({
-      answer: this.toAnswerResponse(item, draft, gradedAnswer ?? null),
+    return {
+      answer: this.toAnswerPayload(item, draft, gradedAnswer ?? null),
       result: gradedAnswer
         ? this.toQuestionResult(item.questionRevision, gradedAnswer)
         : null,
-    });
+    };
   }
 
   async submit(
@@ -229,9 +205,9 @@ export class SolveSessionsService {
     const session = existing.submittedAt
       ? existing
       : await this.solveSessionsRepository.submit(id);
-    return SubmitSolveSessionResponseSchema.parse({
-      session: await this.toResponse(session),
-    });
+    return {
+      session: await this.toSolveSessionPayload(session),
+    };
   }
 
   private async findOwnedSession(userId: string, id: string) {
@@ -269,9 +245,9 @@ export class SolveSessionsService {
     return { answerChoice: null, answerText };
   }
 
-  private async toResponse(
-    session: SessionWithRelations,
-  ): Promise<SolveSessionResponse> {
+  private async toSolveSessionPayload(
+    session: SolveSessionRecord,
+  ): Promise<SolveSessionPayload> {
     const bookmarkedQuestionIds = await this.getBookmarkedQuestionIdSet(
       session.userId,
       session,
@@ -281,7 +257,7 @@ export class SolveSessionsService {
       id: session.id,
       mode: session.mode,
       paper: {
-        ...this.toPaperResponse(session),
+        ...this.toSessionPaperItem(session),
         questions: session.items.map((item) => {
           const gradedAnswer = this.toGradedAnswer(session, item);
           return {
@@ -309,7 +285,7 @@ export class SolveSessionsService {
       answers: session.items
         .filter((item) => item.draft)
         .map((item) =>
-          this.toAnswerResponse(
+          this.toAnswerPayload(
             item,
             item.draft!,
             this.toGradedAnswer(session, item) ?? null,
@@ -322,15 +298,15 @@ export class SolveSessionsService {
     };
   }
 
-  private toLogResponse(
-    session: SessionWithRelations,
-  ): SolveSessionLogResponse {
+  private toSolveSessionLogItem(
+    session: SolveSessionRecord,
+  ): SolveSessionLogItem {
     return {
       id: session.id,
       mode: session.mode,
-      paper: this.toPaperResponse(session),
+      paper: this.toSessionPaperItem(session),
       result: session.submittedAt ? this.toSessionResult(session) : null,
-      progress: this.toProgressResponse(session),
+      progress: this.toProgressPayload(session),
       submittedAt: session.submittedAt?.toISOString() ?? null,
       totalSpentMilliseconds: this.getTotalSpentMilliseconds(session),
       createdAt: session.createdAt.toISOString(),
@@ -338,7 +314,7 @@ export class SolveSessionsService {
     };
   }
 
-  private toPaperResponse(session: SessionWithRelations) {
+  private toSessionPaperItem(session: SolveSessionRecord) {
     const { paper } = session;
     if (!paper) {
       return {
@@ -372,10 +348,10 @@ export class SolveSessionsService {
     };
   }
 
-  private toPublicPaperSessionResponse(
+  private toPublicPaperSessionPayload(
     paper: PublicPaperSolveData,
     mode: AnswerMode,
-  ): SolveSessionResponse {
+  ): SolveSessionPayload {
     const now = new Date().toISOString();
     return {
       id: `public_${paper.id}`,
@@ -422,7 +398,7 @@ export class SolveSessionsService {
   }
 
   private shouldRevealResult(
-    session: SessionWithRelations,
+    session: SolveSessionRecord,
     gradedAnswer?: GradedAnswer,
   ) {
     return (
@@ -432,9 +408,9 @@ export class SolveSessionsService {
   }
 
   private toQuestionResult(
-    question: StoredRevision,
+    question: QuestionRevisionRecord,
     gradedAnswer?: GradedAnswer,
-  ): QuestionResultResponse {
+  ): QuestionResultPayload {
     return {
       answerChoice: question.answerChoice,
       gradingPolicy: question.gradingPolicy,
@@ -450,7 +426,7 @@ export class SolveSessionsService {
 
   private async getBookmarkedQuestionIdSet(
     userId: string,
-    session: SessionWithRelations,
+    session: SolveSessionRecord,
   ) {
     const questionIds = session.items.map(
       (item) => item.questionRevision.questionId,
@@ -463,11 +439,11 @@ export class SolveSessionsService {
     return new Set(bookmarkedQuestionIds);
   }
 
-  private toAnswerResponse(
-    item: SessionItem,
-    draft: StoredDraft,
+  private toAnswerPayload(
+    item: SolveSessionItemRecord,
+    draft: DraftAnswerRecord,
     gradedAnswer: GradedAnswer | null,
-  ): AnswerResponse {
+  ): AnswerPayload {
     return {
       questionId: item.questionRevision.questionId,
       answerChoice: draft.answerChoice,
@@ -480,11 +456,14 @@ export class SolveSessionsService {
     };
   }
 
-  private latestAttempt(item: SessionItem) {
+  private latestAttempt(item: SolveSessionItemRecord) {
     return item.attempts.at(-1);
   }
 
-  private toGradedAnswer(session: SessionWithRelations, item: SessionItem) {
+  private toGradedAnswer(
+    session: SolveSessionRecord,
+    item: SolveSessionItemRecord,
+  ) {
     return (
       this.latestAttempt(item) ??
       this.toEphemeralGradedAnswer(session, item, item.draft)
@@ -492,9 +471,9 @@ export class SolveSessionsService {
   }
 
   private toEphemeralGradedAnswer(
-    session: SessionWithRelations,
-    item: SessionItem,
-    draft?: StoredDraft | null,
+    session: SolveSessionRecord,
+    item: SolveSessionItemRecord,
+    draft?: DraftAnswerRecord | null,
   ): GradedAnswer | undefined {
     if (this.shouldCreateAttempts(session)) return undefined;
     if (!draft) {
@@ -506,18 +485,18 @@ export class SolveSessionsService {
     return { outcome: this.toOutcome(item.questionRevision, draft) };
   }
 
-  private shouldCreateAttempts(session: SessionWithRelations) {
+  private shouldCreateAttempts(session: SolveSessionRecord) {
     return session.sourceSet?.kind !== QuestionSetKind.DAILY_WRONG;
   }
 
-  private getTotalSpentMilliseconds(session: SessionWithRelations) {
+  private getTotalSpentMilliseconds(session: SolveSessionRecord) {
     return session.items.reduce(
       (total, item) => total + (item.draft?.spentMilliseconds ?? 0),
       0,
     );
   }
 
-  private toProgressResponse(session: SessionWithRelations) {
+  private toProgressPayload(session: SolveSessionRecord) {
     const totalCount = session.items.length;
     const answeredCount = session.items.filter((item) =>
       this.hasAnswer(item.draft),
@@ -532,8 +511,8 @@ export class SolveSessionsService {
   }
 
   private toSessionResult(
-    session: SessionWithRelations,
-  ): SolveSessionResultResponse {
+    session: SolveSessionRecord,
+  ): SolveSessionResultPayload {
     const attempts = session.items
       .map((item) => this.toGradedAnswer(session, item))
       .filter((attempt): attempt is GradedAnswer => !!attempt);
@@ -561,8 +540,8 @@ export class SolveSessionsService {
   }
 
   private toOutcome(
-    question: StoredRevision,
-    draft?: StoredDraft | null,
+    question: QuestionRevisionRecord,
+    draft?: DraftAnswerRecord | null,
   ): AttemptOutcome {
     if (!draft || !this.hasAnswer(draft)) return AttemptOutcome.OMITTED;
     const isCorrect =
@@ -573,7 +552,7 @@ export class SolveSessionsService {
   }
 
   private isCorrectChoice(
-    question: Pick<StoredRevision, 'gradingPolicy' | 'answerChoice'>,
+    question: Pick<QuestionRevisionRecord, 'gradingPolicy' | 'answerChoice'>,
     answerChoice?: number | null,
   ) {
     if (question.gradingPolicy === GradingPolicy.ANY_CHOICE) {

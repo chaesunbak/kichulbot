@@ -1,3 +1,4 @@
+import type { StartMockExamSolveSessionResponse } from '@kichulbot/api-contract/mock-exams';
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -32,7 +33,7 @@ export class MockExamsController {
   startSolveSession(
     @CurrentUser() user: RequestUser,
     @Body() dto: StartMockExamSolveSessionDto,
-  ) {
+  ): Promise<StartMockExamSolveSessionResponse> {
     return this.mockExamsService.startSolveSession(
       user.id,
       dto.examId,
@@ -51,7 +52,9 @@ export class PublicMockExamsController {
   @ApiOkResponse({
     description: '비로그인 풀이에 필요한 모의고사 문항을 반환합니다.',
   })
-  startSolveSession(@Body() dto: StartMockExamSolveSessionDto) {
+  startSolveSession(
+    @Body() dto: StartMockExamSolveSessionDto,
+  ): Promise<StartMockExamSolveSessionResponse> {
     return this.mockExamsService.startPublicSolveSession(dto.examId, dto.mode);
   }
 }

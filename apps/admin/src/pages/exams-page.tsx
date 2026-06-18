@@ -1,4 +1,3 @@
-import type { AdminExamResponse } from '@kichulbot/api-contract/taxonomy';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -17,12 +16,11 @@ import {
   tagGroupsQueryOptions,
   tagsQueryOptions,
 } from '@/features/tags/queries/options';
+import type { AdminExam } from '@/shared/types';
 
 export function ExamsPage() {
   const token = useAuthStore((state) => state.token)!;
-  const [editingExam, setEditingExam] = useState<AdminExamResponse | null>(
-    null,
-  );
+  const [editingExam, setEditingExam] = useState<AdminExam | null>(null);
   const examsQuery = useSuspenseQuery(examsQueryOptions(token));
   const categoriesQuery = useSuspenseQuery(categoriesQueryOptions(token));
   const exams = examsQuery.data.exams;
@@ -53,11 +51,11 @@ export function ExamsPage() {
     }
   });
 
-  function beginEdit(exam: AdminExamResponse) {
+  function beginEdit(exam: AdminExam) {
     setEditingExam(exam);
   }
 
-  function handleDelete(exam: AdminExamResponse) {
+  function handleDelete(exam: AdminExam) {
     if (exam.paperCount > 0) {
       return;
     }

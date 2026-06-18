@@ -1,3 +1,7 @@
+import type {
+  ListAdminQuestionReportsResponse,
+  QuestionReportMutationResponse,
+} from '@kichulbot/api-contract/question-reports';
 import {
   Body,
   Controller,
@@ -48,7 +52,7 @@ export class QuestionReportsController {
     @CurrentUser() user: RequestUser,
     @Param('questionId') questionId: string,
     @Body() dto: CreateQuestionReportDto,
-  ) {
+  ): Promise<QuestionReportMutationResponse> {
     return this.questionReportsService.create(user.id, questionId, dto);
   }
 
@@ -59,7 +63,9 @@ export class QuestionReportsController {
   @ApiForbiddenResponse({
     description: '관리자만 문항 신고를 조회할 수 있습니다.',
   })
-  listAdminQuestionReports(@Query() query: ListQuestionReportsDto) {
+  listAdminQuestionReports(
+    @Query() query: ListQuestionReportsDto,
+  ): Promise<ListAdminQuestionReportsResponse> {
     return this.questionReportsService.listAdmin(query);
   }
 
@@ -74,7 +80,7 @@ export class QuestionReportsController {
     @CurrentUser() user: RequestUser,
     @Param('reportId') reportId: string,
     @Body() dto: UpdateQuestionReportDto,
-  ) {
+  ): Promise<QuestionReportMutationResponse> {
     return this.questionReportsService.updateAdmin(reportId, user.id, dto);
   }
 }
@@ -92,7 +98,7 @@ export class PublicQuestionReportsController {
   createQuestionReport(
     @Param('questionId') questionId: string,
     @Body() dto: CreateQuestionReportDto,
-  ) {
+  ): Promise<QuestionReportMutationResponse> {
     return this.questionReportsService.create(null, questionId, dto);
   }
 }

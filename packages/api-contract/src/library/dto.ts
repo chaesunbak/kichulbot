@@ -1,69 +1,22 @@
 import * as z from 'zod';
-import {
-  LibraryFolderResponseSchema,
-  LibraryPaperResponseSchema,
-} from './schema.js';
+import { IsoDateStringSchema } from '../common.js';
+import { PaperResponseSchema } from '../papers/dto.js';
 
-export const LibraryResponseSchema = z.object({
-  folders: z.array(LibraryFolderResponseSchema),
-  papers: z.array(LibraryPaperResponseSchema),
-});
-export type LibraryResponse = z.infer<typeof LibraryResponseSchema>;
-
-export const CreateLibraryFolderRequestSchema = z.object({
-  name: z.string().trim().min(1).max(50),
-  parentId: z.string().nullable().optional(),
-});
-export type CreateLibraryFolderRequest = z.infer<
-  typeof CreateLibraryFolderRequestSchema
->;
-
-export const UpdateLibraryFolderRequestSchema = z.object({
-  name: z.string().trim().min(1).max(50).optional(),
-  parentId: z.string().nullable().optional(),
-});
-export type UpdateLibraryFolderRequest = z.infer<
-  typeof UpdateLibraryFolderRequestSchema
->;
-
-export const LibraryFolderResponseEnvelopeSchema = z.object({
-  folder: LibraryFolderResponseSchema,
-});
-export type LibraryFolderResponseEnvelope = z.infer<
-  typeof LibraryFolderResponseEnvelopeSchema
->;
-
-export const DeleteLibraryFolderResponseSchema = z.object({
+export const LibraryFolderResponseSchema = z.object({
   id: z.string(),
+  name: z.string(),
+  parentId: z.string().nullable(),
+  sortOrder: z.number(),
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
 });
-export type DeleteLibraryFolderResponse = z.infer<
-  typeof DeleteLibraryFolderResponseSchema
->;
+export type LibraryFolderResponse = z.infer<typeof LibraryFolderResponseSchema>;
 
-export const AddLibraryPaperRequestSchema = z.object({
-  folderId: z.string().nullable().optional(),
-});
-export type AddLibraryPaperRequest = z.infer<
-  typeof AddLibraryPaperRequestSchema
->;
-
-export const MoveLibraryPaperRequestSchema = z.object({
+export const LibraryPaperResponseSchema = z.object({
+  id: z.string(),
   folderId: z.string().nullable(),
+  paper: PaperResponseSchema,
+  createdAt: IsoDateStringSchema,
+  updatedAt: IsoDateStringSchema,
 });
-export type MoveLibraryPaperRequest = z.infer<
-  typeof MoveLibraryPaperRequestSchema
->;
-
-export const LibraryPaperResponseEnvelopeSchema = z.object({
-  libraryPaper: LibraryPaperResponseSchema,
-});
-export type LibraryPaperResponseEnvelope = z.infer<
-  typeof LibraryPaperResponseEnvelopeSchema
->;
-
-export const DeleteLibraryPaperResponseSchema = z.object({
-  id: z.string(),
-});
-export type DeleteLibraryPaperResponse = z.infer<
-  typeof DeleteLibraryPaperResponseSchema
->;
+export type LibraryPaperResponse = z.infer<typeof LibraryPaperResponseSchema>;

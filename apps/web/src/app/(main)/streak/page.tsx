@@ -8,7 +8,8 @@ import {
   normalizeMonth,
 } from '@/features/question-attempts/lib/streak-date';
 import { countAttemptsByDate } from '@/features/question-attempts/lib/streak-summary';
-import { ConstructionSection } from '@/shared/components/construction-section';
+import { getCurrentStudyWeeklyGoal } from '@/features/study-weekly-goals/api/server/queries';
+import { WeeklyStudyGoalCard } from '@/features/study-weekly-goals/components/weekly-study-goal-card';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
@@ -26,18 +27,23 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
   const range = getMonthRange(month);
   const currentWeek = getCurrentWeekRange();
   const streakRange = getRecentStreakRange();
-  let data: Awaited<ReturnType<typeof loadStreakPageData>>;
+  let data: {
+    goal: Awaited<ReturnType<typeof getCurrentStudyWeeklyGoal>>;
+    questionAttempts: Awaited<ReturnType<typeof getQuestionAttempts>>;
+    weeklyQuestionAttempts: Awaited<ReturnType<typeof getQuestionAttempts>>;
+  };
   try {
-    data = await loadStreakPageData({
-      monthRange: range,
-      streakFrom: streakRange.from,
-      currentWeekTo: currentWeek.to,
-    });
+    const [questionAttempts, weeklyQuestionAttempts, goal] = await Promise.all([
+      getQuestionAttempts(range.from, range.to),
+      getQuestionAttempts(streakRange.from, currentWeek.to),
+      getCurrentStudyWeeklyGoal(),
+    ]);
+    data = { goal, questionAttempts, weeklyQuestionAttempts };
   } catch (error) {
     redirectToLoginIfUnauthorized(error, nextPath);
     throw error;
   }
-  const { questionAttempts, weeklyQuestionAttempts } = data;
+  const { goal, questionAttempts, weeklyQuestionAttempts } = data;
   const countsByDate = countAttemptsByDate(questionAttempts);
   const totalDaysInMonth = Number(range.to.slice(-2));
 
@@ -47,25 +53,13 @@ export default async function StreakPage({ searchParams }: StreakPageProps) {
       <StreakSummaryCard
         countsByDate={countsByDate}
         questionAttempts={weeklyQuestionAttempts}
+        targetDays={goal.targetDays}
         totalDaysInMonth={totalDaysInMonth}
       />
-      <ConstructionSection />
+      <WeeklyStudyGoalCard
+        goal={goal}
+        questionAttempts={weeklyQuestionAttempts}
+      />
     </PageContainer>
   );
-}
-
-async function loadStreakPageData({
-  monthRange,
-  streakFrom,
-  currentWeekTo,
-}: {
-  monthRange: { from: string; to: string };
-  streakFrom: string;
-  currentWeekTo: string;
-}) {
-  const [questionAttempts, weeklyQuestionAttempts] = await Promise.all([
-    getQuestionAttempts(monthRange.from, monthRange.to),
-    getQuestionAttempts(streakFrom, currentWeekTo),
-  ]);
-  return { questionAttempts, weeklyQuestionAttempts };
 }

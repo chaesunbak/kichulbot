@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   countAttemptsByDate,
+  countSolvedDatesInWeek,
   getCurrentStreakDays,
   getLongestStreakDays,
   getSolvedDates,
@@ -70,5 +71,28 @@ describe('streak summary', () => {
       '2026-06-07': 2,
       '2026-06-08': 1,
     });
+  });
+
+  it('같은 날 여러 번 풀어도 주간 학습일은 1일로 계산한다', () => {
+    const solvedDates = getSolvedDates([
+      attempt('2026-06-15T01:00:00.000Z'),
+      attempt('2026-06-15T02:00:00.000Z'),
+      attempt('2026-06-16T01:00:00.000Z'),
+    ]);
+
+    expect(
+      countSolvedDatesInWeek(
+        [
+          { date: '2026-06-15' },
+          { date: '2026-06-16' },
+          { date: '2026-06-17' },
+          { date: '2026-06-18' },
+          { date: '2026-06-19' },
+          { date: '2026-06-20' },
+          { date: '2026-06-21' },
+        ],
+        solvedDates,
+      ),
+    ).toBe(2);
   });
 });

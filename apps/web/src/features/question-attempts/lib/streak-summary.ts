@@ -49,3 +49,10 @@ export function countAttemptsByDate(questionAttempts: QuestionAttempt[]) {
     {},
   );
 }
+
+export function countSolvedDatesInWeek(
+  week: Array<{ date: string }>,
+  solvedDates: Set<string>,
+) {
+  return week.filter(({ date }) => solvedDates.has(date)).length;
+}

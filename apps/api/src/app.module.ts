@@ -25,6 +25,7 @@ import { QuestionReportsModule } from './modules/question-reports/question-repor
 import { QuestionsModule } from './modules/questions/questions.module';
 import { ReviewModule } from './modules/review/review.module';
 import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
+import { StudyWeeklyGoalsModule } from './modules/study-weekly-goals/study-weekly-goals.module';
 import { TagsModule } from './modules/tags/tags.module';
 
 @Module({
@@ -65,6 +66,7 @@ import { TagsModule } from './modules/tags/tags.module';
     QuestionsModule,
     ReviewModule,
     LibraryModule,
+    StudyWeeklyGoalsModule,
   ],
   controllers: [HealthController],
   providers: [

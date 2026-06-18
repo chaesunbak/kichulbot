@@ -100,6 +100,7 @@ model User {
   questionNotes           QuestionNote[]
   questionReports         QuestionReport[]         @relation("QuestionReportReporter")
   reviewedQuestionReports QuestionReport[]         @relation("QuestionReportReviewer")
+  studyWeeklyGoals        StudyWeeklyGoal[]
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
 }
@@ -527,6 +528,19 @@ model QuestionAttempt {
   @@index([userId, questionRevisionId, gradedAt])
   @@index([userId, gradedAt])
   @@index([sessionItemId])
+}
+
+model StudyWeeklyGoal {
+  id                     String   @id @default(cuid())
+  userId                 String
+  effectiveWeekStartDate DateTime @db.Date
+  targetDays             Int
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([userId, effectiveWeekStartDate])
+  @@index([userId, effectiveWeekStartDate])
 }
 
 model QuestionTag {

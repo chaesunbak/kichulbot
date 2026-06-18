@@ -10,5 +10,6 @@ export * from './question-attempts/index.js';
 export * from './question-reports/index.js';
 export * from './questions/index.js';
 export * from './review/index.js';
+export * from './study-weekly-goals/index.js';
 export * from './tags/index.js';
 export * from './taxonomy/index.js';

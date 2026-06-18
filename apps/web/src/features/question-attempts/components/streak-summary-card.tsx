@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { getCurrentWeek } from '@/features/question-attempts/lib/streak-date';
 import {
+  countSolvedDatesInWeek,
   getCurrentStreakDays,
   getLongestStreakDays,
   getSolvedDates,
@@ -14,12 +15,14 @@ import { cn } from '@/shared/lib/utils';
 interface StreakSummaryCardProps {
   countsByDate: Record<string, number>;
   questionAttempts: QuestionAttempt[];
+  targetDays: number;
   totalDaysInMonth: number;
 }
 
 export function StreakSummaryCard({
   countsByDate,
   questionAttempts,
+  targetDays,
   totalDaysInMonth,
 }: StreakSummaryCardProps) {
   const currentWeek = getCurrentWeek();
@@ -32,37 +35,39 @@ export function StreakSummaryCard({
   const monthlySolvedDays = Object.values(countsByDate).filter(
     (count) => count > 0,
   ).length;
-  const weekdaySolvedDays = currentWeek.week
-    .slice(0, 5)
-    .filter(({ date }) => solvedDates.has(date)).length;
-  const weeklyGoalDays = 5;
-  const weeklyRate = Math.round((weekdaySolvedDays / weeklyGoalDays) * 100);
+  const weeklySolvedDays = countSolvedDatesInWeek(
+    currentWeek.week,
+    solvedDates,
+  );
+  const weeklyRate = Math.round((weeklySolvedDays / targetDays) * 100);
 
   return (
     <Card className="rounded-3xl">
       <CardContent
         className="
-          grid gap-4
-          sm:grid-cols-3 sm:gap-0
+          grid grid-cols-3 gap-0
+          px-2 sm:px-6
         "
       >
         <SummaryItem
-          icon={<Flame className="size-5 fill-orange-500 text-orange-500" />}
+          icon={
+            <Flame className="size-4 shrink-0 fill-orange-500 text-orange-500 sm:size-5" />
+          }
           label="현재 연속 학습"
-          value={`연속 ${currentStreakDays}일`}
+          value={`${currentStreakDays}일`}
           description={`최고 기록 ${longestStreakDays}일`}
         />
         <SummaryItem
-          className="border-t pt-4 sm:border-t-0 sm:border-l sm:pt-0"
+          className="border-l"
           label="이번 달 연속 학습일"
           value={`${monthlySolvedDays}일`}
           description={`총 ${totalDaysInMonth}일 중`}
         />
         <SummaryItem
-          className="border-t pt-4 sm:border-t-0 sm:border-l sm:pt-0"
+          className="border-l"
           label="주간 달성률"
           value={`${weeklyRate}%`}
-          description={`${weekdaySolvedDays} / ${weeklyGoalDays}일 달성`}
+          description={`${weeklySolvedDays} / ${targetDays}일 달성`}
         />
       </CardContent>
     </Card>
@@ -86,14 +91,21 @@ function SummaryItem({
 }: SummaryItemProps) {
   return (
     <div
-      className={cn('flex flex-col items-center gap-2 text-center', className)}
+      className={cn(
+        'flex min-w-0 flex-col items-center gap-1 text-center sm:gap-2',
+        className,
+      )}
     >
-      <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+      <div className="flex min-h-8 items-center justify-center gap-0.5 text-[11px] leading-tight font-semibold text-muted-foreground sm:gap-1 sm:text-xs">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="text-2xl font-bold text-foreground">{value}</div>
-      <div className="text-xs text-muted-foreground">{description}</div>
+      <div className="text-2xl leading-none font-bold text-foreground sm:text-2xl">
+        {value}
+      </div>
+      <div className="text-[11px] whitespace-nowrap text-muted-foreground sm:text-xs">
+        {description}
+      </div>
     </div>
   );
 }

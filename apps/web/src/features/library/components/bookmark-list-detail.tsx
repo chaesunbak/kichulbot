@@ -2,18 +2,18 @@
 
 import { Button } from '@kichulbot/ui/components/ui/button';
 import { toast } from '@kichulbot/ui/components/ui/sonner';
-import { Play, Trash2 } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { overlay } from 'overlay-kit';
 import { useState } from 'react';
 
 import { createBookmarkListSolveSession } from '@/features/learning/api/client/mutations';
-import { QuestionNoteButton } from '@/features/learning/components/question-note-button';
 import { SolveModeDialog } from '@/features/learning/components/solve-mode-dialog';
 import type { BookmarkList, SolveMode } from '@/features/learning/types';
 import { removeQuestionFromBookmarkList } from '@/features/library/api/client/mutations';
 import { PageTitle } from '@/shared/components/page-title';
 
+import { BookmarkListItem } from './bookmark-list-item';
 import { DeleteBookmarkListButton } from './delete-bookmark-list-button';
 import { RenameBookmarkListButton } from './rename-bookmark-list-button';
 
@@ -117,48 +117,12 @@ export function BookmarkListDetail({
       ) : (
         <ul className="mt-6 grid gap-5">
           {questions.map((question) => (
-            <li key={question.id} className="rounded-xl border bg-card p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-semibold text-foreground">
-                    {question.paper.title} {question.number}번
-                  </h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {question.paper.examName} · {question.paper.year}학년도
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <QuestionNoteButton questionId={question.id} />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isStarting || isDeleting}
-                    onClick={() => void removeQuestion(question.id)}
-                  >
-                    <Trash2 />
-                    제거
-                  </Button>
-                </div>
-              </div>
-              {question.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={question.imageUrl}
-                  alt={`${question.paper.title} ${question.number}번 문제`}
-                  className="mt-4 max-h-140 w-full rounded-lg object-contain"
-                />
-              ) : (
-                <p
-                  className="
-                    mt-4 rounded-lg bg-muted px-4 py-10 text-center text-sm
-                    text-muted-foreground
-                  "
-                >
-                  문제 이미지가 없습니다.
-                </p>
-              )}
-            </li>
+            <BookmarkListItem
+              key={question.id}
+              disabled={isStarting || isDeleting}
+              question={question}
+              onRemove={(questionId) => void removeQuestion(questionId)}
+            />
           ))}
         </ul>
       )}

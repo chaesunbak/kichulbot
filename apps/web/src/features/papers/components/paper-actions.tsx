@@ -1,4 +1,4 @@
-import { PaperBookmarkButton } from '@/features/papers/components/paper-bookmark-button';
+import { AddToLibraryButton } from '@/features/papers/components/add-to-library-button';
 import { PaperSolveButton } from '@/features/papers/components/paper-solve-button';
 
 export function PaperActions({
@@ -19,7 +19,7 @@ export function PaperActions({
         questionCount={questionCount}
         isAuthenticated={isAuthenticated}
       />
-      <PaperBookmarkButton
+      <AddToLibraryButton
         paperId={paperId}
         initialIsInLibrary={initialIsInLibrary}
         isAuthenticated={isAuthenticated}

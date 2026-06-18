@@ -13,7 +13,7 @@ import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 
 const MIN_ADDING_DURATION_MS = 400;
 
-export function PaperBookmarkButton({
+export function AddToLibraryButton({
   paperId,
   initialIsInLibrary = false,
   isAuthenticated = false,

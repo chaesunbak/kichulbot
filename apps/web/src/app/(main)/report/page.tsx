@@ -13,14 +13,19 @@ import { PageTitle } from '@/shared/components/page-title';
 
 export default async function ReportPage() {
   const analysisRange = getRecentStreakRange(90);
-  let data: Awaited<ReturnType<typeof loadReportPageData>>;
+  let logs: Awaited<ReturnType<typeof getSolveSessionLogs>>;
+  let questionAttempts: Awaited<ReturnType<typeof getQuestionAttempts>>;
   try {
-    data = await loadReportPageData(analysisRange);
+    [logs, questionAttempts] = await Promise.all([
+      getSolveSessionLogs(),
+      getQuestionAttempts(analysisRange.from, analysisRange.to, {
+        includeTags: true,
+      }),
+    ]);
   } catch (error) {
     redirectToLoginIfUnauthorized(error, '/report');
     throw error;
   }
-  const { logs, questionAttempts } = data;
   const completedLogs = logs.filter(isCompletedLog);
   const trendPoints = getRecapTrendPoints(completedLogs);
   const weaknessGroups = getRecapWeaknessGroups(questionAttempts);
@@ -31,16 +36,6 @@ export default async function ReportPage() {
       <RecapTrendSection data={trendPoints} weaknessGroups={weaknessGroups} />
     </PageContainer>
   );
-}
-
-async function loadReportPageData(analysisRange: { from: string; to: string }) {
-  const [logs, questionAttempts] = await Promise.all([
-    getSolveSessionLogs(),
-    getQuestionAttempts(analysisRange.from, analysisRange.to, {
-      includeTags: true,
-    }),
-  ]);
-  return { logs, questionAttempts };
 }
 
 type CompletedSolveSessionLog = SolveSessionLog & {

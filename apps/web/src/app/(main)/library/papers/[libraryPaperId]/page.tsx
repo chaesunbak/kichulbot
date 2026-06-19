@@ -18,14 +18,14 @@ export default async function LibraryPaperPage({
 }) {
   const { libraryPaperId } = await params;
 
-  let data: Awaited<ReturnType<typeof loadLibraryPaperPageData>>;
+  let library: Awaited<ReturnType<typeof getLibrary>>;
+  let logs: Awaited<ReturnType<typeof getSolveSessionLogs>>;
   try {
-    data = await loadLibraryPaperPageData();
+    [library, logs] = await Promise.all([getLibrary(), getSolveSessionLogs()]);
   } catch (error) {
     redirectToLoginIfUnauthorized(error, `/library/papers/${libraryPaperId}`);
     throw error;
   }
-  const { library, logs } = data;
   const libraryPaper = library.papers.find(
     (item) => item.id === libraryPaperId,
   );
@@ -66,14 +66,6 @@ export default async function LibraryPaperPage({
       <PaperSolveHistorySection logs={logs} paperId={paper.id} />
     </PageContainer>
   );
-}
-
-async function loadLibraryPaperPageData() {
-  const [library, logs] = await Promise.all([
-    getLibrary(),
-    getSolveSessionLogs(),
-  ]);
-  return { library, logs };
 }
 
 function getFolderPath(folders: LibraryFolder[], folderId: string | null) {

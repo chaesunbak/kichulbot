@@ -8,9 +8,13 @@ import { LibraryManager } from '@/features/library/components/library-manager';
 import { PageContainer } from '@/shared/components/page-container';
 
 export default async function LibraryPage() {
-  let data: Awaited<ReturnType<typeof loadLibraryPageData>>;
+  let library: Awaited<ReturnType<typeof getLibrary>>;
+  let bookmarkLists: Awaited<ReturnType<typeof getBookmarkLists>>;
   try {
-    data = await loadLibraryPageData();
+    [library, bookmarkLists] = await Promise.all([
+      getLibrary(),
+      getBookmarkLists(),
+    ]);
   } catch (error) {
     redirectToLoginIfUnauthorized(error, '/library');
     throw error;
@@ -18,16 +22,8 @@ export default async function LibraryPage() {
 
   return (
     <PageContainer>
-      <LibraryManager initialLibrary={data.library} />
-      <BookmarkListManager initialBookmarkLists={data.bookmarkLists} />
+      <LibraryManager initialLibrary={library} />
+      <BookmarkListManager initialBookmarkLists={bookmarkLists} />
     </PageContainer>
   );
-}
-
-async function loadLibraryPageData() {
-  const [library, bookmarkLists] = await Promise.all([
-    getLibrary(),
-    getBookmarkLists(),
-  ]);
-  return { library, bookmarkLists };
 }

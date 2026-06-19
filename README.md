@@ -71,7 +71,7 @@ pnpm -F extractor dev
 
 ## 시딩
 
-관리자 계정과 extractor 서비스 계정 생성을 위해 시딩을 진행합니다. `PAPER_IMPORT_SERVICE_TOKEN`을 바꾸거나 서비스 계정 scope가 변경된 경우에도 다시 실행합니다.
+관리자 계정과 extractor 서비스 계정 생성을 위해 시딩을 진행합니다.
 
 ```bash
 pnpm db:seed
@@ -141,6 +141,6 @@ pnpm db:seed
 
 ## 하네스 엔지니어링
 
-- 심볼릭 링크를 사용하여 claude code, codex 등 어떤 툴을 사용하더라도 같은 하네스가 적용되도록 합니다.
+- claude code, codex 등 어떤 툴을 사용하더라도 같은 하네스가 적용되도록 합니다.
 - 필요하면 프로젝트에 추가하여 공용으로 사용합니다
 - `AGENTS.md`는 200줄 이하로 유지합니다.

@@ -72,52 +72,49 @@ export class QuestionsRepository {
         }
       }
 
-      return tx.question
-        .update({
-          where: { id },
-          data,
-          include: { paper: true },
-        })
-        .then(async (question) => {
-          const latestRevision = await tx.questionRevision.findFirst({
-            where: { questionId: id },
-            orderBy: { revision: 'desc' },
-          });
-          const revision = await this.createRevisionIfChanged(
-            tx,
-            question,
-            latestRevision,
-          );
+      const question = await tx.question.update({
+        where: { id },
+        data,
+        include: { paper: true },
+      });
+      const latestRevision = await tx.questionRevision.findFirst({
+        where: { questionId: id },
+        orderBy: { revision: 'desc' },
+      });
+      const revision = await this.createRevisionIfChanged(
+        tx,
+        question,
+        latestRevision,
+      );
 
-          if (revision && latestRevision) {
-            await tx.questionSetItem.updateMany({
-              where: {
-                questionRevisionId: latestRevision.id,
-                questionSet: { kind: QuestionSetKind.OFFICIAL_PAPER },
-              },
-              data: { questionRevisionId: revision.id },
-            });
-          }
-          if (!revision && latestRevision) {
-            await this.updateLatestRevisionMetadata(
-              tx,
-              latestRevision.id,
-              question,
-            );
-          }
-          await tx.questionSetItem.updateMany({
-            where: {
-              questionRevision: { questionId: id },
-              questionSet: { kind: QuestionSetKind.OFFICIAL_PAPER },
-            },
-            data: { position: question.number },
-          });
-
-          return tx.question.findUniqueOrThrow({
-            where: { id },
-            include: this.questionIncludes(),
-          });
+      if (revision && latestRevision) {
+        await tx.questionSetItem.updateMany({
+          where: {
+            questionRevisionId: latestRevision.id,
+            questionSet: { kind: QuestionSetKind.OFFICIAL_PAPER },
+          },
+          data: { questionRevisionId: revision.id },
         });
+      }
+      if (!revision && latestRevision) {
+        await this.updateLatestRevisionMetadata(
+          tx,
+          latestRevision.id,
+          question,
+        );
+      }
+      await tx.questionSetItem.updateMany({
+        where: {
+          questionRevision: { questionId: id },
+          questionSet: { kind: QuestionSetKind.OFFICIAL_PAPER },
+        },
+        data: { position: question.number },
+      });
+
+      return tx.question.findUniqueOrThrow({
+        where: { id },
+        include: this.questionIncludes(),
+      });
     });
   }
 

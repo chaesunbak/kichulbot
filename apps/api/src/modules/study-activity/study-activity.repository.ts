@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import type { Prisma } from '../../infrastructure/database/prisma-client';
 
 @Injectable()
 export class StudyActivityRepository {
@@ -10,18 +11,7 @@ export class StudyActivityRepository {
     return this.db.solveSession.findMany({
       where: {
         userId,
-        OR: [
-          { submittedAt: { gte: from, lt: toExclusive } },
-          {
-            items: {
-              some: {
-                draft: {
-                  is: { updatedAt: { gte: from, lt: toExclusive } },
-                },
-              },
-            },
-          },
-        ],
+        ...this.activityRangeWhere(from, toExclusive),
       },
       select: {
         items: {
@@ -37,20 +27,7 @@ export class StudyActivityRepository {
 
   findActivityUsers(from: Date, toExclusive: Date) {
     return this.db.solveSession.findMany({
-      where: {
-        OR: [
-          { submittedAt: { gte: from, lt: toExclusive } },
-          {
-            items: {
-              some: {
-                draft: {
-                  is: { updatedAt: { gte: from, lt: toExclusive } },
-                },
-              },
-            },
-          },
-        ],
-      },
+      where: this.activityRangeWhere(from, toExclusive),
       distinct: ['userId'],
       select: { userId: true },
     });
@@ -75,5 +52,22 @@ export class StudyActivityRepository {
       },
       select: { updatedAt: true },
     });
+  }
+
+  private activityRangeWhere(from: Date, toExclusive: Date) {
+    return {
+      OR: [
+        { submittedAt: { gte: from, lt: toExclusive } },
+        {
+          items: {
+            some: {
+              draft: {
+                is: { updatedAt: { gte: from, lt: toExclusive } },
+              },
+            },
+          },
+        },
+      ],
+    } satisfies Prisma.SolveSessionWhereInput;
   }
 }

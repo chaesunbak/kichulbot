@@ -22,10 +22,10 @@ export class UsersRepository {
       data: {
         email: null,
         nickname: data.nickname,
-        signupMethod: SignupMethod.KAKAO,
+        signupMethod: this.toSignupMethod(data.provider),
         role: UserRole.USER,
         questionSets: {
-          create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
+          create: this.defaultBookmarkQuestionSetCreate(),
         },
         oauthAccounts: {
           create: {
@@ -52,7 +52,7 @@ export class UsersRepository {
         signupMethod: SignupMethod.EMAIL,
         role: UserRole.USER,
         questionSets: {
-          create: { kind: QuestionSetKind.CUSTOM, title: '기본 북마크' },
+          create: this.defaultBookmarkQuestionSetCreate(),
         },
       },
       include: { oauthAccounts: true },
@@ -325,5 +325,23 @@ export class UsersRepository {
     return Array.isArray(error.meta?.target)
       ? error.meta.target.includes(target)
       : error.meta?.target === target;
+  }
+
+  private defaultBookmarkQuestionSetCreate() {
+    return {
+      kind: QuestionSetKind.CUSTOM,
+      title: '기본 북마크',
+    } satisfies Prisma.QuestionSetCreateWithoutOwnerInput;
+  }
+
+  private toSignupMethod(provider: OAuthProvider): SignupMethod {
+    switch (provider) {
+      case OAuthProvider.KAKAO:
+        return SignupMethod.KAKAO;
+      default: {
+        const exhaustiveCheck: never = provider;
+        return exhaustiveCheck;
+      }
+    }
   }
 }

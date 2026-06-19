@@ -70,25 +70,25 @@ export class BookmarksRepository {
 
   addQuestion(bookmarkListId: string, questionId: string) {
     return this.db.$transaction(async (tx) => {
-      const revision = await tx.questionRevision.findFirstOrThrow({
+      const latestRevision = await tx.questionRevision.findFirstOrThrow({
         where: { questionId },
         orderBy: { revision: 'desc' },
       });
-      const existing = await tx.questionSetItem.findFirst({
+      const existingItem = await tx.questionSetItem.findFirst({
         where: {
           questionSetId: bookmarkListId,
           questionRevision: { questionId },
         },
       });
-      if (existing) {
+      if (existingItem) {
         return tx.questionSetItem.update({
           where: {
             questionSetId_questionRevisionId: {
               questionSetId: bookmarkListId,
-              questionRevisionId: existing.questionRevisionId,
+              questionRevisionId: existingItem.questionRevisionId,
             },
           },
-          data: { questionRevisionId: revision.id },
+          data: { questionRevisionId: latestRevision.id },
           select: this.questionSetItemSelect(),
         });
       }
@@ -100,7 +100,7 @@ export class BookmarksRepository {
       return tx.questionSetItem.create({
         data: {
           questionSetId: bookmarkListId,
-          questionRevisionId: revision.id,
+          questionRevisionId: latestRevision.id,
           position: (_max.position ?? 0) + 1,
         },
         select: this.questionSetItemSelect(),

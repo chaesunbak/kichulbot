@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import type { Prisma } from '../../infrastructure/database/prisma-client';
 import type { PublicExamPaperOverviewRow } from './exams.types';
 
 interface ExamCreateData {
@@ -44,7 +45,7 @@ const examInclude = {
       },
     },
   },
-};
+} satisfies Prisma.ExamInclude;
 
 @Injectable()
 export class ExamsRepository {
@@ -75,7 +76,7 @@ export class ExamsRepository {
         const paperWhere = {
           isPublished: true,
           examSession: { examId: exam.id },
-        };
+        } satisfies Prisma.PaperWhereInput;
         const [paperCount, papers] = await Promise.all([
           this.db.paper.count({ where: paperWhere }),
           this.db.paper.findMany({

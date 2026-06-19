@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import type { Prisma } from '../../infrastructure/database/prisma-client';
 
 @Injectable()
 export class LibraryRepository {
@@ -120,6 +121,6 @@ export class LibraryRepository {
           examSession: { include: { exam: true } },
         },
       },
-    };
+    } satisfies Prisma.UserPaperInclude;
   }
 }

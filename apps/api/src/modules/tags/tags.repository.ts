@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
-import { Prisma } from '../../infrastructure/database/prisma-client';
+import type { Prisma } from '../../infrastructure/database/prisma-client';
 
 const tagInclude = {
   tagGroup: true,
   _count: {
     select: { questions: true },
   },
-};
+} satisfies Prisma.TagInclude;
 
 const tagGroupInclude = {
   _count: {
     select: { tags: true },
   },
-};
+} satisfies Prisma.TagGroupInclude;
 
 @Injectable()
 export class TagsRepository {

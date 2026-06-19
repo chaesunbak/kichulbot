@@ -136,8 +136,8 @@ describe('ReviewService', () => {
     service = new ReviewService(repository, solveSessionsService);
   });
 
-  it('조회 시 최신 오답 세트를 갱신하고 누락 문항을 반환한다', async () => {
-    repository.regenerate.mockResolvedValue(questionSet as never);
+  it('조회 시 기존 오답 세트를 반환한다', async () => {
+    repository.findByStudyDate.mockResolvedValue(questionSet as never);
 
     const response = await service.getByStudyDate('user_1', '2026-06-01');
 
@@ -146,10 +146,20 @@ describe('ReviewService', () => {
       sourceOutcome: 'OMITTED',
       paper: { title: '2025학년도 수능 한국사' },
     });
-    expect(repository.regenerate).toHaveBeenCalledWith(
+    expect(repository.findByStudyDate).toHaveBeenCalledWith(
       'user_1',
       expect.any(Date),
     );
+    expect(repository.regenerate).not.toHaveBeenCalled();
+  });
+
+  it('조회 시 기존 오답 세트가 없으면 null을 반환한다', async () => {
+    repository.findByStudyDate.mockResolvedValue(null);
+
+    const response = await service.getByStudyDate('user_1', '2026-06-01');
+
+    expect(response.questionSet).toBeNull();
+    expect(repository.regenerate).not.toHaveBeenCalled();
   });
 
   it('요청한 학습일 기준으로 오답 세트를 생성한다', async () => {

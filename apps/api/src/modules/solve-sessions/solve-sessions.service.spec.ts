@@ -129,6 +129,42 @@ const session = {
   },
   items: [sessionItem],
 };
+const logSession = {
+  id: session.id,
+  mode: session.mode,
+  paperId: session.paperId,
+  sourceSetId: session.sourceSetId,
+  submittedAt: null,
+  createdAt: session.createdAt,
+  updatedAt: session.updatedAt,
+  paper: {
+    id: paper.id,
+    title: paper.title,
+    questionCount: paper.questionCount,
+    examSession: {
+      displayYear: examSession.displayYear,
+      month: examSession.month,
+      grade: examSession.grade,
+      round: examSession.round,
+      exam: {
+        id: exam.id,
+        name: exam.name,
+      },
+    },
+  },
+  sourceSet: {
+    title: session.sourceSet.title,
+  },
+  items: [
+    {
+      draft: null,
+      attempts: [],
+      questionRevision: {
+        points: questionRevision.points,
+      },
+    },
+  ],
+};
 const correctDraft = {
   sessionItemId: sessionItem.id,
   answerChoice: 3,
@@ -282,8 +318,27 @@ describe('SolveSessionsService', () => {
     });
   });
 
-  it('페이징된 풀이 기록을 반환한다', async () => {
-    repository.findLogs.mockResolvedValue({ sessions: [session], total: 1 });
+  it('페이징된 제출 완료 풀이 기록을 반환한다', async () => {
+    repository.findLogs.mockResolvedValue({
+      sessions: [
+        {
+          ...logSession,
+          submittedAt: now,
+          items: [
+            {
+              draft: {
+                answerChoice: correctDraft.answerChoice,
+                answerText: correctDraft.answerText,
+                spentMilliseconds: correctDraft.spentMilliseconds,
+              },
+              attempts: [{ outcome: AttemptOutcome.CORRECT }],
+              questionRevision: { points: questionRevision.points },
+            },
+          ],
+        },
+      ],
+      total: 1,
+    });
 
     const response = await service.listLogs('user_1', {
       status: 'completed',
@@ -293,6 +348,25 @@ describe('SolveSessionsService', () => {
 
     expect(response.logs).toHaveLength(1);
     expect(response.logs[0].id).toBe(session.id);
+    expect(response.logs[0].paper).toMatchObject({
+      id: paper.id,
+      title: paper.title,
+      questionCount: 20,
+      exam: { id: exam.id, name: exam.name },
+    });
+    expect(response.logs[0].progress).toEqual({
+      answeredCount: 1,
+      totalCount: 1,
+      percent: 100,
+    });
+    expect(response.logs[0].result).toMatchObject({
+      score: 5,
+      totalCount: 1,
+      answeredCount: 1,
+      correctCount: 1,
+      wrongCount: 0,
+      totalSpentMilliseconds: 1000,
+    });
     expect(response.total).toBe(1);
     expect(response.page).toBe(2);
     expect(response.limit).toBe(5);
@@ -301,6 +375,75 @@ describe('SolveSessionsService', () => {
       status: 'completed',
       page: 2,
       limit: 5,
+    });
+  });
+
+  it('풀이 중 기록은 드래프트 기준 진행률과 풀이 시간을 반환한다', async () => {
+    repository.findLogs.mockResolvedValue({
+      sessions: [
+        {
+          ...logSession,
+          items: [
+            {
+              draft: {
+                answerChoice: 2,
+                answerText: null,
+                spentMilliseconds: 1500,
+              },
+              attempts: [],
+              questionRevision: { points: questionRevision.points },
+            },
+            {
+              draft: null,
+              attempts: [],
+              questionRevision: { points: questionRevision.points },
+            },
+          ],
+        },
+      ],
+      total: 1,
+    });
+
+    const response = await service.listLogs('user_1');
+
+    expect(response.logs[0].result).toBeNull();
+    expect(response.logs[0].progress).toEqual({
+      answeredCount: 1,
+      totalCount: 2,
+      percent: 50,
+    });
+    expect(response.logs[0].totalSpentMilliseconds).toBe(1500);
+  });
+
+  it('문제지 없는 풀이 기록은 오답 복습 fallback paper를 반환한다', async () => {
+    repository.findLogs.mockResolvedValue({
+      sessions: [
+        {
+          ...logSession,
+          paperId: null,
+          sourceSetId: 'daily_wrong_1',
+          paper: null,
+          sourceSet: { title: '2026년 6월 1일 오늘의 오답' },
+        },
+      ],
+      total: 1,
+    });
+
+    const response = await service.listLogs('user_1');
+
+    expect(response.logs[0].paper).toEqual({
+      id: 'daily_wrong_1',
+      title: '2026년 6월 1일 오늘의 오답',
+      year: 2026,
+      month: null,
+      grade: null,
+      round: null,
+      questionCount: 1,
+      isInLibrary: false,
+      exam: {
+        id: 'wrong-review',
+        name: '오답 복습',
+      },
     });
   });
 

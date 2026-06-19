@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
-import { QuestionSetKind } from '../../infrastructure/database/prisma-client';
+import {
+  AttemptOutcome,
+  QuestionSetKind,
+} from '../../infrastructure/database/prisma-client';
 
 @Injectable()
 export class RecapRepository {
@@ -55,4 +58,24 @@ export class RecapRepository {
       },
     });
   }
+
+  findLatestQuestionAttemptOutcomes(userId: string) {
+    return this.db.questionAttempt.findMany({
+      where: { userId },
+      orderBy: [{ gradedAt: 'desc' }, { id: 'desc' }],
+      select: {
+        outcome: true,
+        questionRevision: {
+          select: { questionId: true },
+        },
+      },
+    });
+  }
 }
+
+export type LatestQuestionAttemptOutcome = {
+  outcome: AttemptOutcome;
+  questionRevision: {
+    questionId: string;
+  };
+};

@@ -9,6 +9,9 @@ import type { SolveSessionsRepository } from './solve-sessions.repository';
 export type SolveSessionRecord = NonNullable<
   Awaited<ReturnType<SolveSessionsRepository['findById']>>
 >;
+export type SolveSessionLogRecord = Awaited<
+  ReturnType<SolveSessionsRepository['findLogs']>
+>['sessions'][number];
 export type SolveSessionItemRecord = SolveSessionRecord['items'][number];
 export type DraftAnswerRecord = NonNullable<SolveSessionItemRecord['draft']>;
 export type AttemptRecord = SolveSessionItemRecord['attempts'][number];

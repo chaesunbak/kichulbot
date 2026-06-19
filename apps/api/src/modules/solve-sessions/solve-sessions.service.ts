@@ -34,6 +34,7 @@ import type {
   QuestionRevisionRecord,
   SolveSessionItemRecord,
   SolveSessionLogItem,
+  SolveSessionLogRecord,
   SolveSessionPayload,
   SolveSessionRecord,
   SolveSessionResultPayload,
@@ -299,18 +300,52 @@ export class SolveSessionsService {
   }
 
   private toSolveSessionLogItem(
-    session: SolveSessionRecord,
+    session: SolveSessionLogRecord,
   ): SolveSessionLogItem {
     return {
       id: session.id,
       mode: session.mode,
-      paper: this.toSessionPaperItem(session),
-      result: session.submittedAt ? this.toSessionResult(session) : null,
-      progress: this.toProgressPayload(session),
+      paper: this.toSessionLogPaperItem(session),
+      result: session.submittedAt ? this.toSessionLogResult(session) : null,
+      progress: this.toSessionLogProgressPayload(session),
       submittedAt: session.submittedAt?.toISOString() ?? null,
-      totalSpentMilliseconds: this.getTotalSpentMilliseconds(session),
+      totalSpentMilliseconds: this.getSessionLogTotalSpentMilliseconds(session),
       createdAt: session.createdAt.toISOString(),
       updatedAt: session.updatedAt.toISOString(),
+    };
+  }
+
+  private toSessionLogPaperItem(session: SolveSessionLogRecord) {
+    const { paper } = session;
+    if (!paper) {
+      return {
+        id: session.sourceSetId ?? session.id,
+        title: session.sourceSet?.title ?? '오답 복습',
+        year: session.createdAt.getUTCFullYear(),
+        month: null,
+        grade: null,
+        round: null,
+        questionCount: session.items.length,
+        isInLibrary: false,
+        exam: {
+          id: 'wrong-review',
+          name: '오답 복습',
+        },
+      };
+    }
+    return {
+      id: paper.id,
+      title: paper.title,
+      year: paper.examSession.displayYear,
+      month: paper.examSession.month,
+      grade: paper.examSession.grade,
+      round: paper.examSession.round,
+      questionCount: paper.questionCount,
+      isInLibrary: false,
+      exam: {
+        id: paper.examSession.exam.id,
+        name: paper.examSession.exam.name,
+      },
     };
   }
 
@@ -487,6 +522,57 @@ export class SolveSessionsService {
 
   private shouldCreateAttempts(session: SolveSessionRecord) {
     return session.sourceSet?.kind !== QuestionSetKind.DAILY_WRONG;
+  }
+
+  private getSessionLogTotalSpentMilliseconds(session: SolveSessionLogRecord) {
+    return session.items.reduce(
+      (total, item) => total + (item.draft?.spentMilliseconds ?? 0),
+      0,
+    );
+  }
+
+  private toSessionLogProgressPayload(session: SolveSessionLogRecord) {
+    const totalCount = session.items.length;
+    const answeredCount = session.items.filter((item) =>
+      this.hasAnswer(item.draft),
+    ).length;
+
+    return {
+      answeredCount,
+      totalCount,
+      percent:
+        totalCount === 0 ? 0 : Math.round((answeredCount / totalCount) * 100),
+    };
+  }
+
+  private toSessionLogResult(
+    session: SolveSessionLogRecord,
+  ): SolveSessionResultPayload {
+    const attempts = session.items
+      .map((item) => item.attempts.at(-1))
+      .filter((attempt): attempt is { outcome: AttemptOutcome } => !!attempt);
+    const answered = attempts.filter(
+      (attempt) => attempt.outcome !== AttemptOutcome.OMITTED,
+    );
+    const correctCount = attempts.filter(
+      (attempt) => attempt.outcome === AttemptOutcome.CORRECT,
+    ).length;
+    const totalCount = session.items.length;
+    const score = session.items.reduce((total, item) => {
+      const latestAttempt = item.attempts.at(-1);
+      return latestAttempt?.outcome === AttemptOutcome.CORRECT
+        ? total + item.questionRevision.points
+        : total;
+    }, 0);
+
+    return {
+      score,
+      totalCount,
+      answeredCount: answered.length,
+      correctCount,
+      wrongCount: totalCount - correctCount,
+      totalSpentMilliseconds: this.getSessionLogTotalSpentMilliseconds(session),
+    };
   }
 
   private getTotalSpentMilliseconds(session: SolveSessionRecord) {

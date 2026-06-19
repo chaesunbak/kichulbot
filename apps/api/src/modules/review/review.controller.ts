@@ -41,7 +41,7 @@ export class ReviewController {
   @Get()
   @ApiOperation({ summary: '날짜별 최신 오답 세트 조회' })
   @ApiOkResponse({
-    description: 'studyDate 기준 최신 오답 세트를 생성 또는 갱신해 반환합니다.',
+    description: 'studyDate 기준 오답 세트를 조회해 반환합니다.',
   })
   getByStudyDate(
     @CurrentUser() user: RequestUser,

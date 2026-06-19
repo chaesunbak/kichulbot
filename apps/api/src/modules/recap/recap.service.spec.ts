@@ -11,6 +11,7 @@ describe('RecapService', () => {
   beforeEach(() => {
     repository = {
       findDailyWrongQuestionSetSummary: jest.fn(),
+      findLatestQuestionAttemptOutcomes: jest.fn(),
       findSubmittedSolveSessions: jest.fn(),
       findUserTimezone: jest.fn(),
     } as unknown as jest.Mocked<RecapRepository>;
@@ -40,6 +41,24 @@ describe('RecapService', () => {
       generated: { generatedAt },
       _count: { items: 3 },
     });
+    repository.findLatestQuestionAttemptOutcomes.mockResolvedValue([
+      {
+        outcome: AttemptOutcome.CORRECT,
+        questionRevision: { questionId: 'question_1' },
+      },
+      {
+        outcome: AttemptOutcome.INCORRECT,
+        questionRevision: { questionId: 'question_2' },
+      },
+      {
+        outcome: AttemptOutcome.OMITTED,
+        questionRevision: { questionId: 'question_3' },
+      },
+      {
+        outcome: AttemptOutcome.INCORRECT,
+        questionRevision: { questionId: 'question_1' },
+      },
+    ]);
 
     const response = await service.getSummary(
       'user_1',
@@ -66,7 +85,7 @@ describe('RecapService', () => {
       },
       wrongReview: {
         questionSetId: 'daily_wrong_1',
-        questionCount: 3,
+        questionCount: 2,
         generatedAt: generatedAt.toISOString(),
       },
     });
@@ -76,6 +95,7 @@ describe('RecapService', () => {
     repository.findUserTimezone.mockResolvedValue({ timezone: 'Asia/Seoul' });
     repository.findSubmittedSolveSessions.mockResolvedValue([]);
     repository.findDailyWrongQuestionSetSummary.mockResolvedValue(null);
+    repository.findLatestQuestionAttemptOutcomes.mockResolvedValue([]);
 
     const response = await service.getSummary(
       'user_1',
@@ -99,6 +119,33 @@ describe('RecapService', () => {
     });
   });
 
+  it('오답 세트가 없어도 최신 오답 후보 개수를 반환한다', async () => {
+    repository.findUserTimezone.mockResolvedValue({ timezone: 'Asia/Seoul' });
+    repository.findSubmittedSolveSessions.mockResolvedValue([]);
+    repository.findDailyWrongQuestionSetSummary.mockResolvedValue(null);
+    repository.findLatestQuestionAttemptOutcomes.mockResolvedValue([
+      {
+        outcome: AttemptOutcome.INCORRECT,
+        questionRevision: { questionId: 'question_1' },
+      },
+      {
+        outcome: AttemptOutcome.CORRECT,
+        questionRevision: { questionId: 'question_2' },
+      },
+    ]);
+
+    const response = await service.getSummary(
+      'user_1',
+      new Date('2026-06-19T03:00:00.000Z'),
+    );
+
+    expect(response.wrongReview).toEqual({
+      questionSetId: null,
+      questionCount: 1,
+      generatedAt: null,
+    });
+  });
+
   it('사용자를 찾을 수 없으면 예외를 던진다', async () => {
     repository.findUserTimezone.mockResolvedValue(null);
 
@@ -107,5 +154,6 @@ describe('RecapService', () => {
     );
     expect(repository.findSubmittedSolveSessions).not.toHaveBeenCalled();
     expect(repository.findDailyWrongQuestionSetSummary).not.toHaveBeenCalled();
+    expect(repository.findLatestQuestionAttemptOutcomes).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ import type { GetRecapSummaryResponse } from '@kichulbot/api-contract/recap';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { AttemptOutcome } from '../../infrastructure/database/prisma-client';
+import type { LatestQuestionAttemptOutcome } from './recap.repository';
 import { RecapRepository } from './recap.repository';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -19,17 +20,22 @@ export class RecapService {
 
     const studyDate = this.toDateString(now, user.timezone);
     const { from, toExclusive } = this.toDateRange(studyDate, user.timezone);
-    const [sessions, wrongQuestionSet] = await Promise.all([
-      this.recapRepository.findSubmittedSolveSessions(
-        userId,
-        from,
-        toExclusive,
-      ),
-      this.recapRepository.findDailyWrongQuestionSetSummary(
-        userId,
-        this.toDateOnly(studyDate),
-      ),
-    ]);
+    const [sessions, wrongQuestionSet, latestAttemptOutcomes] =
+      await Promise.all([
+        this.recapRepository.findSubmittedSolveSessions(
+          userId,
+          from,
+          toExclusive,
+        ),
+        this.recapRepository.findDailyWrongQuestionSetSummary(
+          userId,
+          this.toDateOnly(studyDate),
+        ),
+        this.recapRepository.findLatestQuestionAttemptOutcomes(userId),
+      ]);
+    const wrongQuestionCount = this.countWrongReviewCandidates(
+      latestAttemptOutcomes,
+    );
 
     return {
       studyDate,
@@ -37,16 +43,30 @@ export class RecapService {
       wrongReview: wrongQuestionSet
         ? {
             questionSetId: wrongQuestionSet.id,
-            questionCount: wrongQuestionSet._count.items,
+            questionCount: wrongQuestionCount,
             generatedAt:
               wrongQuestionSet.generated?.generatedAt.toISOString() ?? null,
           }
         : {
             questionSetId: null,
-            questionCount: 0,
+            questionCount: wrongQuestionCount,
             generatedAt: null,
           },
     };
+  }
+
+  private countWrongReviewCandidates(attempts: LatestQuestionAttemptOutcome[]) {
+    const latestByQuestion = new Map<string, LatestQuestionAttemptOutcome>();
+    for (const attempt of attempts) {
+      const { questionId } = attempt.questionRevision;
+      if (!latestByQuestion.has(questionId)) {
+        latestByQuestion.set(questionId, attempt);
+      }
+    }
+
+    return [...latestByQuestion.values()].filter(
+      (attempt) => attempt.outcome !== AttemptOutcome.CORRECT,
+    ).length;
   }
 
   private toTodayStats(

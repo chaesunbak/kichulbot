@@ -178,7 +178,7 @@ export class SolveSessionsRepository {
     const [sessions, total] = await this.db.$transaction([
       this.db.solveSession.findMany({
         where,
-        include: this.sessionIncludes(),
+        select: this.sessionLogSelect(),
         orderBy: { updatedAt: 'desc' },
         skip,
         take: filters.limit,
@@ -301,6 +301,63 @@ export class SolveSessionsRepository {
         orderBy: { position: 'asc' as const },
       },
     } satisfies Prisma.SolveSessionInclude;
+  }
+
+  private sessionLogSelect() {
+    return {
+      id: true,
+      mode: true,
+      paperId: true,
+      sourceSetId: true,
+      submittedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      paper: {
+        select: {
+          id: true,
+          title: true,
+          questionCount: true,
+          examSession: {
+            select: {
+              displayYear: true,
+              month: true,
+              grade: true,
+              round: true,
+              exam: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      sourceSet: {
+        select: {
+          title: true,
+        },
+      },
+      items: {
+        select: {
+          draft: {
+            select: {
+              answerChoice: true,
+              answerText: true,
+              spentMilliseconds: true,
+            },
+          },
+          attempts: {
+            orderBy: { gradedAt: 'asc' as const },
+            select: { outcome: true },
+          },
+          questionRevision: {
+            select: { points: true },
+          },
+        },
+        orderBy: { position: 'asc' as const },
+      },
+    } satisfies Prisma.SolveSessionSelect;
   }
 
   private hasAnswer(answer?: {

@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation';
 import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import { getSolveSessionLogs } from '@/features/learning/api/server/queries';
 import { PaperSolveHistorySection } from '@/features/learning/components/paper-solve-history-section';
-import type { LibraryFolder } from '@/features/learning/types';
 import { getLibrary } from '@/features/library/api/server/queries';
 import { LibraryPaperActions } from '@/features/library/components/library-paper-actions';
+import { getLibraryFolderPath } from '@/features/library/lib/folder-path';
 import { PaperCover } from '@/features/papers/components/paper-cover-card';
 import { formatPaperSession } from '@/features/papers/lib/paper-labels';
 import { PageContainer } from '@/shared/components/page-container';
@@ -32,7 +32,10 @@ export default async function LibraryPaperPage({
   if (!libraryPaper) notFound();
 
   const { paper } = libraryPaper;
-  const folderLabel = getFolderPath(library.folders, libraryPaper.folderId);
+  const folderLabel = getLibraryFolderPath(
+    library.folders,
+    libraryPaper.folderId,
+  );
 
   return (
     <PageContainer>
@@ -66,15 +69,4 @@ export default async function LibraryPaperPage({
       <PaperSolveHistorySection logs={logs} paperId={paper.id} />
     </PageContainer>
   );
-}
-
-function getFolderPath(folders: LibraryFolder[], folderId: string | null) {
-  if (!folderId) return '루트';
-  const names: string[] = [];
-  let current = folders.find((folder) => folder.id === folderId);
-  while (current) {
-    names.unshift(current.name);
-    current = folders.find((folder) => folder.id === current?.parentId);
-  }
-  return names.length > 0 ? names.join(' / ') : '루트';
 }

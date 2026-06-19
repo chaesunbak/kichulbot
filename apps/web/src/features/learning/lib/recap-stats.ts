@@ -39,7 +39,18 @@ export type WrongReviewStats = {
   totalCount: number;
 };
 
+export type CompletedSolveSessionLog = SolveSessionLog & {
+  result: NonNullable<SolveSessionLog['result']>;
+  submittedAt: string;
+};
+
 const MAX_TREND_POINTS = 30;
+
+export function isCompletedSolveSessionLog(
+  log: SolveSessionLog,
+): log is CompletedSolveSessionLog {
+  return !!log.submittedAt && !!log.result;
+}
 
 export function getTodayStats(logs: SolveSessionLog[]): WrongReviewStats {
   const stats = logs.reduce(

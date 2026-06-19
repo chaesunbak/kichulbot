@@ -4,6 +4,7 @@ import {
   getRecapTrendPoints,
   getRecapWeaknessGroups,
   getTodayStats,
+  isCompletedSolveSessionLog,
 } from '@/features/learning/lib/recap-stats';
 import type { SolveSessionLog } from '@/features/learning/types';
 import type {
@@ -84,6 +85,27 @@ function attempt(
     ],
   };
 }
+
+describe('isCompletedSolveSessionLog', () => {
+  it('제출 시각과 결과가 모두 있는 로그만 완료로 판단한다', () => {
+    const result = {
+      score: 30,
+      totalCount: 5,
+      answeredCount: 4,
+      correctCount: 3,
+      wrongCount: 2,
+      totalSpentMilliseconds: 1000,
+    };
+
+    expect(
+      [
+        log('log-1', '2026-06-07T00:00:00.000Z', result),
+        log('log-2', null, result),
+        log('log-3', '2026-06-07T00:00:00.000Z', null),
+      ].filter(isCompletedSolveSessionLog),
+    ).toEqual([log('log-1', '2026-06-07T00:00:00.000Z', result)]);
+  });
+});
 
 describe('getTodayStats', () => {
   it('제출 결과가 있는 로그만 오늘 요약에 합산한다', () => {

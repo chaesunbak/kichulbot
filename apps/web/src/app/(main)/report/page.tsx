@@ -4,8 +4,8 @@ import { RecapTrendSection } from '@/features/learning/components/recap-trend-se
 import {
   getRecapTrendPoints,
   getRecapWeaknessGroups,
+  isCompletedSolveSessionLog,
 } from '@/features/learning/lib/recap-stats';
-import type { SolveSessionLog } from '@/features/learning/types';
 import { getQuestionAttempts } from '@/features/question-attempts/api/server/queries';
 import { getRecentStreakRange } from '@/features/question-attempts/lib/streak-date';
 import { PageContainer } from '@/shared/components/page-container';
@@ -26,7 +26,7 @@ export default async function ReportPage() {
     redirectToLoginIfUnauthorized(error, '/report');
     throw error;
   }
-  const completedLogs = logs.filter(isCompletedLog);
+  const completedLogs = logs.filter(isCompletedSolveSessionLog);
   const trendPoints = getRecapTrendPoints(completedLogs);
   const weaknessGroups = getRecapWeaknessGroups(questionAttempts);
 
@@ -36,13 +36,4 @@ export default async function ReportPage() {
       <RecapTrendSection data={trendPoints} weaknessGroups={weaknessGroups} />
     </PageContainer>
   );
-}
-
-type CompletedSolveSessionLog = SolveSessionLog & {
-  result: NonNullable<SolveSessionLog['result']>;
-  submittedAt: string;
-};
-
-function isCompletedLog(log: SolveSessionLog): log is CompletedSolveSessionLog {
-  return !!log.submittedAt && !!log.result;
 }

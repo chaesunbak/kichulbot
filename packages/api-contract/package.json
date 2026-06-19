@@ -16,6 +16,9 @@
       "question-attempts": [
         "dist/question-attempts/index.d.ts"
       ],
+      "study-activity": [
+        "dist/study-activity/index.d.ts"
+      ],
       "study-weekly-goals": [
         "dist/study-weekly-goals/index.d.ts"
       ],
@@ -71,6 +74,11 @@
       "types": "./dist/question-attempts/index.d.ts",
       "import": "./dist/question-attempts/index.js",
       "default": "./dist/question-attempts/index.js"
+    },
+    "./study-activity": {
+      "types": "./dist/study-activity/index.d.ts",
+      "import": "./dist/study-activity/index.js",
+      "default": "./dist/study-activity/index.js"
     },
     "./study-weekly-goals": {
       "types": "./dist/study-weekly-goals/index.d.ts",

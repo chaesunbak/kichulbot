@@ -1,5 +1,4 @@
 import * as z from 'zod';
-import { BooleanInputSchema } from '../common.js';
 import { QuestionAttemptResponseSchema } from './dto.js';
 
 export const ListQuestionAttemptsResponseSchema = z.object({

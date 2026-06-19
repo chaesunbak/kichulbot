@@ -5,6 +5,7 @@ import {
   Prisma,
   QuestionSetKind,
 } from '../../infrastructure/database/prisma-client';
+import { findBookmarkedQuestionIds } from '../shared/repository/bookmarked-question-ids';
 
 interface CreatePaperInput {
   title: string;
@@ -96,26 +97,7 @@ export class PapersRepository {
   }
 
   async findBookmarkedQuestionIds(userId: string, questionIds: string[]) {
-    if (questionIds.length === 0) return [];
-
-    const items = await this.db.questionSetItem.findMany({
-      where: {
-        questionSet: {
-          ownerUserId: userId,
-          kind: QuestionSetKind.CUSTOM,
-        },
-        questionRevision: {
-          questionId: { in: questionIds },
-        },
-      },
-      select: {
-        questionRevision: {
-          select: { questionId: true },
-        },
-      },
-    });
-
-    return items.map((item) => item.questionRevision.questionId);
+    return findBookmarkedQuestionIds(this.db, userId, questionIds);
   }
 
   update(id: string, data: UpdatePaperInput) {

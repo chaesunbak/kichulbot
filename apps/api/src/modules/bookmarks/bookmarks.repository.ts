@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { DatabaseService } from '../../infrastructure/database/database.service';
+import type { Prisma } from '../../infrastructure/database/prisma-client';
 import { QuestionSetKind } from '../../infrastructure/database/prisma-client';
 
 @Injectable()
@@ -15,14 +16,24 @@ export class BookmarksRepository {
     });
   }
 
-  findBookmarkList(userId: string, bookmarkListId: string) {
+  findBookmarkListDetail(userId: string, bookmarkListId: string) {
     return this.db.questionSet.findFirst({
-      where: {
-        id: bookmarkListId,
-        ownerUserId: userId,
-        kind: QuestionSetKind.CUSTOM,
-      },
-      include: this.bookmarkListIncludes(),
+      where: this.ownedBookmarkListWhere(userId, bookmarkListId),
+      select: this.bookmarkListSelect(),
+    });
+  }
+
+  findBookmarkListReference(userId: string, bookmarkListId: string) {
+    return this.db.questionSet.findFirst({
+      where: this.ownedBookmarkListWhere(userId, bookmarkListId),
+      select: { id: true },
+    });
+  }
+
+  findBookmarkListWithItemCount(userId: string, bookmarkListId: string) {
+    return this.db.questionSet.findFirst({
+      where: this.ownedBookmarkListWhere(userId, bookmarkListId),
+      select: { id: true, _count: { select: { items: true } } },
     });
   }
 
@@ -78,7 +89,7 @@ export class BookmarksRepository {
             },
           },
           data: { questionRevisionId: revision.id },
-          include: this.questionSetItemIncludes(),
+          select: this.questionSetItemSelect(),
         });
       }
 
@@ -92,7 +103,7 @@ export class BookmarksRepository {
           questionRevisionId: revision.id,
           position: (_max.position ?? 0) + 1,
         },
-        include: this.questionSetItemIncludes(),
+        select: this.questionSetItemSelect(),
       });
     });
   }
@@ -125,30 +136,55 @@ export class BookmarksRepository {
     });
   }
 
-  private bookmarkListIncludes() {
+  private ownedBookmarkListWhere(userId: string, bookmarkListId: string) {
     return {
-      items: {
-        include: this.questionSetItemIncludes(),
-        orderBy: { position: 'asc' as const },
-      },
-    };
+      id: bookmarkListId,
+      ownerUserId: userId,
+      kind: QuestionSetKind.CUSTOM,
+    } satisfies Prisma.QuestionSetWhereInput;
   }
 
-  private questionSetItemIncludes() {
+  private bookmarkListSelect() {
     return {
+      id: true,
+      title: true,
+      createdAt: true,
+      updatedAt: true,
+      items: {
+        select: this.questionSetItemSelect(),
+        orderBy: { position: 'asc' as const },
+      },
+    } satisfies Prisma.QuestionSetSelect;
+  }
+
+  private questionSetItemSelect() {
+    return {
+      createdAt: true,
+      position: true,
       questionRevision: {
-        include: {
+        select: {
+          imageUrl: true,
+          imageHash: true,
           question: {
-            include: {
+            select: {
+              id: true,
+              number: true,
               paper: {
-                include: {
-                  examSession: { include: { exam: true } },
+                select: {
+                  id: true,
+                  title: true,
+                  examSession: {
+                    select: {
+                      displayYear: true,
+                      exam: { select: { name: true } },
+                    },
+                  },
                 },
               },
             },
           },
         },
       },
-    };
+    } satisfies Prisma.QuestionSetItemSelect;
   }
 }

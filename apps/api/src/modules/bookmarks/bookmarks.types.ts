@@ -15,6 +15,6 @@ export type BookmarkListSummaryRecord = Awaited<
   ReturnType<BookmarksRepository['findBookmarkLists']>
 >[number];
 export type BookmarkListRecord = NonNullable<
-  Awaited<ReturnType<BookmarksRepository['findBookmarkList']>>
+  Awaited<ReturnType<BookmarksRepository['findBookmarkListDetail']>>
 >;
 export type BookmarkListQuestionRecord = BookmarkListRecord['items'][number];

@@ -59,7 +59,7 @@ export class BookmarksService {
     userId: string,
     bookmarkListId: string,
   ): Promise<BookmarkListResponseEnvelope> {
-    const bookmarkList = await this.getOwnedBookmarkList(
+    const bookmarkList = await this.getOwnedBookmarkListDetail(
       userId,
       bookmarkListId,
     );
@@ -73,7 +73,7 @@ export class BookmarksService {
     bookmarkListId: string,
     name: string,
   ): Promise<BookmarkListSummaryResponseEnvelope> {
-    const bookmarkList = await this.getOwnedBookmarkList(
+    const bookmarkList = await this.getOwnedBookmarkListReference(
       userId,
       bookmarkListId,
     );
@@ -90,7 +90,7 @@ export class BookmarksService {
     userId: string,
     bookmarkListId: string,
   ): Promise<DeleteBookmarkListResponse> {
-    const bookmarkList = await this.getOwnedBookmarkList(
+    const bookmarkList = await this.getOwnedBookmarkListReference(
       userId,
       bookmarkListId,
     );
@@ -105,7 +105,7 @@ export class BookmarksService {
   ): Promise<AddBookmarkedQuestionResponse> {
     const [question] = await Promise.all([
       this.bookmarksRepository.findQuestion(questionId),
-      this.getOwnedBookmarkList(userId, bookmarkListId),
+      this.getOwnedBookmarkListReference(userId, bookmarkListId),
     ]);
     if (!question) {
       throw new NotFoundException('문제를 찾을 수 없습니다.');
@@ -125,7 +125,7 @@ export class BookmarksService {
     questionId: string,
   ): Promise<DeleteBookmarkedQuestionResponse> {
     const [, questionSetItem] = await Promise.all([
-      this.getOwnedBookmarkList(userId, bookmarkListId),
+      this.getOwnedBookmarkListReference(userId, bookmarkListId),
       this.bookmarksRepository.findBookmarkedQuestion(
         bookmarkListId,
         questionId,
@@ -146,11 +146,11 @@ export class BookmarksService {
     bookmarkListId: string,
     mode: AnswerMode,
   ): Promise<StartSolveSessionResponse> {
-    const bookmarkList = await this.getOwnedBookmarkList(
+    const bookmarkList = await this.getOwnedBookmarkListItemCount(
       userId,
       bookmarkListId,
     );
-    if (bookmarkList.items.length === 0) {
+    if (bookmarkList._count.items === 0) {
       throw new BadRequestException('풀 문제가 없습니다.');
     }
     return this.solveSessionsService.startQuestionSet(
@@ -160,11 +160,44 @@ export class BookmarksService {
     );
   }
 
-  private async getOwnedBookmarkList(userId: string, bookmarkListId: string) {
-    const bookmarkList = await this.bookmarksRepository.findBookmarkList(
+  private async getOwnedBookmarkListDetail(
+    userId: string,
+    bookmarkListId: string,
+  ) {
+    const bookmarkList = await this.bookmarksRepository.findBookmarkListDetail(
       userId,
       bookmarkListId,
     );
+    if (!bookmarkList) {
+      throw new NotFoundException('북마크 리스트를 찾을 수 없습니다.');
+    }
+    return bookmarkList;
+  }
+
+  private async getOwnedBookmarkListReference(
+    userId: string,
+    bookmarkListId: string,
+  ) {
+    const bookmarkList =
+      await this.bookmarksRepository.findBookmarkListReference(
+        userId,
+        bookmarkListId,
+      );
+    if (!bookmarkList) {
+      throw new NotFoundException('북마크 리스트를 찾을 수 없습니다.');
+    }
+    return bookmarkList;
+  }
+
+  private async getOwnedBookmarkListItemCount(
+    userId: string,
+    bookmarkListId: string,
+  ) {
+    const bookmarkList =
+      await this.bookmarksRepository.findBookmarkListWithItemCount(
+        userId,
+        bookmarkListId,
+      );
     if (!bookmarkList) {
       throw new NotFoundException('북마크 리스트를 찾을 수 없습니다.');
     }

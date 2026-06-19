@@ -47,6 +47,8 @@ export function BookmarkListItem({
         <img
           src={question.imageUrl}
           alt={`${question.paper.title} ${question.number}번 문제`}
+          loading="lazy"
+          decoding="async"
           className="mt-4 max-h-140 w-full rounded-lg object-contain"
         />
       ) : (

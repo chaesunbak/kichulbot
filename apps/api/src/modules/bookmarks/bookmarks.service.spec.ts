@@ -44,6 +44,11 @@ const bookmarkList = {
   updatedAt: now,
   items: [],
 } satisfies QuestionSet & { items: [] };
+const bookmarkListReference = { id: bookmarkList.id };
+const bookmarkListItemCount = {
+  id: bookmarkList.id,
+  _count: { items: 0 },
+};
 const question = {
   id: 'question_1',
   paperId: 'paper_1',
@@ -118,7 +123,9 @@ describe('BookmarksService', () => {
   beforeEach(() => {
     repository = {
       findBookmarkLists: jest.fn(),
-      findBookmarkList: jest.fn(),
+      findBookmarkListDetail: jest.fn(),
+      findBookmarkListReference: jest.fn(),
+      findBookmarkListWithItemCount: jest.fn(),
       createBookmarkList: jest.fn(),
       updateBookmarkList: jest.fn(),
       deleteBookmarkList: jest.fn(),
@@ -133,8 +140,46 @@ describe('BookmarksService', () => {
     service = new BookmarksService(repository, solveSessionsService);
   });
 
+  it('북마크 목록 상세를 응답 형식으로 변환한다', async () => {
+    repository.findBookmarkListDetail.mockResolvedValue({
+      ...bookmarkList,
+      items: [questionSetItem],
+    });
+
+    const response = await service.getBookmarkList('user_1', bookmarkList.id);
+
+    expect(repository.findBookmarkListDetail).toHaveBeenCalledWith(
+      'user_1',
+      bookmarkList.id,
+    );
+    expect(response.bookmarkList).toEqual({
+      id: bookmarkList.id,
+      name: bookmarkList.title,
+      questionCount: 1,
+      questions: [
+        {
+          id: question.id,
+          number: question.number,
+          imageUrl: question.imageUrl,
+          imageCacheKey: question.imageHash,
+          paper: {
+            id: paper.id,
+            title: paper.title,
+            year: examSession.displayYear,
+            examName: exam.name,
+          },
+          createdAt: now.toISOString(),
+        },
+      ],
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    });
+  });
+
   it('이름을 변경하기 전에 북마크 목록 소유권을 확인하고 이름을 정리한다', async () => {
-    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.findBookmarkListReference.mockResolvedValue(
+      bookmarkListReference,
+    );
     repository.updateBookmarkList.mockResolvedValue({
       ...bookmarkList,
       title: '오답 모음',
@@ -147,10 +192,11 @@ describe('BookmarksService', () => {
       '  오답 모음  ',
     );
 
-    expect(repository.findBookmarkList).toHaveBeenCalledWith(
+    expect(repository.findBookmarkListReference).toHaveBeenCalledWith(
       'user_1',
       bookmarkList.id,
     );
+    expect(repository.findBookmarkListDetail).not.toHaveBeenCalled();
     expect(repository.updateBookmarkList).toHaveBeenCalledWith(
       bookmarkList.id,
       '오답 모음',
@@ -159,7 +205,7 @@ describe('BookmarksService', () => {
   });
 
   it('없는 북마크 목록 이름은 변경하지 않는다', async () => {
-    repository.findBookmarkList.mockResolvedValue(null);
+    repository.findBookmarkListReference.mockResolvedValue(null);
 
     await expect(
       service.updateBookmarkList('user_1', bookmarkList.id, '오답 모음'),
@@ -168,21 +214,24 @@ describe('BookmarksService', () => {
   });
 
   it('북마크 목록을 삭제하기 전에 소유권을 확인한다', async () => {
-    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.findBookmarkListReference.mockResolvedValue(
+      bookmarkListReference,
+    );
     repository.deleteBookmarkList.mockResolvedValue(bookmarkList);
 
     await expect(
       service.deleteBookmarkList('user_1', bookmarkList.id),
     ).resolves.toEqual({ id: bookmarkList.id });
-    expect(repository.findBookmarkList).toHaveBeenCalledWith(
+    expect(repository.findBookmarkListReference).toHaveBeenCalledWith(
       'user_1',
       bookmarkList.id,
     );
+    expect(repository.findBookmarkListDetail).not.toHaveBeenCalled();
     expect(repository.deleteBookmarkList).toHaveBeenCalledWith(bookmarkList.id);
   });
 
   it('없는 북마크 목록은 삭제하지 않는다', async () => {
-    repository.findBookmarkList.mockResolvedValue(null);
+    repository.findBookmarkListReference.mockResolvedValue(null);
 
     await expect(
       service.deleteBookmarkList('user_1', bookmarkList.id),
@@ -191,7 +240,9 @@ describe('BookmarksService', () => {
   });
 
   it('같은 문항을 다시 추가해도 멱등적으로 저장 동작을 수행한다', async () => {
-    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.findBookmarkListReference.mockResolvedValue(
+      bookmarkListReference,
+    );
     repository.findQuestion.mockResolvedValue(question);
     repository.addQuestion.mockResolvedValue(questionSetItem);
 
@@ -208,10 +259,13 @@ describe('BookmarksService', () => {
       bookmarkList.id,
       question.id,
     );
+    expect(repository.findBookmarkListDetail).not.toHaveBeenCalled();
   });
 
   it('문항을 삭제하기 전에 북마크 목록 소유권을 확인한다', async () => {
-    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.findBookmarkListReference.mockResolvedValue(
+      bookmarkListReference,
+    );
     repository.findBookmarkedQuestion.mockResolvedValue({
       questionSetId: bookmarkList.id,
       questionRevisionId: questionSetItem.questionRevisionId,
@@ -231,10 +285,11 @@ describe('BookmarksService', () => {
 
     await service.deleteQuestion('user_1', bookmarkList.id, question.id);
 
-    expect(repository.findBookmarkList).toHaveBeenCalledWith(
+    expect(repository.findBookmarkListReference).toHaveBeenCalledWith(
       'user_1',
       bookmarkList.id,
     );
+    expect(repository.findBookmarkListDetail).not.toHaveBeenCalled();
     expect(repository.deleteQuestion).toHaveBeenCalledWith(
       bookmarkList.id,
       question.id,
@@ -242,11 +297,41 @@ describe('BookmarksService', () => {
   });
 
   it('비어 있는 북마크 목록으로는 풀이를 시작하지 않는다', async () => {
-    repository.findBookmarkList.mockResolvedValue(bookmarkList);
+    repository.findBookmarkListWithItemCount.mockResolvedValue(
+      bookmarkListItemCount,
+    );
 
     await expect(
       service.startSolveSession('user_1', bookmarkList.id, 'ONE_BY_ONE'),
     ).rejects.toThrow('풀 문제가 없습니다.');
+    expect(repository.findBookmarkListWithItemCount).toHaveBeenCalledWith(
+      'user_1',
+      bookmarkList.id,
+    );
+    expect(repository.findBookmarkListDetail).not.toHaveBeenCalled();
     expect(solveSessionsService.startQuestionSet).not.toHaveBeenCalled();
+  });
+
+  it('북마크 목록 문항 수만 확인하고 풀이를 시작한다', async () => {
+    repository.findBookmarkListWithItemCount.mockResolvedValue({
+      ...bookmarkListItemCount,
+      _count: { items: 1 },
+    });
+    solveSessionsService.startQuestionSet.mockResolvedValue({
+      session: { id: 'solve_session_1' },
+    } as never);
+
+    await service.startSolveSession('user_1', bookmarkList.id, 'ONE_BY_ONE');
+
+    expect(repository.findBookmarkListWithItemCount).toHaveBeenCalledWith(
+      'user_1',
+      bookmarkList.id,
+    );
+    expect(repository.findBookmarkListDetail).not.toHaveBeenCalled();
+    expect(solveSessionsService.startQuestionSet).toHaveBeenCalledWith(
+      'user_1',
+      bookmarkList.id,
+      'ONE_BY_ONE',
+    );
   });
 });

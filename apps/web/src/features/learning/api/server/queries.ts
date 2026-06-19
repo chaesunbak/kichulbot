@@ -3,6 +3,7 @@ import { ApiError } from '@kichulbot/api-contract';
 import { getAuthContext } from '@/features/auth/lib/server-auth';
 import type {
   DailyWrongQuestionSet,
+  RecapSummary,
   SolveSession,
   SolveSessionLog,
   SolveSessionLogPage,
@@ -85,3 +86,13 @@ export const getTodayWrongQuestions =
     }>('/me/wrong-question-sets', context.token);
     return res.data.questionSet;
   };
+
+export const getRecapSummary = async (): Promise<RecapSummary> => {
+  const context = await getAuthContext();
+  if (!context) throw new ApiError(401, '로그인이 필요합니다.');
+  const res = await serverApi.get<{ data: RecapSummary }>(
+    '/me/recap/summary',
+    context.token,
+  );
+  return res.data;
+};

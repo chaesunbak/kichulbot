@@ -16,6 +16,9 @@
       "question-attempts": [
         "dist/question-attempts/index.d.ts"
       ],
+      "recap": [
+        "dist/recap/index.d.ts"
+      ],
       "study-activity": [
         "dist/study-activity/index.d.ts"
       ],
@@ -74,6 +77,11 @@
       "types": "./dist/question-attempts/index.d.ts",
       "import": "./dist/question-attempts/index.js",
       "default": "./dist/question-attempts/index.js"
+    },
+    "./recap": {
+      "types": "./dist/recap/index.d.ts",
+      "import": "./dist/recap/index.js",
+      "default": "./dist/recap/index.js"
     },
     "./study-activity": {
       "types": "./dist/study-activity/index.d.ts",

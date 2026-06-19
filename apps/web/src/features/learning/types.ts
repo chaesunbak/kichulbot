@@ -7,6 +7,7 @@ import type { LibraryResponse } from '@kichulbot/api-contract/library';
 import type { StartMockExamSolveSessionResponse } from '@kichulbot/api-contract/mock-exams';
 import type { QuestionNoteResponseEnvelope } from '@kichulbot/api-contract/question-notes';
 import type { CreateQuestionReportRequest } from '@kichulbot/api-contract/question-reports';
+import type { GetRecapSummaryResponse } from '@kichulbot/api-contract/recap';
 import type { GetWrongQuestionSetResponse } from '@kichulbot/api-contract/review';
 import type {
   ListSolveSessionLogsQuery,
@@ -38,6 +39,9 @@ export type SolveSessionLogStatus = NonNullable<
   ListSolveSessionLogsQuery['status']
 >;
 export type SolveSessionLogPage = ListSolveSessionLogsResponse;
+export type RecapSummary = GetRecapSummaryResponse;
+export type RecapTodayStats = RecapSummary['todayStats'];
+export type RecapWrongReview = RecapSummary['wrongReview'];
 
 export type DailyWrongQuestionSet = NonNullable<
   GetWrongQuestionSetResponse['questionSet']

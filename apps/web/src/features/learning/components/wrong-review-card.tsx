@@ -13,15 +13,17 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { createLatestWrongQuestionSolveSession } from '@/features/learning/api/client/mutations';
-import type { WrongReviewStats } from '@/features/learning/lib/recap-stats';
-import type { DailyWrongQuestionSet } from '@/features/learning/types';
+import type {
+  RecapTodayStats,
+  RecapWrongReview,
+} from '@/features/learning/types';
 
 export function WrongReviewCard({
-  initialQuestionSet,
   stats,
+  wrongReview,
 }: {
-  initialQuestionSet: DailyWrongQuestionSet | null;
-  stats: WrongReviewStats;
+  stats: RecapTodayStats;
+  wrongReview: RecapWrongReview;
 }) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
@@ -41,7 +43,7 @@ export function WrongReviewCard({
   };
 
   const chartValue = stats.totalCount > 0 ? stats.accuracyRate : 0;
-  const questionCount = initialQuestionSet?.questionCount;
+  const questionCount = wrongReview.questionCount;
   const hasWrongQuestions = (questionCount ?? 0) > 0;
 
   return (

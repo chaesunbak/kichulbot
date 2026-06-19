@@ -23,6 +23,7 @@ import { QuestionAttemptsModule } from './modules/question-attempts/question-att
 import { QuestionNotesModule } from './modules/question-notes/question-notes.module';
 import { QuestionReportsModule } from './modules/question-reports/question-reports.module';
 import { QuestionsModule } from './modules/questions/questions.module';
+import { RecapModule } from './modules/recap/recap.module';
 import { ReviewModule } from './modules/review/review.module';
 import { SolveSessionsModule } from './modules/solve-sessions/solve-sessions.module';
 import { StudyActivityModule } from './modules/study-activity/study-activity.module';
@@ -65,6 +66,7 @@ import { TagsModule } from './modules/tags/tags.module';
     QuestionNotesModule,
     QuestionReportsModule,
     QuestionsModule,
+    RecapModule,
     ReviewModule,
     LibraryModule,
     StudyActivityModule,

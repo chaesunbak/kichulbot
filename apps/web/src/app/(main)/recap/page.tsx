@@ -10,35 +10,33 @@ import Link from 'next/link';
 
 import { redirectToLoginIfUnauthorized } from '@/features/auth/lib/auth-redirect';
 import {
+  getRecapSummary,
   getSolveSessionLogPage,
-  getSolveSessionLogs,
-  getTodayWrongQuestions,
 } from '@/features/learning/api/server/queries';
 import { CompactSolveSessionLogList } from '@/features/learning/components/compact-solve-session-log-list';
 import { WrongReviewCard } from '@/features/learning/components/wrong-review-card';
-import { getTodayStats } from '@/features/learning/lib/recap-stats';
-import { toKstDateString } from '@/features/question-attempts/lib/streak-date';
 import { PageContainer } from '@/shared/components/page-container';
 import { PageTitle } from '@/shared/components/page-title';
 
 export default async function RecapPage() {
-  const today = toKstDateString(new Date());
-  let data: Awaited<ReturnType<typeof loadRecapPageData>>;
+  let logPage: Awaited<ReturnType<typeof getSolveSessionLogPage>>;
+  let summary: Awaited<ReturnType<typeof getRecapSummary>>;
   try {
-    data = await loadRecapPageData(today);
+    [logPage, summary] = await Promise.all([
+      getSolveSessionLogPage({ status: 'all', limit: 5 }),
+      getRecapSummary(),
+    ]);
   } catch (error) {
     redirectToLoginIfUnauthorized(error, '/recap');
     throw error;
   }
-  const { logPage, todayLogs, wrongQuestionSet } = data;
-  const todayStats = getTodayStats(todayLogs);
 
   return (
     <PageContainer>
       <PageTitle>복습</PageTitle>
       <WrongReviewCard
-        initialQuestionSet={wrongQuestionSet}
-        stats={todayStats}
+        stats={summary.todayStats}
+        wrongReview={summary.wrongReview}
       />
       <Card>
         <CardHeader>
@@ -67,13 +65,4 @@ export default async function RecapPage() {
       />
     </PageContainer>
   );
-}
-
-async function loadRecapPageData(today: string) {
-  const [logPage, todayLogs, wrongQuestionSet] = await Promise.all([
-    getSolveSessionLogPage({ status: 'all', limit: 5 }),
-    getSolveSessionLogs({ status: 'completed', submittedDate: today }),
-    getTodayWrongQuestions(),
-  ]);
-  return { logPage, todayLogs, wrongQuestionSet };
 }

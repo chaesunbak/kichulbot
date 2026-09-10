@@ -48,7 +48,7 @@
     "shadcn": "^4.8.2",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "react": "19.2.4",
